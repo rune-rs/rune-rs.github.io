@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+        <!-- SEO -->
+        
+        <title> The Rune Programming Language </title>
+        
+
+        <!-- Enable responsiveness on mobile devices-->
+        <meta name="viewport"  content="width=device-width, initial-scale=1.0, maximum-scale=1" >
+
+        <!--  css -->
+        <link rel="stylesheet"  href="https:&#x2F;&#x2F;rune-rs.github.io/style.css" >
+
+        <!-- fonts -->
+        <!-- preload  -->
+        <link rel="preload" href="https://fonts.googleapis.com/css?family=Montserrat:200,300,300i,400,500,500i,600,700,800,900|Raleway" as="style">
+        <link rel="preload"  href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous" as="style" >
+        <!-- load -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:200,300,300i,400,500,500i,600,700,800,900|Raleway">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"  integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+      
+    </head>
+
+    <body>
+      
+        <header class="header">
+          <figure class="user-logo">
+              <a href="https:&#x2F;&#x2F;rune-rs.github.io" style="background-image: url(https:&#x2F;&#x2F;rune-rs.github.io/img/logo.png"></a>
+          </figure>
+  
+          <h2 class="site-title">The Rune Programming Language</h2>
+  
+          <div>Party dynamically like it's 1995</div>
+
+          
+<nav>
+    <a href="https:&#x2F;&#x2F;rune-rs.github.io">Home</a>
+    <span class="dot-divider"></span>
+    <a href="https:&#x2F;&#x2F;rune-rs.github.io/posts/">Posts</a>
+    <span class="dot-divider"></span>
+    <a href="https:&#x2F;&#x2F;rune-rs.github.io/play/">Playground</a>
+</nav>
+
+        </header>
+      
+
+      
+  <section class="container">
+    <p>Welcome to the Rune Programming Language.</p>
+<p>Rune is a dynamic programming language that is easily embeddable and has support for an exciting set of language features.</p>
+<h4 id="asynchronous-first">Asynchronous first</h4>
+<p>Rune prioritized excellent support for <code>async</code> with support for async functions,
+<a href="https://rune-rs.github.io/book/async.html#async-closures">closures</a>, <a href="https://rune-rs.github.io/book/async.html#async-blocks">blocks</a>, and <a href="https://rune-rs.github.io/book/streams.html">generators</a>. And native support for <a href="https://rune-rs.github.io/book/async.html#select-blocks"><code>select</code></a>, a
+popular control flow mechanism for asynchronous code.</p>
+<div class="rune big"
+    rune-update-url="false"
+    rune-run-on-change="false""
+    rune-run-button="false""
+    rune-options="""
+    rune-experimental="false""
+    rune-instructions="""
+    rune-config="""
+    >
+    <div class="rune-editor">use std::future;
+
+struct Timeout;
+
+const SITE = "https://httpstat.us";
+
+async fn request(timeout) {
+    let request = http::get(`${SITE}/200?sleep=${timeout}`);
+    let timeout = time::delay_for(time::Duration::from_secs(1));
+
+    let result = select {
+        res = request => res,
+        _ = timeout => Err(Timeout),
+    }?;
+
+    let text = result.text().await?;
+    Ok(text)
+}
+
+pub async fn main() {
+    let result = future::join((request(0), request(1500))).await;
+    dbg(result);
+}</div>
+    <div class="rune-console">
+        <div class="rune-control">
+            <button class="rune-button rune-run">Run</button>
+
+            <label class="rune-option">
+                <input class="rune-checkbox instructions" type="checkbox" title="Show compiled instructions"></input>
+                Instructions
+            </label>
+
+            <label class="rune-option">
+                <input class="rune-checkbox run-on-change" type="checkbox" title="Show compiled instructions"></input>
+                Run on change
+            </label>
+        </div>
+        <div class="rune-output primary"></div>
+        <div class="rune-output diagnostics"></div>
+        <div class="rune-output instructions"></div>
+    </div>
+    <div class="rune-footnote">Asynchronous programming using select</div>
+</div>
+<h4 id="const-evaluation"><code>const</code> evaluation</h4>
+<p>Rune has support for constant evaluation using the <code>const</code> keyword. Which
+can perform complex work at compile time.</p>
+<div class="rune big"
+    rune-update-url="false"
+    rune-run-on-change="true""
+    rune-run-button="false""
+    rune-options="""
+    rune-experimental="false""
+    rune-instructions="""
+    rune-config="""
+    >
+    <div class="rune-editor">const BASE = 10;
+const LIMIT = 0b1 << 10;
+
+const VALUE = {
+    let timeout = BASE;
+
+    while timeout < LIMIT {
+        timeout = timeout * 2;
+    }
+
+    `https://httpstat.us/200?timeout=${timeout}`
+};
+
+pub fn main() {
+    dbg(VALUE, LIMIT);
+}</div>
+    <div class="rune-console">
+        <div class="rune-control">
+            <button class="rune-button rune-run">Run</button>
+
+            <label class="rune-option">
+                <input class="rune-checkbox instructions" type="checkbox" title="Show compiled instructions"></input>
+                Instructions
+            </label>
+
+            <label class="rune-option">
+                <input class="rune-checkbox run-on-change" type="checkbox" title="Show compiled instructions"></input>
+                Run on change
+            </label>
+        </div>
+        <div class="rune-output primary"></div>
+        <div class="rune-output diagnostics"></div>
+        <div class="rune-output instructions"></div>
+    </div>
+    <div class="rune-footnote">VALUE and LIMIT is calculated once, reducing the work needed at runtime</div>
+</div>
+
+  </section>
+
+       
+
+      
+        <footer>
+          
+<ul class="social-list foot-list" >
+    
+
+    
+    <li class="button extra-small font_faint"><a title="Read The Book" href="https://rune-rs.github.io&#x2F;book&#x2F;" target="_blank" >book</a><i class="fa fa-book" ></i></li>
+    
+
+    
+    <li class="button extra-small font_faint"><a title="Visit GitHub Project" href="https://github.com/rune-rs" target="_blank" >rune-rs</a><i class="fab fa-github" ></i></li>
+    
+
+    
+    <li class="button extra-small font_faint"><a title="Join Community Discord" href="https:&#x2F;&#x2F;discord.gg&#x2F;v5AeNkT" target="_blank" >discord</a><i class="fab fa-discord" ></i></li>
+    
+</ul>
+
+        </footer>
+      
+    </body>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q==" crossorigin="anonymous"></script>
+    <script type="text/javascript"  src="https:&#x2F;&#x2F;rune-rs.github.io/ace/mode-rune.js"></script>
+    <script type="text/javascript"  src="https:&#x2F;&#x2F;rune-rs.github.io/rune/rune.js"></script>
+    <script type="text/javascript"  src="https:&#x2F;&#x2F;rune-rs.github.io/index.js"></script>
+</html>
