@@ -8,26 +8,6 @@ var rune = (function (exports) {
 
   let wasm;
 
-  const heap = new Array(32).fill(undefined);
-
-  heap.push(undefined, null, true, false);
-
-  function getObject(idx) { return heap[idx]; }
-
-  let heap_next = heap.length;
-
-  function dropObject(idx) {
-      if (idx < 36) return;
-      heap[idx] = heap_next;
-      heap_next = idx;
-  }
-
-  function takeObject(idx) {
-      const ret = getObject(idx);
-      dropObject(idx);
-      return ret;
-  }
-
   let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
 
   cachedTextDecoder.decode();
@@ -44,6 +24,12 @@ var rune = (function (exports) {
       return cachedTextDecoder.decode(getUint8Memory0().subarray(ptr, ptr + len));
   }
 
+  const heap = new Array(32).fill(undefined);
+
+  heap.push(undefined, null, true, false);
+
+  let heap_next = heap.length;
+
   function addHeapObject(obj) {
       if (heap_next === heap.length) heap.push(heap.length + 1);
       const idx = heap_next;
@@ -52,6 +38,8 @@ var rune = (function (exports) {
       heap[idx] = obj;
       return idx;
   }
+
+  function getObject(idx) { return heap[idx]; }
 
   let WASM_VECTOR_LEN = 0;
 
@@ -116,6 +104,18 @@ var rune = (function (exports) {
       return cachegetInt32Memory0;
   }
 
+  function dropObject(idx) {
+      if (idx < 36) return;
+      heap[idx] = heap_next;
+      heap_next = idx;
+  }
+
+  function takeObject(idx) {
+      const ret = getObject(idx);
+      dropObject(idx);
+      return ret;
+  }
+
   function isLikeNone(x) {
       return x === undefined || x === null;
   }
@@ -145,7 +145,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_20(arg0, arg1, arg2) {
-      wasm._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__ha347b3cb7d4459de(arg0, arg1, addHeapObject(arg2));
+      wasm._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hc0eebb683b76c6ef(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -175,7 +175,7 @@ var rune = (function (exports) {
       return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
   }
   function __wbg_adapter_56(arg0, arg1, arg2, arg3) {
-      wasm.wasm_bindgen__convert__closures__invoke2_mut__h5e51b1ba8c91639b(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm.wasm_bindgen__convert__closures__invoke2_mut__hb86adab2bb95b967(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function load(module, imports) {
@@ -217,18 +217,6 @@ var rune = (function (exports) {
       }
       const imports = {};
       imports.wbg = {};
-      imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
-          takeObject(arg0);
-      };
-      imports.wbg.__wbindgen_cb_drop = function(arg0) {
-          const obj = takeObject(arg0).original;
-          if (obj.cnt-- == 1) {
-              obj.a = 0;
-              return true;
-          }
-          var ret = false;
-          return ret;
-      };
       imports.wbg.__wbindgen_json_parse = function(arg0, arg1) {
           var ret = JSON.parse(getStringFromWasm0(arg0, arg1));
           return addHeapObject(ret);
@@ -240,6 +228,18 @@ var rune = (function (exports) {
           var len0 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+      };
+      imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
+          takeObject(arg0);
+      };
+      imports.wbg.__wbindgen_cb_drop = function(arg0) {
+          const obj = takeObject(arg0).original;
+          if (obj.cnt-- == 1) {
+              obj.a = 0;
+              return true;
+          }
+          var ret = false;
+          return ret;
       };
       imports.wbg.__wbg_sleep_c9b3d834bdadca92 = function(arg0) {
           var ret = sleep(arg0);
@@ -380,8 +380,8 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_throw = function(arg0, arg1) {
           throw new Error(getStringFromWasm0(arg0, arg1));
       };
-      imports.wbg.__wbindgen_closure_wrapper1163 = function(arg0, arg1, arg2) {
-          var ret = makeMutClosure(arg0, arg1, 579, __wbg_adapter_20);
+      imports.wbg.__wbindgen_closure_wrapper1178 = function(arg0, arg1, arg2) {
+          var ret = makeMutClosure(arg0, arg1, 585, __wbg_adapter_20);
           return addHeapObject(ret);
       };
 
@@ -404,7 +404,7 @@ var rune = (function (exports) {
   });
 
   var wasm$1 = async () => {
-                          await init("/rune/assets/rune-wasm-46bccf0d.wasm");
+                          await init("/rune/assets/rune-wasm-e4c3d157.wasm");
                           return exports$1;
                       };
 
