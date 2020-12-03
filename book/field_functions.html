@@ -230,50 +230,7 @@ module.field_fn(Protocol::GET, &quot;field&quot;, External::field_get)?;
 argument to the corresponding attribute pointing to the function to use instead.</p>
 <p>The following uses an implementation of <code>add_assign</code> which performs checked
 addition:</p>
-<pre><code class="language-rust noplaypen">use runestick::{Any, Context, Module, VmError, VmErrorKind};
-use std::sync::Arc;
-
-#[derive(Any)]
-struct External {
-    #[rune(add_assign = &quot;External::value_add_assign&quot;)]
-    value: i64,
-}
-
-impl External {
-    fn value_add_assign(&amp;mut self, other: i64) -&gt; Result&lt;(), VmError&gt; {
-        self.value = self
-            .value
-            .checked_add(other)
-            .ok_or_else(|| VmErrorKind::Overflow)?;
-
-        Ok(())
-    }
-}
-
-fn main() -&gt; runestick::Result&lt;()&gt; {
-    let mut module = Module::default();
-    module.ty::&lt;External&gt;()?;
-
-    let mut context = Context::default();
-    context.install(&amp;module)?;
-    let context = Arc::new(context);
-
-    let external = External {
-        value: i64::max_value(),
-    };
-
-    let result = rune::testing::run::&lt;_, _, ()&gt;(
-        &amp;context,
-        &amp;[&quot;main&quot;],
-        (external,),
-        &quot;pub fn main(external) { external.value += 1; }&quot;,
-    );
-
-    let error = result.expect_err(&quot;expected error&quot;);
-    let error = error.expect_vm_error(&quot;expected vm error&quot;);
-    println!(&quot;Error: {}&quot;, error);
-    Ok(())
-}
+<pre><code class="language-rust noplaypen">{{#include ../../examples/checked_add_assign.rs}}
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --example checked_add_assign
 Error: numerical overflow (at inst 2)

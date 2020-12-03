@@ -145,7 +145,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_20(arg0, arg1, arg2) {
-      wasm._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hd8a3415963dc8aa7(arg0, arg1, addHeapObject(arg2));
+      wasm._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hfcfed72ad3d35505(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -175,7 +175,7 @@ var rune = (function (exports) {
       return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
   }
   function __wbg_adapter_56(arg0, arg1, arg2, arg3) {
-      wasm.wasm_bindgen__convert__closures__invoke2_mut__h5b55c6dd4f8519ab(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm.wasm_bindgen__convert__closures__invoke2_mut__h57e508a9f52914e9(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function load(module, imports) {
@@ -380,8 +380,8 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_throw = function(arg0, arg1) {
           throw new Error(getStringFromWasm0(arg0, arg1));
       };
-      imports.wbg.__wbindgen_closure_wrapper1189 = function(arg0, arg1, arg2) {
-          var ret = makeMutClosure(arg0, arg1, 590, __wbg_adapter_20);
+      imports.wbg.__wbindgen_closure_wrapper1190 = function(arg0, arg1, arg2) {
+          var ret = makeMutClosure(arg0, arg1, 588, __wbg_adapter_20);
           return addHeapObject(ret);
       };
 
@@ -404,7 +404,7 @@ var rune = (function (exports) {
   });
 
   var wasm$1 = async () => {
-                          await init("/rune/assets/rune-wasm-f5aaacb3.wasm");
+                          await init("/rune/assets/rune-wasm-7a18c70b.wasm");
                           return exports$1;
                       };
 
