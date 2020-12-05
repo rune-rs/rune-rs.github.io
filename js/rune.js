@@ -1,5 +1,28 @@
-var rune = (function (exports) {
+var rune = (function (exports, __wbg_star0) {
   'use strict';
+
+  function _interopNamespace(e) {
+    if (e && e.__esModule) { return e; } else {
+      var n = Object.create(null);
+      if (e) {
+        Object.keys(e).forEach(function (k) {
+          if (k !== 'default') {
+            var d = Object.getOwnPropertyDescriptor(e, k);
+            Object.defineProperty(n, k, d.get ? d : {
+              enumerable: true,
+              get: function () {
+                return e[k];
+              }
+            });
+          }
+        });
+      }
+      n['default'] = e;
+      return Object.freeze(n);
+    }
+  }
+
+  var __wbg_star0__namespace = /*#__PURE__*/_interopNamespace(__wbg_star0);
 
   /// Hook used to construct an async sleep function.
   function sleep(ms) {
@@ -380,10 +403,11 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_throw = function(arg0, arg1) {
           throw new Error(getStringFromWasm0(arg0, arg1));
       };
-      imports.wbg.__wbindgen_closure_wrapper1193 = function(arg0, arg1, arg2) {
+      imports.wbg.__wbindgen_closure_wrapper1194 = function(arg0, arg1, arg2) {
           var ret = makeMutClosure(arg0, arg1, 591, __wbg_adapter_20);
           return addHeapObject(ret);
       };
+      imports['env'] = __wbg_star0__namespace;
 
       if (typeof input === 'string' || (typeof Request === 'function' && input instanceof Request) || (typeof URL === 'function' && input instanceof URL)) {
           input = fetch(input);
@@ -404,7 +428,7 @@ var rune = (function (exports) {
   });
 
   var wasm$1 = async () => {
-                          await init("/js/assets/rune-wasm-9293fb57.wasm");
+                          await init("/js/assets/rune-wasm-b3a61711.wasm");
                           return exports$1;
                       };
 
@@ -418,5 +442,5 @@ var rune = (function (exports) {
 
   return exports;
 
-}({}));
+}({}, __wbg_star0));
 //# sourceMappingURL=rune.js.map
