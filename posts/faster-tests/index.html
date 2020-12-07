@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+        <!-- SEO -->
+        
+        <title> Faster integration tests in Rust | The Rune Programming Language </title>
+        
+
+        <!-- Enable responsiveness on mobile devices-->
+        <meta name="viewport"  content="width=device-width, initial-scale=1.0, maximum-scale=1" >
+
+        <!--  css -->
+        <link rel="stylesheet"  href="https:&#x2F;&#x2F;rune-rs.github.io/style.css" >
+
+        <!-- fonts -->
+        <!-- preload  -->
+        <link rel="preload" href="https://fonts.googleapis.com/css?family=Montserrat:200,300,300i,400,500,500i,600,700,800,900|Raleway" as="style">
+        <link rel="preload"  href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous" as="style" >
+        <!-- load -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:200,300,300i,400,500,500i,600,700,800,900|Raleway">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"  integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+      
+
+      
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https:&#x2F;&#x2F;rune-rs.github.io&#x2F;rss.xml">
+      
+    </head>
+
+    <body>
+      
+<header>
+  <nav id="overlord" class="overlord" >
+    
+<img class="mini-logo " src="https:&#x2F;&#x2F;rune-rs.github.io/img/logo.png"></img>
+<span class="mini-logo-title">
+    <a href="https:&#x2F;&#x2F;rune-rs.github.io">The Rune Programming Language</a>
+</span>
+
+  </nav>
+
+  
+<nav>
+    <a href="https:&#x2F;&#x2F;rune-rs.github.io">Home</a>
+    <span class="dot-divider"></span>
+    <a href="https:&#x2F;&#x2F;rune-rs.github.io/posts/">Posts</a>
+    <span class="dot-divider"></span>
+    <a href="https:&#x2F;&#x2F;rune-rs.github.io/play/">Playground</a>
+</nav>
+
+</header>
+
+
+      
+  <section class="container">
+    <article>
+      
+        <h1 class="article-title"><a href="https:&#x2F;&#x2F;rune-rs.github.io&#x2F;posts&#x2F;faster-tests&#x2F;" id="article-link">Faster integration tests in Rust</a></h1>
+        
+<ul class="frontmatter frontmatter-page" id="frontmatter">
+    
+    <li>John-John Tedro</li>
+    <span class="dot-divider"></span>
+    
+    <li>
+        <time class="article_time"  datetime="2020-12-07">December 07, 2020</time>
+    </li>
+    <span class="dot-divider"></span>
+    <li> 629 words </li>
+    <span class="dot-divider" ></span>
+    <li> 4 min </li>
+</ul>
+
+        <p>This is just a quick post to outline a trick that can be used to speed up
+building of projects which has a lot of integration tests.</p>
+<span id="continue-reading"></span>
+<p>The standard way to run and build integration tests in Rust is to make use of a
+cargo feature called <a href="https://doc.rust-lang.org/cargo/reference/cargo-targets.html#target-auto-discovery"><code>autotests</code></a>. This will scan your project for a directory
+called <code>tests</code> and build an integration test for every file found.</p>
+<p>So what happens if you have a lot of tests?</p>
+<p>This is the <a href="https://github.com/rune-rs/rune/tree/main/tests/tests"><code>tests</code> directory used by Rune</a>:</p>
+<pre style="background-color:#2e3440;">
+<code><span style="color:#d8dee9;">tests/bugfixes.rs
+tests/collections.rs
+tests/compiler_attributes.rs
+tests/compiler_expr_assign.rs
+tests/compiler_expr_binary.rs
+tests/compiler_fn.rs
+tests/compiler_general.rs
+tests/compiler_literals.rs
+tests/compiler_paths.rs
+tests/compiler_use.rs
+tests/compiler_visibility.rs
+tests/compiler_warnings.rs
+tests/core_macros.rs
+tests/destructuring.rs
+tests/external_ops.rs
+tests/for_loop.rs
+tests/getter_setter.rs
+tests/iterator.rs
+tests/moved.rs
+tests/reference_error.rs
+tests/stmt_reordering.rs
+tests/test_continue.rs
+tests/test_iter.rs
+tests/test_option.rs
+tests/test_quote.rs
+tests/test_range.rs
+tests/test_result.rs
+tests/type_name_native.rs
+tests/type_name_rune.rs
+tests/vm_arithmetic.rs
+tests/vm_assign_exprs.rs
+tests/vm_async_block.rs
+tests/vm_blocks.rs
+tests/vm_closures.rs
+tests/vm_const_exprs.rs
+tests/vm_early_termination.rs
+tests/vm_function.rs
+tests/vm_general.rs
+tests/vm_generators.rs
+tests/vm_is.rs
+tests/vm_lazy_and_or.rs
+tests/vm_literals.rs
+tests/vm_match.rs
+tests/vm_not_used.rs
+tests/vm_option.rs
+tests/vm_pat.rs
+tests/vm_result.rs
+tests/vm_streams.rs
+tests/vm_test_external_fn_ptr.rs
+tests/vm_test_from_value_derive.rs
+tests/vm_test_imports.rs
+tests/vm_test_instance_fns.rs
+tests/vm_test_linked_list.rs
+tests/vm_test_mod.rs
+tests/vm_try.rs
+tests/vm_tuples.rs
+tests/vm_typed_tuple.rs
+tests/vm_types.rs
+tests/wildcard_imports.rs
+</span></code></pre>
+<p>All in all this is <em>59 test binaries</em> that need to be built and executed.
+Linking binaries can be a painfully slow process. And especially when this has
+to happen every time a dependency is changed. Something we expect to happen
+quite <em>frequently</em> in the projects being developed!</p>
+<p>So if we let <code>autotests</code> do its thing, let's see how long it takes to run our
+tests:</p>
+<pre style="background-color:#2e3440;">
+<code><span style="color:#616e88;"># make sure dependencies are built
+</span><span style="color:#88c0d0;">$</span><span style="color:#81a1c1;">&gt;</span><span style="color:#d8dee9;"> cargo clean </span><span style="color:#81a1c1;">&amp;&amp; </span><span style="color:#88c0d0;">cargo</span><span style="color:#d8dee9;"> build
+</span><span style="color:#88c0d0;">$</span><span style="color:#81a1c1;">&gt;</span><span style="color:#d8dee9;"> time cargo test
+</span><span style="color:#88c0d0;">cargo</span><span style="color:#d8dee9;"> test  451,83s user 59,81s system 1170</span><span style="color:#81a1c1;">%</span><span style="color:#d8dee9;"> cpu 43,697 total
+</span></code></pre>
+<p>Assuming this doesn't cause issues for you. A faster way to do this would be to
+build a single binary containing all tests.</p>
+<p>Next I'm gonna showcase a hack you can do to make this happen with minor
+modifications to your project.</p>
+<p>First we need to disable <code>autotests</code> in <code>Cargo.toml</code> and specify an entrypoint
+to our one integration test:</p>
+<pre style="background-color:#2e3440;">
+<code><span style="color:#d8dee9;">[package]
+</span><span style="color:#81a1c1;">name </span><span style="color:#d8dee9;">= </span><span style="color:#a3be8c;">&quot;rune-tests&quot;
+</span><span style="color:#616e88;"># **snip**
+
+# disable autodiscovery of tests
+</span><span style="color:#81a1c1;">autotests </span><span style="color:#d8dee9;">= </span><span style="color:#81a1c1;">false
+
+</span><span style="color:#616e88;"># add our entrypoint
+</span><span style="color:#d8dee9;">[[test]]
+</span><span style="color:#81a1c1;">name </span><span style="color:#d8dee9;">= </span><span style="color:#a3be8c;">&quot;test&quot;
+</span><span style="color:#81a1c1;">path </span><span style="color:#d8dee9;">= </span><span style="color:#a3be8c;">&quot;test.rs&quot;
+</span></code></pre>
+<p>And this is where the magic happens. We write a <code>build.rs</code> extension to perform our own autodiscovery:</p>
+<pre style="background-color:#2e3440;">
+<code><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">std</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">env</span><span style="color:#eceff4;">;
+</span><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">std</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">ffi</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">OsStr</span><span style="color:#eceff4;">;
+</span><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">std</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">fs</span><span style="color:#eceff4;">;
+</span><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">std</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">io</span><span style="color:#eceff4;">;
+</span><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">std</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">io</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">Write </span><span style="color:#81a1c1;">as _</span><span style="color:#eceff4;">;
+</span><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">std</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">path</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">Path</span><span style="color:#eceff4;">;
+
+</span><span style="color:#81a1c1;">fn </span><span style="color:#88c0d0;">discover_tests</span><span style="color:#d8dee9;">() </span><span style="color:#eceff4;">-&gt; </span><span style="color:#d8dee9;">io</span><span style="color:#81a1c1;">::</span><span style="color:#8fbcbb;">Result</span><span style="color:#d8dee9;">&lt;()&gt; {
+    </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> manifest_dir </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">env</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">var_os(</span><span style="color:#a3be8c;">&quot;CARGO_MANIFEST_DIR&quot;</span><span style="color:#d8dee9;">)
+        </span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">expect</span><span style="color:#d8dee9;">(</span><span style="color:#a3be8c;">&quot;missing CARGO_MANIFEST_DIR&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">;
+
+    </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> out_dir </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">env</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">var_os(</span><span style="color:#a3be8c;">&quot;OUT_DIR&quot;</span><span style="color:#d8dee9;">)
+        </span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">expect</span><span style="color:#d8dee9;">(</span><span style="color:#a3be8c;">&quot;missing OUT_DIR&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">;
+
+    </span><span style="color:#81a1c1;">let mut</span><span style="color:#d8dee9;"> f </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">fs</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">File</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">create(Path</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">new(</span><span style="color:#81a1c1;">&amp;</span><span style="color:#d8dee9;">out_dir)</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">join</span><span style="color:#d8dee9;">(</span><span style="color:#a3be8c;">&quot;tests.rs&quot;</span><span style="color:#d8dee9;">))</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
+
+    </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> tests </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">Path</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">new(</span><span style="color:#81a1c1;">&amp;</span><span style="color:#d8dee9;">manifest_dir)</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">join</span><span style="color:#d8dee9;">(</span><span style="color:#a3be8c;">&quot;tests&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">;
+
+    </span><span style="color:#81a1c1;">for</span><span style="color:#d8dee9;"> entry </span><span style="color:#81a1c1;">in </span><span style="color:#d8dee9;">fs</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">read_dir(tests)</span><span style="color:#81a1c1;">? </span><span style="color:#d8dee9;">{
+        </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> entry </span><span style="color:#81a1c1;">=</span><span style="color:#d8dee9;"> entry</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
+        </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> path </span><span style="color:#81a1c1;">=</span><span style="color:#d8dee9;"> entry</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">path</span><span style="color:#d8dee9;">()</span><span style="color:#eceff4;">;
+
+        </span><span style="color:#81a1c1;">if !</span><span style="color:#d8dee9;">path</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">is_file</span><span style="color:#d8dee9;">() </span><span style="color:#81a1c1;">||</span><span style="color:#d8dee9;"> path</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">extension</span><span style="color:#d8dee9;">() </span><span style="color:#81a1c1;">!= </span><span style="color:#8fbcbb;">Some</span><span style="color:#d8dee9;">(OsStr</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">new(</span><span style="color:#a3be8c;">&quot;rs&quot;</span><span style="color:#d8dee9;">)) {
+            </span><span style="color:#81a1c1;">continue</span><span style="color:#eceff4;">;
+        </span><span style="color:#d8dee9;">}
+
+        </span><span style="color:#81a1c1;">if let </span><span style="color:#8fbcbb;">Some</span><span style="color:#d8dee9;">(stem) </span><span style="color:#81a1c1;">=</span><span style="color:#d8dee9;"> path</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">file_stem</span><span style="color:#d8dee9;">() {
+            </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> path </span><span style="color:#81a1c1;">=</span><span style="color:#d8dee9;"> path</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">canonicalize</span><span style="color:#d8dee9;">()</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
+
+            </span><span style="color:#d8dee9;">writeln!(f, </span><span style="color:#a3be8c;">&quot;#[path = </span><span style="color:#ebcb8b;">{:?}</span><span style="color:#a3be8c;">]&quot;</span><span style="color:#eceff4;">,</span><span style="color:#d8dee9;"> path</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">display</span><span style="color:#d8dee9;">())</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
+            </span><span style="color:#d8dee9;">writeln!(f, </span><span style="color:#a3be8c;">&quot;mod </span><span style="color:#ebcb8b;">{}</span><span style="color:#a3be8c;">;&quot;</span><span style="color:#eceff4;">,</span><span style="color:#d8dee9;"> stem</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">to_string_lossy</span><span style="color:#d8dee9;">())</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
+        </span><span style="color:#d8dee9;">}
+    }
+
+    </span><span style="color:#8fbcbb;">Ok</span><span style="color:#d8dee9;">(())
+}
+
+</span><span style="color:#81a1c1;">fn </span><span style="color:#88c0d0;">main</span><span style="color:#d8dee9;">() {
+    </span><span style="color:#88c0d0;">discover_tests</span><span style="color:#d8dee9;">()</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">expect</span><span style="color:#d8dee9;">(</span><span style="color:#a3be8c;">&quot;failed to discover tests&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">;
+</span><span style="color:#d8dee9;">}
+</span></code></pre>
+<p>Finally we add the generated file to our test entrypoint <code>test.rs</code>:</p>
+<pre style="background-color:#2e3440;">
+<code><span style="color:#d8dee9;">include!(concat!(env!(</span><span style="color:#a3be8c;">&quot;OUT_DIR&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">, </span><span style="color:#a3be8c;">&quot;/tests.rs&quot;</span><span style="color:#d8dee9;">))</span><span style="color:#eceff4;">;
+</span></code></pre>
+<p>Now if we do the same dance again we'll notice a significant speedup:</p>
+<pre style="background-color:#2e3440;">
+<code><span style="color:#88c0d0;">$</span><span style="color:#81a1c1;">&gt;</span><span style="color:#d8dee9;"> cargo clean </span><span style="color:#81a1c1;">&amp;&amp; </span><span style="color:#88c0d0;">cargo</span><span style="color:#d8dee9;"> build
+</span><span style="color:#88c0d0;">$</span><span style="color:#81a1c1;">&gt;</span><span style="color:#d8dee9;"> time cargo test
+</span><span style="color:#88c0d0;">cargo</span><span style="color:#d8dee9;"> test  33,86s user 3,73s system 315</span><span style="color:#81a1c1;">%</span><span style="color:#d8dee9;"> cpu 11,912 total
+</span></code></pre>
+<p>The entirety of the speedup lies within building and running a single binary
+instead of <em>59 separate</em> ones. This won't work for everyone, and obviously only
+speeds things up significantly if you happen to have a lot of integration tests.</p>
+<p>But at least it's good to be aware of what's going on, and that there's a fairly
+easy way to speed things up if needed.</p>
+
+      
+    </article>
+  </section>
+
+       
+
+      
+        <footer>
+          
+<ul class="social-list foot-list" >
+    
+
+    
+    <li class="button extra-small font_faint"><a title="Read The Book" href="https://rune-rs.github.io&#x2F;book&#x2F;" target="_blank" >book</a><i class="fa fa-book" ></i></li>
+    
+
+    
+    <li class="button extra-small font_faint"><a title="Visit GitHub Project" href="https://github.com/rune-rs" target="_blank" >rune-rs</a><i class="fab fa-github" ></i></li>
+    
+
+    
+    <li class="button extra-small font_faint"><a title="Join Community Discord" href="https:&#x2F;&#x2F;discord.gg&#x2F;v5AeNkT" target="_blank" >discord</a><i class="fab fa-discord" ></i></li>
+
+    
+    <li class="button extra-small font_faint"><a href="https:&#x2F;&#x2F;rune-rs.github.io/rss.xml" target ="_blank">rss</a><i class="fas fa-rss" ></i></li>
+    
+    
+</ul>
+
+        </footer>
+      
+    </body>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q==" crossorigin="anonymous"></script>
+    <script type="text/javascript"  src="https:&#x2F;&#x2F;rune-rs.github.io/ace/mode-rune.js"></script>
+    <script type="text/javascript"  src="https:&#x2F;&#x2F;rune-rs.github.io/js/rune.js"></script>
+    <script type="text/javascript"  src="https:&#x2F;&#x2F;rune-rs.github.io/index.js"></script>
+</html>
