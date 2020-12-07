@@ -202,23 +202,67 @@ Hello
 </code></pre>
 <h2><a class="header" href="#using-vectors-from-rust" id="using-vectors-from-rust">Using vectors from Rust</a></h2>
 <p>Vectors are represented externally as the standard <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>Vec</code></a>.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>{{#include ../../examples/vector.rs}}
-<span class="boring">}
-</span></code></pre></pre>
+<pre><pre class="playground"><code class="language-rust">use rune_tests::*;
+use std::sync::Arc;
+
+fn main() -&gt; runestick::Result&lt;()&gt; {
+    let context = Arc::new(rune_modules::default_context()?);
+
+    let input: Vec&lt;i64&gt; = vec![1, 2, 3, 4];
+
+    let output: Vec&lt;i64&gt; = run(
+        &amp;context,
+        r#&quot;
+        pub fn calc(input) {
+            let output = 0;
+
+            for value in input {
+                output += value;
+            }
+
+            [output]
+        }
+        &quot;#,
+        &amp;[&quot;calc&quot;],
+        (input,),
+    )?;
+
+    println!(&quot;{:?}&quot;, output);
+    Ok(())
+}
+</code></pre></pre>
 <pre><code class="language-text">$&gt; cargo run --example vector
 [10]
 </code></pre>
 <p>If you have a vector which has values of non-uniform types, you can use 
 <a href="https://docs.rs/runestick/0/runestick/struct.VecTuple.html"><code>VecTuple</code></a> to deal with them.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>{{#include ../../examples/vec_tuple.rs}}
-<span class="boring">}
-</span></code></pre></pre>
+<pre><pre class="playground"><code class="language-rust">use rune_tests::run;
+use runestick::VecTuple;
+use std::sync::Arc;
+
+fn main() -&gt; runestick::Result&lt;()&gt; {
+    let context = Arc::new(rune_modules::default_context()?);
+
+    let input: VecTuple&lt;(i64, String)&gt; = VecTuple::new((1, String::from(&quot;Hello&quot;)));
+
+    let output: VecTuple&lt;(i64, String)&gt; = run(
+        &amp;context,
+        r#&quot;
+        pub fn calc(input) {
+            let a = input[0] + 1;
+            let b = `{input[1]} World`;
+            [a, b]
+        }
+        &quot;#,
+        &amp;[&quot;calc&quot;],
+        (input,),
+    )?;
+
+    let VecTuple((a, b)) = output;
+    println!(&quot;({:?}, {:?})&quot;, a, b);
+    Ok(())
+}
+</code></pre></pre>
 <pre><code class="language-text">$&gt; cargo run --example vec_tuple
 (2, &quot;Hello World&quot;)
 </code></pre>
