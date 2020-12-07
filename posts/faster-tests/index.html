@@ -69,7 +69,7 @@
         <time class="article_time"  datetime="2020-12-07">December 07, 2020</time>
     </li>
     <span class="dot-divider"></span>
-    <li> 629 words </li>
+    <li> 719 words </li>
     <span class="dot-divider" ></span>
     <li> 4 min </li>
 </ul>
@@ -174,7 +174,8 @@ to our one integration test:</p>
 </span><span style="color:#81a1c1;">name </span><span style="color:#d8dee9;">= </span><span style="color:#a3be8c;">&quot;test&quot;
 </span><span style="color:#81a1c1;">path </span><span style="color:#d8dee9;">= </span><span style="color:#a3be8c;">&quot;test.rs&quot;
 </span></code></pre>
-<p>And this is where the magic happens. We write a <code>build.rs</code> extension to perform our own autodiscovery:</p>
+<p>Next is where the magic happens. We write a <code>build.rs</code> extension to perform our
+own autodiscovery:</p>
 <pre style="background-color:#2e3440;">
 <code><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">std</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">env</span><span style="color:#eceff4;">;
 </span><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">std</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">ffi</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">OsStr</span><span style="color:#eceff4;">;
@@ -217,7 +218,18 @@ to our one integration test:</p>
     </span><span style="color:#88c0d0;">discover_tests</span><span style="color:#d8dee9;">()</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">expect</span><span style="color:#d8dee9;">(</span><span style="color:#a3be8c;">&quot;failed to discover tests&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">;
 </span><span style="color:#d8dee9;">}
 </span></code></pre>
-<p>Finally we add the generated file to our test entrypoint <code>test.rs</code>:</p>
+<p>This writes a generated file in <code>OUT_DIR</code> called <code>tests.rs</code> which contains the
+necessary module enumeration of our test files so that Rust can build it as a
+single project.</p>
+<blockquote>
+<p>Note the use of <code>#[path = ..]</code> above which uses an absolute path. This is
+necessary because it would otherwise look for the modules in <code>OUT_DIR</code> instead
+of the correct file in our <code>tests</code> directory. There are other ways to do this,
+but this provides us with the modules as part of the test names when we run
+them.</p>
+</blockquote>
+<p>Finally we include the generated file in <code>test.rs</code> which we defined as our
+entrypoint in <code>Cargo.toml</code>:</p>
 <pre style="background-color:#2e3440;">
 <code><span style="color:#d8dee9;">include!(concat!(env!(</span><span style="color:#a3be8c;">&quot;OUT_DIR&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">, </span><span style="color:#a3be8c;">&quot;/tests.rs&quot;</span><span style="color:#d8dee9;">))</span><span style="color:#eceff4;">;
 </span></code></pre>
