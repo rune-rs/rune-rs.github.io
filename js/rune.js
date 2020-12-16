@@ -285,6 +285,10 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
           takeObject(arg0);
       };
+      imports.wbg.__wbg_sleep_c9b3d834bdadca92 = function(arg0) {
+          var ret = sleep(arg0);
+          return addHeapObject(ret);
+      };
       imports.wbg.__wbindgen_json_serialize = function(arg0, arg1) {
           const obj = getObject(arg1);
           var ret = JSON.stringify(obj === undefined ? null : obj);
@@ -292,10 +296,6 @@ var rune = (function (exports) {
           var len0 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
-      };
-      imports.wbg.__wbg_sleep_c9b3d834bdadca92 = function(arg0) {
-          var ret = sleep(arg0);
-          return addHeapObject(ret);
       };
       imports.wbg.__wbindgen_json_parse = function(arg0, arg1) {
           var ret = JSON.parse(getStringFromWasm0(arg0, arg1));
@@ -460,8 +460,8 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_throw = function(arg0, arg1) {
           throw new Error(getStringFromWasm0(arg0, arg1));
       };
-      imports.wbg.__wbindgen_closure_wrapper1230 = function(arg0, arg1, arg2) {
-          var ret = makeMutClosure(arg0, arg1, 590, __wbg_adapter_22);
+      imports.wbg.__wbindgen_closure_wrapper1229 = function(arg0, arg1, arg2) {
+          var ret = makeMutClosure(arg0, arg1, 591, __wbg_adapter_22);
           return addHeapObject(ret);
       };
 
@@ -484,7 +484,7 @@ var rune = (function (exports) {
   });
 
   var wasm$1 = async () => {
-                          await init("/js/assets/rune-wasm-b3deffea.wasm");
+                          await init("/js/assets/rune-wasm-b9f772f7.wasm");
                           return exports$1;
                       };
 
