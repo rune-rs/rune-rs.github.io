@@ -487,7 +487,7 @@ var rune = (function (exports) {
           var ret = wasm.memory;
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper1237 = function(arg0, arg1, arg2) {
+      imports.wbg.__wbindgen_closure_wrapper1231 = function(arg0, arg1, arg2) {
           var ret = makeMutClosure(arg0, arg1, 591, __wbg_adapter_24);
           return addHeapObject(ret);
       };
@@ -511,7 +511,7 @@ var rune = (function (exports) {
   });
 
   var wasm$1 = async () => {
-                          await init("/js/assets/rune-wasm-b681b15a.wasm");
+                          await init("/js/assets/rune-wasm-cd0f037e.wasm");
                           return exports$1;
                       };
 
