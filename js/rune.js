@@ -511,7 +511,7 @@ var rune = (function (exports) {
   });
 
   var wasm$1 = async () => {
-                          await init("/js/assets/rune-wasm-0c6ef699.wasm");
+                          await init("/js/assets/rune-wasm-9184c863.wasm");
                           return exports$1;
                       };
 
