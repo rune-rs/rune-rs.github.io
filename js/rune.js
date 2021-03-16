@@ -306,7 +306,7 @@ var rune = (function (exports) {
           var ret = JSON.parse(getStringFromWasm0(arg0, arg1));
           return addHeapObject(ret);
       };
-      imports.wbg.__wbg_sleep_e1737b85d8a0431a = function(arg0) {
+      imports.wbg.__wbg_sleep_a0cdfa14f60619d4 = function(arg0) {
           var ret = sleep(arg0);
           return addHeapObject(ret);
       };
@@ -487,8 +487,8 @@ var rune = (function (exports) {
           var ret = wasm.memory;
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper1230 = function(arg0, arg1, arg2) {
-          var ret = makeMutClosure(arg0, arg1, 575, __wbg_adapter_24);
+      imports.wbg.__wbindgen_closure_wrapper1231 = function(arg0, arg1, arg2) {
+          var ret = makeMutClosure(arg0, arg1, 577, __wbg_adapter_24);
           return addHeapObject(ret);
       };
 
@@ -511,7 +511,7 @@ var rune = (function (exports) {
   });
 
   var wasm$1 = async () => {
-                          await init("/js/assets/rune-wasm-0b777ebb.wasm");
+                          await init("/js/assets/rune-wasm-a1b30302.wasm");
                           return exports$1;
                       };
 
