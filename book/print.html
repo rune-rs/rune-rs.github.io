@@ -2251,13 +2251,15 @@ that can be invoked on expressions.</p>
 that we need to pass in the <code>MacroContext</code> when invoking it. This is a detail
 which will be covered in one of the advanced sections.</p>
 <pre><code class="language-rust noplaypen">use rune::ast;
-use rune::macros;
-use rune::{quote, Parser, Spanned, TokenStream};
+use rune::{quote, MacroContext, Parser, Spanned, TokenStream};
 use runestick::SpannedError;
 
 /// Implementation for the `stringy_math!` macro.
-pub(crate) fn stringy_math(stream: &amp;TokenStream) -&gt; runestick::Result&lt;TokenStream&gt; {
-    let mut parser = Parser::from_token_stream(stream);
+pub(crate) fn stringy_math(
+    ctx: &amp;mut MacroContext&lt;'_&gt;,
+    stream: &amp;TokenStream,
+) -&gt; runestick::Result&lt;TokenStream&gt; {
+    let mut parser = Parser::from_token_stream(stream, ctx.stream_span());
 
     let mut output = quote!(0);
 
@@ -2265,7 +2267,7 @@ pub(crate) fn stringy_math(stream: &amp;TokenStream) -&gt; runestick::Result&lt;
         let op = parser.parse::&lt;ast::Ident&gt;()?;
         let arg = parser.parse::&lt;ast::Expr&gt;()?;
 
-        output = match macros::resolve(op)?.as_ref() {
+        output = match ctx.resolve(op)?.as_ref() {
             &quot;add&quot; =&gt; quote!((#output) + #arg),
             &quot;sub&quot; =&gt; quote!((#output) - #arg),
             &quot;div&quot; =&gt; quote!((#output) / #arg),
@@ -2275,7 +2277,7 @@ pub(crate) fn stringy_math(stream: &amp;TokenStream) -&gt; runestick::Result&lt;
     }
 
     parser.eof()?;
-    Ok(output.into_token_stream())
+    Ok(output.into_token_stream(ctx))
 }
 </code></pre>
 <p>A macro is added to a <a href="https://docs.rs/runestick/0/runestick/module/struct.Module.html"><code>Module</code></a> using the <a href="https://docs.rs/runestick/0/runestick/module/struct.Module.html#method.macro_"><code>Module::macro_</code></a> function.</p>
