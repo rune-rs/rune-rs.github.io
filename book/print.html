@@ -466,11 +466,10 @@ or quite scary. It allows for a larger ability to express a program, but at the
 same time it can be harder to reason on what your program will do.</p>
 <h2 id="calling-functions-in-rust"><a class="header" href="#calling-functions-in-rust">Calling functions in Rust</a></h2>
 <p>Rune functions can be easily set up and called from Rust.</p>
-<pre><code class="language-rust noplaypen">use rune::{Diagnostics, Options, Sources};
-use runestick::{Context, FromValue, Source, Vm};
+<pre><code class="language-rust noplaypen">use rune::{Context, Diagnostics, FromValue, Options, Source, Sources, Vm};
 use std::sync::Arc;
 
-fn main() -&gt; runestick::Result&lt;()&gt; {
+fn main() -&gt; rune::Result&lt;()&gt; {
     let context = Context::with_default_modules()?;
     let mut sources = Sources::new();
 
@@ -627,7 +626,7 @@ of that value. You can think of every nontrivial value being automatically
 wrapped in an <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> if that helps you out.</p>
 <blockquote>
 <p>This is not exactly what's going on. If you're interested to learn more, Rune
-uses a container called <a href="https://docs.rs/runestick/0/runestick/struct.Shared.html"><code>Shared&lt;T&gt;</code></a> which is <em>like</em> an <code>Rc&lt;RefCell&lt;T&gt;&gt;</code>, but
+uses a container called <a href="https://docs.rs/rune/0/rune/struct.Shared.html"><code>Shared&lt;T&gt;</code></a> which is <em>like</em> an <code>Rc&lt;RefCell&lt;T&gt;&gt;</code>, but
 has a few more tricks.</p>
 </blockquote>
 <p>We can see how this works by sharing and mutating one object across two
@@ -952,9 +951,9 @@ impl StatusCode {
     }
 }
 
-pub fn module() -&gt; Result&lt;runestick::Module, runestick::ContextError&gt; {
-    let mut module = runestick::Module::new(&amp;[&quot;http&quot;]);
-    module.inst_fn(runestick::STRING_DISPLAY, StatusCode::display)?;
+pub fn module() -&gt; Result&lt;rune::Module, rune::ContextError&gt; {
+    let mut module = rune::Module::new(&amp;[&quot;http&quot;]);
+    module.inst_fn(rune::Protocol::STRING_DISPLAY, StatusCode::display)?;
     Ok(module)
 }
 </code></pre>
@@ -1008,7 +1007,7 @@ able to provide better diagnostics by adding debug information.</p>
 the item in the virtual machine and is the result of a deterministic computation
 based on its item. So the hash for the item <code>Foo::new</code> will always be the same.</p>
 <p>In Rust, we can calculate this hash using the <code>Hash::type_hash</code> method:</p>
-<pre><code class="language-rune">use runestick::{Hash, Item};
+<pre><code class="language-rune">use rune::{Hash, Item};
 
 fn main() {
     println!(&quot;{}&quot;, Hash::type_hash(&amp;Item::with_item(&amp;[&quot;Foo&quot;, &quot;new&quot;])));
@@ -1023,11 +1022,10 @@ fn main() {
 be stabilized and documented in a future release.</p>
 <h2 id="defining-instance-functions-in-rust"><a class="header" href="#defining-instance-functions-in-rust">Defining instance functions in Rust</a></h2>
 <p>Native instance functions are added to a runtime environment using the
-<a href="https://docs.rs/runestick/0.5.3/runestick/struct.Module.html#method.inst_fn"><code>Module::inst_fn</code></a> and <a href="https://docs.rs/runestick/0.5.3/runestick/struct.Module.html#method.async_inst_fn"><code>Module::async_inst_fn</code></a> functions. The type is
+<a href="https://docs.rs/rune/0/rune/struct.Module.html#method.inst_fn"><code>Module::inst_fn</code></a> and <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.async_inst_fn"><code>Module::async_inst_fn</code></a> functions. The type is
 identified as the first argument of the instance function, and must be a type
-registered in the module using <a href="https://docs.rs/runestick/0.5.3/runestick/struct.Module.html#method.ty"><code>Module::ty</code></a>.</p>
-<pre><code class="language-rust noplaypen">use rune::{Diagnostics, Options, Sources};
-use runestick::{Context, FromValue, Module, Source, Vm};
+registered in the module using <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.ty"><code>Module::ty</code></a>.</p>
+<pre><code class="language-rust noplaypen">use rune::{Context, Diagnostics, FromValue, Module, Options, Source, Sources, Vm};
 use std::sync::Arc;
 
 fn divide_by_three(value: i64) -&gt; i64 {
@@ -1035,7 +1033,7 @@ fn divide_by_three(value: i64) -&gt; i64 {
 }
 
 #[tokio::main]
-async fn main() -&gt; runestick::Result&lt;()&gt; {
+async fn main() -&gt; rune::Result&lt;()&gt; {
     let mut my_module = Module::with_item(&amp;[&quot;mymodule&quot;]);
     my_module.inst_fn(&quot;divide_by_three&quot;, divide_by_three)?;
 
@@ -1076,7 +1074,7 @@ for the <a href="https://github.com/rune-rs/rune/tree/main/crates/rune-modules">
 distinct from associated functions, because they are invoked by using the
 operation associated with the kind of the field function.</p>
 <p>The most common forms of fields functions are <em>getters</em> and <em>setters</em>, which are
-defined through the <a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.GET"><code>Protocol::GET</code></a> and <a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.SET"><code>Protocol::SET</code></a> protocols.</p>
+defined through the <a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.GET"><code>Protocol::GET</code></a> and <a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.SET"><code>Protocol::SET</code></a> protocols.</p>
 <p>The <code>Any</code> derive can also generate default implementations of these through
 various <code>#[rune(...)]</code> attributes:</p>
 <pre><code class="language-rust noplaypen">#[derive(Any)]
@@ -1097,23 +1095,23 @@ struct External {
 <p>The full list of available field functions and their corresponding attributes
 are:</p>
 <table><thead><tr><th>Protocol</th><th>Attribute</th><th></th></tr></thead><tbody>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.GET"><code>Protocol::GET</code></a></td><td><code>#[rune(get)]</code></td><td>For getters, like <code>external.field</code>.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.SET"><code>Protocol::SET</code></a></td><td><code>#[rune(set)]</code></td><td>For setters, like <code>external.field = 42</code>.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.ADD_ASSIGN"><code>Protocol::ADD_ASSIGN</code></a></td><td><code>#[rune(add_assign)]</code></td><td>The <code>+=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.SUB_ASSIGN"><code>Protocol::SUB_ASSIGN</code></a></td><td><code>#[rune(sub_assign)]</code></td><td>The <code>-=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.MUL_ASSIGN"><code>Protocol::MUL_ASSIGN</code></a></td><td><code>#[rune(mul_assign)]</code></td><td>The <code>*=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.DIV_ASSIGN"><code>Protocol::DIV_ASSIGN</code></a></td><td><code>#[rune(div_assign)]</code></td><td>The <code>/=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.BIT_AND_ASSIGN"><code>Protocol::BIT_AND_ASSIGN</code></a></td><td><code>#[rune(bit_and_assign)]</code></td><td>The <code>&amp;=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.BIT_OR_ASSIGN"><code>Protocol::BIT_OR_ASSIGN</code></a></td><td><code>#[rune(bit_or_assign)]</code></td><td>The bitwise or operation.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.BIT_XOR_ASSIGN"><code>Protocol::BIT_XOR_ASSIGN</code></a></td><td><code>#[rune(bit_xor_assign)]</code></td><td>The <code>^=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.SHL_ASSIGN"><code>Protocol::SHL_ASSIGN</code></a></td><td><code>#[rune(shl_assign)]</code></td><td>The <code>&lt;&lt;=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.SHR_ASSIGN"><code>Protocol::SHR_ASSIGN</code></a></td><td><code>#[rune(shr_assign)]</code></td><td>The <code>&gt;&gt;=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/runestick/0/runestick/struct.Protocol.html#associatedconstant.REM_ASSIGN"><code>Protocol::REM_ASSIGN</code></a></td><td><code>#[rune(rem_assign)]</code></td><td>The <code>%=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.GET"><code>Protocol::GET</code></a></td><td><code>#[rune(get)]</code></td><td>For getters, like <code>external.field</code>.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.SET"><code>Protocol::SET</code></a></td><td><code>#[rune(set)]</code></td><td>For setters, like <code>external.field = 42</code>.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.ADD_ASSIGN"><code>Protocol::ADD_ASSIGN</code></a></td><td><code>#[rune(add_assign)]</code></td><td>The <code>+=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.SUB_ASSIGN"><code>Protocol::SUB_ASSIGN</code></a></td><td><code>#[rune(sub_assign)]</code></td><td>The <code>-=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.MUL_ASSIGN"><code>Protocol::MUL_ASSIGN</code></a></td><td><code>#[rune(mul_assign)]</code></td><td>The <code>*=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.DIV_ASSIGN"><code>Protocol::DIV_ASSIGN</code></a></td><td><code>#[rune(div_assign)]</code></td><td>The <code>/=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.BIT_AND_ASSIGN"><code>Protocol::BIT_AND_ASSIGN</code></a></td><td><code>#[rune(bit_and_assign)]</code></td><td>The <code>&amp;=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.BIT_OR_ASSIGN"><code>Protocol::BIT_OR_ASSIGN</code></a></td><td><code>#[rune(bit_or_assign)]</code></td><td>The bitwise or operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.BIT_XOR_ASSIGN"><code>Protocol::BIT_XOR_ASSIGN</code></a></td><td><code>#[rune(bit_xor_assign)]</code></td><td>The <code>^=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.SHL_ASSIGN"><code>Protocol::SHL_ASSIGN</code></a></td><td><code>#[rune(shl_assign)]</code></td><td>The <code>&lt;&lt;=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.SHR_ASSIGN"><code>Protocol::SHR_ASSIGN</code></a></td><td><code>#[rune(shr_assign)]</code></td><td>The <code>&gt;&gt;=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.REM_ASSIGN"><code>Protocol::REM_ASSIGN</code></a></td><td><code>#[rune(rem_assign)]</code></td><td>The <code>%=</code> operation.</td></tr>
 </tbody></table>
 <p>The manual way to register these functions is to use the new <code>Module::field_fn</code>
 function. This clearly showcases that there's no relationship between the field
 used and the function registered:</p>
-<pre><code class="language-rust noplaypen">use runestick::{Any, Module};
+<pre><code class="language-rust noplaypen">use rune::{Any, Module};
 
 #[derive(Any)]
 struct External {
@@ -1138,7 +1136,7 @@ module.field_fn(Protocol::GET, &quot;field&quot;, External::field_get)?;
 argument to the corresponding attribute pointing to the function to use instead.</p>
 <p>The following uses an implementation of <code>add_assign</code> which performs checked
 addition:</p>
-<pre><code class="language-rust noplaypen">use runestick::{Any, Context, Module, VmError, VmErrorKind};
+<pre><code class="language-rust noplaypen">use rune::{Any, Context, Module, VmError, VmErrorKind};
 use std::sync::Arc;
 
 #[derive(Any)]
@@ -1159,7 +1157,7 @@ impl External {
     }
 }
 
-fn main() -&gt; runestick::Result&lt;()&gt; {
+fn main() -&gt; rune::Result&lt;()&gt; {
     let mut module = Module::default();
     module.ty::&lt;External&gt;()?;
 
@@ -1357,7 +1355,7 @@ Hello
 <pre><pre class="playground"><code class="language-rust">use rune_tests::*;
 use std::sync::Arc;
 
-fn main() -&gt; runestick::Result&lt;()&gt; {
+fn main() -&gt; rune::Result&lt;()&gt; {
     let context = Arc::new(rune_modules::default_context()?);
 
     let input: Vec&lt;i64&gt; = vec![1, 2, 3, 4];
@@ -1387,12 +1385,12 @@ fn main() -&gt; runestick::Result&lt;()&gt; {
 [10]
 </code></pre>
 <p>If you have a vector which has values of non-uniform types, you can use 
-<a href="https://docs.rs/runestick/0/runestick/struct.VecTuple.html"><code>VecTuple</code></a> to deal with them.</p>
-<pre><pre class="playground"><code class="language-rust">use rune_tests::run;
-use runestick::VecTuple;
+<a href="https://docs.rs/rune/0/rune/struct.VecTuple.html"><code>VecTuple</code></a> to deal with them.</p>
+<pre><pre class="playground"><code class="language-rust">use rune::runtime::VecTuple;
+use rune_tests::run;
 use std::sync::Arc;
 
-fn main() -&gt; runestick::Result&lt;()&gt; {
+fn main() -&gt; rune::Result&lt;()&gt; {
     let context = Arc::new(rune_modules::default_context()?);
 
     let input: VecTuple&lt;(i64, String)&gt; = VecTuple::new((1, String::from(&quot;Hello&quot;)));
@@ -1481,14 +1479,15 @@ cba225dad143779a0a9543cfb05cde9710083af5
 == () (331.3324ms)
 </code></pre>
 <h2 id="using-objects-from-rust"><a class="header" href="#using-objects-from-rust">Using objects from Rust</a></h2>
-<p>Objects are represented externally as the <a href="https://docs.rs/runestick/0/runestick/type.Object.html"><code>Object</code></a> type alias. The keys are
+<p>Objects are represented externally as the <a href="https://docs.rs/rune/0/rune/type.Object.html"><code>Object</code></a> type alias. The keys are
 always strings, but its value must be specified as the sole type parameter.
-Note that the dynamic <a href="https://docs.rs/runestick/0/runestick/enum.Value.html"><code>Value</code></a> can be used if the type is unknown.</p>
-<pre><code class="language-rust noplaypen">use rune_tests::run;
-use runestick::{Object, Value};
+Note that the dynamic <a href="https://docs.rs/rune/0/rune/enum.Value.html"><code>Value</code></a> can be used if the type is unknown.</p>
+<pre><code class="language-rust noplaypen">use rune::runtime::Object;
+use rune::Value;
+use rune_tests::run;
 use std::sync::Arc;
 
-fn main() -&gt; runestick::Result&lt;()&gt; {
+fn main() -&gt; rune::Result&lt;()&gt; {
     let context = Arc::new(rune_modules::default_context()?);
 
     let mut object = Object::new();
@@ -1568,7 +1567,7 @@ pub fn main() {
 <pre><code class="language-rust noplaypen">use rune_tests::run;
 use std::sync::Arc;
 
-fn main() -&gt; runestick::Result&lt;()&gt; {
+fn main() -&gt; rune::Result&lt;()&gt; {
     let context = Arc::new(rune_modules::default_context()?);
 
     let object: (i64, i64) = run(
@@ -1991,9 +1990,9 @@ pointers out of the virtual machine using the <code>Function</code> type.</p>
 it for something else.</p>
 <p>Below we showcase this, with the help of the <code>rune_s!</code> macro from the <code>testing</code>
 module.</p>
-<pre><code class="language-rust noplaypen">use runestick::Function;
+<pre><code class="language-rust noplaypen">use rune::runtime::Function;
 
-fn main() -&gt; runestick::Result&lt;()&gt; {
+fn main() -&gt; rune::Result&lt;()&gt; {
     let function: Function = rune_tests::rune! { Function =&gt;
         fn foo(a, b) {
             a + b
@@ -2251,14 +2250,14 @@ that can be invoked on expressions.</p>
 that we need to pass in the <code>MacroContext</code> when invoking it. This is a detail
 which will be covered in one of the advanced sections.</p>
 <pre><code class="language-rust noplaypen">use rune::ast;
-use rune::{quote, MacroContext, Parser, Spanned, TokenStream};
-use runestick::SpannedError;
+use rune::quote;
+use rune::{MacroContext, Parser, Spanned, SpannedError, TokenStream};
 
 /// Implementation for the `stringy_math!` macro.
 pub(crate) fn stringy_math(
-    ctx: &amp;mut MacroContext&lt;'_&gt;,
+    ctx: &amp;mut MacroContext&lt;'_, '_&gt;,
     stream: &amp;TokenStream,
-) -&gt; runestick::Result&lt;TokenStream&gt; {
+) -&gt; rune::Result&lt;TokenStream&gt; {
     let mut parser = Parser::from_token_stream(stream, ctx.stream_span());
 
     let mut output = quote!(0);
@@ -2280,9 +2279,9 @@ pub(crate) fn stringy_math(
     Ok(output.into_token_stream(ctx))
 }
 </code></pre>
-<p>A macro is added to a <a href="https://docs.rs/runestick/0/runestick/module/struct.Module.html"><code>Module</code></a> using the <a href="https://docs.rs/runestick/0/runestick/module/struct.Module.html#method.macro_"><code>Module::macro_</code></a> function.</p>
-<pre><code class="language-rust noplaypen">pub fn module() -&gt; Result&lt;runestick::Module, runestick::ContextError&gt; {
-    let mut module = runestick::Module::new(&amp;[&quot;std&quot;, &quot;experiments&quot;]);
+<p>A macro is added to a <a href="https://docs.rs/rune/0/rune/module/struct.Module.html"><code>Module</code></a> using the <a href="https://docs.rs/rune/0/rune/module/struct.Module.html#method.macro_"><code>Module::macro_</code></a> function.</p>
+<pre><code class="language-rust noplaypen">pub fn module() -&gt; Result&lt;rune::Module, rune::ContextError&gt; {
+    let mut module = rune::Module::new(&amp;[&quot;std&quot;, &quot;experiments&quot;]);
     module.macro_(&amp;[&quot;stringy_math&quot;], stringy_math_macro::stringy_math)?;
     Ok(module)
 }
@@ -2347,14 +2346,14 @@ right now.</p>
 <p>In the future we might also implement a lookaside table stored in the <code>Unit</code> for
 types registered in <code>Any</code>, which requires all types used to be registered
 beforehand in order to detect these hash conflicts. Any dynamic types already
-use such a table at the time we install modules into the <a href="https://docs.rs/runestick/0.6.16/runestick/struct.Context.html"><code>Context</code></a>.</p>
+use such a table at the time we install modules into the <a href="https://docs.rs/rune/0/rune/struct.Context.html"><code>Context</code></a>.</p>
 <p>So the current conclusion is:</p>
 <ul>
 <li>Externally defined types (C ffi) must use properly <em>random</em> type hashes.</li>
 <li>The risk for the current safety issue is deemed to be low.</li>
 </ul>
 <h2 id="internal-any-type"><a class="header" href="#internal-any-type">Internal <code>Any</code> type</a></h2>
-<p>Rune uses an <a href="https://docs.rs/runestick/0/runestick/struct.Any.html">internal <code>Any</code> type</a>.</p>
+<p>Rune uses an <a href="https://docs.rs/rune/0/rune/struct.Any.html">internal <code>Any</code> type</a>.</p>
 <p>Apart from the <a href="safety.html#conflicts-in-type-hashes">hash conflict</a> documented above, the
 implementation should be sound. We have an internal <code>Any</code> type instead of
 relying on <code>Box&lt;dyn Any&gt;</code> to allow <a href="https://github.com/rune-rs/rune/blob/e910fb9/crates/runestick/src/any.rs#L171"><code>AnyObjVtable</code></a> to be implementable by external
@@ -2363,10 +2362,10 @@ types to support external types through a C ffi.</p>
 <p>A large chunk of the <code>Shared&lt;T&gt;</code> container is <code>unsafe</code>. This is a container
 which is behaviorally equivalent to <code>Rc&lt;RefCell&lt;T&gt;&gt;</code>.</p>
 <p>We have this because it merges <code>Rc</code> and <code>RefCell</code> and provides the ability to
-have <a href="https://docs.rs/runestick/0/runestick/struct.Shared.html#method.into_ref">&quot;owned borrows&quot;</a> and the ability to unsafely decompose these into a raw
+have <a href="https://docs.rs/rune/0/rune/struct.Shared.html#method.into_ref">&quot;owned borrows&quot;</a> and the ability to unsafely decompose these into a raw
 pointer and a raw guard, which is used in many implementations of
-<a href="https://docs.rs/runestick/0/runestick/trait.UnsafeFromValue.html"><code>UnsafeFromValue</code></a>.</p>
-<p><a href="https://docs.rs/runestick/0/runestick/trait.UnsafeFromValue.html"><code>UnsafeFromValue</code></a> is a conversion trait which is strictly used internally to
+<a href="https://docs.rs/rune/0/rune/trait.UnsafeFromValue.html"><code>UnsafeFromValue</code></a>.</p>
+<p><a href="https://docs.rs/rune/0/rune/trait.UnsafeFromValue.html"><code>UnsafeFromValue</code></a> is a conversion trait which is strictly used internally to
 convert values into references. Its safety is documented in the trait.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="the-stack"><a class="header" href="#the-stack">The stack</a></h1>
 <p>Runestick is a stack-based virtual machine. It has two primary places where
@@ -2549,7 +2548,7 @@ people who want to hack on it.</p>
 </blockquote>
 <p>Compiling a rune program involves the following stages:</p>
 <ul>
-<li>Queue the initial source files specified by <a href="https://docs.rs/runestick/0/runestick/struct.Source.html#method.insert"><code>Source::insert</code></a>.</li>
+<li>Queue the initial source files specified by <a href="https://docs.rs/rune/0/rune/struct.Source.html#method.insert"><code>Source::insert</code></a>.</li>
 <li><strong>Indexing and macro expansion</strong>, which processes tasks in the <a href="https://github.com/rune-rs/rune/blob/main/crates/rune/src/worker.rs"><code>Worker</code></a>
 queue until it is empty. These are:
 <ul>
@@ -2563,7 +2562,7 @@ must happen after indexing because macros might expand into imports.</li>
 <h2 id="indexing"><a class="header" href="#indexing">Indexing</a></h2>
 <p>Indexing is primarily handled through the <a href="https://github.com/rune-rs/rune/blob/main/crates/rune/src/indexing/index.rs"><code>Index</code></a> trait, which are
 implemented for the type being indexed with the helper of the <a href="https://github.com/rune-rs/rune/blob/main/crates/rune/src/indexing/index.rs"><code>Indexer</code></a>.</p>
-<p>This walks through the <a href="https://github.com/rune-rs/rune/tree/main/crates/rune/src/ast"><code>AST</code></a> to be indexed and construct <a href="https://github.com/rune-rs/rune/blob/main/crates/runestick/src/item.rs">components</a> into an
+<p>This walks through the <a href="https://github.com/rune-rs/rune/tree/main/crates/rune/src/ast"><code>AST</code></a> to be indexed and construct <a href="https://github.com/rune-rs/rune/blob/main/crates/rune/src/item.rs">components</a> into an
 item path for every:</p>
 <ul>
 <li>Functions, which adds components named after the function. <code>fn foo</code> would add
