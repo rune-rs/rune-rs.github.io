@@ -995,10 +995,8 @@ be stabilized and documented in a future release.</p>
 <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.inst_fn"><code>Module::inst_fn</code></a> and <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.async_inst_fn"><code>Module::async_inst_fn</code></a> functions. The type is
 identified as the first argument of the instance function, and must be a type
 registered in the module using <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.ty"><code>Module::ty</code></a>.</p>
-<pre><code class="language-rust noplaypen">use rune::{
-    termcolor::{ColorChoice, StandardStream},
-    Context, Diagnostics, FromValue, Module, Source, Sources, Vm,
-};
+<pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{ContextError, Diagnostics, FromValue, Module, Vm};
 use std::sync::Arc;
 
 fn divide_by_three(value: i64) -&gt; i64 {
@@ -1007,26 +1005,22 @@ fn divide_by_three(value: i64) -&gt; i64 {
 
 #[tokio::main]
 async fn main() -&gt; rune::Result&lt;()&gt; {
-    let mut my_module = Module::with_item(&amp;[&quot;mymodule&quot;]);
-    my_module.inst_fn(&quot;divide_by_three&quot;, divide_by_three)?;
+    let m = module()?;
 
-    let mut context = Context::with_default_modules()?;
-    context.install(&amp;my_module)?;
+    let mut context = rune_modules::default_context()?;
+    context.install(&amp;m)?;
     let runtime = Arc::new(context.runtime());
 
-    let mut sources = Sources::new();
-    sources.insert(Source::new(
-        &quot;test&quot;,
-        r#&quot;
+    let mut sources = rune::sources!(entry =&gt; {
         pub fn main(number) {
             number.divide_by_three()
         }
-        &quot;#,
-    ));
+    });
 
     let mut diagnostics = Diagnostics::new();
 
-    let result = rune::prepare(&amp;context, &amp;mut sources)
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
         .with_diagnostics(&amp;mut diagnostics)
         .build();
 
@@ -1043,6 +1037,12 @@ async fn main() -&gt; rune::Result&lt;()&gt; {
 
     println!(&quot;output: {}&quot;, output);
     Ok(())
+}
+
+fn module() -&gt; Result&lt;Module, ContextError&gt; {
+    let mut m = Module::with_item(&amp;[&quot;mymodule&quot;]);
+    m.inst_fn(&quot;divide_by_three&quot;, divide_by_three)?;
+    Ok(m)
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --example custom_instance_fn
@@ -1119,7 +1119,7 @@ argument to the corresponding attribute pointing to the function to use instead.
 addition:</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::{VmError, VmErrorKind};
 use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Any, Context, ContextError, Diagnostics, Module, Source, Sources, Vm};
+use rune::{Any, ContextError, Diagnostics, Module, Vm};
 use std::sync::Arc;
 
 #[derive(Any)]
@@ -1143,19 +1143,22 @@ impl External {
 fn main() -&gt; rune::Result&lt;()&gt; {
     let m = module()?;
 
-    let mut context = Context::default();
+    let mut context = rune_modules::default_context()?;
     context.install(&amp;m)?;
     let runtime = Arc::new(context.runtime());
 
-    let mut sources = Sources::new();
-    sources.insert(Source::new(
-        &quot;test&quot;,
-        r#&quot;pub fn main(external) { external.value += 1; }&quot;#,
-    ));
+    let mut sources = rune::sources! {
+        entry =&gt; {
+            pub fn main(e) {
+                e.value += 1;
+            }
+        }
+    };
 
     let mut diagnostics = Diagnostics::new();
 
-    let result = rune::prepare(&amp;context, &amp;mut sources)
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
         .with_diagnostics(&amp;mut diagnostics)
         .build();
 
@@ -1354,31 +1357,31 @@ Hello
 <h2 id="using-vectors-from-rust"><a class="header" href="#using-vectors-from-rust">Using vectors from Rust</a></h2>
 <p>Vectors are represented externally as the standard <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>Vec</code></a>.</p>
 <pre><pre class="playground"><code class="language-rust">use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Diagnostics, FromValue, Source, Sources, Vm};
+use rune::{Diagnostics, FromValue, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
     let runtime = Arc::new(context.runtime());
 
-    let mut sources = Sources::new();
-    sources.insert(Source::new(
-        &quot;entry&quot;,
-        r#&quot;
-    pub fn calc(input) {
-        let output = 0;
+    let mut sources = rune::sources! {
+        entry =&gt; {
+            pub fn calc(input) {
+                let output = 0;
 
-        for value in input {
-            output += value;
+                for value in input {
+                    output += value;
+                }
+
+                [output]
+            }
         }
-
-        [output]
-    }&quot;#,
-    ));
+    };
 
     let mut diagnostics = Diagnostics::new();
 
-    let result = rune::prepare(&amp;context, &amp;mut sources)
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
         .with_diagnostics(&amp;mut diagnostics)
         .build();
 
@@ -1405,28 +1408,27 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 <a href="https://docs.rs/rune/0/rune/struct.VecTuple.html"><code>VecTuple</code></a> to deal with them.</p>
 <pre><pre class="playground"><code class="language-rust">use rune::runtime::VecTuple;
 use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Diagnostics, FromValue, Source, Sources, Vm};
+use rune::{Diagnostics, FromValue, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
     let runtime = Arc::new(context.runtime());
 
-    let mut sources = Sources::new();
-    sources.insert(Source::new(
-        &quot;test&quot;,
-        r#&quot;
-        pub fn calc(input) {
-            let a = input[0] + 1;
-            let b = `${input[1]} World`;
-            [a, b]
+    let mut sources = rune::sources! {
+        entry =&gt; {
+            pub fn calc(input) {
+                let a = input[0] + 1;
+                let b = format!(&quot;{} World&quot;, input[1]);
+                [a, b]
+            }
         }
-        &quot;#,
-    ));
+    };
 
     let mut diagnostics = Diagnostics::new();
 
-    let result = rune::prepare(&amp;context, &amp;mut sources)
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
         .with_diagnostics(&amp;mut diagnostics)
         .build();
 
@@ -1517,28 +1519,27 @@ always strings, but its value must be specified as the sole type parameter.
 Note that the dynamic <a href="https://docs.rs/rune/0/rune/enum.Value.html"><code>Value</code></a> can be used if the type is unknown.</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::Object;
 use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Diagnostics, FromValue, Source, Sources, Value, Vm};
+use rune::{Diagnostics, FromValue, Value, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
     let runtime = Arc::new(context.runtime());
 
-    let mut sources = Sources::new();
-    sources.insert(Source::new(
-        &quot;entry&quot;,
-        r#&quot;
-        pub fn calc(input) {
-            dbg(input[&quot;key&quot;]);
-            input[&quot;key&quot;] = &quot;World&quot;;
-            input
+    let mut sources = rune::sources! {
+        entry =&gt; {
+            pub fn calc(input) {
+                dbg(input[&quot;key&quot;]);
+                input[&quot;key&quot;] = &quot;World&quot;;
+                input
+            }
         }
-        &quot;#,
-    ));
+    };
 
     let mut diagnostics = Diagnostics::new();
 
-    let result = rune::prepare(&amp;context, &amp;mut sources)
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
         .with_diagnostics(&amp;mut diagnostics)
         .build();
 
@@ -1616,26 +1617,25 @@ pub fn main() {
 <h2 id="using-tuples-from-rust"><a class="header" href="#using-tuples-from-rust">Using tuples from Rust</a></h2>
 <p>Tuples are represented externally as <a href="https://doc.rust-lang.org/std/primitive.tuple.html">primitive tuple types</a>.</p>
 <pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Diagnostics, FromValue, Source, Sources, Vm};
+use rune::{Diagnostics, FromValue, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
     let runtime = Arc::new(context.runtime());
 
-    let mut sources = Sources::new();
-    sources.insert(Source::new(
-        &quot;test&quot;,
-        r#&quot;
-    pub fn calc(input) {
-        (input.0 + 1, input.1 + 2)
-    }
-    &quot;#,
-    ));
+    let mut sources = rune::sources! {
+        entry =&gt; {
+            pub fn calc(input) {
+                (input.0 + 1, input.1 + 2)
+            }
+        }
+    };
 
     let mut diagnostics = Diagnostics::new();
 
-    let result = rune::prepare(&amp;context, &amp;mut sources)
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
         .with_diagnostics(&amp;mut diagnostics)
         .build();
 

@@ -174,31 +174,31 @@ Hello
 <h2 id="using-vectors-from-rust"><a class="header" href="#using-vectors-from-rust">Using vectors from Rust</a></h2>
 <p>Vectors are represented externally as the standard <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>Vec</code></a>.</p>
 <pre><pre class="playground"><code class="language-rust">use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Diagnostics, FromValue, Source, Sources, Vm};
+use rune::{Diagnostics, FromValue, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
     let runtime = Arc::new(context.runtime());
 
-    let mut sources = Sources::new();
-    sources.insert(Source::new(
-        &quot;entry&quot;,
-        r#&quot;
-    pub fn calc(input) {
-        let output = 0;
+    let mut sources = rune::sources! {
+        entry =&gt; {
+            pub fn calc(input) {
+                let output = 0;
 
-        for value in input {
-            output += value;
+                for value in input {
+                    output += value;
+                }
+
+                [output]
+            }
         }
-
-        [output]
-    }&quot;#,
-    ));
+    };
 
     let mut diagnostics = Diagnostics::new();
 
-    let result = rune::prepare(&amp;context, &amp;mut sources)
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
         .with_diagnostics(&amp;mut diagnostics)
         .build();
 
@@ -225,28 +225,27 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 <a href="https://docs.rs/rune/0/rune/struct.VecTuple.html"><code>VecTuple</code></a> to deal with them.</p>
 <pre><pre class="playground"><code class="language-rust">use rune::runtime::VecTuple;
 use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Diagnostics, FromValue, Source, Sources, Vm};
+use rune::{Diagnostics, FromValue, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
     let runtime = Arc::new(context.runtime());
 
-    let mut sources = Sources::new();
-    sources.insert(Source::new(
-        &quot;test&quot;,
-        r#&quot;
-        pub fn calc(input) {
-            let a = input[0] + 1;
-            let b = `${input[1]} World`;
-            [a, b]
+    let mut sources = rune::sources! {
+        entry =&gt; {
+            pub fn calc(input) {
+                let a = input[0] + 1;
+                let b = format!(&quot;{} World&quot;, input[1]);
+                [a, b]
+            }
         }
-        &quot;#,
-    ));
+    };
 
     let mut diagnostics = Diagnostics::new();
 
-    let result = rune::prepare(&amp;context, &amp;mut sources)
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
         .with_diagnostics(&amp;mut diagnostics)
         .build();
 
