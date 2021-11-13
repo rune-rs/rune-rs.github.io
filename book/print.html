@@ -976,7 +976,8 @@ able to provide better diagnostics by adding debug information.</p>
 the item in the virtual machine and is the result of a deterministic computation
 based on its item. So the hash for the item <code>Foo::new</code> will always be the same.</p>
 <p>In Rust, we can calculate this hash using the <code>Hash::type_hash</code> method:</p>
-<pre><code class="language-rune">use rune::{Hash, Item};
+<pre><code class="language-rune">use rune::compile::Item;
+use rune::Hash;
 
 fn main() {
     println!(&quot;{}&quot;, Hash::type_hash(&amp;Item::with_item(&amp;[&quot;Foo&quot;, &quot;new&quot;])));
@@ -996,7 +997,7 @@ identified as the first argument of the instance function, and must be a type
 registered in the module using <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.ty"><code>Module::ty</code></a>.</p>
 <pre><code class="language-rust noplaypen">use rune::{
     termcolor::{ColorChoice, StandardStream},
-    Context, Diagnostics, EmitDiagnostics, FromValue, Module, Source, Sources, Vm,
+    Context, Diagnostics, FromValue, Module, Source, Sources, Vm,
 };
 use std::sync::Arc;
 
@@ -1031,7 +1032,7 @@ async fn main() -&gt; rune::Result&lt;()&gt; {
 
     if !diagnostics.is_empty() {
         let mut writer = StandardStream::stderr(ColorChoice::Always);
-        diagnostics.emit_diagnostics(&amp;mut writer, &amp;sources)?;
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
     }
 
     let unit = result?;
@@ -1116,11 +1117,9 @@ module.field_fn(Protocol::GET, &quot;field&quot;, External::field_get)?;
 argument to the corresponding attribute pointing to the function to use instead.</p>
 <p>The following uses an implementation of <code>add_assign</code> which performs checked
 addition:</p>
-<pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{
-    Any, Context, ContextError, Diagnostics, EmitDiagnostics, Module, Source, Sources, Vm, VmError,
-    VmErrorKind,
-};
+<pre><code class="language-rust noplaypen">use rune::runtime::{VmError, VmErrorKind};
+use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Any, Context, ContextError, Diagnostics, Module, Source, Sources, Vm};
 use std::sync::Arc;
 
 #[derive(Any)]
@@ -1162,7 +1161,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 
     if !diagnostics.is_empty() {
         let mut writer = StandardStream::stderr(ColorChoice::Always);
-        diagnostics.emit_diagnostics(&amp;mut writer, &amp;sources)?;
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
     }
 
     let unit = result?;
@@ -1355,7 +1354,7 @@ Hello
 <h2 id="using-vectors-from-rust"><a class="header" href="#using-vectors-from-rust">Using vectors from Rust</a></h2>
 <p>Vectors are represented externally as the standard <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>Vec</code></a>.</p>
 <pre><pre class="playground"><code class="language-rust">use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Diagnostics, EmitDiagnostics, FromValue, Source, Sources, Vm};
+use rune::{Diagnostics, FromValue, Source, Sources, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
@@ -1385,7 +1384,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 
     if !diagnostics.is_empty() {
         let mut writer = StandardStream::stderr(ColorChoice::Always);
-        diagnostics.emit_diagnostics(&amp;mut writer, &amp;sources)?;
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
     }
 
     let unit = result?;
@@ -1406,7 +1405,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 <a href="https://docs.rs/rune/0/rune/struct.VecTuple.html"><code>VecTuple</code></a> to deal with them.</p>
 <pre><pre class="playground"><code class="language-rust">use rune::runtime::VecTuple;
 use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Diagnostics, EmitDiagnostics, FromValue, Source, Sources, Vm};
+use rune::{Diagnostics, FromValue, Source, Sources, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
@@ -1433,7 +1432,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 
     if !diagnostics.is_empty() {
         let mut writer = StandardStream::stderr(ColorChoice::Always);
-        diagnostics.emit_diagnostics(&amp;mut writer, &amp;sources)?;
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
     }
 
     let unit = result?;
@@ -1518,7 +1517,7 @@ always strings, but its value must be specified as the sole type parameter.
 Note that the dynamic <a href="https://docs.rs/rune/0/rune/enum.Value.html"><code>Value</code></a> can be used if the type is unknown.</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::Object;
 use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Diagnostics, EmitDiagnostics, FromValue, Source, Sources, Value, Vm};
+use rune::{Diagnostics, FromValue, Source, Sources, Value, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
@@ -1545,7 +1544,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 
     if !diagnostics.is_empty() {
         let mut writer = StandardStream::stderr(ColorChoice::Always);
-        diagnostics.emit_diagnostics(&amp;mut writer, &amp;sources)?;
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
     }
 
     let unit = result?;
@@ -1617,7 +1616,7 @@ pub fn main() {
 <h2 id="using-tuples-from-rust"><a class="header" href="#using-tuples-from-rust">Using tuples from Rust</a></h2>
 <p>Tuples are represented externally as <a href="https://doc.rust-lang.org/std/primitive.tuple.html">primitive tuple types</a>.</p>
 <pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
-use rune::{Diagnostics, EmitDiagnostics, FromValue, Source, Sources, Vm};
+use rune::{Diagnostics, FromValue, Source, Sources, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
@@ -1642,7 +1641,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 
     if !diagnostics.is_empty() {
         let mut writer = StandardStream::stderr(ColorChoice::Always);
-        diagnostics.emit_diagnostics(&amp;mut writer, &amp;sources)?;
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
     }
 
     let unit = result?;
@@ -2304,9 +2303,9 @@ that can be invoked on expressions.</p>
 that we need to pass in the <code>MacroContext</code> when invoking it. This is a detail
 which will be covered in one of the advanced sections.</p>
 <pre><code class="language-rust noplaypen">use rune::ast;
+use rune::ast::{Spanned, SpannedError};
 use rune::macros::{quote, MacroContext, TokenStream};
 use rune::parse::Parser;
-use rune::{Spanned, SpannedError};
 
 /// Implementation for the `stringy_math!` macro.
 pub(crate) fn stringy_math(
