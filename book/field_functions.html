@@ -201,7 +201,11 @@ module.field_fn(Protocol::GET, &quot;field&quot;, External::field_get)?;
 argument to the corresponding attribute pointing to the function to use instead.</p>
 <p>The following uses an implementation of <code>add_assign</code> which performs checked
 addition:</p>
-<pre><code class="language-rust noplaypen">use rune::{Any, Context, Module, VmError, VmErrorKind};
+<pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{
+    Any, Context, ContextError, Diagnostics, EmitDiagnostics, Module, Source, Sources, Vm, VmError,
+    VmErrorKind,
+};
 use std::sync::Arc;
 
 #[derive(Any)]
@@ -223,28 +227,46 @@ impl External {
 }
 
 fn main() -&gt; rune::Result&lt;()&gt; {
-    let mut module = Module::default();
-    module.ty::&lt;External&gt;()?;
+    let m = module()?;
 
     let mut context = Context::default();
-    context.install(&amp;module)?;
-    let context = Arc::new(context);
+    context.install(&amp;m)?;
+    let runtime = Arc::new(context.runtime());
 
-    let external = External {
+    let mut sources = Sources::new();
+    sources.insert(Source::new(
+        &quot;test&quot;,
+        r#&quot;pub fn main(external) { external.value += 1; }&quot;#,
+    ));
+
+    let mut diagnostics = Diagnostics::new();
+
+    let result = rune::prepare(&amp;context, &amp;mut sources)
+        .with_diagnostics(&amp;mut diagnostics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit_diagnostics(&amp;mut writer, &amp;sources)?;
+    }
+
+    let unit = result?;
+
+    let mut vm = Vm::new(runtime, Arc::new(unit));
+
+    let input = External {
         value: i64::max_value(),
     };
-
-    let result = rune_tests::run::&lt;_, _, ()&gt;(
-        &amp;context,
-        &quot;pub fn main(external) { external.value += 1; }&quot;,
-        &amp;[&quot;main&quot;],
-        (external,),
-    );
-
-    let error = result.expect_err(&quot;expected error&quot;);
-    let error = error.expect_vm_error(&quot;expected vm error&quot;);
-    println!(&quot;Error: {}&quot;, error);
+    let err = vm.call(&amp;[&quot;main&quot;], (input,)).unwrap_err();
+    let (kind, _) = err.as_unwound();
+    println!(&quot;{:?}&quot;, kind);
     Ok(())
+}
+
+fn module() -&gt; Result&lt;Module, ContextError&gt; {
+    let mut m = Module::new();
+    m.ty::&lt;External&gt;()?;
+    Ok(m)
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --example checked_add_assign

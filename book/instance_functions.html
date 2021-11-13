@@ -187,7 +187,10 @@ be stabilized and documented in a future release.</p>
 <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.inst_fn"><code>Module::inst_fn</code></a> and <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.async_inst_fn"><code>Module::async_inst_fn</code></a> functions. The type is
 identified as the first argument of the instance function, and must be a type
 registered in the module using <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.ty"><code>Module::ty</code></a>.</p>
-<pre><code class="language-rust noplaypen">use rune::{Context, Diagnostics, FromValue, Module, Options, Source, Sources, Vm};
+<pre><code class="language-rust noplaypen">use rune::{
+    termcolor::{ColorChoice, StandardStream},
+    Context, Diagnostics, EmitDiagnostics, FromValue, Module, Source, Sources, Vm,
+};
 use std::sync::Arc;
 
 fn divide_by_three(value: i64) -&gt; i64 {
@@ -201,8 +204,7 @@ async fn main() -&gt; rune::Result&lt;()&gt; {
 
     let mut context = Context::with_default_modules()?;
     context.install(&amp;my_module)?;
-
-    let options = Options::default();
+    let runtime = Arc::new(context.runtime());
 
     let mut sources = Sources::new();
     sources.insert(Source::new(
@@ -216,9 +218,18 @@ async fn main() -&gt; rune::Result&lt;()&gt; {
 
     let mut diagnostics = Diagnostics::new();
 
-    let unit = rune::load_sources(&amp;context, &amp;options, &amp;mut sources, &amp;mut diagnostics)?;
+    let result = rune::prepare(&amp;context, &amp;mut sources)
+        .with_diagnostics(&amp;mut diagnostics)
+        .build();
 
-    let mut vm = Vm::new(Arc::new(context.runtime()), Arc::new(unit));
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit_diagnostics(&amp;mut writer, &amp;sources)?;
+    }
+
+    let unit = result?;
+
+    let mut vm = Vm::new(runtime, Arc::new(unit));
     let output = vm.execute(&amp;[&quot;main&quot;], (33i64,))?.complete()?;
     let output = i64::from_value(output)?;
 

@@ -201,30 +201,48 @@ cba225dad143779a0a9543cfb05cde9710083af5
 always strings, but its value must be specified as the sole type parameter.
 Note that the dynamic <a href="https://docs.rs/rune/0/rune/enum.Value.html"><code>Value</code></a> can be used if the type is unknown.</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::Object;
-use rune::Value;
-use rune_tests::run;
+use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Diagnostics, EmitDiagnostics, FromValue, Source, Sources, Value, Vm};
 use std::sync::Arc;
 
 fn main() -&gt; rune::Result&lt;()&gt; {
-    let context = Arc::new(rune_modules::default_context()?);
+    let context = rune_modules::default_context()?;
+    let runtime = Arc::new(context.runtime());
 
-    let mut object = Object::new();
-    object.insert(String::from(&quot;Hello&quot;), Value::from(42i64));
-
-    let object: Object = run(
-        &amp;context,
+    let mut sources = Sources::new();
+    sources.insert(Source::new(
+        &quot;entry&quot;,
         r#&quot;
         pub fn calc(input) {
-            dbg(input[&quot;Hello&quot;]);
-            input[&quot;Hello&quot;] = &quot;World&quot;;
+            dbg(input[&quot;key&quot;]);
+            input[&quot;key&quot;] = &quot;World&quot;;
             input
         }
         &quot;#,
-        &amp;[&quot;calc&quot;],
-        (object,),
-    )?;
+    ));
 
-    println!(&quot;{:?}&quot;, object.get(&quot;Hello&quot;));
+    let mut diagnostics = Diagnostics::new();
+
+    let result = rune::prepare(&amp;context, &amp;mut sources)
+        .with_diagnostics(&amp;mut diagnostics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit_diagnostics(&amp;mut writer, &amp;sources)?;
+    }
+
+    let unit = result?;
+
+    let mut vm = Vm::new(runtime, Arc::new(unit));
+
+    let mut object = Object::new();
+    object.insert(String::from(&quot;key&quot;), Value::from(42i64));
+
+    let output = vm.call(&amp;[&quot;calc&quot;], (object,))?;
+    let output = Object::from_value(output)?;
+
+    println!(&quot;{:?}&quot;, output.get(&quot;key&quot;));
     Ok(())
 }
 </code></pre>
