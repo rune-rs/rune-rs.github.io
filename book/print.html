@@ -906,7 +906,9 @@ protocol</em> and it can be very efficient to build complex strings out of it.</
 <p>The <code>STRING_DISPLAY</code> protocol is a function that can be implemented by any
 <em>external</em> type which allows it to be used in a template string.</p>
 <p>It expects a function with the signature <code>fn(&amp;self, buf: &amp;mut String) -&gt; fmt::Result</code>.</p>
-<pre><code class="language-rust noplaypen">use std::fmt::Write as _;
+<pre><code class="language-rust noplaypen">use rune::{ContextError, Module};
+use rune::runtime::Protocol;
+use std::fmt::Write as _;
 use std::fmt;
 
 #[derive(Debug)]
@@ -920,9 +922,9 @@ impl StatusCode {
     }
 }
 
-pub fn module() -&gt; Result&lt;rune::Module, rune::ContextError&gt; {
-    let mut module = rune::Module::new(&amp;[&quot;http&quot;]);
-    module.inst_fn(rune::Protocol::STRING_DISPLAY, StatusCode::display)?;
+pub fn module() -&gt; Result&lt;Module, ContextError&gt; {
+    let mut module = Module::new(&amp;[&quot;http&quot;]);
+    module.inst_fn(Protocol::STRING_DISPLAY, StatusCode::display)?;
     Ok(module)
 }
 </code></pre>
@@ -1055,7 +1057,7 @@ for the <a href="https://github.com/rune-rs/rune/tree/main/crates/rune-modules">
 distinct from associated functions, because they are invoked by using the
 operation associated with the kind of the field function.</p>
 <p>The most common forms of fields functions are <em>getters</em> and <em>setters</em>, which are
-defined through the <a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.GET"><code>Protocol::GET</code></a> and <a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.SET"><code>Protocol::SET</code></a> protocols.</p>
+defined through the <a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.GET"><code>Protocol::GET</code></a> and <a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.SET"><code>Protocol::SET</code></a> protocols.</p>
 <p>The <code>Any</code> derive can also generate default implementations of these through
 various <code>#[rune(...)]</code> attributes:</p>
 <pre><code class="language-rust noplaypen">#[derive(Any)]
@@ -1076,23 +1078,24 @@ struct External {
 <p>The full list of available field functions and their corresponding attributes
 are:</p>
 <table><thead><tr><th>Protocol</th><th>Attribute</th><th></th></tr></thead><tbody>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.GET"><code>Protocol::GET</code></a></td><td><code>#[rune(get)]</code></td><td>For getters, like <code>external.field</code>.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.SET"><code>Protocol::SET</code></a></td><td><code>#[rune(set)]</code></td><td>For setters, like <code>external.field = 42</code>.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.ADD_ASSIGN"><code>Protocol::ADD_ASSIGN</code></a></td><td><code>#[rune(add_assign)]</code></td><td>The <code>+=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.SUB_ASSIGN"><code>Protocol::SUB_ASSIGN</code></a></td><td><code>#[rune(sub_assign)]</code></td><td>The <code>-=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.MUL_ASSIGN"><code>Protocol::MUL_ASSIGN</code></a></td><td><code>#[rune(mul_assign)]</code></td><td>The <code>*=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.DIV_ASSIGN"><code>Protocol::DIV_ASSIGN</code></a></td><td><code>#[rune(div_assign)]</code></td><td>The <code>/=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.BIT_AND_ASSIGN"><code>Protocol::BIT_AND_ASSIGN</code></a></td><td><code>#[rune(bit_and_assign)]</code></td><td>The <code>&amp;=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.BIT_OR_ASSIGN"><code>Protocol::BIT_OR_ASSIGN</code></a></td><td><code>#[rune(bit_or_assign)]</code></td><td>The bitwise or operation.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.BIT_XOR_ASSIGN"><code>Protocol::BIT_XOR_ASSIGN</code></a></td><td><code>#[rune(bit_xor_assign)]</code></td><td>The <code>^=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.SHL_ASSIGN"><code>Protocol::SHL_ASSIGN</code></a></td><td><code>#[rune(shl_assign)]</code></td><td>The <code>&lt;&lt;=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.SHR_ASSIGN"><code>Protocol::SHR_ASSIGN</code></a></td><td><code>#[rune(shr_assign)]</code></td><td>The <code>&gt;&gt;=</code> operation.</td></tr>
-<tr><td><a href="https://docs.rs/rune/0/rune/struct.Protocol.html#associatedconstant.REM_ASSIGN"><code>Protocol::REM_ASSIGN</code></a></td><td><code>#[rune(rem_assign)]</code></td><td>The <code>%=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.GET"><code>Protocol::GET</code></a></td><td><code>#[rune(get)]</code></td><td>For getters, like <code>external.field</code>.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.SET"><code>Protocol::SET</code></a></td><td><code>#[rune(set)]</code></td><td>For setters, like <code>external.field = 42</code>.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.ADD_ASSIGN"><code>Protocol::ADD_ASSIGN</code></a></td><td><code>#[rune(add_assign)]</code></td><td>The <code>+=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.SUB_ASSIGN"><code>Protocol::SUB_ASSIGN</code></a></td><td><code>#[rune(sub_assign)]</code></td><td>The <code>-=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.MUL_ASSIGN"><code>Protocol::MUL_ASSIGN</code></a></td><td><code>#[rune(mul_assign)]</code></td><td>The <code>*=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.DIV_ASSIGN"><code>Protocol::DIV_ASSIGN</code></a></td><td><code>#[rune(div_assign)]</code></td><td>The <code>/=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.BIT_AND_ASSIGN"><code>Protocol::BIT_AND_ASSIGN</code></a></td><td><code>#[rune(bit_and_assign)]</code></td><td>The <code>&amp;=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.BIT_OR_ASSIGN"><code>Protocol::BIT_OR_ASSIGN</code></a></td><td><code>#[rune(bit_or_assign)]</code></td><td>The bitwise or operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.BIT_XOR_ASSIGN"><code>Protocol::BIT_XOR_ASSIGN</code></a></td><td><code>#[rune(bit_xor_assign)]</code></td><td>The <code>^=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.SHL_ASSIGN"><code>Protocol::SHL_ASSIGN</code></a></td><td><code>#[rune(shl_assign)]</code></td><td>The <code>&lt;&lt;=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.SHR_ASSIGN"><code>Protocol::SHR_ASSIGN</code></a></td><td><code>#[rune(shr_assign)]</code></td><td>The <code>&gt;&gt;=</code> operation.</td></tr>
+<tr><td><a href="https://docs.rs/rune/0/rune/runtime/struct.Protocol.html#associatedconstant.REM_ASSIGN"><code>Protocol::REM_ASSIGN</code></a></td><td><code>#[rune(rem_assign)]</code></td><td>The <code>%=</code> operation.</td></tr>
 </tbody></table>
 <p>The manual way to register these functions is to use the new <code>Module::field_fn</code>
 function. This clearly showcases that there's no relationship between the field
 used and the function registered:</p>
 <pre><code class="language-rust noplaypen">use rune::{Any, Module};
+use rune::runtime::Protocol;
 
 #[derive(Any)]
 struct External {
