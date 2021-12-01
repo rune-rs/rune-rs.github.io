@@ -6,7 +6,7 @@ var rune = (function (exports) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  let wasm;
+  let wasm$1;
 
   const heap = new Array(32).fill(undefined);
 
@@ -32,8 +32,8 @@ var rune = (function (exports) {
 
   let cachegetUint8Memory0 = null;
   function getUint8Memory0() {
-      if (cachegetUint8Memory0 === null || cachegetUint8Memory0.buffer !== wasm.memory.buffer) {
-          cachegetUint8Memory0 = new Uint8Array(wasm.memory.buffer);
+      if (cachegetUint8Memory0 === null || cachegetUint8Memory0.buffer !== wasm$1.memory.buffer) {
+          cachegetUint8Memory0 = new Uint8Array(wasm$1.memory.buffer);
       }
       return cachegetUint8Memory0;
   }
@@ -97,8 +97,8 @@ var rune = (function (exports) {
 
   let cachegetInt32Memory0 = null;
   function getInt32Memory0() {
-      if (cachegetInt32Memory0 === null || cachegetInt32Memory0.buffer !== wasm.memory.buffer) {
-          cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer);
+      if (cachegetInt32Memory0 === null || cachegetInt32Memory0.buffer !== wasm$1.memory.buffer) {
+          cachegetInt32Memory0 = new Int32Array(wasm$1.memory.buffer);
       }
       return cachegetInt32Memory0;
   }
@@ -198,7 +198,7 @@ var rune = (function (exports) {
               return f(a, state.b, ...args);
           } finally {
               if (--state.cnt === 0) {
-                  wasm.__wbindgen_export_2.get(state.dtor)(a, state.b);
+                  wasm$1.__wbindgen_export_2.get(state.dtor)(a, state.b);
 
               } else {
                   state.a = a;
@@ -210,7 +210,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_28(arg0, arg1, arg2) {
-      wasm._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h82443f13d721be54(arg0, arg1, addHeapObject(arg2));
+      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h82443f13d721be54(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -219,9 +219,9 @@ var rune = (function (exports) {
   * @returns {Promise<any>}
   */
   function compile(input, config) {
-      var ptr0 = passStringToWasm0(input, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+      var ptr0 = passStringToWasm0(input, wasm$1.__wbindgen_malloc, wasm$1.__wbindgen_realloc);
       var len0 = WASM_VECTOR_LEN;
-      var ret = wasm.compile(ptr0, len0, addHeapObject(config));
+      var ret = wasm$1.compile(ptr0, len0, addHeapObject(config));
       return takeObject(ret);
   }
 
@@ -229,7 +229,7 @@ var rune = (function (exports) {
       try {
           return f.apply(this, args);
       } catch (e) {
-          wasm.__wbindgen_exn_store(addHeapObject(e));
+          wasm$1.__wbindgen_exn_store(addHeapObject(e));
       }
   }
 
@@ -237,7 +237,7 @@ var rune = (function (exports) {
       return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
   }
   function __wbg_adapter_68(arg0, arg1, arg2, arg3) {
-      wasm.wasm_bindgen__convert__closures__invoke2_mut__h182db85668eb18ca(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h182db85668eb18ca(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function load(module, imports) {
@@ -271,7 +271,7 @@ var rune = (function (exports) {
       }
   }
 
-  async function init(input) {
+  async function init$1(input) {
       if (typeof input === 'undefined') {
           input = new URL('index_bg.wasm', (document.currentScript && document.currentScript.src || new URL('rune.js', document.baseURI).href));
       }
@@ -292,7 +292,7 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_string_get = function(arg0, arg1) {
           const obj = getObject(arg1);
           var ret = typeof(obj) === 'string' ? obj : undefined;
-          var ptr0 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+          var ptr0 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm$1.__wbindgen_malloc, wasm$1.__wbindgen_realloc);
           var len0 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
@@ -304,7 +304,7 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_json_serialize = function(arg0, arg1) {
           const obj = getObject(arg1);
           var ret = JSON.stringify(obj === undefined ? null : obj);
-          var ptr0 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+          var ptr0 = passStringToWasm0(ret, wasm$1.__wbindgen_malloc, wasm$1.__wbindgen_realloc);
           var len0 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
@@ -483,7 +483,7 @@ var rune = (function (exports) {
       }, arguments) };
       imports.wbg.__wbindgen_debug_string = function(arg0, arg1) {
           var ret = debugString(getObject(arg1));
-          var ptr0 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+          var ptr0 = passStringToWasm0(ret, wasm$1.__wbindgen_malloc, wasm$1.__wbindgen_realloc);
           var len0 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
@@ -492,7 +492,7 @@ var rune = (function (exports) {
           throw new Error(getStringFromWasm0(arg0, arg1));
       };
       imports.wbg.__wbindgen_memory = function() {
-          var ret = wasm.memory;
+          var ret = wasm$1.memory;
           return addHeapObject(ret);
       };
       imports.wbg.__wbindgen_closure_wrapper449 = function(arg0, arg1, arg2) {
@@ -508,34 +508,46 @@ var rune = (function (exports) {
 
       const { instance, module } = await load(await input, imports);
 
-      wasm = instance.exports;
-      init.__wbindgen_wasm_module = module;
+      wasm$1 = instance.exports;
+      init$1.__wbindgen_wasm_module = module;
 
-      return wasm;
+      return wasm$1;
   }
 
   var exports$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     compile: compile,
-    'default': init
+    'default': init$1
   });
 
-  var wasm$1 = async () => {
-                          await init("/js/assets/rune-wasm-b437ab82.wasm");
+  var wasm = async (opt = {}) => {
+                          let {importHook, serverPath} = opt;
+
+                          let path = "/js/assets/rune-wasm-b437ab82.wasm";
+
+                          if (serverPath != null) {
+                              path = serverPath + /[^\/\\]*$/.exec(path)[0];
+                          }
+
+                          if (importHook != null) {
+                              path = importHook(path);
+                          }
+
+                          await init$1(path);
                           return exports$1;
                       };
 
-  async function init$1() {
-      exports.module = await wasm$1();
+  async function init() {
+      exports.module = await wasm();
   }
 
   exports.module = null;
 
-  exports.init = init$1;
+  exports.init = init;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
   return exports;
 
-}({}));
+})({});
 //# sourceMappingURL=rune.js.map
