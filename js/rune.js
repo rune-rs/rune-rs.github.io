@@ -309,7 +309,7 @@ var rune = (function (exports) {
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
       };
-      imports.wbg.__wbg_sleep_77ea03b78b30e4a6 = function(arg0) {
+      imports.wbg.__wbg_sleep_43d6e7cb4b7ab34d = function(arg0) {
           var ret = sleep(arg0);
           return addHeapObject(ret);
       };
@@ -523,7 +523,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                           let {importHook, serverPath} = opt;
 
-                          let path = "/js/assets/rune-wasm-ffe8a939.wasm";
+                          let path = "/js/assets/rune-wasm-cc4ed20e.wasm";
 
                           if (serverPath != null) {
                               path = serverPath + /[^\/\\]*$/.exec(path)[0];
