@@ -466,9 +466,44 @@ or quite scary. It allows for a larger ability to express a program, but at the
 same time it can be harder to reason on what your program will do.</p>
 <h2 id="calling-functions-in-rust"><a class="header" href="#calling-functions-in-rust">Calling functions in Rust</a></h2>
 <p>Rune functions can be easily set up and called from Rust.</p>
-<pre><code class="language-rust noplaypen">{{#include ../../examples/examples/basic_add.rs}}
+<pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Diagnostics, FromValue, Vm};
+use std::sync::Arc;
+
+fn main() -&gt; rune::Result&lt;()&gt; {
+    let context = rune_modules::default_context()?;
+
+    let mut sources = rune::sources!(
+        entry =&gt; {
+            pub fn main(number) {
+                number + 10
+            }
+        }
+    );
+
+    let mut diagnostics = Diagnostics::new();
+
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
+        .with_diagnostics(&amp;mut diagnostics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
+    }
+
+    let unit = result?;
+
+    let mut vm = Vm::new(Arc::new(context.runtime()), Arc::new(unit));
+    let output = vm.execute(&amp;[&quot;main&quot;], (33i64,))?.complete()?;
+    let output = i64::from_value(output)?;
+
+    println!(&quot;output: {}&quot;, output);
+    Ok(())
+}
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --example basic_add
+<pre><code class="language-text">$&gt; cargo run --example minimal
 output: 43
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="control-flow"><a class="header" href="#control-flow">Control Flow</a></h1>
@@ -2060,11 +2095,51 @@ Runestick, the virtual machine driving Rune, has support for passing function
 pointers out of the virtual machine using the <code>Function</code> type.</p>
 <p>This allows you to write code that takes a function constructed in Rune, and use
 it for something else.</p>
-<p>Below we showcase this, with the help of the <code>rune_s!</code> macro from the <code>testing</code>
-module.</p>
-<pre><code class="language-rust noplaypen">{{#include ../../examples/examples/call_rune_fn.rs}}
+<pre><code class="language-rust noplaypen">use rune::runtime::Function;
+use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Diagnostics, FromValue, Vm};
+use std::sync::Arc;
+
+fn main() -&gt; rune::Result&lt;()&gt; {
+    let context = rune_modules::default_context()?;
+    let runtime = Arc::new(context.runtime());
+
+    let mut sources = rune::sources! {
+        entry =&gt; {
+            fn foo(a, b) {
+                a + b
+            }
+
+            pub fn main() {
+                foo
+            }
+        }
+    };
+
+    let mut diagnostics = Diagnostics::new();
+
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
+        .with_diagnostics(&amp;mut diagnostics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
+    }
+
+    let unit = result?;
+
+    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let output = vm.call(&amp;[&quot;main&quot;], ())?;
+    let output = Function::from_value(output)?;
+
+    println!(&quot;{}&quot;, output.call::&lt;(i64, i64), i64&gt;((1, 3))?);
+    println!(&quot;{}&quot;, output.call::&lt;(i64, i64), i64&gt;((2, 6))?);
+    Ok(())
+}
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --example call_rune_fn
+<pre><code class="language-text">$&gt; cargo run --example rune_function
 4
 8
 </code></pre>
@@ -2410,7 +2485,7 @@ use such a table at the time we install modules into the <a href="https://docs.r
 <li>The risk for the current safety issue is deemed to be low.</li>
 </ul>
 <h2 id="internal-any-type"><a class="header" href="#internal-any-type">Internal <code>Any</code> type</a></h2>
-<p>Rune uses an <a href="https://docs.rs/rune/0/rune/struct.Any.html">internal <code>Any</code> type</a>.</p>
+<p>Rune uses an <a href="https://docs.rs/rune/0/rune/runtime/struct.AnyObj.html">internal <code>Any</code> type</a>.</p>
 <p>Apart from the <a href="safety.html#conflicts-in-type-hashes">hash conflict</a> documented above, the
 implementation should be sound. We have an internal <code>Any</code> type instead of
 relying on <code>Box&lt;dyn Any&gt;</code> to allow <a href="https://github.com/rune-rs/rune/blob/e910fb9/crates/runestick/src/any.rs#L171"><code>AnyObjVtable</code></a> to be implementable by external
@@ -2419,10 +2494,10 @@ types to support external types through a C ffi.</p>
 <p>A large chunk of the <code>Shared&lt;T&gt;</code> container is <code>unsafe</code>. This is a container
 which is behaviorally equivalent to <code>Rc&lt;RefCell&lt;T&gt;&gt;</code>.</p>
 <p>We have this because it merges <code>Rc</code> and <code>RefCell</code> and provides the ability to
-have <a href="https://docs.rs/rune/0/rune/struct.Shared.html#method.into_ref">&quot;owned borrows&quot;</a> and the ability to unsafely decompose these into a raw
+have <a href="https://docs.rs/rune/0/rune/runtime/struct.Shared.html#method.into_ref">&quot;owned borrows&quot;</a> and the ability to unsafely decompose these into a raw
 pointer and a raw guard, which is used in many implementations of
-<a href="https://docs.rs/rune/0/rune/trait.UnsafeFromValue.html"><code>UnsafeFromValue</code></a>.</p>
-<p><a href="https://docs.rs/rune/0/rune/trait.UnsafeFromValue.html"><code>UnsafeFromValue</code></a> is a conversion trait which is strictly used internally to
+<a href="https://docs.rs/rune/0/rune/runtime/trait.UnsafeFromValue.html"><code>UnsafeFromValue</code></a>.</p>
+<p><a href="https://docs.rs/rune/0/rune/runtime/trait.UnsafeFromValue.html"><code>UnsafeFromValue</code></a> is a conversion trait which is strictly used internally to
 convert values into references. Its safety is documented in the trait.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="the-stack"><a class="header" href="#the-stack">The stack</a></h1>
 <p>Runestick is a stack-based virtual machine. It has two primary places where

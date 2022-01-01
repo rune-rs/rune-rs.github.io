@@ -210,7 +210,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_28(arg0, arg1, arg2) {
-      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hecd8b42fadca90ac(arg0, arg1, addHeapObject(arg2));
+      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h437de3e3f277f484(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -237,7 +237,7 @@ var rune = (function (exports) {
       return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
   }
   function __wbg_adapter_68(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h513d0e2c05b467e1(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h1be1d220e75b3962(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function load(module, imports) {
@@ -309,7 +309,7 @@ var rune = (function (exports) {
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
       };
-      imports.wbg.__wbg_sleep_43d6e7cb4b7ab34d = function(arg0) {
+      imports.wbg.__wbg_sleep_45ceb82939c49ce3 = function(arg0) {
           var ret = sleep(arg0);
           return addHeapObject(ret);
       };
@@ -495,8 +495,8 @@ var rune = (function (exports) {
           var ret = wasm$1.memory;
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper440 = function(arg0, arg1, arg2) {
-          var ret = makeMutClosure(arg0, arg1, 236, __wbg_adapter_28);
+      imports.wbg.__wbindgen_closure_wrapper433 = function(arg0, arg1, arg2) {
+          var ret = makeMutClosure(arg0, arg1, 232, __wbg_adapter_28);
           return addHeapObject(ret);
       };
 
@@ -523,7 +523,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                           let {importHook, serverPath} = opt;
 
-                          let path = "/js/assets/rune-wasm-5f12474b.wasm";
+                          let path = "/js/assets/rune-wasm-9b214d28.wasm";
 
                           if (serverPath != null) {
                               path = serverPath + /[^\/\\]*$/.exec(path)[0];

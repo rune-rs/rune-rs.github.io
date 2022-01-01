@@ -181,9 +181,44 @@ or quite scary. It allows for a larger ability to express a program, but at the
 same time it can be harder to reason on what your program will do.</p>
 <h2 id="calling-functions-in-rust"><a class="header" href="#calling-functions-in-rust">Calling functions in Rust</a></h2>
 <p>Rune functions can be easily set up and called from Rust.</p>
-<pre><code class="language-rust noplaypen">{{#include ../../examples/examples/basic_add.rs}}
+<pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Diagnostics, FromValue, Vm};
+use std::sync::Arc;
+
+fn main() -&gt; rune::Result&lt;()&gt; {
+    let context = rune_modules::default_context()?;
+
+    let mut sources = rune::sources!(
+        entry =&gt; {
+            pub fn main(number) {
+                number + 10
+            }
+        }
+    );
+
+    let mut diagnostics = Diagnostics::new();
+
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
+        .with_diagnostics(&amp;mut diagnostics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
+    }
+
+    let unit = result?;
+
+    let mut vm = Vm::new(Arc::new(context.runtime()), Arc::new(unit));
+    let output = vm.execute(&amp;[&quot;main&quot;], (33i64,))?.complete()?;
+    let output = i64::from_value(output)?;
+
+    println!(&quot;output: {}&quot;, output);
+    Ok(())
+}
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --example basic_add
+<pre><code class="language-text">$&gt; cargo run --example minimal
 output: 43
 </code></pre>
 
