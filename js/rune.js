@@ -301,6 +301,10 @@ var rune = (function (exports) {
           const ret = false;
           return ret;
       };
+      imports.wbg.__wbg_sleep_45ceb82939c49ce3 = function(arg0) {
+          const ret = sleep(arg0);
+          return addHeapObject(ret);
+      };
       imports.wbg.__wbindgen_string_get = function(arg0, arg1) {
           const obj = getObject(arg1);
           const ret = typeof(obj) === 'string' ? obj : undefined;
@@ -308,10 +312,6 @@ var rune = (function (exports) {
           var len0 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
-      };
-      imports.wbg.__wbg_sleep_45ceb82939c49ce3 = function(arg0) {
-          const ret = sleep(arg0);
-          return addHeapObject(ret);
       };
       imports.wbg.__wbg_randomFillSync_654a7797990fb8db = function() { return handleError(function (arg0, arg1, arg2) {
           getObject(arg0).randomFillSync(getArrayU8FromWasm0(arg1, arg2));
@@ -500,7 +500,7 @@ var rune = (function (exports) {
           return addHeapObject(ret);
       };
       imports.wbg.__wbindgen_closure_wrapper470 = function(arg0, arg1, arg2) {
-          const ret = makeMutClosure(arg0, arg1, 238, __wbg_adapter_28);
+          const ret = makeMutClosure(arg0, arg1, 239, __wbg_adapter_28);
           return addHeapObject(ret);
       };
 
@@ -527,7 +527,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                           let {importHook, serverPath} = opt;
 
-                          let path = "/js/assets/rune-wasm-8e2f4b95.wasm";
+                          let path = "/js/assets/rune-wasm-bf9f65de.wasm";
 
                           if (serverPath != null) {
                               path = serverPath + /[^\/\\]*$/.exec(path)[0];
