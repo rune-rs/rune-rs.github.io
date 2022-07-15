@@ -289,15 +289,6 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
           takeObject(arg0);
       };
-      imports.wbg.__wbindgen_cb_drop = function(arg0) {
-          const obj = takeObject(arg0).original;
-          if (obj.cnt-- == 1) {
-              obj.a = 0;
-              return true;
-          }
-          const ret = false;
-          return ret;
-      };
       imports.wbg.__wbg_sleep_d74933620257f29f = function(arg0) {
           const ret = sleep(arg0);
           return addHeapObject(ret);
@@ -309,6 +300,15 @@ var rune = (function (exports) {
           var len0 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+      };
+      imports.wbg.__wbindgen_cb_drop = function(arg0) {
+          const obj = takeObject(arg0).original;
+          if (obj.cnt-- == 1) {
+              obj.a = 0;
+              return true;
+          }
+          const ret = false;
+          return ret;
       };
       imports.wbg.__wbg_randomFillSync_91e2b39becca6147 = function() { return handleError(function (arg0, arg1, arg2) {
           getObject(arg0).randomFillSync(getArrayU8FromWasm0(arg1, arg2));
@@ -496,7 +496,7 @@ var rune = (function (exports) {
           const ret = wasm$1.memory;
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper467 = function(arg0, arg1, arg2) {
+      imports.wbg.__wbindgen_closure_wrapper468 = function(arg0, arg1, arg2) {
           const ret = makeMutClosure(arg0, arg1, 240, __wbg_adapter_28);
           return addHeapObject(ret);
       };
@@ -548,7 +548,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                           let {importHook, serverPath} = opt;
 
-                          let path = "/js/assets/rune-wasm-8617d382.wasm";
+                          let path = "/js/assets/rune-wasm-34cbf45e.wasm";
 
                           if (serverPath != null) {
                               path = serverPath + /[^\/\\]*$/.exec(path)[0];
