@@ -210,7 +210,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_28(arg0, arg1, arg2) {
-      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h396ee0b1ea31d291(arg0, arg1, addHeapObject(arg2));
+      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h7d04c7f57e00b0d0(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -237,7 +237,7 @@ var rune = (function (exports) {
       return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
   }
   function __wbg_adapter_70(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h715139b2289c3e57(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h44ac45966d059677(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function load(module, imports) {
@@ -289,10 +289,6 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
           takeObject(arg0);
       };
-      imports.wbg.__wbg_sleep_d74933620257f29f = function(arg0) {
-          const ret = sleep(arg0);
-          return addHeapObject(ret);
-      };
       imports.wbg.__wbindgen_string_get = function(arg0, arg1) {
           const obj = getObject(arg1);
           const ret = typeof(obj) === 'string' ? obj : undefined;
@@ -300,6 +296,10 @@ var rune = (function (exports) {
           var len0 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+      };
+      imports.wbg.__wbg_sleep_d74933620257f29f = function(arg0) {
+          const ret = sleep(arg0);
+          return addHeapObject(ret);
       };
       imports.wbg.__wbindgen_cb_drop = function(arg0) {
           const obj = takeObject(arg0).original;
@@ -310,12 +310,6 @@ var rune = (function (exports) {
           const ret = false;
           return ret;
       };
-      imports.wbg.__wbg_randomFillSync_91e2b39becca6147 = function() { return handleError(function (arg0, arg1, arg2) {
-          getObject(arg0).randomFillSync(getArrayU8FromWasm0(arg1, arg2));
-      }, arguments) };
-      imports.wbg.__wbg_getRandomValues_b14734aa289bc356 = function() { return handleError(function (arg0, arg1) {
-          getObject(arg0).getRandomValues(getObject(arg1));
-      }, arguments) };
       imports.wbg.__wbg_process_e56fd54cf6319b6c = function(arg0) {
           const ret = getObject(arg0).process;
           return addHeapObject(ret);
@@ -353,6 +347,12 @@ var rune = (function (exports) {
           const ret = getObject(arg0).msCrypto;
           return addHeapObject(ret);
       };
+      imports.wbg.__wbg_getRandomValues_b14734aa289bc356 = function() { return handleError(function (arg0, arg1) {
+          getObject(arg0).getRandomValues(getObject(arg1));
+      }, arguments) };
+      imports.wbg.__wbg_randomFillSync_91e2b39becca6147 = function() { return handleError(function (arg0, arg1, arg2) {
+          getObject(arg0).randomFillSync(getArrayU8FromWasm0(arg1, arg2));
+      }, arguments) };
       imports.wbg.__wbindgen_string_new = function(arg0, arg1) {
           const ret = getStringFromWasm0(arg0, arg1);
           return addHeapObject(ret);
@@ -496,7 +496,7 @@ var rune = (function (exports) {
           const ret = wasm$1.memory;
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper466 = function(arg0, arg1, arg2) {
+      imports.wbg.__wbindgen_closure_wrapper465 = function(arg0, arg1, arg2) {
           const ret = makeMutClosure(arg0, arg1, 239, __wbg_adapter_28);
           return addHeapObject(ret);
       };
@@ -548,7 +548,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                           let {importHook, serverPath} = opt;
 
-                          let path = "/js/assets/rune-wasm-a7aff858.wasm";
+                          let path = "/js/assets/rune-wasm-516c69d5.wasm";
 
                           if (serverPath != null) {
                               path = serverPath + /[^\/\\]*$/.exec(path)[0];
