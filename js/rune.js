@@ -212,7 +212,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_28(arg0, arg1, arg2) {
-      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h7ca46d7f0b21781c(arg0, arg1, addHeapObject(arg2));
+      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hd5a5de32bf0a72ec(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -239,7 +239,7 @@ var rune = (function (exports) {
       return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
   }
   function __wbg_adapter_70(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h29a6f835ccf12346(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__hdcb03142cefd0088(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function load(module, imports) {
@@ -279,10 +279,6 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
           takeObject(arg0);
       };
-      imports.wbg.__wbg_sleep_d74933620257f29f = function(arg0) {
-          const ret = sleep(arg0);
-          return addHeapObject(ret);
-      };
       imports.wbg.__wbindgen_string_get = function(arg0, arg1) {
           const obj = getObject(arg1);
           const ret = typeof(obj) === 'string' ? obj : undefined;
@@ -290,6 +286,10 @@ var rune = (function (exports) {
           var len0 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+      };
+      imports.wbg.__wbg_sleep_d74933620257f29f = function(arg0) {
+          const ret = sleep(arg0);
+          return addHeapObject(ret);
       };
       imports.wbg.__wbindgen_json_serialize = function(arg0, arg1) {
           const obj = getObject(arg1);
@@ -498,7 +498,7 @@ var rune = (function (exports) {
           const ret = wasm$1.memory;
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper465 = function(arg0, arg1, arg2) {
+      imports.wbg.__wbindgen_closure_wrapper464 = function(arg0, arg1, arg2) {
           const ret = makeMutClosure(arg0, arg1, 237, __wbg_adapter_28);
           return addHeapObject(ret);
       };
@@ -550,7 +550,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                           let {importHook, serverPath} = opt;
 
-                          let path = "/js/assets/rune-wasm-efe4387a.wasm";
+                          let path = "/js/assets/rune-wasm-e80cb639.wasm";
 
                           if (serverPath != null) {
                               path = serverPath + /[^\/\\]*$/.exec(path)[0];
