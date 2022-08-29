@@ -212,7 +212,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_28(arg0, arg1, arg2) {
-      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__haa3e86ad1db289ba(arg0, arg1, addHeapObject(arg2));
+      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hd35d96a6f5699168(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -239,7 +239,7 @@ var rune = (function (exports) {
       return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
   }
   function __wbg_adapter_70(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__hc2fb9b242b7b4dd8(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__ha411f5a8f7bffd1c(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function load(module, imports) {
@@ -312,6 +312,12 @@ var rune = (function (exports) {
           const ret = JSON.parse(getStringFromWasm0(arg0, arg1));
           return addHeapObject(ret);
       };
+      imports.wbg.__wbg_randomFillSync_91e2b39becca6147 = function() { return handleError(function (arg0, arg1, arg2) {
+          getObject(arg0).randomFillSync(getArrayU8FromWasm0(arg1, arg2));
+      }, arguments) };
+      imports.wbg.__wbg_getRandomValues_b14734aa289bc356 = function() { return handleError(function (arg0, arg1) {
+          getObject(arg0).getRandomValues(getObject(arg1));
+      }, arguments) };
       imports.wbg.__wbg_process_e56fd54cf6319b6c = function(arg0) {
           const ret = getObject(arg0).process;
           return addHeapObject(ret);
@@ -349,12 +355,6 @@ var rune = (function (exports) {
           const ret = getObject(arg0).msCrypto;
           return addHeapObject(ret);
       };
-      imports.wbg.__wbg_getRandomValues_b14734aa289bc356 = function() { return handleError(function (arg0, arg1) {
-          getObject(arg0).getRandomValues(getObject(arg1));
-      }, arguments) };
-      imports.wbg.__wbg_randomFillSync_91e2b39becca6147 = function() { return handleError(function (arg0, arg1, arg2) {
-          getObject(arg0).randomFillSync(getArrayU8FromWasm0(arg1, arg2));
-      }, arguments) };
       imports.wbg.__wbindgen_string_new = function(arg0, arg1) {
           const ret = getStringFromWasm0(arg0, arg1);
           return addHeapObject(ret);
@@ -498,8 +498,8 @@ var rune = (function (exports) {
           const ret = wasm$1.memory;
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper465 = function(arg0, arg1, arg2) {
-          const ret = makeMutClosure(arg0, arg1, 237, __wbg_adapter_28);
+      imports.wbg.__wbindgen_closure_wrapper472 = function(arg0, arg1, arg2) {
+          const ret = makeMutClosure(arg0, arg1, 240, __wbg_adapter_28);
           return addHeapObject(ret);
       };
 
@@ -550,7 +550,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                           let {importHook, serverPath} = opt;
 
-                          let path = "/js/assets/rune-wasm-8786ce12.wasm";
+                          let path = "/js/assets/rune-wasm-8d57b63c.wasm";
 
                           if (serverPath != null) {
                               path = serverPath + /[^\/\\]*$/.exec(path)[0];
