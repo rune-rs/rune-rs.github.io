@@ -288,7 +288,7 @@ var rune = (function (exports) {
           const ret = false;
           return ret;
       };
-      imports.wbg.__wbg_sleep_9e8f127b42ad8f0e = function(arg0) {
+      imports.wbg.__wbg_sleep_7964c3b72c59c841 = function(arg0) {
           const ret = sleep(arg0);
           return addHeapObject(ret);
       };
@@ -561,7 +561,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                           let {importHook, serverPath} = opt;
 
-                          let path = "/js/assets/rune-wasm-882a98f1.wasm";
+                          let path = "/js/assets/rune-wasm-6f64f24b.wasm";
 
                           if (serverPath != null) {
                               path = serverPath + /[^\/\\]*$/.exec(path)[0];
