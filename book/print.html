@@ -71,10 +71,12 @@
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
             var html = document.querySelector('html');
-            var sidebar = 'hidden';
+            var sidebar = null;
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
             }
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
@@ -504,7 +506,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
     let unit = result?;
 
     let mut vm = Vm::new(Arc::new(context.runtime()), Arc::new(unit));
-    let output = vm.execute(&amp;[&quot;main&quot;], (33i64,))?.complete()?;
+    let output = vm.execute([&quot;main&quot;], (33i64,))?.complete()?;
     let output = i64::from_value(output)?;
 
     println!(&quot;output: {}&quot;, output);
@@ -965,7 +967,7 @@ impl StatusCode {
 }
 
 pub fn module() -&gt; Result&lt;Module, ContextError&gt; {
-    let mut module = Module::new(&amp;[&quot;http&quot;]);
+    let mut module = Module::new([&quot;http&quot;]);
     module.inst_fn(Protocol::STRING_DISPLAY, StatusCode::display)?;
     Ok(module)
 }</code></pre>
@@ -1023,8 +1025,8 @@ based on its item. So the hash for the item <code>Foo::new</code> will always be
 use rune::Hash;
 
 fn main() {
-    println!(&quot;{}&quot;, Hash::type_hash(&amp;ItemBuf::with_item(&amp;[&quot;Foo&quot;, &quot;new&quot;])));
-    println!(&quot;{}&quot;, Hash::type_hash(&amp;[&quot;Foo&quot;, &quot;new&quot;]));
+    println!(&quot;{}&quot;, Hash::type_hash(&amp;ItemBuf::with_item([&quot;Foo&quot;, &quot;new&quot;])));
+    println!(&quot;{}&quot;, Hash::type_hash([&quot;Foo&quot;, &quot;new&quot;]));
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --example function_hash
@@ -1075,7 +1077,7 @@ async fn main() -&gt; rune::Result&lt;()&gt; {
     let unit = result?;
 
     let mut vm = Vm::new(runtime, Arc::new(unit));
-    let output = vm.execute(&amp;[&quot;main&quot;], (33i64,))?.complete()?;
+    let output = vm.execute([&quot;main&quot;], (33i64,))?.complete()?;
     let output = i64::from_value(output)?;
 
     println!(&quot;output: {}&quot;, output);
@@ -1083,7 +1085,7 @@ async fn main() -&gt; rune::Result&lt;()&gt; {
 }
 
 fn module() -&gt; Result&lt;Module, ContextError&gt; {
-    let mut m = Module::with_item(&amp;[&quot;mymodule&quot;]);
+    let mut m = Module::with_item([&quot;mymodule&quot;]);
     m.inst_fn(&quot;divide_by_three&quot;, divide_by_three)?;
     Ok(m)
 }</code></pre>
@@ -1216,7 +1218,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
     let input = External {
         value: i64::max_value(),
     };
-    let err = vm.call(&amp;[&quot;main&quot;], (input,)).unwrap_err();
+    let err = vm.call([&quot;main&quot;], (input,)).unwrap_err();
     let (kind, _) = err.as_unwound();
     println!(&quot;{:?}&quot;, kind);
     Ok(())
@@ -1435,7 +1437,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
     let mut vm = Vm::new(runtime, Arc::new(unit));
 
     let input = vec![1, 2, 3, 4];
-    let output = vm.call(&amp;[&quot;calc&quot;], (input,))?;
+    let output = vm.call([&quot;calc&quot;], (input,))?;
     let output = Vec::&lt;i64&gt;::from_value(output)?;
 
     println!(&quot;{:?}&quot;, output);
@@ -1481,7 +1483,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
     let mut vm = Vm::new(runtime, Arc::new(unit));
 
     let input: VecTuple&lt;(i64, String)&gt; = VecTuple::new((1, String::from(&quot;Hello&quot;)));
-    let output = vm.call(&amp;[&quot;calc&quot;], (input,))?;
+    let output = vm.call([&quot;calc&quot;], (input,))?;
     let VecTuple((a, b)) = VecTuple::&lt;(u32, String)&gt;::from_value(output)?;
 
     println!(&quot;({:?}, {:?})&quot;, a, b);
@@ -1594,7 +1596,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
     let mut object = Object::new();
     object.insert(String::from(&quot;key&quot;), Value::from(42i64));
 
-    let output = vm.call(&amp;[&quot;calc&quot;], (object,))?;
+    let output = vm.call([&quot;calc&quot;], (object,))?;
     let output = Object::from_value(output)?;
 
     println!(&quot;{:?}&quot;, output.get(&quot;key&quot;));
@@ -1685,7 +1687,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
     let unit = result?;
 
     let mut vm = Vm::new(runtime, Arc::new(unit));
-    let output = vm.call(&amp;[&quot;calc&quot;], ((1u32, 2u32),))?;
+    let output = vm.call([&quot;calc&quot;], ((1u32, 2u32),))?;
     let output = &lt;(i32, i32)&gt;::from_value(output)?;
 
     println!(&quot;{:?}&quot;, output);
@@ -1905,7 +1907,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 
     let mut vm = Vm::new(runtime, Arc::new(unit));
 
-    let output = vm.call(&amp;[&quot;main&quot;], (External { value: 42 },))?;
+    let output = vm.call([&quot;main&quot;], (External { value: 42 },))?;
     let output = External::from_value(output)?;
     println!(&quot;{:?}&quot;, output);
     assert_eq!(output.value, 42);
@@ -2294,7 +2296,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
     let unit = result?;
 
     let mut vm = Vm::new(runtime, Arc::new(unit));
-    let output = vm.call(&amp;[&quot;main&quot;], ())?;
+    let output = vm.call([&quot;main&quot;], ())?;
     let output = Function::from_value(output)?;
 
     println!(&quot;{}&quot;, output.call::&lt;(i64, i64), i64&gt;((1, 3))?);
@@ -2574,8 +2576,8 @@ pub(crate) fn stringy_math(
 }</code></pre>
 <p>A macro is added to a <a href="https://docs.rs/rune/0/rune/module/struct.Module.html"><code>Module</code></a> using the <a href="https://docs.rs/rune/0/rune/module/struct.Module.html#method.macro_"><code>Module::macro_</code></a> function.</p>
 <pre><code class="language-rust noplaypen">pub fn module() -&gt; Result&lt;rune::Module, rune::ContextError&gt; {
-    let mut module = rune::Module::new(&amp;[&quot;std&quot;, &quot;experiments&quot;]);
-    module.macro_(&amp;[&quot;stringy_math&quot;], stringy_math_macro::stringy_math)?;
+    let mut module = rune::Module::new([&quot;std&quot;, &quot;experiments&quot;]);
+    module.macro_([&quot;stringy_math&quot;], stringy_math_macro::stringy_math)?;
     Ok(module)
 }</code></pre>
 <p>With this module installed, we can now take <code>stringy_math!</code> for a spin.</p>
