@@ -561,7 +561,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                           let {importHook, serverPath} = opt;
 
-                          let path = "/js/assets/rune-wasm-e82d9aa6.wasm";
+                          let path = "/js/assets/rune-wasm-2d420e5c.wasm";
 
                           if (serverPath != null) {
                               path = serverPath + /[^\/\\]*$/.exec(path)[0];
