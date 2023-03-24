@@ -122,71 +122,6 @@ var rune = (function (exports) {
       return idx;
   }
 
-  function debugString(val) {
-      // primitive types
-      const type = typeof val;
-      if (type == 'number' || type == 'boolean' || val == null) {
-          return  `${val}`;
-      }
-      if (type == 'string') {
-          return `"${val}"`;
-      }
-      if (type == 'symbol') {
-          const description = val.description;
-          if (description == null) {
-              return 'Symbol';
-          } else {
-              return `Symbol(${description})`;
-          }
-      }
-      if (type == 'function') {
-          const name = val.name;
-          if (typeof name == 'string' && name.length > 0) {
-              return `Function(${name})`;
-          } else {
-              return 'Function';
-          }
-      }
-      // objects
-      if (Array.isArray(val)) {
-          const length = val.length;
-          let debug = '[';
-          if (length > 0) {
-              debug += debugString(val[0]);
-          }
-          for(let i = 1; i < length; i++) {
-              debug += ', ' + debugString(val[i]);
-          }
-          debug += ']';
-          return debug;
-      }
-      // Test for built-in
-      const builtInMatches = /\[object ([^\]]+)\]/.exec(toString.call(val));
-      let className;
-      if (builtInMatches.length > 1) {
-          className = builtInMatches[1];
-      } else {
-          // Failed to match the standard '[object ClassName]'
-          return toString.call(val);
-      }
-      if (className == 'Object') {
-          // we're a user defined class or Object
-          // JSON.stringify avoids problems with cycles, and is generally much
-          // easier than looping through ownProperties of `val`.
-          try {
-              return 'Object(' + JSON.stringify(val) + ')';
-          } catch (_) {
-              return 'Object';
-          }
-      }
-      // errors
-      if (val instanceof Error) {
-          return `${val.name}: ${val.message}\n${val.stack}`;
-      }
-      // TODO we could test for more things here, like `Set`s and `Map`s.
-      return className;
-  }
-
   function makeMutClosure(arg0, arg1, dtor, f) {
       const state = { a: arg0, b: arg1, cnt: 1, dtor };
       const real = (...args) => {
@@ -211,8 +146,8 @@ var rune = (function (exports) {
 
       return real;
   }
-  function __wbg_adapter_26(arg0, arg1, arg2) {
-      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h5bc619ca039f6d3c(arg0, arg1, addHeapObject(arg2));
+  function __wbg_adapter_24(arg0, arg1, arg2) {
+      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hb8a6a0dd9c4dc39a(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -238,8 +173,8 @@ var rune = (function (exports) {
   function getArrayU8FromWasm0(ptr, len) {
       return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
   }
-  function __wbg_adapter_66(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h20b922ed5d900bf9(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+  function __wbg_adapter_62(arg0, arg1, arg2, arg3) {
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h57326fc5d283dfbe(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function load(module, imports) {
@@ -279,15 +214,6 @@ var rune = (function (exports) {
       imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
           takeObject(arg0);
       };
-      imports.wbg.__wbindgen_cb_drop = function(arg0) {
-          const obj = takeObject(arg0).original;
-          if (obj.cnt-- == 1) {
-              obj.a = 0;
-              return true;
-          }
-          const ret = false;
-          return ret;
-      };
       imports.wbg.__wbg_sleep_bf1f4d9ccd04f0b1 = function(arg0) {
           const ret = sleep(arg0);
           return addHeapObject(ret);
@@ -299,6 +225,15 @@ var rune = (function (exports) {
           var len0 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len0;
           getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+      };
+      imports.wbg.__wbindgen_cb_drop = function(arg0) {
+          const obj = takeObject(arg0).original;
+          if (obj.cnt-- == 1) {
+              obj.a = 0;
+              return true;
+          }
+          const ret = false;
+          return ret;
       };
       imports.wbg.__wbindgen_is_undefined = function(arg0) {
           const ret = getObject(arg0) === undefined;
@@ -383,10 +318,6 @@ var rune = (function (exports) {
           const ret = getObject(arg0).text();
           return addHeapObject(ret);
       }, arguments) };
-      imports.wbg.__wbg_now_c644db5194be8437 = function(arg0) {
-          const ret = getObject(arg0).now();
-          return ret;
-      };
       imports.wbg.__wbg_newwithstr_533a2b691cd87b92 = function() { return handleError(function (arg0, arg1) {
           const ret = new Request(getStringFromWasm0(arg0, arg1));
           return addHeapObject(ret);
@@ -395,10 +326,6 @@ var rune = (function (exports) {
           const ret = new Function(getStringFromWasm0(arg0, arg1));
           return addHeapObject(ret);
       };
-      imports.wbg.__wbg_get_baf4855f9a986186 = function() { return handleError(function (arg0, arg1) {
-          const ret = Reflect.get(getObject(arg0), getObject(arg1));
-          return addHeapObject(ret);
-      }, arguments) };
       imports.wbg.__wbg_call_95d1ea488d03e4e8 = function() { return handleError(function (arg0, arg1) {
           const ret = getObject(arg0).call(getObject(arg1));
           return addHeapObject(ret);
@@ -434,7 +361,7 @@ var rune = (function (exports) {
                   const a = state0.a;
                   state0.a = 0;
                   try {
-                      return __wbg_adapter_66(a, state0.b, arg0, arg1);
+                      return __wbg_adapter_62(a, state0.b, arg0, arg1);
                   } finally {
                       state0.a = a;
                   }
@@ -492,13 +419,6 @@ var rune = (function (exports) {
           const ret = JSON.stringify(getObject(arg0));
           return addHeapObject(ret);
       }, arguments) };
-      imports.wbg.__wbindgen_debug_string = function(arg0, arg1) {
-          const ret = debugString(getObject(arg1));
-          const ptr0 = passStringToWasm0(ret, wasm$1.__wbindgen_malloc, wasm$1.__wbindgen_realloc);
-          const len0 = WASM_VECTOR_LEN;
-          getInt32Memory0()[arg0 / 4 + 1] = len0;
-          getInt32Memory0()[arg0 / 4 + 0] = ptr0;
-      };
       imports.wbg.__wbindgen_throw = function(arg0, arg1) {
           throw new Error(getStringFromWasm0(arg0, arg1));
       };
@@ -506,8 +426,8 @@ var rune = (function (exports) {
           const ret = wasm$1.memory;
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper472 = function(arg0, arg1, arg2) {
-          const ret = makeMutClosure(arg0, arg1, 235, __wbg_adapter_26);
+      imports.wbg.__wbindgen_closure_wrapper473 = function(arg0, arg1, arg2) {
+          const ret = makeMutClosure(arg0, arg1, 235, __wbg_adapter_24);
           return addHeapObject(ret);
       };
 
@@ -559,7 +479,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-1ba408c5.wasm";
+                  let path = "/js/assets/rune_wasm-e0badb73.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
