@@ -281,10 +281,9 @@ fn function() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/getting_started/dbg.rn
 [1, 2, 3]
 '今'
+dynamic function (at: 0x1a)
+native function (0x1bd03b8ee40)
 dynamic function (at: 0x17)
-native function (0x2959efc1c70)
-Type(0x9aa62663879132fb)
-== () (8.3679ms)
 </code></pre>
 <p>The default <code>dbg</code> implementation outputs information on its arguments to stdout.
 But its exact behavior can differ depending on how the environment is
@@ -302,17 +301,7 @@ code.</p>
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/getting_started/hello_world.rn
 Hello World
-== () (1.0864ms)
 </code></pre>
-<p>At the end of the script's output, you see this rather odd looking line:</p>
-<pre><code class="language-text">== () (1.0864ms)
-</code></pre>
-<p>This simply means that the script evaluated to a unit, or a <code>()</code>.
-And that the script took <code>1.0864</code> milliseconds to run.</p>
-<blockquote>
-<p>Cool hint:
-Any function that doesn't have a return value returns a unit.</p>
-</blockquote>
 <p>So now you know how to run Rune scripts. Well done! Let's move on to the next
 chapter.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="concepts"><a class="header" href="#concepts">Concepts</a></h1>
@@ -339,11 +328,11 @@ statement:</p>
 <pre><code class="language-rune">use std::iter::range;
 
 pub fn main() {
-    range(0, 10)
+    dbg!(range(0, 10));
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/items_imports/example_import.rn
-== Iterator (60µs)
+std::iter::Range
 </code></pre>
 <p>Trying to use an item which doesn't exist results in a compile error:</p>
 <pre><code class="language-rune">pub fn main() {
@@ -366,45 +355,93 @@ the <code>mod</code> keyword. And the module can either be loaded from a differe
 matching the name of the module or defined directly inside of the source file.</p>
 <p>The following is an example of an <em>inline</em> module:</p>
 <pre><code class="language-rune">mod foo {
-    pub fn get_number() {
+    pub fn number() {
         1
     }
 }
 
 mod bar {
-    pub fn get_number() {
+    pub fn number() {
         2
     }
 }
 
+#[test]
+fn inline_modules() {
+    assert_eq!(foo::number() + bar::number(), 3);
+}
+
 pub fn main() {
-    foo::get_number() + bar::get_number()
+    dbg(foo::number() + bar::number());
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/items_imports/inline_modules.rn
-== 3 (33.2µs)
+3
 </code></pre>
 <p>And this is the equivalent modules loaded from the filesystem. These are three
 separate files:</p>
 <pre><code class="language-rune">mod foo;
 mod bar;
 
+#[test]
+fn test_modules() {
+    assert_eq!(foo::number() + bar::number(), 3);
+}
+
 pub fn main() {
-    foo::get_number() + bar::get_number()
+    dbg(foo::number() + bar::number());
 }
 </code></pre>
 <pre><code class="language-rune">// file: ./foo/mod.rn
-pub fn get_number() {
+pub fn number() {
     2
 }
 </code></pre>
 <pre><code class="language-rune">// file: ./bar.rn
-pub fn get_number() {
+pub fn number() {
     1
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/items_imports/modules.rn
-== 3 (37.5µs)
+3
+</code></pre>
+<h1 id="disambiguating-imports"><a class="header" href="#disambiguating-imports">Disambiguating imports</a></h1>
+<p>Normally an item would simply be used through its local name, such as
+<code>foo::number</code> above. But what happens if we need to reference a module which is
+not a direct descendent of the current one or there is some ambiguation?</p>
+<p>To this end Rune supports the following Rust keywords:</p>
+<ul>
+<li><code>self</code> - which will resolve items from the root of the <em>current</em> module.</li>
+<li><code>crate</code> - which will look up items from the entrypoint of the current project.</li>
+<li><code>super</code> - which will look up items from the <em>parent</em> of the current module.</li>
+</ul>
+<pre><code class="language-rune">mod first {
+    pub fn number() {
+        crate::number() + 2
+    }
+}
+
+mod second {
+    pub fn number() {
+        super::first::number() + 4
+    }
+}
+
+pub fn number() {
+    1
+}
+
+#[test]
+fn item_keywords() {
+    assert_eq!(self::second::number(), 7);
+}
+
+pub fn main() {
+    dbg(self::second::number());
+}
+</code></pre>
+<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/items_imports/item_keywords.rn
+7
 </code></pre>
 <h1 id="visibility"><a class="header" href="#visibility">Visibility</a></h1>
 <p>Every item used has to be <em>visible</em> to that item. This is governed by Runes
@@ -448,7 +485,6 @@ simply what the Rune cli looks for when deciding what to execute.</p>
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/functions/main_function.rn
 Hello World
-== () (277.8µs)
 </code></pre>
 <p>In Rune, you don't have to specify the return type of a function. Given that
 Rune is a dynamic programming language, this allows a function to return
@@ -469,7 +505,6 @@ pub fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/functions/return_value.rn
 Hello
 1
-== () (8.437ms)
 </code></pre>
 <p>Depending on who you talk to, this is either the best thing since sliced bread
 or quite scary. It allows for a larger ability to express a program, but at the
@@ -533,6 +568,12 @@ what the function returns by default unless a <code>return</code> is specified.<
     &quot;something else&quot;
 }
 
+#[test]
+fn test_control_flow() {
+    assert_eq!(foo(0), &quot;less than one&quot;);
+    assert_eq!(foo(10), &quot;something else&quot;);
+}
+
 pub fn main() {
     println!(&quot;{}&quot;, foo(0)); // =&gt; outputs: &quot;less than one&quot;
     println!(&quot;{}&quot;, foo(10)); // =&gt; outputs: &quot;something else&quot;
@@ -541,7 +582,6 @@ pub fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/control_flow/numbers_game.rn
 less than one
 something else
-== () (3.8608ms)
 </code></pre>
 <h2 id="if-expressions"><a class="header" href="#if-expressions"><code>if</code> expressions</a></h2>
 <p>If expressions allow you to provide a condition with one or more code branches.
@@ -556,7 +596,6 @@ If the condition is <code>true</code>, the provided block of code will run.</p>
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/control_flow/conditional.rn
 The number *is* smaller than 5
-== () (5.108ms)
 </code></pre>
 <p>Optionally, we can add another branch under <code>else</code>, which will execute in case
 the condition is false.</p>
@@ -572,7 +611,6 @@ the condition is false.</p>
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/control_flow/conditional_else.rn
 the number is smaller than 5
-== () (196.1µs)
 </code></pre>
 <p>We can also add an arbitrary number of <code>else if</code> branches, which allow us to
 specify many different conditions.</p>
@@ -590,7 +628,6 @@ specify many different conditions.</p>
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/control_flow/conditional_else_ifs.rn
 the number is smaller than 5
-== () (227.9µs)
 </code></pre>
 <p>Do note however that if you have <em>many</em> conditions, it might be cleaner to use
 a <code>match</code>.</p>
@@ -613,7 +650,6 @@ a <code>match</code>.</p>
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/control_flow/first_match.rn
 the number is smaller than 5
-== () (124.2µs)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="variables-and-memory"><a class="header" href="#variables-and-memory">Variables and memory</a></h1>
 <p>Variables in Rune are defined using the <code>let</code> keyword. In contrast to Rust, all
@@ -657,7 +693,6 @@ variables:</p>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/variables/shared_ownership.rn
 1
 2
-== () (913.4µs)
 </code></pre>
 <p>This can cause issues if we call an external function which expects to take
 ownership of its arguments. We say that functions like these <em>move</em> their
@@ -704,7 +739,6 @@ to functions which need to move the value, like <code>drop</code>.</p>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/variables/is_readable.rn
 field: 1
 object is no longer readable 😢
-== () (943.8µs)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="loops"><a class="header" href="#loops">Loops</a></h1>
 <p>Loops are a fundamental building block common to many programming languages.
@@ -732,7 +766,6 @@ currently in and continue running right after it.</p>
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/loops/while_loop.rn
 The value is 50
-== () (501.1µs)
 </code></pre>
 <h2 id="loop-expressions"><a class="header" href="#loop-expressions"><code>loop</code> Expressions</a></h2>
 <p>The <code>loop</code> keyword builds the most fundamental form of loop in Rune.
@@ -778,7 +811,6 @@ By default, this is simply a unit <code>()</code>.</p>
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/loops/loop_break.rn
 The final count is: 11
-== () (281.5µs)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="pattern-matching"><a class="header" href="#pattern-matching">Pattern matching</a></h1>
 <p>In this section we will be discussing <em>Pattern Matching</em>.</p>
@@ -810,7 +842,6 @@ Another number: 2.
 A vector starting with one and two, followed by 42.
 One, but this time as a string.
 Something else. Can I go eat now?
-== () (5.691ms)
 </code></pre>
 <p>We will be covering each of these variants in detail in the coming sections.</p>
 <h2 id="patterns"><a class="header" href="#patterns">Patterns</a></h2>
@@ -863,7 +894,6 @@ This is called a <em>rest pattern</em>.</p>
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/pattern_matching/rest_pattern.rn
-== () (89.8µs)
 </code></pre>
 <h2 id="binding-and-ignoring"><a class="header" href="#binding-and-ignoring">Binding and ignoring</a></h2>
 <p>In a pattern, every value can be replaced with a <em>binding</em> or an <em>ignore
@@ -882,7 +912,6 @@ pub fn main() {
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/pattern_matching/ignore.rn
 Second item in vector is 2.
-== () (281.3µs)
 </code></pre>
 <p>In contrast to ignoring, we can also <em>bind</em> the value to a variable that is then
 in scope of the match arm. This will also match the value unconditionally, but
@@ -899,7 +928,6 @@ pub fn main() {
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/pattern_matching/bind.rn
 Second item in vector is 2.
-== () (6.25ms)
 </code></pre>
 <p>Here are some more examples:</p>
 <ul>
@@ -925,7 +953,6 @@ pub fn main() {
 Pretty fast!
 Can't tell 😞
 What, where did you get that?
-== () (5.3533ms)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="template-literals"><a class="header" href="#template-literals">Template literals</a></h1>
 <p>If you've been paying attention on previous sections you might have seen odd
@@ -942,7 +969,6 @@ environment.</p>
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/template_literals/basic_template.rn
 &quot;I am 30 years old!&quot;
-== () (4.5678ms)
 </code></pre>
 <p>Template strings are accelerated by the Vm, each argument uses a <em>display
 protocol</em> and it can be very efficient to build complex strings out of it.</p>
@@ -1251,7 +1277,6 @@ a type.</p>
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/types/types.rn
-== () (120µs)
 </code></pre>
 <p>Conversely, the type check would fail if you're providing a value which is not
 of that type.</p>
@@ -1289,7 +1314,6 @@ pub fn main() {
 n is a String
 n is a vector
 n is unknown
-== () (1.0544ms)
 </code></pre>
 <p>A tighter way to accomplish this would be by using pattern matching, a mechanism
 especially suited for many conditional branches. Especially when the branches
@@ -1312,7 +1336,6 @@ pub fn main() {
 n is a String
 n is a vector
 n is unknown
-== () (1.0341ms)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="primitive-and-reference-types"><a class="header" href="#primitive-and-reference-types">Primitive and reference types</a></h1>
 <p>Primitives are values stored immediately on the stack. In Rust terminology,
@@ -1342,7 +1365,6 @@ variable, because a separate copy of the value will be used automatically.</p>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/primitives/copy.rn
 2
 1
-== () (691.3µs)
 </code></pre>
 <p>Other types like <em>strings</em> are stored by reference. Assigning them to a
 different variable will only <em>copy their reference</em>, but they still point to the
@@ -1358,7 +1380,6 @@ same underlying data.</p>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/primitives/primitives.rn
 Hello World
 Hello World
-== () (9.7406ms)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="vectors"><a class="header" href="#vectors">Vectors</a></h1>
 <p>A vector is a native data structure of Rune which is a dynamic list of values. A
@@ -1379,7 +1400,6 @@ Hello
 42
 Hello
 42
-== () (5.0674ms)
 </code></pre>
 <p>As you can see, you can iterate over a vector because it implements the iterator
 protocol. It is also possible to create and use an iterator manually using
@@ -1395,7 +1415,6 @@ protocol. It is also possible to create and use an iterator manually using
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/vectors/vectors_rev.rn
 42
 Hello
-== () (2.9116ms)
 </code></pre>
 <h2 id="using-vectors-from-rust"><a class="header" href="#using-vectors-from-rust">Using vectors from Rust</a></h2>
 <p>Vectors are represented externally as the standard <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>Vec</code></a>.</p>
@@ -1520,7 +1539,6 @@ keys.</p>
 key did not exist
 (&quot;second&quot;, 42)
 (&quot;first&quot;, &quot;bar&quot;)
-== () (3.3527ms)
 </code></pre>
 <p>These are useful because they allow their data to be specified dynamically,
 which is exactly the same use case as storing unknown JSON.</p>
@@ -1552,7 +1570,6 @@ cba225dad143779a0a9543cfb05cde9710083af5
 15133745237c014ff8bae53d8ff8f3c137c732c7
 39ac97ab4ebe26118e807eb91c7656ab95b1fcac
 3f6310eeeaca22d0373cc11d8b34d346bd12a364
-== () (331.3324ms)
 </code></pre>
 <h2 id="using-objects-from-rust"><a class="header" href="#using-objects-from-rust">Using objects from Rust</a></h2>
 <p>Objects are represented externally as the <a href="https://docs.rs/rune/0/rune/type.Object.html"><code>Object</code></a> type alias. The keys are
@@ -1622,7 +1639,6 @@ tuple.</p>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/tuples/tuple_masquerade.rn
 (&quot;Now&quot;, &quot;You&quot;, &quot;See&quot;, &quot;Me&quot;)
 (&quot;Now&quot;, &quot;You&quot;, &quot;Don\'t&quot;, &quot;!&quot;)
-== () (38.3136ms)
 </code></pre>
 <p>The following is a simple example of a function returning a tuple:</p>
 <pre><code class="language-rune">fn foo() {
@@ -1635,7 +1651,6 @@ pub fn main() {
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/tuples/basic_tuples.rn
 (1, &quot;test&quot;)
-== () (387.6µs)
 </code></pre>
 <p>Tuples can also be pattern matched:</p>
 <pre><code class="language-rune">pub fn main() {
@@ -1652,7 +1667,6 @@ pub fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/tuples/tuple_patterns.rn
 &quot;the first part was a number:&quot;
 1
-== () (7.7892ms)
 </code></pre>
 <h2 id="using-tuples-from-rust"><a class="header" href="#using-tuples-from-rust">Using tuples from Rust</a></h2>
 <p>Tuples are represented externally as <a href="https://doc.rust-lang.org/std/primitive.tuple.html">primitive tuple types</a>.</p>
@@ -1721,7 +1735,6 @@ pub fn main() {
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/dynamic_types/greeting.rn
 Greetings from John-John Tedro, and good luck with this section!
-== () (2.7585ms)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="structs"><a class="header" href="#structs">Structs</a></h1>
 <p>Structs are like objects, except that they have a predefined structure with a
@@ -1762,7 +1775,6 @@ pub fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/structs/user_database.rn
 setbac is inactive
 setbac is active
-== () (6.2095ms)
 </code></pre>
 <p>Structs can also be pattern matched, like most types.</p>
 <p>But since the fields of a struct are known at compile time, the compiler can
@@ -1799,7 +1811,6 @@ pub fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/structs/struct_matching.rn
 Yep, it's setbac.
 Other user: newt.
-== () (1.0652ms)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="enums"><a class="header" href="#enums">Enums</a></h1>
 <p>Rune has support for <em>enumerations</em>. These allow you to define a type with zero
@@ -1844,7 +1855,6 @@ Count: 9
 Second count!
 Count: 0
 Count: 1
-== () (9.0745ms)
 </code></pre>
 <p>Using an <code>Option</code> allows us to easily model the scenario where we have an
 optional function parameter, with a default fallback value.</p>
@@ -2037,7 +2047,6 @@ pub fn main() {
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/try_operator/basic_try.rn
 Result: 2, 1
-== () (7.4912ms)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="generators"><a class="header" href="#generators">Generators</a></h1>
 <p>Generators are a convenient method for constructing functions which are capable
@@ -2084,7 +2093,6 @@ pub fn main() {
 55
 89
 144
-== () (14.9441ms)
 </code></pre>
 <h2 id="advanced-generators-with-generatorstate"><a class="header" href="#advanced-generators-with-generatorstate">Advanced generators with <code>GeneratorState</code></a></h2>
 <p>Generators internally are a bit more complex than that.
@@ -2093,15 +2101,20 @@ things easier to do.</p>
 <p>The first thing to know is that <code>yield</code> itself can actually <em>produce</em> a value,
 allowing the calling procedure to send values to the generator.</p>
 <pre><code class="language-rune">fn printer() {
-    loop {
+    let collected = [];
+
+    for _ in 0..2 {
         let out = yield;
         println!(&quot;{:?}&quot;, out);
+        collected.push(out);
     }
+
+    assert_eq!(collected, [&quot;John&quot;, (1, 2, 3)]);
 }
 
 pub fn main() {
     let printer = printer();
-    printer.resume(1);
+    printer.resume(());
     printer.resume(&quot;John&quot;);
     printer.resume((1, 2, 3));
 }
@@ -2109,7 +2122,6 @@ pub fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/generators/send_values.rn
 &quot;John&quot;
 (1, 2, 3)
-== () (883.2µs)
 </code></pre>
 <p>But wait, what happened to the first value we sent, <code>1</code>?</p>
 <p>Well, generators don't run immediately, they need to be &quot;warmed up&quot; by calling
@@ -2143,7 +2155,6 @@ ready to go!
 waiting for value...
 (1, 2, 3)
 waiting for value...
-== () (8.8014ms)
 </code></pre>
 <p>Ok, so we understand how to <em>send</em> values into a generator.
 But how do we <em>receive</em> them?</p>
@@ -2166,7 +2177,6 @@ pub fn main() {
 Yielded(1)
 &quot;John&quot;
 Complete(2)
-== () (712.7µs)
 </code></pre>
 <p>After the first call to resume, we see that the generator produced <code>Yielded(1)</code>.
 This corresponds to the <code>yield 1</code> statement in the generator.</p>
@@ -2221,15 +2231,20 @@ fn sub(a, b) {
     a - b
 }
 
+#[test]
+fn test_function_pointer() {
+    assert_eq!(do_thing(add), 3);
+    assert_eq!(do_thing(sub), -1);
+}
+
 pub fn main() {
-    println!(&quot;{}&quot;, do_thing(add));
-    println!(&quot;{}&quot;, do_thing(sub));
+    println!(&quot;Result: {}&quot;, do_thing(add));
+    println!(&quot;Result: {}&quot;, do_thing(sub));
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/closures/function_pointers.rn
 Result: 3
 Result: -1
-== () (5.4354ms)
 </code></pre>
 <h2 id="closures-1"><a class="header" href="#closures-1">Closures</a></h2>
 <p>Closures are anonymous functions which closes over their environment.
@@ -2237,6 +2252,13 @@ This means that they capture any variables used inside of the closure, allowing
 them to be used when the function is being called.</p>
 <pre><code class="language-rune">fn work(op) {
     op(1, 2)
+}
+
+#[test]
+fn test_basic_closure() {
+    let n = 1;
+    assert_eq!(work(|a, b| n + a + b), 4);
+    assert_eq!(work(|a, b| n + a * b), 3);
 }
 
 pub fn main() {
@@ -2248,7 +2270,6 @@ pub fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/closures/basic_closure.rn
 Result: 4
 Result: 3
-== () (5.4354ms)
 </code></pre>
 <blockquote>
 <p>Hint: Closures which do not capture their environment are <em>identical</em> in
@@ -2368,7 +2389,6 @@ the result of those tasks.</p>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_http.rn
 200 OK
 200 OK
-== () (591.0319ms)
 </code></pre>
 <p>In the above code we send two requests <em>concurrently</em>. They are both processed
 at the same time and we collect the result.</p>
@@ -2405,7 +2425,6 @@ pub async fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_http_timeout.rn
 200 OK
 Request timed out!
-== () (3.2231404s)
 </code></pre>
 <p>But wait, this is taking three seconds. We're not running the requests
 concurrently any longer!</p>
@@ -2445,7 +2464,6 @@ pub async fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_http_concurrent.rn
 Result: 200 OK
 Request timed out!
-== () (2.0028603s)
 </code></pre>
 <h2 id="async-closures"><a class="header" href="#async-closures"><code>async</code> closures</a></h2>
 <p>Closures can be prefixed with the <code>async</code> keyword, meaning calling them will
@@ -2464,7 +2482,6 @@ pub async fn main() {
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_closure.rn
 Status: 200 OK
-== () (165.4817ms)
 </code></pre>
 <h2 id="async-blocks"><a class="header" href="#async-blocks"><code>async</code> blocks</a></h2>
 <p>Blocks can be marked with <code>async</code> to produce on-the-fly futures. These blocks
@@ -2483,7 +2500,6 @@ pub async fn main() {
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_blocks.rn
 Status: 200 OK
-== () (179.9381ms)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="streams"><a class="header" href="#streams">Streams</a></h1>
 <p>Streams are the asynchronous version of <a href="./7_generators.html">Generators</a>.</p>
@@ -2517,7 +2533,6 @@ pub async fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/streams/basic_stream.rn
 200 OK
 200 OK
-== () (754.3946ms)
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="macros"><a class="header" href="#macros">Macros</a></h1>
 <p>Rune has (experimental) support for macros. These are functions which expand
@@ -2590,7 +2605,6 @@ pub fn main() {
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/macros/stringy_math.rn -O macros=true --experimental
 200
-== () (2.9737ms)
 </code></pre>
 <p>To access the <code>std::experimental</code>, you have to specify the <code>--experimental</code>
 option to the Rune CLI.</p>
@@ -2933,23 +2947,22 @@ script:</p>
     callable();
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/compiler_guide/closures.rn --dump-instructions --dump-functions
+<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/compiler_guide/closures.rn --emit-instructions --dump-functions
 # instructions
-fn main() (0xa76ee18c7fed2b52):
-  0000 = load-fn 0xca35663d3c51a903 // closure `main::$0::$0`
-  0001 = copy 0 // var `callable`
-  0002 = call-fn 0
+fn main() (0x1c69d5964e831fc1):
+  0000 = load-fn hash=0xbef6d5f6276cd45e // closure `3`
+  0001 = copy offset=0 // var `callable`
+  0002 = call-fn args=0
   0003 = pop
   0004 = pop
   0005 = return-unit
 
-fn main::$0::$0() (0xca35663d3c51a903):
-  0006 = push 42
-  0007 = return
+fn main::$0::$0() (0xbef6d5f6276cd45e):
+  0006 = push value=42
+  0007 = return address=top, clean=0
 # dynamic functions
-0xca35663d3c51a903 = main::$0::$0()
-0xa76ee18c7fed2b52 = main()
-== () (173µs)
+0xbef6d5f6276cd45e = main::$0::$0()
+0x1c69d5964e831fc1 = main()
 </code></pre>
 <p>A function pointer is pushed on the stack <code>load-fn 0xca35663d3c51a903</code>, then
 copied and called with zero arguments.</p>

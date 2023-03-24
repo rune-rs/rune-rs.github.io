@@ -189,7 +189,6 @@ pub fn main() {
 55
 89
 144
-== () (14.9441ms)
 </code></pre>
 <h2 id="advanced-generators-with-generatorstate"><a class="header" href="#advanced-generators-with-generatorstate">Advanced generators with <code>GeneratorState</code></a></h2>
 <p>Generators internally are a bit more complex than that.
@@ -198,15 +197,20 @@ things easier to do.</p>
 <p>The first thing to know is that <code>yield</code> itself can actually <em>produce</em> a value,
 allowing the calling procedure to send values to the generator.</p>
 <pre><code class="language-rune">fn printer() {
-    loop {
+    let collected = [];
+
+    for _ in 0..2 {
         let out = yield;
         println!(&quot;{:?}&quot;, out);
+        collected.push(out);
     }
+
+    assert_eq!(collected, [&quot;John&quot;, (1, 2, 3)]);
 }
 
 pub fn main() {
     let printer = printer();
-    printer.resume(1);
+    printer.resume(());
     printer.resume(&quot;John&quot;);
     printer.resume((1, 2, 3));
 }
@@ -214,7 +218,6 @@ pub fn main() {
 <pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/generators/send_values.rn
 &quot;John&quot;
 (1, 2, 3)
-== () (883.2µs)
 </code></pre>
 <p>But wait, what happened to the first value we sent, <code>1</code>?</p>
 <p>Well, generators don't run immediately, they need to be &quot;warmed up&quot; by calling
@@ -248,7 +251,6 @@ ready to go!
 waiting for value...
 (1, 2, 3)
 waiting for value...
-== () (8.8014ms)
 </code></pre>
 <p>Ok, so we understand how to <em>send</em> values into a generator.
 But how do we <em>receive</em> them?</p>
@@ -271,7 +273,6 @@ pub fn main() {
 Yielded(1)
 &quot;John&quot;
 Complete(2)
-== () (712.7µs)
 </code></pre>
 <p>After the first call to resume, we see that the generator produced <code>Yielded(1)</code>.
 This corresponds to the <code>yield 1</code> statement in the generator.</p>
