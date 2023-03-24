@@ -537,9 +537,7 @@ var rune = (function (exports) {
   }
 
   async function init$1(input) {
-      if (typeof input === 'undefined') {
-          input = new URL('index_bg.wasm', (document.currentScript && document.currentScript.src || new URL('rune.js', document.baseURI).href));
-      }
+
       const imports = getImports();
 
       if (typeof input === 'string' || (typeof Request === 'function' && input instanceof Request) || (typeof URL === 'function' && input instanceof URL)) {
@@ -554,26 +552,26 @@ var rune = (function (exports) {
   var exports$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     compile: compile,
-    initSync: initSync,
-    'default': init$1
+    default: init$1,
+    initSync: initSync
   });
 
   var wasm = async (opt = {}) => {
-                          let {importHook, serverPath} = opt;
+                  let {importHook, serverPath} = opt;
 
-                          let path = "/js/assets/rune-wasm-44faeb7f.wasm";
+                  let path = "/js/assets/rune_wasm-eece8d60.wasm";
 
-                          if (serverPath != null) {
-                              path = serverPath + /[^\/\\]*$/.exec(path)[0];
-                          }
+                  if (serverPath != null) {
+                      path = serverPath + /[^\/\\]*$/.exec(path)[0];
+                  }
 
-                          if (importHook != null) {
-                              path = importHook(path);
-                          }
+                  if (importHook != null) {
+                      path = importHook(path);
+                  }
 
-                          await init$1(path);
-                          return exports$1;
-                      };
+                  await init$1(path);
+                  return exports$1;
+              };
 
   async function init() {
       exports.module = await wasm();
@@ -582,8 +580,6 @@ var rune = (function (exports) {
   exports.module = null;
 
   exports.init = init;
-
-  Object.defineProperty(exports, '__esModule', { value: true });
 
   return exports;
 

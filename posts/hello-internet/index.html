@@ -26,7 +26,7 @@
       
 
       
-        <link rel="alternate" type="application/rss+xml" title="RSS" href="https:&#x2F;&#x2F;rune-rs.github.io&#x2F;rss.xml">
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://rune-rs.github.io/rss.xml">
       
     </head>
 
@@ -88,34 +88,33 @@ push to main. <a href="https://github.com/rune-rs/rune/tree/main/tools/site">The
 involved</a> to
 download and run Zola, but apart from that the experience has been really
 smooth. It's a great project overall.</p>
-<pre style="background-color:#2e3440;">
-<code><span style="color:#81a1c1;">fn </span><span style="color:#88c0d0;">main</span><span style="color:#d8dee9;">() </span><span style="color:#eceff4;">-&gt; </span><span style="color:#8fbcbb;">Result</span><span style="color:#d8dee9;">&lt;()&gt; {
-    </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> url </span><span style="color:#81a1c1;">= match </span><span style="color:#d8dee9;">env</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">var(</span><span style="color:#a3be8c;">&quot;ZOLA_URL&quot;</span><span style="color:#d8dee9;">) {
-        </span><span style="color:#8fbcbb;">Ok</span><span style="color:#d8dee9;">(url) </span><span style="color:#81a1c1;">=&gt;</span><span style="color:#d8dee9;"> url</span><span style="color:#eceff4;">,
-        </span><span style="color:#8fbcbb;">Err</span><span style="color:#d8dee9;">(</span><span style="color:#81a1c1;">..</span><span style="color:#d8dee9;">) </span><span style="color:#81a1c1;">=&gt; </span><span style="color:#d8dee9;">bail!(</span><span style="color:#a3be8c;">&quot;missing ZOLA_URL&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">,
-    </span><span style="color:#d8dee9;">}</span><span style="color:#eceff4;">;
-
-    </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> target </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">Path</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">new(</span><span style="color:#a3be8c;">&quot;target&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">;
-    </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> bin </span><span style="color:#81a1c1;">=</span><span style="color:#d8dee9;"> target</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">join</span><span style="color:#d8dee9;">(</span><span style="color:#a3be8c;">&quot;zola&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">;
-
-    </span><span style="color:#81a1c1;">if !</span><span style="color:#d8dee9;">bin</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">is_file</span><span style="color:#d8dee9;">() {
-        println!(</span><span style="color:#a3be8c;">&quot;Downloading: </span><span style="color:#ebcb8b;">{}</span><span style="color:#a3be8c;">&quot;</span><span style="color:#eceff4;">,</span><span style="color:#d8dee9;"> url)</span><span style="color:#eceff4;">;
-        </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> bytes </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">reqwest</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">blocking</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">get(</span><span style="color:#81a1c1;">&amp;</span><span style="color:#d8dee9;">url)</span><span style="color:#81a1c1;">?.</span><span style="color:#88c0d0;">bytes</span><span style="color:#d8dee9;">()</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
-        </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> decoder </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">GzDecoder</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">new(io</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">Cursor</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">new(bytes</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">as_ref</span><span style="color:#d8dee9;">()))</span><span style="color:#eceff4;">;
-        </span><span style="color:#81a1c1;">let mut</span><span style="color:#d8dee9;"> archive </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">Archive</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">new(decoder)</span><span style="color:#eceff4;">;</span><span style="color:#d8dee9;">
-        archive</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">unpack</span><span style="color:#d8dee9;">(target)</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
-    </span><span style="color:#d8dee9;">}
-
-    </span><span style="color:#81a1c1;">if !</span><span style="color:#d8dee9;">bin</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">is_file</span><span style="color:#d8dee9;">() {
-        bail!(</span><span style="color:#a3be8c;">&quot;Missing bin: {}&quot;</span><span style="color:#eceff4;">,</span><span style="color:#d8dee9;"> bin</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">display</span><span style="color:#d8dee9;">())</span><span style="color:#eceff4;">;
-    </span><span style="color:#d8dee9;">}
-
-    </span><span style="color:#81a1c1;">let mut</span><span style="color:#d8dee9;"> it </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">env</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">args()</span><span style="color:#eceff4;">;</span><span style="color:#d8dee9;">
-    it</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">next</span><span style="color:#d8dee9;">()</span><span style="color:#eceff4;">;
-
-    </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> status </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">Command</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">new(bin)</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">args</span><span style="color:#d8dee9;">(it)</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">status</span><span style="color:#d8dee9;">()</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
-    </span><span style="color:#d8dee9;">std</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">process</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">exit(status</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">code</span><span style="color:#d8dee9;">()</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">unwrap</span><span style="color:#d8dee9;">())</span><span style="color:#eceff4;">;
-</span><span style="color:#d8dee9;">}
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() -&gt; Result&lt;()&gt; {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> url = </span><span style="color:#b48ead;">match </span><span>env::var(&quot;</span><span style="color:#a3be8c;">ZOLA_URL</span><span>&quot;) {
+</span><span>        Ok(url) =&gt; url,
+</span><span>        Err(..) =&gt; bail!(&quot;</span><span style="color:#a3be8c;">missing ZOLA_URL</span><span>&quot;),
+</span><span>    };
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> target = Path::new(&quot;</span><span style="color:#a3be8c;">target</span><span>&quot;);
+</span><span>    </span><span style="color:#b48ead;">let</span><span> bin = target.</span><span style="color:#96b5b4;">join</span><span>(&quot;</span><span style="color:#a3be8c;">zola</span><span>&quot;);
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>!bin.</span><span style="color:#96b5b4;">is_file</span><span>() {
+</span><span>        println!(&quot;</span><span style="color:#a3be8c;">Downloading: </span><span style="color:#d08770;">{}</span><span>&quot;, url);
+</span><span>        </span><span style="color:#b48ead;">let</span><span> bytes = reqwest::blocking::get(&amp;url)?.</span><span style="color:#96b5b4;">bytes</span><span>()?;
+</span><span>        </span><span style="color:#b48ead;">let</span><span> decoder = GzDecoder::new(io::Cursor::new(bytes.</span><span style="color:#96b5b4;">as_ref</span><span>()));
+</span><span>        </span><span style="color:#b48ead;">let mut</span><span> archive = Archive::new(decoder);
+</span><span>        archive.</span><span style="color:#96b5b4;">unpack</span><span>(target)?;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>!bin.</span><span style="color:#96b5b4;">is_file</span><span>() {
+</span><span>        bail!(&quot;</span><span style="color:#a3be8c;">Missing bin: {}</span><span>&quot;, bin.</span><span style="color:#96b5b4;">display</span><span>());
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> it = env::args();
+</span><span>    it.</span><span style="color:#96b5b4;">next</span><span>();
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> status = Command::new(bin).</span><span style="color:#96b5b4;">args</span><span>(it).</span><span style="color:#96b5b4;">status</span><span>()?;
+</span><span>    std::process::exit(status.</span><span style="color:#96b5b4;">code</span><span>().</span><span style="color:#96b5b4;">unwrap</span><span>());
+</span><span>}
 </span></code></pre>
 <p>Basically it's perfect. It's part of the repository and I don't have to think
 too much about it. Hopefully others feel the same and that the threshold for

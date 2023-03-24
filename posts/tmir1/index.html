@@ -26,7 +26,7 @@
       
 
       
-        <link rel="alternate" type="application/rss+xml" title="RSS" href="https:&#x2F;&#x2F;rune-rs.github.io&#x2F;rss.xml">
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://rune-rs.github.io/rss.xml">
       
     </head>
 
@@ -277,39 +277,38 @@ get with the <a href="https://docs.rs/syn/1"><code>syn</code> crate</a>. We also
 macro</a> to ergonomically produce token streams.</p>
 <p>The following is an example macro that comes with the <code>std::experiments</code> crate.
 It translates &quot;stringy math&quot; into rune expressions:</p>
-<pre style="background-color:#2e3440;">
-<code><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">rune</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">ast</span><span style="color:#eceff4;">;
-</span><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">rune</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">macros</span><span style="color:#eceff4;">;
-</span><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">rune</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">{quote</span><span style="color:#eceff4;">,</span><span style="color:#d8dee9;"> Parser</span><span style="color:#eceff4;">,</span><span style="color:#d8dee9;"> Spanned</span><span style="color:#eceff4;">,</span><span style="color:#d8dee9;"> TokenStream}</span><span style="color:#eceff4;">;
-</span><span style="color:#81a1c1;">use </span><span style="color:#d8dee9;">runestick</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">SpannedError</span><span style="color:#eceff4;">;
-
-</span><span style="color:#616e88;">/// Implementation for the `stringy_math!` macro.
-</span><span style="color:#81a1c1;">pub</span><span style="color:#d8dee9;">(</span><span style="color:#81a1c1;">crate</span><span style="color:#d8dee9;">) </span><span style="color:#81a1c1;">fn </span><span style="color:#88c0d0;">stringy_math</span><span style="color:#d8dee9;">(stream</span><span style="color:#eceff4;">: </span><span style="color:#81a1c1;">&amp;</span><span style="color:#d8dee9;">TokenStream) </span><span style="color:#eceff4;">-&gt; </span><span style="color:#d8dee9;">runestick</span><span style="color:#81a1c1;">::</span><span style="color:#8fbcbb;">Result</span><span style="color:#d8dee9;">&lt;TokenStream&gt; {
-    </span><span style="color:#81a1c1;">let mut</span><span style="color:#d8dee9;"> parser </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">Parser</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">from_token_stream(stream)</span><span style="color:#eceff4;">;
-
-    </span><span style="color:#81a1c1;">let mut</span><span style="color:#d8dee9;"> output </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">quote!(</span><span style="color:#b48ead;">0</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">;
-
-    </span><span style="color:#81a1c1;">while !</span><span style="color:#d8dee9;">parser</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">is_eof</span><span style="color:#d8dee9;">()</span><span style="color:#81a1c1;">? </span><span style="color:#d8dee9;">{
-        </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> op </span><span style="color:#81a1c1;">=</span><span style="color:#d8dee9;"> parser</span><span style="color:#81a1c1;">.</span><span style="color:#d8dee9;">parse</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">&lt;ast</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">Ident&gt;()</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
-        </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> arg </span><span style="color:#81a1c1;">=</span><span style="color:#d8dee9;"> parser</span><span style="color:#81a1c1;">.</span><span style="color:#d8dee9;">parse</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">&lt;ast</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">Expr&gt;()</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;</span><span style="color:#d8dee9;">
-
-        output </span><span style="color:#81a1c1;">= match </span><span style="color:#d8dee9;">macros</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">resolve(op)</span><span style="color:#81a1c1;">?.</span><span style="color:#88c0d0;">as_ref</span><span style="color:#d8dee9;">() {
-            </span><span style="color:#a3be8c;">&quot;add&quot; </span><span style="color:#81a1c1;">=&gt; </span><span style="color:#d8dee9;">quote!((</span><span style="color:#81a1c1;">#</span><span style="color:#d8dee9;">output) </span><span style="color:#81a1c1;">+ #</span><span style="color:#d8dee9;">arg)</span><span style="color:#eceff4;">,
-            </span><span style="color:#a3be8c;">&quot;sub&quot; </span><span style="color:#81a1c1;">=&gt; </span><span style="color:#d8dee9;">quote!((</span><span style="color:#81a1c1;">#</span><span style="color:#d8dee9;">output) </span><span style="color:#81a1c1;">- #</span><span style="color:#d8dee9;">arg)</span><span style="color:#eceff4;">,
-            </span><span style="color:#a3be8c;">&quot;div&quot; </span><span style="color:#81a1c1;">=&gt; </span><span style="color:#d8dee9;">quote!((</span><span style="color:#81a1c1;">#</span><span style="color:#d8dee9;">output) </span><span style="color:#81a1c1;">/ #</span><span style="color:#d8dee9;">arg)</span><span style="color:#eceff4;">,
-            </span><span style="color:#a3be8c;">&quot;mul&quot; </span><span style="color:#81a1c1;">=&gt; </span><span style="color:#d8dee9;">quote!((</span><span style="color:#81a1c1;">#</span><span style="color:#d8dee9;">output) </span><span style="color:#81a1c1;">* #</span><span style="color:#d8dee9;">arg)</span><span style="color:#eceff4;">,
-            </span><span style="color:#81a1c1;">_ =&gt; </span><span style="color:#d8dee9;">{
-                </span><span style="color:#81a1c1;">return </span><span style="color:#8fbcbb;">Err</span><span style="color:#d8dee9;">(SpannedError</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">msg(
-                    op</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">span</span><span style="color:#d8dee9;">()</span><span style="color:#eceff4;">,
-                    </span><span style="color:#a3be8c;">&quot;unsupported operation&quot;</span><span style="color:#eceff4;">,
-                </span><span style="color:#d8dee9;">)</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">into</span><span style="color:#d8dee9;">())
-            }
-        }
-    }
-
-    parser</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">eof</span><span style="color:#d8dee9;">()</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
-    </span><span style="color:#8fbcbb;">Ok</span><span style="color:#d8dee9;">(output</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">into_token_stream</span><span style="color:#d8dee9;">())
-}
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>rune::ast;
+</span><span style="color:#b48ead;">use </span><span>rune::macros;
+</span><span style="color:#b48ead;">use </span><span>rune::{quote, Parser, Spanned, TokenStream};
+</span><span style="color:#b48ead;">use </span><span>runestick::SpannedError;
+</span><span>
+</span><span style="color:#65737e;">/// Implementation for the `stringy_math!` macro.
+</span><span style="color:#b48ead;">pub</span><span>(</span><span style="color:#b48ead;">crate</span><span>) </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">stringy_math</span><span>(</span><span style="color:#bf616a;">stream</span><span>: &amp;TokenStream) -&gt; runestick::Result&lt;TokenStream&gt; {
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> parser = Parser::from_token_stream(stream);
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> output = quote!(</span><span style="color:#d08770;">0</span><span>);
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">while </span><span>!parser.</span><span style="color:#96b5b4;">is_eof</span><span>()? {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> op = parser.parse::&lt;ast::Ident&gt;()?;
+</span><span>        </span><span style="color:#b48ead;">let</span><span> arg = parser.parse::&lt;ast::Expr&gt;()?;
+</span><span>
+</span><span>        output = </span><span style="color:#b48ead;">match </span><span>macros::resolve(op)?.</span><span style="color:#96b5b4;">as_ref</span><span>() {
+</span><span>            &quot;</span><span style="color:#a3be8c;">add</span><span>&quot; =&gt; quote!((#output) + #arg),
+</span><span>            &quot;</span><span style="color:#a3be8c;">sub</span><span>&quot; =&gt; quote!((#output) - #arg),
+</span><span>            &quot;</span><span style="color:#a3be8c;">div</span><span>&quot; =&gt; quote!((#output) / #arg),
+</span><span>            &quot;</span><span style="color:#a3be8c;">mul</span><span>&quot; =&gt; quote!((#output) * #arg),
+</span><span>            _ =&gt; {
+</span><span>                </span><span style="color:#b48ead;">return </span><span>Err(SpannedError::msg(
+</span><span>                    op.</span><span style="color:#96b5b4;">span</span><span>(),
+</span><span>                    &quot;</span><span style="color:#a3be8c;">unsupported operation</span><span>&quot;,
+</span><span>                ).</span><span style="color:#96b5b4;">into</span><span>())
+</span><span>            }
+</span><span>        }
+</span><span>    }
+</span><span>
+</span><span>    parser.</span><span style="color:#96b5b4;">eof</span><span>()?;
+</span><span>    Ok(output.</span><span style="color:#96b5b4;">into_token_stream</span><span>())
+</span><span>}
 </span></code></pre>
 <p>You can try it out below:</p>
 <div class="rune big"
@@ -358,8 +357,7 @@ in the next section.</p>
 <h2 id="println-and-formatargs"><code>println!</code> and <code>FormatArgs</code></h2>
 <p>In Rust, when you want to print something to stdout you can reach for the
 <code>println!</code> macro.</p>
-<pre style="background-color:#2e3440;">
-<code><span style="color:#d8dee9;">println!(</span><span style="color:#a3be8c;">&quot;Hello {:&gt;12}&quot;</span><span style="color:#eceff4;">, </span><span style="color:#a3be8c;">&quot;World&quot;</span><span style="color:#d8dee9;">)</span><span style="color:#eceff4;">;
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>println!(&quot;</span><span style="color:#a3be8c;">Hello {:&gt;12}</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">World</span><span>&quot;);
 </span></code></pre>
 <p>The first argument in this macro is called a format string. And combined it
 provides a convenient way for performing common text formatting operations in
@@ -401,14 +399,13 @@ in general.</p>
 implements <code>Parse</code> that can be used to add message formatting to any macro. The
 full implementation of the <code>println!</code> is simply using it to format a string
 which is passed to <code>std::io::println</code>.</p>
-<pre style="background-color:#2e3440;">
-<code><span style="color:#81a1c1;">fn </span><span style="color:#88c0d0;">println_macro</span><span style="color:#d8dee9;">(stream</span><span style="color:#eceff4;">: </span><span style="color:#81a1c1;">&amp;</span><span style="color:#d8dee9;">TokenStream) </span><span style="color:#eceff4;">-&gt; </span><span style="color:#8fbcbb;">Result</span><span style="color:#d8dee9;">&lt;TokenStream&gt; {
-    </span><span style="color:#81a1c1;">let mut</span><span style="color:#d8dee9;"> p </span><span style="color:#81a1c1;">= </span><span style="color:#d8dee9;">Parser</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">from_token_stream(stream)</span><span style="color:#eceff4;">;
-    </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> args </span><span style="color:#81a1c1;">=</span><span style="color:#d8dee9;"> p</span><span style="color:#81a1c1;">.</span><span style="color:#d8dee9;">parse_all</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">&lt;macros</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">FormatArgs&gt;()</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
-
-    </span><span style="color:#81a1c1;">let</span><span style="color:#d8dee9;"> expanded </span><span style="color:#81a1c1;">=</span><span style="color:#d8dee9;"> args</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">expand</span><span style="color:#d8dee9;">()</span><span style="color:#81a1c1;">?</span><span style="color:#eceff4;">;
-    </span><span style="color:#8fbcbb;">Ok</span><span style="color:#d8dee9;">(quote!(std</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">io</span><span style="color:#81a1c1;">::</span><span style="color:#d8dee9;">println(</span><span style="color:#81a1c1;">#</span><span style="color:#d8dee9;">expanded))</span><span style="color:#81a1c1;">.</span><span style="color:#88c0d0;">into_token_stream</span><span style="color:#d8dee9;">())
-}
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">println_macro</span><span>(</span><span style="color:#bf616a;">stream</span><span>: &amp;TokenStream) -&gt; Result&lt;TokenStream&gt; {
+</span><span>    </span><span style="color:#b48ead;">let mut</span><span> p = Parser::from_token_stream(stream);
+</span><span>    </span><span style="color:#b48ead;">let</span><span> args = p.parse_all::&lt;macros::FormatArgs&gt;()?;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> expanded = args.</span><span style="color:#96b5b4;">expand</span><span>()?;
+</span><span>    Ok(quote!(std::io::println(#expanded)).</span><span style="color:#96b5b4;">into_token_stream</span><span>())
+</span><span>}
 </span></code></pre>
 <p>To accomplish this, <code>FormatArgs</code> is actually expanded into two internal macros:</p>
 <ul>
