@@ -211,7 +211,7 @@ module.field_fn(Protocol::GET, &quot;field&quot;, External::field_get)?;</code><
 argument to the corresponding attribute pointing to the function to use instead.</p>
 <p>The following uses an implementation of <code>add_assign</code> which performs checked
 addition:</p>
-<pre><code class="language-rust noplaypen">use rune::runtime::{VmError, VmErrorKind};
+<pre><code class="language-rust noplaypen">use rune::runtime::{VmErrorKind, VmResult};
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Any, ContextError, Diagnostics, Module, Vm};
 use std::sync::Arc;
@@ -224,13 +224,13 @@ struct External {
 
 #[allow(clippy::unnecessary_lazy_evaluations)]
 impl External {
-    fn value_add_assign(&amp;mut self, other: i64) -&gt; Result&lt;(), VmError&gt; {
-        self.value = self
+    fn value_add_assign(&amp;mut self, other: i64) -&gt; VmResult&lt;()&gt; {
+        self.value = rune::vm_try!(self
             .value
             .checked_add(other)
-            .ok_or_else(|| VmErrorKind::Overflow)?;
+            .ok_or_else(|| VmErrorKind::Overflow));
 
-        Ok(())
+        VmResult::Ok(())
     }
 }
 
@@ -269,8 +269,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
         value: i64::max_value(),
     };
     let err = vm.call([&quot;main&quot;], (input,)).unwrap_err();
-    let (kind, _) = err.as_unwound();
-    println!(&quot;{:?}&quot;, kind);
+    println!(&quot;{:?}&quot;, err.kind());
     Ok(())
 }
 
