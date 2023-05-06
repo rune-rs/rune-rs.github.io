@@ -82,7 +82,7 @@ cargo feature called <a href="https://doc.rust-lang.org/cargo/reference/cargo-ta
 called <code>tests</code> and build an integration test for every file found.</p>
 <p>So what happens if you have a lot of tests?</p>
 <p>This is the <a href="https://github.com/rune-rs/rune/tree/main/tests/tests"><code>tests</code> directory used by Rune</a>:</p>
-<pre data-lang="text" style="background-color:#2b303b;color:#c0c5ce;" class="language-text "><code class="language-text" data-lang="text"><span>tests/bugfixes.rs
+<pre data-lang="text" style="background-color:#383838;color:#e6e1dc;" class="language-text "><code class="language-text" data-lang="text"><span>tests/bugfixes.rs
 </span><span>tests/collections.rs
 </span><span>tests/compiler_attributes.rs
 </span><span>tests/compiler_expr_assign.rs
@@ -148,10 +148,10 @@ to happen every time a dependency is changed. Something we expect to happen
 quite <em>frequently</em> in the projects being developed!</p>
 <p>So if we let <code>autotests</code> do its thing, let's see how long it takes to run our
 tests:</p>
-<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#65737e;"># make sure dependencies are built
-</span><span style="color:#bf616a;">$</span><span>&gt; cargo clean &amp;&amp; </span><span style="color:#bf616a;">cargo</span><span> build
-</span><span style="color:#bf616a;">$</span><span>&gt; time cargo test
-</span><span style="color:#bf616a;">cargo</span><span> test  451,83s user 59,81s system 1170% cpu 43,697 total
+<pre data-lang="sh" style="background-color:#383838;color:#e6e1dc;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="font-style:italic;color:#7c7865;"># make sure dependencies are built
+</span><span>$</span><span style="color:#cc7833;">&gt;</span><span> cargo clean </span><span style="color:#cc7833;">&amp;&amp; </span><span>cargo build
+</span><span>$</span><span style="color:#cc7833;">&gt;</span><span> time cargo test
+</span><span>cargo test  451,83s user 59,81s system 1170% cpu 43,697 total
 </span></code></pre>
 <p>Assuming this doesn't cause issues for you. A faster way to do this would be to
 build a single binary containing all tests.</p>
@@ -159,59 +159,59 @@ build a single binary containing all tests.</p>
 modifications to your project.</p>
 <p>First we need to disable <code>autotests</code> in <code>Cargo.toml</code> and specify an entrypoint
 to our one integration test:</p>
-<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[package]
-</span><span style="color:#bf616a;">name </span><span>= &quot;</span><span style="color:#a3be8c;">rune-tests</span><span>&quot;
-</span><span style="color:#65737e;"># **snip**
+<pre data-lang="toml" style="background-color:#383838;color:#e6e1dc;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[</span><span style="color:#e8bf6a;">package</span><span>]
+</span><span style="color:#e8bf6a;">name </span><span>= </span><span style="color:#c1be91;">&quot;rune-tests&quot;
+</span><span style="color:#95815e;"># **snip**
 </span><span>
-</span><span style="color:#65737e;"># disable autodiscovery of tests
-</span><span style="color:#bf616a;">autotests </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#95815e;"># disable autodiscovery of tests
+</span><span style="color:#e8bf6a;">autotests </span><span>= </span><span style="color:#6e9cbe;">false
 </span><span>
-</span><span style="color:#65737e;"># add our entrypoint
-</span><span>[[test]]
-</span><span style="color:#bf616a;">name </span><span>= &quot;</span><span style="color:#a3be8c;">test</span><span>&quot;
-</span><span style="color:#bf616a;">path </span><span>= &quot;</span><span style="color:#a3be8c;">test.rs</span><span>&quot;
+</span><span style="color:#95815e;"># add our entrypoint
+</span><span>[[</span><span style="color:#e8bf6a;">test</span><span>]]
+</span><span style="color:#e8bf6a;">name </span><span>= </span><span style="color:#c1be91;">&quot;test&quot;
+</span><span style="color:#e8bf6a;">path </span><span>= </span><span style="color:#c1be91;">&quot;test.rs&quot;
 </span></code></pre>
 <p>Next is where the magic happens. We write a <code>build.rs</code> extension to perform our
 own autodiscovery:</p>
-<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::env;
-</span><span style="color:#b48ead;">use </span><span>std::ffi::OsStr;
-</span><span style="color:#b48ead;">use </span><span>std::fs;
-</span><span style="color:#b48ead;">use </span><span>std::io;
-</span><span style="color:#b48ead;">use </span><span>std::io::Write as _;
-</span><span style="color:#b48ead;">use </span><span>std::path::Path;
+<pre data-lang="rust" style="background-color:#383838;color:#e6e1dc;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#cc7833;">use </span><span>std::env;
+</span><span style="color:#cc7833;">use </span><span>std::ffi::OsStr;
+</span><span style="color:#cc7833;">use </span><span>std::fs;
+</span><span style="color:#cc7833;">use </span><span>std::io;
+</span><span style="color:#cc7833;">use </span><span>std::io::Write </span><span style="color:#cc7833;">as _</span><span>;
+</span><span style="color:#cc7833;">use </span><span>std::path::Path;
 </span><span>
-</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">discover_tests</span><span>() -&gt; io::Result&lt;()&gt; {
-</span><span>    </span><span style="color:#b48ead;">let</span><span> manifest_dir = env::var_os(&quot;</span><span style="color:#a3be8c;">CARGO_MANIFEST_DIR</span><span>&quot;)
-</span><span>        .</span><span style="color:#96b5b4;">expect</span><span>(&quot;</span><span style="color:#a3be8c;">missing CARGO_MANIFEST_DIR</span><span>&quot;);
+</span><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">discover_tests</span><span>() -&gt; io::</span><span style="font-style:italic;color:#6e9cbe;">Result</span><span>&lt;()&gt; {
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> manifest_dir </span><span style="color:#cc7833;">= </span><span>env::var_os(</span><span style="color:#c1be91;">&quot;CARGO_MANIFEST_DIR&quot;</span><span>)
+</span><span>        .</span><span style="color:#da4939;">expect</span><span>(</span><span style="color:#c1be91;">&quot;missing CARGO_MANIFEST_DIR&quot;</span><span>);
 </span><span>
-</span><span>    </span><span style="color:#b48ead;">let</span><span> out_dir = env::var_os(&quot;</span><span style="color:#a3be8c;">OUT_DIR</span><span>&quot;)
-</span><span>        .</span><span style="color:#96b5b4;">expect</span><span>(&quot;</span><span style="color:#a3be8c;">missing OUT_DIR</span><span>&quot;);
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> out_dir </span><span style="color:#cc7833;">= </span><span>env::var_os(</span><span style="color:#c1be91;">&quot;OUT_DIR&quot;</span><span>)
+</span><span>        .</span><span style="color:#da4939;">expect</span><span>(</span><span style="color:#c1be91;">&quot;missing OUT_DIR&quot;</span><span>);
 </span><span>
-</span><span>    </span><span style="color:#b48ead;">let mut</span><span> f = fs::File::create(Path::new(&amp;out_dir).</span><span style="color:#96b5b4;">join</span><span>(&quot;</span><span style="color:#a3be8c;">tests.rs</span><span>&quot;))?;
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let </span><span style="color:#cc7833;">mut</span><span> f </span><span style="color:#cc7833;">= </span><span>fs::File::create(Path::new(</span><span style="color:#cc7833;">&amp;</span><span>out_dir).</span><span style="color:#da4939;">join</span><span>(</span><span style="color:#c1be91;">&quot;tests.rs&quot;</span><span>))</span><span style="color:#cc7833;">?</span><span>;
 </span><span>
-</span><span>    </span><span style="color:#b48ead;">let</span><span> tests = Path::new(&amp;manifest_dir).</span><span style="color:#96b5b4;">join</span><span>(&quot;</span><span style="color:#a3be8c;">tests</span><span>&quot;);
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> tests </span><span style="color:#cc7833;">= </span><span>Path::new(</span><span style="color:#cc7833;">&amp;</span><span>manifest_dir).</span><span style="color:#da4939;">join</span><span>(</span><span style="color:#c1be91;">&quot;tests&quot;</span><span>);
 </span><span>
-</span><span>    </span><span style="color:#b48ead;">for</span><span> entry in fs::read_dir(tests)? {
-</span><span>        </span><span style="color:#b48ead;">let</span><span> entry = entry?;
-</span><span>        </span><span style="color:#b48ead;">let</span><span> path = entry.</span><span style="color:#96b5b4;">path</span><span>();
+</span><span>    </span><span style="color:#cc7833;">for</span><span> entry </span><span style="color:#cc7833;">in </span><span>fs::read_dir(tests)</span><span style="color:#cc7833;">? </span><span>{
+</span><span>        </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> entry </span><span style="color:#cc7833;">=</span><span> entry</span><span style="color:#cc7833;">?</span><span>;
+</span><span>        </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> path </span><span style="color:#cc7833;">=</span><span> entry.</span><span style="color:#da4939;">path</span><span>();
 </span><span>
-</span><span>        </span><span style="color:#b48ead;">if </span><span>!path.</span><span style="color:#96b5b4;">is_file</span><span>() || path.</span><span style="color:#96b5b4;">extension</span><span>() != Some(OsStr::new(&quot;</span><span style="color:#a3be8c;">rs</span><span>&quot;)) {
-</span><span>            </span><span style="color:#b48ead;">continue</span><span>;
+</span><span>        </span><span style="color:#cc7833;">if !</span><span>path.</span><span style="color:#da4939;">is_file</span><span>() </span><span style="color:#cc7833;">||</span><span> path.</span><span style="color:#da4939;">extension</span><span>() </span><span style="color:#cc7833;">!= </span><span style="font-style:italic;color:#6e9cbe;">Some</span><span>(OsStr::new(</span><span style="color:#c1be91;">&quot;rs&quot;</span><span>)) {
+</span><span>            </span><span style="color:#cc7833;">continue</span><span>;
 </span><span>        }
 </span><span>
-</span><span>        </span><span style="color:#b48ead;">if let </span><span>Some(stem) = path.</span><span style="color:#96b5b4;">file_stem</span><span>() {
-</span><span>            </span><span style="color:#b48ead;">let</span><span> path = path.</span><span style="color:#96b5b4;">canonicalize</span><span>()?;
+</span><span>        </span><span style="color:#cc7833;">if </span><span style="font-style:italic;color:#6e9cbe;">let Some</span><span>(stem) </span><span style="color:#cc7833;">=</span><span> path.</span><span style="color:#da4939;">file_stem</span><span>() {
+</span><span>            </span><span style="font-style:italic;color:#6e9cbe;">let</span><span> path </span><span style="color:#cc7833;">=</span><span> path.</span><span style="color:#da4939;">canonicalize</span><span>()</span><span style="color:#cc7833;">?</span><span>;
 </span><span>
-</span><span>            writeln!(f, &quot;</span><span style="color:#a3be8c;">#[path = </span><span style="color:#d08770;">{:?}</span><span style="color:#a3be8c;">]</span><span>&quot;, path.</span><span style="color:#96b5b4;">display</span><span>())?;
-</span><span>            writeln!(f, &quot;</span><span style="color:#a3be8c;">mod </span><span style="color:#d08770;">{}</span><span style="color:#a3be8c;">;</span><span>&quot;, stem.</span><span style="color:#96b5b4;">to_string_lossy</span><span>())?;
+</span><span>            writeln!(f, </span><span style="color:#c1be91;">&quot;#[path = </span><span style="color:#6d9cbe;">{:?}</span><span style="color:#c1be91;">]&quot;</span><span>, path.</span><span style="color:#da4939;">display</span><span>())</span><span style="color:#cc7833;">?</span><span>;
+</span><span>            writeln!(f, </span><span style="color:#c1be91;">&quot;mod </span><span style="color:#6d9cbe;">{}</span><span style="color:#c1be91;">;&quot;</span><span>, stem.</span><span style="color:#da4939;">to_string_lossy</span><span>())</span><span style="color:#cc7833;">?</span><span>;
 </span><span>        }
 </span><span>    }
 </span><span>
-</span><span>    Ok(())
+</span><span>    </span><span style="font-style:italic;color:#6e9cbe;">Ok</span><span>(())
 </span><span>}
 </span><span>
-</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
-</span><span>    </span><span style="color:#96b5b4;">discover_tests</span><span>().</span><span style="color:#96b5b4;">expect</span><span>(&quot;</span><span style="color:#a3be8c;">failed to discover tests</span><span>&quot;);
+</span><span style="font-style:italic;color:#6e9cbe;">fn </span><span style="color:#ffc66d;">main</span><span>() {
+</span><span>    </span><span style="color:#da4939;">discover_tests</span><span>().</span><span style="color:#da4939;">expect</span><span>(</span><span style="color:#c1be91;">&quot;failed to discover tests&quot;</span><span>);
 </span><span>}
 </span></code></pre>
 <p>This writes a generated file in <code>OUT_DIR</code> called <code>tests.rs</code> which contains the
@@ -226,12 +226,12 @@ them.</p>
 </blockquote>
 <p>Finally we include the generated file in <code>test.rs</code> which we defined as our
 entrypoint in <code>Cargo.toml</code>:</p>
-<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>include!(concat!(env!(&quot;</span><span style="color:#a3be8c;">OUT_DIR</span><span>&quot;), &quot;</span><span style="color:#a3be8c;">/tests.rs</span><span>&quot;));
+<pre data-lang="rust" style="background-color:#383838;color:#e6e1dc;" class="language-rust "><code class="language-rust" data-lang="rust"><span>include!(concat!(env!(</span><span style="color:#c1be91;">&quot;OUT_DIR&quot;</span><span>), </span><span style="color:#c1be91;">&quot;/tests.rs&quot;</span><span>));
 </span></code></pre>
 <p>Now if we do the same dance again we'll notice a significant speedup:</p>
-<pre data-lang="sh" style="background-color:#2b303b;color:#c0c5ce;" class="language-sh "><code class="language-sh" data-lang="sh"><span style="color:#bf616a;">$</span><span>&gt; cargo clean &amp;&amp; </span><span style="color:#bf616a;">cargo</span><span> build
-</span><span style="color:#bf616a;">$</span><span>&gt; time cargo test
-</span><span style="color:#bf616a;">cargo</span><span> test  33,86s user 3,73s system 315% cpu 11,912 total
+<pre data-lang="sh" style="background-color:#383838;color:#e6e1dc;" class="language-sh "><code class="language-sh" data-lang="sh"><span>$</span><span style="color:#cc7833;">&gt;</span><span> cargo clean </span><span style="color:#cc7833;">&amp;&amp; </span><span>cargo build
+</span><span>$</span><span style="color:#cc7833;">&gt;</span><span> time cargo test
+</span><span>cargo test  33,86s user 3,73s system 315% cpu 11,912 total
 </span></code></pre>
 <p>The entirety of the speedup lies within building and running a single binary
 instead of <em>59 separate</em> ones. This won't work for everyone, and obviously only
