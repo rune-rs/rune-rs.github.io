@@ -147,7 +147,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_24(arg0, arg1, arg2) {
-      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hb4746b1693baf940(arg0, arg1, addHeapObject(arg2));
+      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h5f6b188662312092(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -170,7 +170,7 @@ var rune = (function (exports) {
       }
   }
   function __wbg_adapter_62(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h51b21aa5109d8605(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h1091828d78d30c48(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function load(module, imports) {
@@ -422,7 +422,7 @@ var rune = (function (exports) {
           const ret = wasm$1.memory;
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper1398 = function(arg0, arg1, arg2) {
+      imports.wbg.__wbindgen_closure_wrapper1397 = function(arg0, arg1, arg2) {
           const ret = makeMutClosure(arg0, arg1, 556, __wbg_adapter_24);
           return addHeapObject(ret);
       };
@@ -475,7 +475,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-ef0c267d.wasm";
+                  let path = "/js/assets/rune_wasm-6f1b2bd9.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
