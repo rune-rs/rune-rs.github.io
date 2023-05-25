@@ -147,7 +147,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_24(arg0, arg1, arg2) {
-      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h689d1b2d67b0aaf4(arg0, arg1, addHeapObject(arg2));
+      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h2a8742074ba9dbb1(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -170,7 +170,7 @@ var rune = (function (exports) {
       }
   }
   function __wbg_adapter_60(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h61948937c3c4c617(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h0696f55b6a7cb038(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function __wbg_load(module, imports) {
@@ -227,10 +227,6 @@ var rune = (function (exports) {
           const ret = false;
           return ret;
       };
-      imports.wbg.__wbg_sleep_bf1f4d9ccd04f0b1 = function(arg0) {
-          const ret = sleep(arg0);
-          return addHeapObject(ret);
-      };
       imports.wbg.__wbg_new_2b6fea4ea03b1b95 = function() {
           const ret = new Object();
           return addHeapObject(ret);
@@ -270,6 +266,10 @@ var rune = (function (exports) {
           }
           const ret = result;
           return ret;
+      };
+      imports.wbg.__wbg_sleep_bf1f4d9ccd04f0b1 = function(arg0) {
+          const ret = sleep(arg0);
+          return addHeapObject(ret);
       };
       imports.wbg.__wbg_text_65fa1887e8f7b4ac = function() { return handleError(function (arg0) {
           const ret = getObject(arg0).text();
@@ -422,7 +422,7 @@ var rune = (function (exports) {
           const ret = getObject(arg0).then(getObject(arg1));
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper3729 = function(arg0, arg1, arg2) {
+      imports.wbg.__wbindgen_closure_wrapper3726 = function(arg0, arg1, arg2) {
           const ret = makeMutClosure(arg0, arg1, 302, __wbg_adapter_24);
           return addHeapObject(ret);
       };
@@ -479,7 +479,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-2745fd72.wasm";
+                  let path = "/js/assets/rune_wasm-242163e2.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
