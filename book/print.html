@@ -2548,10 +2548,10 @@ use rune::parse::Parser;
 /// Implementation for the `stringy_math!` macro.
 #[rune::macro_]
 pub(crate) fn stringy_math(
-    ctx: &amp;mut MacroContext&lt;'_, '_&gt;,
+    cx: &amp;mut MacroContext&lt;'_, '_, '_&gt;,
     stream: &amp;TokenStream,
 ) -&gt; compile::Result&lt;TokenStream&gt; {
-    let mut parser = Parser::from_token_stream(stream, ctx.input_span());
+    let mut parser = Parser::from_token_stream(stream, cx.input_span());
 
     let mut output = quote!(0);
 
@@ -2559,7 +2559,7 @@ pub(crate) fn stringy_math(
         let op = parser.parse::&lt;ast::Ident&gt;()?;
         let arg = parser.parse::&lt;ast::Expr&gt;()?;
 
-        output = match ctx.resolve(op)? {
+        output = match cx.resolve(op)? {
             &quot;add&quot; =&gt; quote!((#output) + #arg),
             &quot;sub&quot; =&gt; quote!((#output) - #arg),
             &quot;div&quot; =&gt; quote!((#output) / #arg),
@@ -2569,7 +2569,7 @@ pub(crate) fn stringy_math(
     }
 
     parser.eof()?;
-    Ok(output.into_token_stream(ctx))
+    Ok(output.into_token_stream(cx))
 }</code></pre>
 <p>A macro is added to a <a href="https://docs.rs/rune/0/rune/module/struct.Module.html"><code>Module</code></a> using the <a href="https://docs.rs/rune/0/rune/module/struct.Module.html#method.macro_"><code>Module::macro_</code></a> function.</p>
 <pre><code class="language-rust noplaypen">pub fn module() -&gt; Result&lt;rune::Module, rune::ContextError&gt; {
