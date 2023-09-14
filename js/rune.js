@@ -147,7 +147,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_24(arg0, arg1, arg2) {
-      wasm$1.wasm_bindgen__convert__closures__invoke1_mut__hc7cd90d471132d48(arg0, arg1, addHeapObject(arg2));
+      wasm$1.wasm_bindgen__convert__closures__invoke1_mut__h38675de350677cd7(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -170,7 +170,7 @@ var rune = (function (exports) {
       }
   }
   function __wbg_adapter_60(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h17e89b5c6716d0a5(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h1fa9f3f12983fb3f(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function __wbg_load(module, imports) {
@@ -227,6 +227,10 @@ var rune = (function (exports) {
           const ret = false;
           return ret;
       };
+      imports.wbg.__wbg_sleep_bf1f4d9ccd04f0b1 = function(arg0) {
+          const ret = sleep(arg0);
+          return addHeapObject(ret);
+      };
       imports.wbg.__wbg_text_a667ac1770538491 = function() { return handleError(function (arg0) {
           const ret = getObject(arg0).text();
           return addHeapObject(ret);
@@ -278,10 +282,6 @@ var rune = (function (exports) {
           }
           const ret = result;
           return ret;
-      };
-      imports.wbg.__wbg_sleep_bf1f4d9ccd04f0b1 = function(arg0) {
-          const ret = sleep(arg0);
-          return addHeapObject(ret);
       };
       imports.wbg.__wbindgen_is_undefined = function(arg0) {
           const ret = getObject(arg0) === undefined;
@@ -422,8 +422,8 @@ var rune = (function (exports) {
           const ret = getObject(arg0).then(getObject(arg1));
           return addHeapObject(ret);
       };
-      imports.wbg.__wbindgen_closure_wrapper3952 = function(arg0, arg1, arg2) {
-          const ret = makeMutClosure(arg0, arg1, 315, __wbg_adapter_24);
+      imports.wbg.__wbindgen_closure_wrapper3958 = function(arg0, arg1, arg2) {
+          const ret = makeMutClosure(arg0, arg1, 314, __wbg_adapter_24);
           return addHeapObject(ret);
       };
 
@@ -479,7 +479,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-0633c53e.wasm";
+                  let path = "/js/assets/rune_wasm-f10debc1.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
