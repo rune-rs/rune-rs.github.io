@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -10,7 +10,7 @@
         
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
         <link rel="icon" href="favicon.svg">
         <link rel="shortcut icon" href="favicon.png">
@@ -31,7 +31,7 @@
         <!-- Custom theme stylesheets -->
 
     </head>
-    <body>
+    <body class="sidebar-visible no-js">
     <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
@@ -61,24 +61,29 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             var html = document.querySelector('html');
-            html.classList.remove('no-js')
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
         </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var html = document.querySelector('html');
+            var body = document.querySelector('body');
             var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
             }
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
@@ -116,9 +121,9 @@
                                 <div id="menu-bar-hover-placeholder"></div>
                 <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
-                        </button>
+                        </label>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
@@ -204,9 +209,10 @@ based on its item. So the hash for the item <code>Foo::new</code> will always be
 <pre><code class="language-rune">use rune::compile::ItemBuf;
 use rune::Hash;
 
-fn main() {
-    println!(&quot;{}&quot;, Hash::type_hash(&amp;ItemBuf::with_item([&quot;Foo&quot;, &quot;new&quot;])));
+fn main() -&gt; rune::support::Result&lt;()&gt; {
+    println!(&quot;{}&quot;, Hash::type_hash(&amp;ItemBuf::with_item([&quot;Foo&quot;, &quot;new&quot;])?));
     println!(&quot;{}&quot;, Hash::type_hash([&quot;Foo&quot;, &quot;new&quot;]));
+    Ok(())
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --example function_hash
@@ -222,6 +228,7 @@ argument of the instance function, and must be a type registered in the module
 using <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.ty"><code>Module::ty</code></a>.</p>
 <pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{ContextError, Diagnostics, Module, Vm};
+
 use std::sync::Arc;
 
 #[rune::function(instance)]
@@ -230,12 +237,12 @@ fn divide_by_three(value: i64) -&gt; i64 {
 }
 
 #[tokio::main]
-async fn main() -&gt; rune::Result&lt;()&gt; {
+async fn main() -&gt; rune::support::Result&lt;()&gt; {
     let m = module()?;
 
     let mut context = rune_modules::default_context()?;
     context.install(m)?;
-    let runtime = Arc::new(context.runtime());
+    let runtime = Arc::new(context.runtime()?);
 
     let mut sources = rune::sources!(entry =&gt; {
         pub fn main(number) {
@@ -266,7 +273,7 @@ async fn main() -&gt; rune::Result&lt;()&gt; {
 }
 
 fn module() -&gt; Result&lt;Module, ContextError&gt; {
-    let mut m = Module::with_item([&quot;mymodule&quot;]);
+    let mut m = Module::with_item([&quot;mymodule&quot;])?;
     m.function_meta(divide_by_three)?;
     Ok(m)
 }</code></pre>
@@ -284,7 +291,7 @@ for the <a href="https://github.com/rune-rs/rune/tree/main/crates/rune-modules">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="field_functions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="field_functions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -298,7 +305,7 @@ for the <a href="https://github.com/rune-rs/rune/tree/main/crates/rune-modules">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="field_functions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="field_functions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

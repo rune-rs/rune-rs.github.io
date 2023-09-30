@@ -1,17 +1,17 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>The Rune Programming Language</title>
-        <meta name="robots" content="noindex" />
+        <meta name="robots" content="noindex">
 
 
         <!-- Custom HTML head -->
         
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
         <link rel="icon" href="favicon.svg">
         <link rel="shortcut icon" href="favicon.png">
@@ -32,7 +32,7 @@
         <!-- Custom theme stylesheets -->
 
     </head>
-    <body>
+    <body class="sidebar-visible no-js">
     <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
@@ -62,24 +62,29 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             var html = document.querySelector('html');
-            html.classList.remove('no-js')
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
         </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var html = document.querySelector('html');
+            var body = document.querySelector('body');
             var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
             }
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
@@ -117,9 +122,9 @@
                                 <div id="menu-bar-hover-placeholder"></div>
                 <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
-                        </button>
+                        </label>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
@@ -533,9 +538,10 @@ same time it can be harder to reason on what your program will do.</p>
 <p>Rune functions can be easily set up and called from Rust.</p>
 <pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
+
 use std::sync::Arc;
 
-fn main() -&gt; rune::Result&lt;()&gt; {
+fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
 
     let mut sources = rune::sources!(
@@ -560,7 +566,7 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 
     let unit = result?;
 
-    let mut vm = Vm::new(Arc::new(context.runtime()), Arc::new(unit));
+    let mut vm = Vm::new(Arc::new(context.runtime()?), Arc::new(unit));
     let output = vm.execute([&quot;main&quot;], (33i64,))?.complete().into_result()?;
     let output: i64 = rune::from_value(output)?;
 
@@ -1071,9 +1077,10 @@ based on its item. So the hash for the item <code>Foo::new</code> will always be
 <pre><code class="language-rune">use rune::compile::ItemBuf;
 use rune::Hash;
 
-fn main() {
-    println!(&quot;{}&quot;, Hash::type_hash(&amp;ItemBuf::with_item([&quot;Foo&quot;, &quot;new&quot;])));
+fn main() -&gt; rune::support::Result&lt;()&gt; {
+    println!(&quot;{}&quot;, Hash::type_hash(&amp;ItemBuf::with_item([&quot;Foo&quot;, &quot;new&quot;])?));
     println!(&quot;{}&quot;, Hash::type_hash([&quot;Foo&quot;, &quot;new&quot;]));
+    Ok(())
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run --example function_hash
@@ -1089,6 +1096,7 @@ argument of the instance function, and must be a type registered in the module
 using <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.ty"><code>Module::ty</code></a>.</p>
 <pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{ContextError, Diagnostics, Module, Vm};
+
 use std::sync::Arc;
 
 #[rune::function(instance)]
@@ -1097,12 +1105,12 @@ fn divide_by_three(value: i64) -&gt; i64 {
 }
 
 #[tokio::main]
-async fn main() -&gt; rune::Result&lt;()&gt; {
+async fn main() -&gt; rune::support::Result&lt;()&gt; {
     let m = module()?;
 
     let mut context = rune_modules::default_context()?;
     context.install(m)?;
-    let runtime = Arc::new(context.runtime());
+    let runtime = Arc::new(context.runtime()?);
 
     let mut sources = rune::sources!(entry =&gt; {
         pub fn main(number) {
@@ -1133,7 +1141,7 @@ async fn main() -&gt; rune::Result&lt;()&gt; {
 }
 
 fn module() -&gt; Result&lt;Module, ContextError&gt; {
-    let mut m = Module::with_item([&quot;mymodule&quot;]);
+    let mut m = Module::with_item([&quot;mymodule&quot;])?;
     m.function_meta(divide_by_three)?;
     Ok(m)
 }</code></pre>
@@ -1212,6 +1220,7 @@ addition:</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::{VmError, VmResult};
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Any, ContextError, Diagnostics, Module, Vm};
+
 use std::sync::Arc;
 
 #[derive(Any)]
@@ -1228,12 +1237,12 @@ impl External {
     }
 }
 
-fn main() -&gt; rune::Result&lt;()&gt; {
+fn main() -&gt; rune::support::Result&lt;()&gt; {
     let m = module()?;
 
     let mut context = rune_modules::default_context()?;
     context.install(m)?;
-    let runtime = Arc::new(context.runtime());
+    let runtime = Arc::new(context.runtime()?);
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1439,11 +1448,12 @@ Hello
 <p>Vectors are represented externally as the standard <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>Vec</code></a>.</p>
 <pre><pre class="playground"><code class="language-rust">use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
+
 use std::sync::Arc;
 
-fn main() -&gt; rune::Result&lt;()&gt; {
+fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime());
+    let runtime = Arc::new(context.runtime()?);
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1489,11 +1499,12 @@ fn main() -&gt; rune::Result&lt;()&gt; {
 <pre><pre class="playground"><code class="language-rust">use rune::runtime::VecTuple;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
+
 use std::sync::Arc;
 
-fn main() -&gt; rune::Result&lt;()&gt; {
+fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime());
+    let runtime = Arc::new(context.runtime()?);
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1598,11 +1609,12 @@ Note that the dynamic <a href="https://docs.rs/rune/0/rune/enum.Value.html"><cod
 use rune::runtime::Object;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Value, Vm};
+
 use std::sync::Arc;
 
-fn main() -&gt; rune::Result&lt;()&gt; {
+fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime());
+    let runtime = Arc::new(context.runtime()?);
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1692,11 +1704,12 @@ pub fn main() {
 <p>Tuples are represented externally as <a href="https://doc.rust-lang.org/std/primitive.tuple.html">primitive tuple types</a>.</p>
 <pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
+
 use std::sync::Arc;
 
-fn main() -&gt; rune::Result&lt;()&gt; {
+fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime());
+    let runtime = Arc::new(context.runtime()?);
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1881,11 +1894,11 @@ levels of integration with the language.</p>
 about it except that it is a value bound to a variable.</p>
 <p>Below is the most simple example of an external type. It's implemented by
 deriving <a href="https://docs.rs/rune/latest/rune/derive.Any.html">Any</a> which can do a lot of heavy lifting for us.</p>
-<pre><code class="language-rust noplaypen">use std::sync::Arc;
-
-use rune::runtime::Vm;
+<pre><code class="language-rust noplaypen">use rune::runtime::Vm;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Any, ContextError, Diagnostics, Module};
+
+use std::sync::Arc;
 
 #[derive(Debug, Any)]
 struct External {
@@ -1898,12 +1911,12 @@ pub fn module() -&gt; Result&lt;Module, ContextError&gt; {
     Ok(module)
 }
 
-fn main() -&gt; rune::Result&lt;()&gt; {
+fn main() -&gt; rune::support::Result&lt;()&gt; {
     let m = module()?;
 
     let mut context = rune_modules::default_context()?;
     context.install(m)?;
-    let runtime = Arc::new(context.runtime());
+    let runtime = Arc::new(context.runtime()?);
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -2296,11 +2309,12 @@ it for something else.</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::Function;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
+
 use std::sync::Arc;
 
-fn main() -&gt; rune::Result&lt;()&gt; {
+fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime());
+    let runtime = Arc::new(context.runtime()?);
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -2596,7 +2610,7 @@ pub(crate) fn stringy_math(
     }
 
     parser.eof()?;
-    Ok(output.into_token_stream(cx))
+    Ok(output.into_token_stream(cx)?)
 }</code></pre>
 <p>A macro is added to a <a href="https://docs.rs/rune/0/rune/module/struct.Module.html"><code>Module</code></a> using the <a href="https://docs.rs/rune/0/rune/module/struct.Module.html#method.macro_"><code>Module::macro_</code></a> function.</p>
 <pre><code class="language-rust noplaypen">pub fn module() -&gt; Result&lt;rune::Module, rune::ContextError&gt; {
