@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Error","Float","Integer","Key","NeverFloat"],"fn":["from_key","to_key"],"struct":["RejectFloatPolicy"],"trait":["FloatPolicy","FloatRepr"],"type":["Result"]};

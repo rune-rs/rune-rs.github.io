@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_FIXED_BYTES_LEN"],"struct":["Buffer"],"trait":["Writer"]};

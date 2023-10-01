@@ -1,0 +1,101 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The macro system of Rune."><title>rune::macros - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (ca62d2c44 2023-09-30)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../rune/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a></nav><nav class="sidebar"><a class="logo-container" href="../../rune/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Module macros</a></h2><div class="sidebar-elems"><section><ul class="block"><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Module <a href="../index.html">rune</a>::<wbr><a class="mod" href="#">macros</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../src/rune/macros.rs.html#1-151">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The macro system of Rune.</p>
+<p>Macros are registered with <a href="../struct.Module.html#method.macro_" title="method rune::Module::macro_">Module::macro_</a> and are
+function-like items that are expanded at compile time.</p>
+<p>Macros take token streams as arguments and are responsible for translating
+them into another token stream that will be embedded into the source location
+where the macro was invoked.</p>
+<p>The attribute macros <a href="../../rune_macros/attr.macro_.html" title="attr rune_macros::macro_"><code>rune::macro_</code></a> for function macros (<code>some_macro!( ... )</code>) and
+<a href="../../rune_macros/attr.attribute_macro.html" title="attr rune_macros::attribute_macro"><code>rune::attribute_macro</code></a> for attribute macros (<code>#[some_macro ...]</code>).</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>rune::{T, Context, Diagnostics, Module, Vm};
+<span class="kw">use </span>rune::ast;
+<span class="kw">use </span>rune::compile;
+<span class="kw">use </span>rune::macros::{quote, MacroContext, TokenStream, ToTokens};
+<span class="kw">use </span>rune::parse::Parser;
+<span class="kw">use </span>rune::termcolor::{ColorChoice, StandardStream};
+<span class="kw">use </span>rune::alloc::String;
+
+<span class="kw">use </span>std::sync::Arc;
+
+<span class="attr">#[rune::macro_]
+</span><span class="kw">fn </span>concat_idents(cx: <span class="kw-2">&amp;mut </span>MacroContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;, input: <span class="kw-2">&amp;</span>TokenStream) -&gt; compile::Result&lt;TokenStream&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>output = String::new();
+
+    <span class="kw">let </span><span class="kw-2">mut </span>p = Parser::from_token_stream(input, cx.input_span());
+
+    <span class="kw">let </span>ident = p.parse::&lt;ast::Ident&gt;()<span class="question-mark">?</span>;
+    output.try_push_str(cx.resolve(ident)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+
+    <span class="kw">while </span>p.parse::&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro">T!</span>[,]&gt;&gt;()<span class="question-mark">?</span>.is_some() {
+        <span class="kw">if </span>p.is_eof()<span class="question-mark">? </span>{
+            <span class="kw">break</span>;
+        }
+
+        <span class="kw">let </span>ident = p.parse::&lt;ast::Ident&gt;()<span class="question-mark">?</span>;
+        output.try_push_str(cx.resolve(ident)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+    }
+
+    p.eof()<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>output = cx.ident(<span class="kw-2">&amp;</span>output)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="macro">quote!</span>(#output).into_token_stream(cx)<span class="question-mark">?</span>)
+}
+
+<span class="attr">#[rune::attribute_macro]
+</span><span class="kw">fn </span>rename(cx: <span class="kw-2">&amp;mut </span>MacroContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;, input: <span class="kw-2">&amp;</span>TokenStream, item: <span class="kw-2">&amp;</span>TokenStream) -&gt; compile::Result&lt;TokenStream&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::from_token_stream(item, cx.macro_span());
+    <span class="kw">let </span><span class="kw-2">mut </span>fun: ast::ItemFn = parser.parse_all()<span class="question-mark">?</span>;
+
+    <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::from_token_stream(input, cx.input_span());
+    fun.name = parser.parse_all::&lt;ast::EqValue&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>.value;
+
+    <span class="kw">let </span><span class="kw-2">mut </span>tokens = TokenStream::new();
+    fun.to_tokens(cx, <span class="kw-2">&amp;mut </span>tokens);
+    <span class="prelude-val">Ok</span>(tokens)
+}
+
+<span class="kw">let </span><span class="kw-2">mut </span>m = Module::new();
+m.macro_meta(concat_idents)<span class="question-mark">?</span>;
+m.macro_meta(rename)<span class="question-mark">?</span>;
+
+<span class="kw">let </span><span class="kw-2">mut </span>context = Context::new();
+context.install(m)<span class="question-mark">?</span>;
+
+<span class="kw">let </span>runtime = Arc::new(context.runtime()<span class="question-mark">?</span>);
+
+<span class="kw">let </span><span class="kw-2">mut </span>sources = <span class="macro">rune::sources! </span>{
+    entry =&gt; {
+        <span class="attr">#[rename = foobar]
+        </span><span class="kw">fn </span>renamed() {
+            <span class="number">42
+        </span>}
+
+        <span class="kw">pub fn </span>main() {
+            <span class="kw">let </span>foobar = foobar();
+            <span class="macro">concat_idents!</span>(foo, bar)
+        }
+    }
+};
+
+<span class="kw">let </span><span class="kw-2">mut </span>diagnostics = Diagnostics::new();
+
+<span class="kw">let </span>result = rune::prepare(<span class="kw-2">&amp;mut </span>sources)
+    .with_context(<span class="kw-2">&amp;</span>context)
+    .with_diagnostics(<span class="kw-2">&amp;mut </span>diagnostics)
+    .build();
+
+<span class="kw">if </span>!diagnostics.is_empty() {
+    <span class="kw">let </span><span class="kw-2">mut </span>writer = StandardStream::stderr(ColorChoice::Always);
+    diagnostics.emit(<span class="kw-2">&amp;mut </span>writer, <span class="kw-2">&amp;</span>sources)<span class="question-mark">?</span>;
+}
+
+<span class="kw">let </span>unit = result<span class="question-mark">?</span>;
+<span class="kw">let </span>unit = Arc::new(unit);
+
+<span class="kw">let </span><span class="kw-2">mut </span>vm = Vm::new(runtime, unit);
+<span class="kw">let </span>value = vm.call([<span class="string">&quot;main&quot;</span>], ())<span class="question-mark">?</span>;
+<span class="kw">let </span>value: u32 = rune::from_value(value)<span class="question-mark">?</span>;
+
+<span class="macro">assert_eq!</span>(value, <span class="number">42</span>);</code></pre></div>
+</div></details><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2><ul class="item-table"><li><div class="item-name"><a class="macro" href="macro.quote.html" title="macro rune::macros::quote">quote</a></div><div class="desc docblock-short">Macro helper function for quoting the token stream as macro output.</div></li></ul><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.FormatArgs.html" title="struct rune::macros::FormatArgs">FormatArgs</a></div><div class="desc docblock-short">A format specification: A format string followed by arguments to be
+formatted in accordance with that string.</div></li><li><div class="item-name"><a class="struct" href="struct.MacroContext.html" title="struct rune::macros::MacroContext">MacroContext</a></div><div class="desc docblock-short">Context for a running macro.</div></li><li><div class="item-name"><a class="struct" href="struct.Quote.html" title="struct rune::macros::Quote">Quote</a></div><div class="desc docblock-short"><a href="trait.ToTokens.html" title="trait rune::macros::ToTokens">ToTokens</a> implementation generated by <a href="fn.quote_fn.html" title="fn rune::macros::quote_fn">quote_fn</a>.</div></li><li><div class="item-name"><a class="struct" href="struct.SyntheticId.html" title="struct rune::macros::SyntheticId">SyntheticId</a></div><div class="desc docblock-short">A synthetic identifier which can be used to reference something in storage.</div></li><li><div class="item-name"><a class="struct" href="struct.TokenStream.html" title="struct rune::macros::TokenStream">TokenStream</a></div><div class="desc docblock-short">A token stream.</div></li><li><div class="item-name"><a class="struct" href="struct.TokenStreamIter.html" title="struct rune::macros::TokenStreamIter">TokenStreamIter</a></div><div class="desc docblock-short">A token stream iterator.</div></li></ul><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2><ul class="item-table"><li><div class="item-name"><a class="enum" href="enum.SyntheticKind.html" title="enum rune::macros::SyntheticKind">SyntheticKind</a></div><div class="desc docblock-short">The kind of a synthetic token.</div></li></ul><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2><ul class="item-table"><li><div class="item-name"><a class="trait" href="trait.IntoLit.html" title="trait rune::macros::IntoLit">IntoLit</a></div><div class="desc docblock-short">Helper trait used for things that can be converted into tokens.</div></li><li><div class="item-name"><a class="trait" href="trait.ToTokens.html" title="trait rune::macros::ToTokens">ToTokens</a></div><div class="desc docblock-short">Trait for things that can be turned into tokens.</div></li></ul><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2><ul class="item-table"><li><div class="item-name"><a class="fn" href="fn.quote_fn.html" title="fn rune::macros::quote_fn">quote_fn</a></div><div class="desc docblock-short">Construct a token stream from a function.</div></li><li><div class="item-name"><a class="fn" href="fn.test.html" title="fn rune::macros::test">test</a><span class="stab portability" title="Available on crate feature `std` only"><code>std</code></span></div><div class="desc docblock-short">Construct an empty macro context which can be used for testing.</div></li></ul></section></div></main></body></html>

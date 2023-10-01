@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["TryCloned"],"trait":["IteratorExt","TryExtend","TryFromIterator","TryFromIteratorIn","TryJoin"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Expectation"],"fn":["parse_all"],"struct":["Id","NonZeroId","Parser","Peeker"],"trait":["Parse","Peek"]};

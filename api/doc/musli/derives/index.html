@@ -1,0 +1,487 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The `Encode` and `Decode` derives"><title>musli::derives - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="musli" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (ca62d2c44 2023-09-30)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../musli/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a></nav><nav class="sidebar"><a class="logo-container" href="../../musli/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Module derives</a></h2><div class="sidebar-elems"></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Module <a href="../index.html">musli</a>::<wbr><a class="mod" href="#">derives</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../src/musli/derives.rs.html#1-627">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="the-encode-and-decode-derives"><a href="#the-encode-and-decode-derives">The <code>Encode</code> and <code>Decode</code> derives</a></h2>
+<p>The <a href="../en/trait.Encode.html" title="trait musli::en::Encode"><code>Encode</code></a> and <a href="../de/trait.Decode.html" title="trait musli::de::Decode"><code>Decode</code></a> derives allows for automatically implementing
+<a href="../en/trait.Encode.html" title="trait musli::en::Encode"><code>Encode</code></a> and <a href="../de/trait.Decode.html" title="trait musli::de::Decode"><code>Decode</code></a>.</p>
+<p>They come with a number of options for customizing their implementation,
+detailed below. But first we need to talk about <em>modes</em>.</p>
+<h5 id="modes"><a href="#modes">Modes</a></h5>
+<p>If you’ve paid close attention to the <a href="../en/trait.Encode.html" title="trait musli::en::Encode"><code>Encode</code></a> and <a href="../de/trait.Decode.html" title="trait musli::de::Decode"><code>Decode</code></a> traits you
+might’ve noticed that they have an extra parameter called <code>M</code> for “mode”.</p>
+<p>This allows a single type to have <em>more than one</em> implementation of encoding
+traits, allowing for a high level of flexibility in how a type should be
+encoded.</p>
+<p>When it comes to deriving these traits you can scope attributes to apply to
+either any mode, the <a href="../mode/enum.DefaultMode.html" title="enum musli::mode::DefaultMode">default mode</a>, or a completely custom mode. This is
+done using the <code>#[musli(mode = ..)]</code> attribute like this:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode, Mode};
+
+<span class="kw">enum </span>Json {}
+<span class="kw">impl </span>Mode <span class="kw">for </span>Json {}
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(default_field_name = <span class="string">&quot;index&quot;</span>)]
+#[musli(mode = Json, default_field_name = <span class="string">&quot;name&quot;</span>)]
+</span><span class="kw">struct </span>Person&lt;<span class="lifetime">&#39;a</span>&gt; {
+    name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+    age: u32,
+}</code></pre></div>
+<p>What this means is that if we want to serialize <code>Person</code> using named fields,
+we can simply turn on the <code>Json</code> mode for our given serializer. If we want
+to revert back to the default behavior and use indexed fields we can instead
+use <a href="../mode/enum.DefaultMode.html" title="enum musli::mode::DefaultMode"><code>DefaultMode</code></a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli_json::Encoding;
+
+<span class="kw">const </span>JSON_ENCODING: Encoding&lt;Json&gt; = Encoding::new();
+<span class="kw">const </span>DEFAULT_ENCODING: Encoding = Encoding::new();
+
+<span class="kw">let </span>named = JSON_ENCODING.to_buffer(<span class="kw-2">&amp;</span>Person { name: <span class="string">&quot;Aristotle&quot;</span>, age: <span class="number">62 </span>})<span class="question-mark">?</span>;
+<span class="macro">assert_eq!</span>(named.as_slice(), <span class="string">b&quot;{\&quot;name\&quot;:\&quot;Aristotle\&quot;,\&quot;age\&quot;:62}&quot;</span>);
+
+<span class="kw">let </span>indexed = DEFAULT_ENCODING.to_buffer(<span class="kw-2">&amp;</span>Person { name: <span class="string">&quot;Plato&quot;</span>, age: <span class="number">84 </span>})<span class="question-mark">?</span>;
+<span class="macro">assert_eq!</span>(indexed.as_slice(), <span class="string">b&quot;{\&quot;0\&quot;:\&quot;Plato\&quot;,\&quot;1\&quot;:84}&quot;</span>);
+</code></pre></div>
+<p>So the <code>#[musli(mode)]</code> atttribute is supported in any position. And any of
+its sibling attributes will be added to the given <em>alternative</em> mode, rather
+the <a href="../mode/enum.DefaultMode.html" title="enum musli::mode::DefaultMode">default mode</a>.</p>
+<h5 id="attributes"><a href="#attributes">Attributes</a></h5>
+<ul>
+<li><em>Container attributes</em> are attributes which apply to the <code>struct</code> or
+<code>enum</code>. Like the uses of <code>#[musli(packed)]</code> and
+<code>#[musli(default_variant_name = &quot;name&quot;)]</code> here:</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(packed)]
+</span><span class="kw">struct </span>Struct {
+    <span class="comment">/* the body of the struct */
+</span>}
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(default_variant_name = <span class="string">&quot;name&quot;</span>)]
+</span><span class="kw">enum </span>Enum {
+    <span class="comment">/* the body of the struct */
+</span>}</code></pre></div>
+<ul>
+<li><em>Variant attributes</em> are attributes which apply to each individual variant
+in an <code>enum</code>. Like the use of <code>#[musli(name)]</code> here:</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(default_variant_name = <span class="string">&quot;name&quot;</span>)]
+</span><span class="kw">enum </span>Enum {
+    <span class="attr">#[musli(rename = <span class="string">&quot;Other&quot;</span>)]
+    </span>Something {
+        <span class="comment">/* variant body */
+    </span>}
+}</code></pre></div>
+<ul>
+<li><em>Field attributes</em> are attributes which apply to each individual field
+either in a <code>struct</code> or an <code>enum</code> variant. Like the uses of
+<code>#[musli(rename)]</code> here:</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(default_field_name = <span class="string">&quot;name&quot;</span>)]
+</span><span class="kw">struct </span>Struct {
+    <span class="attr">#[musli(rename = <span class="string">&quot;other&quot;</span>)]
+    </span>something: String,
+}
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(default_field_name = <span class="string">&quot;name&quot;</span>)]
+</span><span class="kw">enum </span>Enum {
+    Variant {
+        <span class="attr">#[musli(rename = <span class="string">&quot;other&quot;</span>)]
+        </span>something: String,
+    }
+}</code></pre></div>
+<h3 id="container-attributes"><a href="#container-attributes">Container attributes</a></h3><h5 id="muslidefault_field_name--"><a href="#muslidefault_field_name--"><code>#[musli(default_field_name = &quot;..&quot;)]</code></a></h5>
+<p>This determines how the default tag for a field is determined. It can take
+either <code>&quot;name&quot;</code> or <code>&quot;index&quot;</code>.</p>
+<ul>
+<li><code>#[musli(default_field_name = &quot;index&quot;)]</code> will use the index of the field.
+This is the default.</li>
+<li><code>#[musli(default_field_name = &quot;name&quot;)]</code> will use the name of the field.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(default_field_name = <span class="string">&quot;name&quot;</span>)]
+</span><span class="kw">struct </span>Struct {
+    field1: u32,
+    field2: u32,
+}
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(default_field_name = <span class="string">&quot;name&quot;</span>)]
+</span><span class="kw">enum </span>Enum {
+    Variant1 {
+        field1: u32,
+    },
+    Variant2 {
+        field1: u32,
+    },
+}</code></pre></div>
+<h5 id="muslidefault_variant_name--"><a href="#muslidefault_variant_name--"><code>#[musli(default_variant_name = &quot;..&quot;)]</code></a></h5>
+<p>This determines how the default tag for a variant is determined. It can take
+either <code>&quot;name&quot;</code> or <code>&quot;index&quot;</code>.</p>
+<ul>
+<li><code>#[musli(default_variant_name = &quot;index&quot;)]</code> will use the index of the
+variant. This is the default.</li>
+<li><code>#[musli(default_variant_name = &quot;name&quot;)]</code> will use the name of the
+variant.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(default_variant_name = <span class="string">&quot;name&quot;</span>)]
+</span><span class="kw">enum </span>Enum {
+    Variant1 {
+        field1: u32,
+    },
+    Variant2 {
+        field1: u32,
+    },
+}</code></pre></div>
+<h5 id="muslitransparent"><a href="#muslitransparent"><code>#[musli(transparent)]</code></a></h5>
+<p>This can only be used on types which have a single field. It will cause that
+field to define how that variant is encoded or decoded transparently without
+being treated as a field.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+<span class="kw">use </span>musli_wire::tag::{Tag, Kind};
+
+<span class="attr">#[derive(Encode)]
+#[musli(transparent)]
+</span><span class="kw">struct </span>Struct(u32);
+
+<span class="kw">let </span>data = musli_wire::to_buffer(<span class="kw-2">&amp;</span>Struct(<span class="number">42</span>))<span class="question-mark">?</span>;
+<span class="macro">assert_eq!</span>(data.as_slice(), <span class="macro">vec!</span>[Tag::new(Kind::Continuation, <span class="number">42</span>).byte()]);</code></pre></div>
+<h5 id="muslipacked"><a href="#muslipacked"><code>#[musli(packed)]</code></a></h5>
+<p>This attribute will disable all <em>tagging</em> and the structure will simply be
+encoded with one field following another in the order in which they are
+defined.</p>
+<p>A caveat of <em>packed</em> structures is that they cannot be safely versioned and
+the two systems communicating through them need to be using strictly
+synchronized representations.</p>
+<p>This attribute is useful for performing simple decoding over “raw” bytes
+when combined with an encoder which does minimal prefixing and packs fields.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Encode)]
+#[musli(packed)]
+</span><span class="kw">struct </span>Struct {
+    field1: u32,
+    field2: u32,
+    field3: u32,
+}
+
+<span class="kw">let </span>data = musli_storage::to_buffer(<span class="kw-2">&amp;</span>Struct {
+    field1: <span class="number">1</span>,
+    field2: <span class="number">2</span>,
+    field3: <span class="number">3</span>,
+})<span class="question-mark">?</span>;
+
+<span class="macro">assert_eq!</span>(data.as_slice(), <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);</code></pre></div>
+<h5 id="musliname_type--"><a href="#musliname_type--"><code>#[musli(name_type = ..)]</code></a></h5>
+<p>This indicates which type any contained <code>#[musli(tag = ..)]</code> attributes
+should have. Tags can usually be inferred, but specifying this field ensures
+that all tags have a well-defined type.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Debug, PartialEq, Eq, Encode, Decode)]
+#[musli(transparent)]
+</span><span class="kw">struct </span>CustomTag&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]);
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(name_type = CustomTag)]
+</span><span class="kw">struct </span>Struct {
+    <span class="attr">#[musli(rename = CustomTag(<span class="string">b&quot;name in bytes&quot;</span>))]
+    </span>name: String,
+}
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(name_type = CustomTag)]
+</span><span class="kw">enum </span>EnumWithCustomTag {
+    <span class="attr">#[musli(rename = CustomTag(<span class="string">b&quot;variant one&quot;</span>))]
+    </span>Variant1 {
+        <span class="comment">/* .. */
+    </span>},
+}</code></pre></div>
+<h5 id="muslibound---and-muslidecode_bound--"><a href="#muslibound---and-muslidecode_bound--"><code>#[musli(bound = {..})]</code> and <code>#[musli(decode_bound = {..})]</code></a></h5>
+<p>These attributes can be used to apply bounds to an <a href="../en/trait.Encode.html" title="trait musli::en::Encode"><code>Encode</code></a> or <a href="../de/trait.Decode.html" title="trait musli::de::Decode"><code>Decode</code></a>
+implementation.</p>
+<p>These are necessary to use when a generic container is used to ensure that
+the given parameter implements the necessary bounds.</p>
+<p><code>#[musli(bound = {..})]</code> applies to all implementations while
+<code>#[musli(decode_bound = {..})]</code> only applies to the <a href="../de/trait.Decode.html" title="trait musli::de::Decode"><code>Decode</code></a> implementation.
+The latter allows for using the decode lifetime parameter (which defaults to
+<code>'de</code>).</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Decode, Encode};
+
+<span class="attr">#[derive(Clone, Debug, PartialEq, Encode, Decode)]
+#[musli(bound = {T: Encode&lt;M&gt;}, decode_bound = {T: Decode&lt;<span class="lifetime">&#39;de</span>, M&gt;})]
+</span><span class="kw">pub struct </span>GenericWithBound&lt;T&gt; {
+    value: T,
+}</code></pre></div>
+<h3 id="enum-attributes"><a href="#enum-attributes">Enum attributes</a></h3><h5 id="muslitag--"><a href="#muslitag--"><code>#[musli(tag = ..)]</code></a></h5>
+<p>This attribute causes the enum to be internally tagged, with the given tag.
+See <a href="#enum-representations">enum representations</a> for details on this
+representation.</p>
+<h3 id="variant-attributes"><a href="#variant-attributes">Variant attributes</a></h3><h5 id="muslirename--"><a href="#muslirename--"><code>#[musli(rename = ..)]</code></a></h5>
+<p>This allows for renaming a variant from its default value.
+It can take any value (including complex ones) that can be serialized with
+the current encoding, such as:</p>
+<ul>
+<li><code>#[musli(rename = 1)]</code></li>
+<li><code>#[musli(rename = &quot;Hello World&quot;)]</code></li>
+<li><code>#[musli(rename = b&quot;box\0&quot;)]</code></li>
+<li><code>#[musli(rename = SomeStruct { field: 42 })]</code> (if <code>SomeStruct</code> implements
+<a href="../en/trait.Encode.html" title="trait musli::en::Encode"><code>Encode</code></a> and <a href="../de/trait.Decode.html" title="trait musli::de::Decode"><code>Decode</code></a> as appropriate).</li>
+</ul>
+<p>If the type of the tag is ambiguous it can be explicitly specified through
+the <code>#[musli(name_type)]</code> container attribute (see above).</p>
+<h5 id="muslidefault_field_name---1"><a href="#muslidefault_field_name---1"><code>#[musli(default_field_name = &quot;..&quot;)]</code></a></h5>
+<p>This determines how the default tag for a field in the current variant is
+determined. This overrides the tagging convention specified on the
+<em>container</em> and can take either <code>&quot;name&quot;</code> or <code>&quot;index&quot;</code>.</p>
+<ul>
+<li><code>#[musli(default_field_name = &quot;index&quot;)]</code> will use the index of the field.
+This is the default.</li>
+<li><code>#[musli(default_field_name = &quot;name&quot;)]</code> will use the name of the field.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(default_field_name = <span class="string">&quot;index&quot;</span>)]
+</span><span class="kw">enum </span>Enum {
+    <span class="attr">#[musli(default_field_name = <span class="string">&quot;name&quot;</span>)]
+    </span>Variant {
+        field1: u32,
+    },
+    Variant2 {
+        field1: u32,
+    },
+}</code></pre></div>
+<h5 id="muslitransparent-1"><a href="#muslitransparent-1"><code>#[musli(transparent)]</code></a></h5>
+<p>This can only be used on variants which have a single field. It will cause
+that field to define how that variant is encoded or decoded transparently
+without being treated as a field.</p>
+<h5 id="musliname_type---1"><a href="#musliname_type---1"><code>#[musli(name_type = ..)]</code></a></h5>
+<p>This indicates which type any contained <code>#[musli(tag = ..)]</code> attributes
+should have. Tags can usually be inferred, but specifying this field ensures
+that all tags have a well-defined type.</p>
+<p>This attribute takes priority over the one with the same name on the
+container.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Debug, PartialEq, Eq, Encode, Decode)]
+#[musli(transparent)]
+</span><span class="kw">struct </span>CustomTag&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]);
+
+<span class="attr">#[derive(Encode, Decode)]
+#[musli(name_type = usize)]
+</span><span class="kw">enum </span>Enum {
+    <span class="attr">#[musli(name_type = CustomTag)]
+    </span>Variant {
+        <span class="attr">#[musli(rename = CustomTag(<span class="string">b&quot;name in bytes&quot;</span>))]
+        </span>name: String,
+    }
+}</code></pre></div>
+<h5 id="muslidefault"><a href="#muslidefault"><code>#[musli(default)]</code></a></h5>
+<p>This defines the variant that will be used in case no other variant matches.
+Only one such variant can be defined.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Debug, PartialEq, Eq, Encode, Decode)]
+</span><span class="kw">enum </span>Animal {
+    <span class="attr">#[musli(rename = <span class="string">&quot;cat&quot;</span>)]
+    </span>Cat,
+    <span class="attr">#[musli(rename = <span class="string">&quot;dog&quot;</span>)]
+    </span>Dog,
+    <span class="attr">#[musli(default)]
+    </span>Unknown,
+}</code></pre></div>
+<h3 id="field-attributes"><a href="#field-attributes">Field attributes</a></h3><h5 id="muslirename---1"><a href="#muslirename---1"><code>#[musli(rename = ..)]</code></a></h5>
+<p>This allows for renaming a field from its default value. It can take any
+value (including complex ones) that can be serialized with the current
+encoding, such as:</p>
+<ul>
+<li><code>#[musli(rename = 1)]</code></li>
+<li><code>#[musli(rename = &quot;Hello World&quot;)]</code></li>
+<li><code>#[musli(rename = b&quot;box\0&quot;)]</code></li>
+<li><code>#[musli(rename = SomeStruct { field: 42 })]</code> (if <code>SomeStruct</code> implements
+<a href="../en/trait.Encode.html" title="trait musli::en::Encode"><code>Encode</code></a> and <a href="../de/trait.Decode.html" title="trait musli::de::Decode"><code>Decode</code></a> as appropriate).</li>
+</ul>
+<p>If the type of the tag is ambiguous it can be explicitly specified through
+the <code>#[musli(name_type)]</code> variant or container attributes (see above).</p>
+<h5 id="musliwith--path"><a href="#musliwith--path"><code>#[musli(with = &lt;path&gt;)]</code></a></h5>
+<p>This specifies the path to a module to use instead of the fields default
+<a href="../en/trait.Encode.html" title="trait musli::en::Encode"><code>Encode</code></a> or <a href="../de/trait.Decode.html" title="trait musli::de::Decode"><code>Decode</code></a> implementations.</p>
+<p>It expects the following functions to be defined, assuming the type of the
+field is <code>Field</code>.</p>
+<p><code>encode</code> for encoding the field, which should match the following signature:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>encode&lt;M, E&gt;(field: <span class="kw-2">&amp;</span>Field, encoder: E) -&gt; <span class="prelude-ty">Result</span>&lt;E::Ok, E::Error&gt;
+<span class="kw">where
+    </span>M: Mode,
+    E: Encoder;</code></pre></div>
+<p><code>encode</code> for decoding the field, which should match the following signature:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>decode&lt;<span class="lifetime">&#39;de</span>, M, D&gt;(decoder: D) -&gt; <span class="prelude-ty">Result</span>&lt;Field, D::Error&gt;
+<span class="kw">where
+    </span>M: Mode,
+    D: Decoder&lt;<span class="lifetime">&#39;de</span>&gt;;</code></pre></div>
+<p>Finally this can receive generic arguments like <code>#[musli(with = crate::path::&lt;_&gt;)]</code>, in case the receiving decode and encode functions
+receive <em>extra</em> generic arguments (beyond <code>M</code> and <code>D</code>), such as:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>decode&lt;<span class="lifetime">&#39;de</span>, M, D, T&gt;(decoder: D) -&gt; <span class="prelude-ty">Result</span>&lt;Set&lt;T&gt;, D::Error&gt;
+<span class="kw">where
+    </span>M: Mode,
+    D: Decoder&lt;<span class="lifetime">&#39;de</span>&gt;,
+    T: Decode&lt;<span class="lifetime">&#39;de</span>&gt;;</code></pre></div>
+<p>Full example:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::collections::HashSet;
+<span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="kw">pub struct </span>CustomUuid(u128);
+
+<span class="attr">#[derive(Encode, Decode)]
+</span><span class="kw">struct </span>Struct {
+    <span class="attr">#[musli(with = <span class="self">self</span>::custom_uuid)]
+    </span>id: CustomUuid,
+    <span class="attr">#[musli(with = <span class="self">self</span>::custom_set::&lt;<span class="kw">_</span>&gt;)]
+    </span>numbers: HashSet&lt;u32&gt;,
+}
+
+<span class="kw">mod </span>custom_uuid {
+    <span class="kw">use </span>musli::en::{Encode, Encoder};
+    <span class="kw">use </span>musli::de::{Decode, Decoder};
+    <span class="kw">use </span>musli::mode::Mode;
+
+    <span class="kw">use </span><span class="kw">super</span>::CustomUuid;
+
+    <span class="kw">pub fn </span>encode&lt;M, E&gt;(uuid: <span class="kw-2">&amp;</span>CustomUuid, encoder: E) -&gt; <span class="prelude-ty">Result</span>&lt;E::Ok, E::Error&gt;
+    <span class="kw">where
+        </span>M: Mode,
+        E: Encoder,
+    {
+        Encode::&lt;M&gt;::encode(<span class="kw-2">&amp;</span>uuid.<span class="number">0</span>, encoder)
+    }
+
+    <span class="kw">pub fn </span>decode&lt;<span class="lifetime">&#39;de</span>, M, D&gt;(decoder: D) -&gt; <span class="prelude-ty">Result</span>&lt;CustomUuid, D::Error&gt;
+    <span class="kw">where
+        </span>M: Mode,
+        D: Decoder&lt;<span class="lifetime">&#39;de</span>&gt;
+    {
+        <span class="prelude-val">Ok</span>(CustomUuid(&lt;u128 <span class="kw">as </span>Decode&lt;M&gt;&gt;::decode(decoder)<span class="question-mark">?</span>))
+    }
+}
+
+<span class="kw">mod </span>custom_set {
+    <span class="kw">use </span>std::collections::HashSet;
+    <span class="kw">use </span>std::hash::Hash;
+
+    <span class="kw">use </span>musli::en::{Encode, Encoder};
+    <span class="kw">use </span>musli::de::{Decode, Decoder};
+    <span class="kw">use </span>musli::mode::Mode;
+
+    <span class="kw">pub fn </span>encode&lt;M, E, T&gt;(set: <span class="kw-2">&amp;</span>HashSet&lt;T&gt;, encoder: E) -&gt; <span class="prelude-ty">Result</span>&lt;E::Ok, E::Error&gt;
+    <span class="kw">where
+        </span>M: Mode,
+        E: Encoder,
+        T: Encode&lt;M&gt; + Eq + Hash,
+    {
+        HashSet::&lt;T&gt;::encode(set, encoder)
+    }
+
+    <span class="kw">pub fn </span>decode&lt;<span class="lifetime">&#39;de</span>, M, D, T&gt;(decoder: D) -&gt; <span class="prelude-ty">Result</span>&lt;HashSet&lt;T&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>M: Mode,
+        D: Decoder&lt;<span class="lifetime">&#39;de</span>&gt;,
+        T: Decode&lt;<span class="lifetime">&#39;de</span>&gt; + Eq + Hash,
+    {
+        HashSet::&lt;T&gt;::decode(decoder)
+    }
+}</code></pre></div>
+<h5 id="muslidefault-1"><a href="#muslidefault-1"><code>#[musli(default)]</code></a></h5>
+<p>This constructs the field using <a href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default" title="associated function core::default::Default::default">Default::default</a> in case it’s not
+available. This is only used when a field is missing during decoding.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Encode, Decode)]
+</span><span class="kw">struct </span>Person {
+    name: String,
+    <span class="attr">#[musli(default)]
+    </span>age: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+}</code></pre></div>
+<h5 id="musliskip_encoding_if--path"><a href="#musliskip_encoding_if--path"><code>#[musli(skip_encoding_if = &lt;path&gt;)]</code></a></h5>
+<p>This adds a condition to skip encoding a field entirely if the condition is
+true. This is very commonly used to skip over encoding <code>Option&lt;T&gt;</code> fields.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>musli::{Encode, Decode};
+
+<span class="attr">#[derive(Encode, Decode)]
+</span><span class="kw">struct </span>Person {
+    name: String,
+    <span class="attr">#[musli(skip_encoding_if = Option::is_none)]
+    </span>age: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+}</code></pre></div>
+<h2 id="enum-representations"><a href="#enum-representations">Enum representations</a></h2>
+<p>Müsli supports the following enum representations, which mimics the ones
+supported by <em>serde</em>:</p>
+<ul>
+<li>Externally tagged (<em>default</em>).</li>
+<li>Internally tagged when <code>#[musli(tag)]</code> is specified on the enum.</li>
+<li>Adjacently tagged when both <code>#[musli(tag)]</code> and <code>#[musli(content)]</code> are
+specified.</li>
+</ul>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[derive(Encode, Decode)]
+</span><span class="kw">enum </span>Message {
+    Request { id: String, method: String, params: Params },
+    Response { id: String, result: Value },
+}</code></pre></div>
+<h3 id="externally-tagged"><a href="#externally-tagged">Externally tagged</a></h3>
+<p>When an enum is externally tagged it is represented by a single field
+indicating the variant of the enum.</p>
+<div class="example-wrap"><pre class="language-json"><code>{&quot;Request&quot;: {&quot;id&quot;: &quot;...&quot;, &quot;method&quot;: &quot;...&quot;, &quot;params&quot;: {...}}}
+</code></pre></div>
+<p>This is the most portable representation and is supported by most formats.
+It has special support in the <a href="../en/trait.Encoder.html" title="trait musli::en::Encoder"><code>Encoder</code></a> and <a href="../de/trait.Decoder.html" title="trait musli::de::Decoder"><code>Decoder</code></a> traits through
+<a href="../en/trait.Encoder.html#method.encode_variant" title="method musli::en::Encoder::encode_variant"><code>Encoder::encode_variant</code></a> and <a href="../de/trait.Decoder.html#method.decode_variant" title="method musli::de::Decoder::decode_variant"><code>Decoder::decode_variant</code></a>.</p>
+<p>Conceptually this can be considered as a “pair”, where the variant tag can
+be extracted from the format before the variant is decoded.</p>
+<h3 id="internally-tagged"><a href="#internally-tagged">Internally tagged</a></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[derive(Encode, Decode)]
+#[musli(tag = <span class="string">&quot;type&quot;</span>)]
+</span><span class="kw">enum </span>Message {
+    Request { id: String, method: String, params: Params },
+    Response { id: String, result: Value },
+}</code></pre></div>
+<p>In JSON, the <code>Message::Request</code> would be represented as:</p>
+<div class="example-wrap"><pre class="language-json"><code>{&quot;type&quot;: &quot;Request&quot;, &quot;id&quot;: &quot;...&quot;, &quot;method&quot;: &quot;...&quot;, &quot;params&quot;: {...}}
+</code></pre></div>
+<p>This is only supported by formats which are <em>self descriptive</em>, which is a
+requirement for the format to be buffered through <a href="../de/trait.Decoder.html#method.decode_buffer" title="method musli::de::Decoder::decode_buffer"><code>Decoder::decode_buffer</code></a>.</p>
+<p>It is necessary to buffer the value, since we need to inspect the fields of
+a map for the field corresponding to the <code>tag</code>, and then use this to
+determine which decoder implementation to call.</p>
+</div></details></section></div></main></body></html>

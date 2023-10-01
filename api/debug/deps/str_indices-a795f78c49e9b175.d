@@ -1,0 +1,11 @@
+/home/runner/work/rune/rune/target/site/api/debug/deps/libstr_indices-a795f78c49e9b175.rmeta: /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/byte_chunk.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/chars.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lines.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lines_crlf.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lines_lf.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/utf16.rs
+
+/home/runner/work/rune/rune/target/site/api/debug/deps/str_indices-a795f78c49e9b175.d: /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/byte_chunk.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/chars.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lines.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lines_crlf.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lines_lf.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/utf16.rs
+
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lib.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/byte_chunk.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/chars.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lines.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lines_crlf.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/lines_lf.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/str_indices-0.4.1/src/utf16.rs:

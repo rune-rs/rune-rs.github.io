@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Alignment","Flag","Type"],"struct":["AlignmentFromStrError","Flags","Format","FormatSpec","TypeFromStrError"]};

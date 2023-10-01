@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["AllocError","Global"],"trait":["Allocator"]};

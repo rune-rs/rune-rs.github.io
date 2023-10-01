@@ -1,0 +1,53 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Iterators over a `Rope`’s data."><title>ropey::iter - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="ropey" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (ca62d2c44 2023-09-30)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../ropey/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a></nav><nav class="sidebar"><a class="logo-container" href="../../ropey/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Module iter</a></h2><div class="sidebar-elems"><section><ul class="block"><li><a href="#structs">Structs</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Module <a href="../index.html">ropey</a>::<wbr><a class="mod" href="#">iter</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../src/ropey/iter.rs.html#1-3533">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Iterators over a <code>Rope</code>’s data.</p>
+<p>The iterators in Ropey can be created from both <code>Rope</code>s and <code>RopeSlice</code>s.
+When created from a <code>RopeSlice</code>, they iterate over only the data that the
+<code>RopeSlice</code> refers to.  For the <code>Lines</code> and <code>Chunks</code> iterators, the data
+of the first and last yielded item will be correctly truncated to match
+the bounds of the <code>RopeSlice</code>.</p>
+<h2 id="reverse-iteration"><a href="#reverse-iteration">Reverse iteration</a></h2>
+<p>All iterators in Ropey operate as a cursor that can move both forwards
+and backwards over its contents.  This can be accomplished via the
+<code>next()</code> and <code>prev()</code> methods on each iterator, or by using the <code>reverse()</code>
+or <code>reversed()</code> methods to change the iterator’s direction.</p>
+<p>Conceptually, an iterator in Ropey is always positioned <em>between</em> the
+elements it iterates over, and returns an element when it jumps over it
+via the <code>next()</code> or <code>prev()</code> methods.</p>
+<p>For example, given the text <code>&quot;abc&quot;</code> and a <code>Chars</code> iterator starting at the
+beginning of the text, you would get the following sequence of states and
+return values by repeatedly calling <code>next()</code> (the vertical bar represents
+the position of the iterator):</p>
+<ol start="0">
+<li><code>|abc</code></li>
+<li><code>a|bc</code> -&gt; <code>Some('a')</code></li>
+<li><code>ab|c</code> -&gt; <code>Some('b')</code></li>
+<li><code>abc|</code> -&gt; <code>Some('c')</code></li>
+<li><code>abc|</code> -&gt; <code>None</code></li>
+</ol>
+<p>The <code>prev()</code> method operates identically, except moving in the opposite
+direction.  And <code>reverse()</code> simply swaps the behavior of <code>prev()</code> and
+<code>next()</code>.</p>
+<h2 id="creating-iterators-at-any-position"><a href="#creating-iterators-at-any-position">Creating iterators at any position</a></h2>
+<p>Iterators in Ropey can be created starting at any position in the text.
+This is accomplished with the various <code>bytes_at()</code>, <code>chars_at()</code>, etc.
+methods of <code>Rope</code> and <code>RopeSlice</code>.</p>
+<p>When an iterator is created this way, it is positioned such that a call to
+<code>next()</code> will return the specified element, and a call to <code>prev()</code> will
+return the element just before the specified one.</p>
+<p>Importantly, iterators created this way still have access to the entire
+contents of the <code>Rope</code>/<code>RopeSlice</code> they were created from—the
+contents before the specified position is not truncated.  For example, you
+can create a <code>Chars</code> iterator starting at the end of a <code>Rope</code>, and then
+use the <code>prev()</code> method to iterate backwards over all of that <code>Rope</code>’s
+chars.</p>
+<h2 id="a-possible-point-of-confusion"><a href="#a-possible-point-of-confusion">A possible point of confusion</a></h2>
+<p>The Rust standard library has an iterator trait <code>DoubleEndedIterator</code> with
+a method <code>rev()</code>.  While this method’s name is very similar to Ropey’s
+<code>reverse()</code> method, its behavior is very different.</p>
+<p><code>DoubleEndedIterator</code> actually provides two iterators: one starting at each
+end of the collection, moving in opposite directions towards each other.
+Calling <code>rev()</code> switches between those two iterators, changing not only the
+direction of iteration but also its current position in the collection.</p>
+<p>The <code>reverse()</code> method on Ropey’s iterators, on the other hand, reverses
+the direction of the iterator in-place, without changing its position in
+the text.</p>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.Bytes.html" title="struct ropey::iter::Bytes">Bytes</a></div><div class="desc docblock-short">An iterator over a <code>Rope</code>’s bytes.</div></li><li><div class="item-name"><a class="struct" href="struct.Chars.html" title="struct ropey::iter::Chars">Chars</a></div><div class="desc docblock-short">An iterator over a <code>Rope</code>’s chars.</div></li><li><div class="item-name"><a class="struct" href="struct.Chunks.html" title="struct ropey::iter::Chunks">Chunks</a></div><div class="desc docblock-short">An iterator over a <code>Rope</code>’s contiguous <code>str</code> chunks.</div></li><li><div class="item-name"><a class="struct" href="struct.Lines.html" title="struct ropey::iter::Lines">Lines</a></div><div class="desc docblock-short">An iterator over a <code>Rope</code>’s lines.</div></li></ul></section></div></main></body></html>

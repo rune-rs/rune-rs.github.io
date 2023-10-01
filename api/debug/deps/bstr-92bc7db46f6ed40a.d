@@ -1,0 +1,12 @@
+/home/runner/work/rune/rune/target/site/api/debug/deps/libbstr-92bc7db46f6ed40a.rmeta: /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/ascii.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/bstr.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/byteset/mod.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/byteset/scalar.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/ext_slice.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/impls.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/utf8.rs
+
+/home/runner/work/rune/rune/target/site/api/debug/deps/bstr-92bc7db46f6ed40a.d: /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/ascii.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/bstr.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/byteset/mod.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/byteset/scalar.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/ext_slice.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/impls.rs /home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/utf8.rs
+
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/lib.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/ascii.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/bstr.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/byteset/mod.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/byteset/scalar.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/ext_slice.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/impls.rs:
+/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bstr-0.2.17/src/utf8.rs:

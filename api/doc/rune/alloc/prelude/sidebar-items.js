@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"derive":["TryClone"],"trait":["IteratorExt","OptionExt","TryClone","TryCopy","TryExtend","TryFromIterator","TryFromIteratorIn","TryToOwned","TryToString"]};

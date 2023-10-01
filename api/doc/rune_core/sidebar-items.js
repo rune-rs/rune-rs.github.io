@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Component","ComponentRef"],"struct":["FullTypeOf","Hash","Item","ItemBuf","Params","Protocol","RawStr"],"trait":["IntoComponent","IntoHash","ToTypeHash"]};

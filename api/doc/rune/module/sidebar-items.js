@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["Async","EnumMut","InternalEnumMut","ItemFnMut","ItemMut","Plain","TypeMut","Variant","VariantMut"],"trait":["Function","FunctionKind","InstallWith","InstanceFunction"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BigEndian","LittleEndian","Variable"],"mod":["continuation","zigzag"],"struct":["Fixed","FixedUsize"],"trait":["ByteOrder","ByteOrderIo","IntegerEncoding","Signed","Unsigned","UsizeEncoding"],"type":["NativeEndian","NetworkEndian"]};

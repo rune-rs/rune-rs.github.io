@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"derive":["Decode","Encode"],"mod":["compat","de","derives","en","error","mode","never","utils"]};
