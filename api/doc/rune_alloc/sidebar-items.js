@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["abort"],"macro":["try_format","try_vec"],"mod":["alloc","borrow","boxed","btree_map","btree_set","clone","error","fmt","hashbrown","iter","limit","path","prelude","str","string","vec","vec_deque"],"struct":["BTreeMap","BTreeSet","HashMap","HashSet"],"type":["Result"]};

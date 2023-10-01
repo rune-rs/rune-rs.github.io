@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["take","with"],"struct":["Budget"]};
