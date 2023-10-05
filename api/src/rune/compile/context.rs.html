@@ -903,57 +903,6 @@
 <a href="#903" id="903">903</a>
 <a href="#904" id="904">904</a>
 <a href="#905" id="905">905</a>
-<a href="#906" id="906">906</a>
-<a href="#907" id="907">907</a>
-<a href="#908" id="908">908</a>
-<a href="#909" id="909">909</a>
-<a href="#910" id="910">910</a>
-<a href="#911" id="911">911</a>
-<a href="#912" id="912">912</a>
-<a href="#913" id="913">913</a>
-<a href="#914" id="914">914</a>
-<a href="#915" id="915">915</a>
-<a href="#916" id="916">916</a>
-<a href="#917" id="917">917</a>
-<a href="#918" id="918">918</a>
-<a href="#919" id="919">919</a>
-<a href="#920" id="920">920</a>
-<a href="#921" id="921">921</a>
-<a href="#922" id="922">922</a>
-<a href="#923" id="923">923</a>
-<a href="#924" id="924">924</a>
-<a href="#925" id="925">925</a>
-<a href="#926" id="926">926</a>
-<a href="#927" id="927">927</a>
-<a href="#928" id="928">928</a>
-<a href="#929" id="929">929</a>
-<a href="#930" id="930">930</a>
-<a href="#931" id="931">931</a>
-<a href="#932" id="932">932</a>
-<a href="#933" id="933">933</a>
-<a href="#934" id="934">934</a>
-<a href="#935" id="935">935</a>
-<a href="#936" id="936">936</a>
-<a href="#937" id="937">937</a>
-<a href="#938" id="938">938</a>
-<a href="#939" id="939">939</a>
-<a href="#940" id="940">940</a>
-<a href="#941" id="941">941</a>
-<a href="#942" id="942">942</a>
-<a href="#943" id="943">943</a>
-<a href="#944" id="944">944</a>
-<a href="#945" id="945">945</a>
-<a href="#946" id="946">946</a>
-<a href="#947" id="947">947</a>
-<a href="#948" id="948">948</a>
-<a href="#949" id="949">949</a>
-<a href="#950" id="950">950</a>
-<a href="#951" id="951">951</a>
-<a href="#952" id="952">952</a>
-<a href="#953" id="953">953</a>
-<a href="#954" id="954">954</a>
-<a href="#955" id="955">955</a>
-<a href="#956" id="956">956</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>::rust_alloc::sync::Arc;
@@ -969,8 +918,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::{ComponentRef, ContextError, IntoComponent, Item, ItemBuf, Names};
 <span class="kw">use </span><span class="kw">crate</span>::hash;
 <span class="kw">use </span><span class="kw">crate</span>::module::{
-    Fields, InternalEnum, Module, ModuleAssociated, ModuleAssociatedKind, ModuleAttributeMacro,
-    ModuleConstant, ModuleFunction, ModuleMacro, ModuleType, TypeSpecification,
+    Fields, Module, ModuleAssociated, ModuleAssociatedKind, ModuleItem, ModuleType,
+    TypeSpecification,
 };
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
     AttributeMacroHandler, ConstValue, FunctionHandler, MacroHandler, Protocol, RuntimeContext,
@@ -988,6 +937,9 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) item: <span class="prelude-ty">Option</span>&lt;ItemBuf&gt;,
     <span class="doccomment">/// The kind of the compile meta.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: meta::Kind,
+    <span class="doccomment">/// Deprecation notice.
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) deprecated: <span class="prelude-ty">Option</span>&lt;Box&lt;str&gt;&gt;,
     <span class="doccomment">/// Documentation associated with a context meta.
     </span><span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) docs: Docs,
@@ -1177,24 +1129,8 @@
             <span class="self">self</span>.install_type(module, ty)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">for </span>f <span class="kw">in </span><span class="kw-2">&amp;</span>module.functions {
-            <span class="self">self</span>.install_function(module, f)<span class="question-mark">?</span>;
-        }
-
-        <span class="kw">for </span>m <span class="kw">in </span><span class="kw-2">&amp;</span>module.macros {
-            <span class="self">self</span>.install_macro(module, m)<span class="question-mark">?</span>;
-        }
-
-        <span class="kw">for </span>m <span class="kw">in </span><span class="kw-2">&amp;</span>module.attribute_macros {
-            <span class="self">self</span>.install_attribute_macro(module, m)<span class="question-mark">?</span>;
-        }
-
-        <span class="kw">for </span>m <span class="kw">in </span><span class="kw-2">&amp;</span>module.constants {
-            <span class="self">self</span>.install_constant(module, m)<span class="question-mark">?</span>;
-        }
-
-        <span class="kw">for </span>internal_enum <span class="kw">in </span><span class="kw-2">&amp;</span>module.internal_enums {
-            <span class="self">self</span>.install_internal_enum(module, internal_enum)<span class="question-mark">?</span>;
+        <span class="kw">for </span>item <span class="kw">in </span><span class="kw-2">&amp;</span>module.items {
+            <span class="self">self</span>.install_item(module, item)<span class="question-mark">?</span>;
         }
 
         <span class="kw">for </span>assoc <span class="kw">in </span><span class="kw-2">&amp;</span>module.associated {
@@ -1360,16 +1296,24 @@
     </span><span class="kw">fn </span>install_module(<span class="kw-2">&amp;mut </span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>Module) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
         <span class="self">self</span>.names.insert(<span class="kw-2">&amp;</span>m.item)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>current = <span class="prelude-val">Some</span>((m.item.as_ref(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>m.docs)));
+        <span class="kw">let </span><span class="kw-2">mut </span>current = <span class="prelude-val">Some</span>((m.item.as_ref(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>m.common)));
 
         <span class="attr">#[allow(unused)]
-        </span><span class="kw">while let </span><span class="prelude-val">Some</span>((item, docs)) = current.take() {
+        </span><span class="kw">while let </span><span class="prelude-val">Some</span>((item, common)) = current.take() {
             <span class="self">self</span>.install_meta(ContextMeta {
                 hash: Hash::type_hash(item),
                 item: <span class="prelude-val">Some</span>(item.try_to_owned()<span class="question-mark">?</span>),
                 kind: meta::Kind::Module,
                 <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                </span>docs: docs.try_cloned()<span class="question-mark">?</span>.unwrap_or_default(),
+                </span>deprecated: common
+                    .map(|c| c.deprecated.as_ref().try_cloned())
+                    .transpose()<span class="question-mark">?
+                    </span>.flatten(),
+                <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                </span>docs: common
+                    .map(|c| c.docs.try_clone())
+                    .transpose()<span class="question-mark">?
+                    </span>.unwrap_or_default(),
             })<span class="question-mark">?</span>;
 
             current = item.parent().map(|item| (item, <span class="prelude-val">None</span>));
@@ -1402,8 +1346,6 @@
                             <span class="kw">let </span>signature = meta::Signature {
                                 <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
                                 </span>is_async: <span class="bool-val">false</span>,
-                                <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                                </span>deprecated: <span class="prelude-val">None</span>,
                                 <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
                                 </span>args: <span class="prelude-val">Some</span>(<span class="kw">match </span>fields {
                                     Fields::Named(names) =&gt; names.len(),
@@ -1470,8 +1412,6 @@
                                 <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
                                 </span>is_async: <span class="bool-val">false</span>,
                                 <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                                </span>deprecated: <span class="prelude-val">None</span>,
-                                <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
                                 </span>args: <span class="prelude-val">Some</span>(<span class="kw">match </span>fields {
                                     Fields::Named(names) =&gt; names.len(),
                                     Fields::Unnamed(args) =&gt; <span class="kw-2">*</span>args,
@@ -1517,6 +1457,8 @@
                                 constructor,
                             },
                             <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                            </span>deprecated: variant.deprecated.try_clone()<span class="question-mark">?</span>,
+                            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
                             </span>docs: variant.docs.try_clone()<span class="question-mark">?</span>,
                         })<span class="question-mark">?</span>;
                     }
@@ -1533,7 +1475,9 @@
             item: <span class="prelude-val">Some</span>(item),
             kind,
             <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>docs: ty.docs.try_clone()<span class="question-mark">?</span>,
+            </span>deprecated: ty.common.deprecated.try_clone()<span class="question-mark">?</span>,
+            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+            </span>docs: ty.common.docs.try_clone()<span class="question-mark">?</span>,
         })<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
@@ -1568,115 +1512,172 @@
     }
 
     <span class="doccomment">/// Install a function and check for duplicates.
-    </span><span class="kw">fn </span>install_function(
+    </span><span class="kw">fn </span>install_item(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         module: <span class="kw-2">&amp;</span>Module,
-        f: <span class="kw-2">&amp;</span>ModuleFunction,
+        module_item: <span class="kw-2">&amp;</span>ModuleItem,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
-        <span class="kw">let </span>item = module.item.join(<span class="kw-2">&amp;</span>f.item)<span class="question-mark">?</span>;
+        <span class="kw">let </span>item = module.item.join(<span class="kw-2">&amp;</span>module_item.item)<span class="question-mark">?</span>;
         <span class="self">self</span>.names.insert(<span class="kw-2">&amp;</span>item)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>hash = Hash::type_hash(<span class="kw-2">&amp;</span>item);
 
-        <span class="self">self</span>.constants.try_insert(
-            Hash::associated_function(hash, Protocol::INTO_TYPE_NAME),
-            ConstValue::String(item.try_to_string()<span class="question-mark">?</span>),
-        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>kind = <span class="kw">match </span><span class="kw-2">&amp;</span>module_item.kind {
+            rune::module::ModuleItemKind::Constant(value) =&gt; {
+                <span class="self">self</span>.constants.try_insert(hash, value.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                meta::Kind::Const
+            }
+            rune::module::ModuleItemKind::Function(f) =&gt; {
+                <span class="self">self</span>.constants.try_insert(
+                    Hash::associated_function(hash, Protocol::INTO_TYPE_NAME),
+                    ConstValue::String(item.try_to_string()<span class="question-mark">?</span>),
+                )<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>signature = meta::Signature {
-            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>is_async: f.is_async,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>deprecated: f.deprecated.try_clone()<span class="question-mark">?</span>,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>args: f.args,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>return_type: f.return_type.as_ref().map(|f| f.hash),
-            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>argument_types: f
-                .argument_types
-                .iter()
-                .map(|f| f.as_ref().map(|f| f.hash))
-                .try_collect()<span class="question-mark">?</span>,
+                <span class="kw">let </span>signature = meta::Signature {
+                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                    </span>is_async: f.is_async,
+                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                    </span>args: f.args,
+                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                    </span>return_type: f.return_type.as_ref().map(|f| f.hash),
+                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                    </span>argument_types: f
+                        .argument_types
+                        .iter()
+                        .map(|f| f.as_ref().map(|f| f.hash))
+                        .try_collect()<span class="question-mark">?</span>,
+                };
+
+                <span class="self">self</span>.insert_native_fn(hash, <span class="kw-2">&amp;</span>f.handler)<span class="question-mark">?</span>;
+
+                meta::Kind::Function {
+                    associated: <span class="prelude-val">None</span>,
+                    signature,
+                    is_test: <span class="bool-val">false</span>,
+                    is_bench: <span class="bool-val">false</span>,
+                    parameters: Hash::EMPTY,
+                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                    </span>container: <span class="prelude-val">None</span>,
+                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                    </span>parameter_types: Vec::new(),
+                }
+            }
+            rune::module::ModuleItemKind::Macro(m) =&gt; {
+                <span class="self">self</span>.macros.try_insert(hash, m.handler.clone())<span class="question-mark">?</span>;
+                meta::Kind::Macro
+            }
+            rune::module::ModuleItemKind::AttributeMacro(m) =&gt; {
+                <span class="self">self</span>.attribute_macros.try_insert(hash, m.handler.clone())<span class="question-mark">?</span>;
+                meta::Kind::AttributeMacro
+            }
+            rune::module::ModuleItemKind::InternalEnum(internal_enum) =&gt; {
+                <span class="kw">if </span>!<span class="self">self</span>.internal_enums.try_insert(internal_enum.static_type)<span class="question-mark">? </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ContextError::InternalAlreadyPresent {
+                        name: internal_enum.name,
+                    });
+                }
+
+                <span class="comment">// Sanity check that the registered item is in the right location.
+                </span><span class="kw">if </span>internal_enum.static_type.hash != hash {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ContextError::TypeHashMismatch {
+                        type_info: internal_enum.static_type.type_info(),
+                        item,
+                        hash: internal_enum.static_type.hash,
+                        item_hash: hash,
+                    });
+                }
+
+                <span class="self">self</span>.install_type_info(ContextType {
+                    item: item.try_clone()<span class="question-mark">?</span>,
+                    hash,
+                    type_check: <span class="prelude-val">None</span>,
+                    type_info: internal_enum.static_type.type_info(),
+                    type_parameters: Hash::EMPTY,
+                })<span class="question-mark">?</span>;
+
+                <span class="kw">for </span>(index, variant) <span class="kw">in </span>internal_enum.variants.iter().enumerate() {
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(fields) = <span class="kw-2">&amp;</span>variant.fields <span class="kw">else </span>{
+                        <span class="kw">continue</span>;
+                    };
+
+                    <span class="kw">let </span>variant_item = item.extended(variant.name)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>variant_hash = Hash::type_hash(<span class="kw-2">&amp;</span>variant_item);
+
+                    <span class="self">self</span>.install_type_info(ContextType {
+                        item: variant_item.try_clone()<span class="question-mark">?</span>,
+                        hash: variant_hash,
+                        type_check: variant.type_check,
+                        type_info: internal_enum.static_type.type_info(),
+                        type_parameters: Hash::EMPTY,
+                    })<span class="question-mark">?</span>;
+
+                    <span class="kw">let </span>constructor = <span class="kw">if let </span><span class="prelude-val">Some</span>(constructor) = <span class="kw-2">&amp;</span>variant.constructor {
+                        <span class="self">self</span>.insert_native_fn(variant_hash, constructor)<span class="question-mark">?</span>;
+
+                        <span class="prelude-val">Some</span>(meta::Signature {
+                            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                            </span>is_async: <span class="bool-val">false</span>,
+                            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                            </span>args: <span class="prelude-val">Some</span>(<span class="kw">match </span>fields {
+                                Fields::Named(names) =&gt; names.len(),
+                                Fields::Unnamed(args) =&gt; <span class="kw-2">*</span>args,
+                                Fields::Empty =&gt; <span class="number">0</span>,
+                            }),
+                            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                            </span>return_type: <span class="prelude-val">Some</span>(hash),
+                            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                            </span>argument_types: Box::default(),
+                        })
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">None
+                    </span>};
+
+                    <span class="self">self</span>.install_meta(ContextMeta {
+                        hash: variant_hash,
+                        item: <span class="prelude-val">Some</span>(variant_item),
+                        kind: meta::Kind::Variant {
+                            enum_hash: hash,
+                            index,
+                            fields: <span class="kw">match </span>fields {
+                                Fields::Named(fields) =&gt; meta::Fields::Named(meta::FieldsNamed {
+                                    fields: fields
+                                        .iter()
+                                        .copied()
+                                        .enumerate()
+                                        .map(|(position, name)| {
+                                            <span class="prelude-val">Ok</span>((
+                                                Box::&lt;str&gt;::try_from(name)<span class="question-mark">?</span>,
+                                                meta::FieldMeta { position },
+                                            ))
+                                        })
+                                        .try_collect::&lt;alloc::Result&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">??</span>,
+                                }),
+                                Fields::Unnamed(args) =&gt; meta::Fields::Unnamed(<span class="kw-2">*</span>args),
+                                Fields::Empty =&gt; meta::Fields::Empty,
+                            },
+                            constructor,
+                        },
+                        <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                        </span>deprecated: variant.deprecated.try_clone()<span class="question-mark">?</span>,
+                        <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
+                        </span>docs: variant.docs.try_clone()<span class="question-mark">?</span>,
+                    })<span class="question-mark">?</span>;
+                }
+
+                meta::Kind::Enum {
+                    parameters: Hash::EMPTY,
+                }
+            }
         };
 
-        <span class="self">self</span>.insert_native_fn(hash, <span class="kw-2">&amp;</span>f.handler)<span class="question-mark">?</span>;
-
         <span class="self">self</span>.install_meta(ContextMeta {
             hash,
             item: <span class="prelude-val">Some</span>(item),
-            kind: meta::Kind::Function {
-                associated: <span class="prelude-val">None</span>,
-                signature,
-                is_test: <span class="bool-val">false</span>,
-                is_bench: <span class="bool-val">false</span>,
-                parameters: Hash::EMPTY,
-                <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                </span>container: <span class="prelude-val">None</span>,
-                <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                </span>parameter_types: Vec::new(),
-            },
+            kind,
             <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>docs: f.docs.try_clone()<span class="question-mark">?</span>,
-        })<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="doccomment">/// Install a macro and check for duplicates.
-    </span><span class="kw">fn </span>install_macro(<span class="kw-2">&amp;mut </span><span class="self">self</span>, module: <span class="kw-2">&amp;</span>Module, m: <span class="kw-2">&amp;</span>ModuleMacro) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
-        <span class="kw">let </span>item = module.item.join(<span class="kw-2">&amp;</span>m.item)<span class="question-mark">?</span>;
-        <span class="kw">let </span>hash = Hash::type_hash(<span class="kw-2">&amp;</span>item);
-        <span class="self">self</span>.macros.try_insert(hash, m.handler.clone())<span class="question-mark">?</span>;
-
-        <span class="self">self</span>.install_meta(ContextMeta {
-            hash,
-            item: <span class="prelude-val">Some</span>(item),
-            kind: meta::Kind::Macro,
+            </span>deprecated: module_item.common.deprecated.try_clone()<span class="question-mark">?</span>,
             <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>docs: m.docs.try_clone()<span class="question-mark">?</span>,
-        })<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="doccomment">/// Install an attribute macro and check for duplicates.
-    </span><span class="kw">fn </span>install_attribute_macro(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        module: <span class="kw-2">&amp;</span>Module,
-        m: <span class="kw-2">&amp;</span>ModuleAttributeMacro,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
-        <span class="kw">let </span>item = module.item.join(<span class="kw-2">&amp;</span>m.item)<span class="question-mark">?</span>;
-        <span class="kw">let </span>hash = Hash::type_hash(<span class="kw-2">&amp;</span>item);
-        <span class="self">self</span>.attribute_macros.try_insert(hash, m.handler.clone())<span class="question-mark">?</span>;
-
-        <span class="self">self</span>.install_meta(ContextMeta {
-            hash,
-            item: <span class="prelude-val">Some</span>(item),
-            kind: meta::Kind::AttributeMacro,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>docs: m.docs.try_clone()<span class="question-mark">?</span>,
-        })<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="doccomment">/// Install a constant and check for duplicates.
-    </span><span class="kw">fn </span>install_constant(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        module: <span class="kw-2">&amp;</span>Module,
-        m: <span class="kw-2">&amp;</span>ModuleConstant,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
-        <span class="kw">let </span>item = module.item.join(<span class="kw-2">&amp;</span>m.item)<span class="question-mark">?</span>;
-        <span class="kw">let </span>hash = Hash::type_hash(<span class="kw-2">&amp;</span>item);
-        <span class="self">self</span>.constants.try_insert(hash, m.value.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-
-        <span class="self">self</span>.install_meta(ContextMeta {
-            hash,
-            item: <span class="prelude-val">Some</span>(item),
-            kind: meta::Kind::Const,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>docs: m.docs.try_clone()<span class="question-mark">?</span>,
+            </span>docs: module_item.common.docs.try_clone()<span class="question-mark">?</span>,
         })<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
@@ -1716,20 +1717,18 @@
         </span>};
 
         <span class="kw">let </span>kind = <span class="kw">match </span><span class="kw-2">&amp;</span>assoc.kind {
-            ModuleAssociatedKind::Constant(c) =&gt; {
+            ModuleAssociatedKind::Constant(value) =&gt; {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>((hash, ..)) = <span class="kw-2">&amp;</span>item {
-                    <span class="self">self</span>.constants.try_insert(<span class="kw-2">*</span>hash, c.value.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.constants.try_insert(<span class="kw-2">*</span>hash, value.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 }
 
-                <span class="self">self</span>.constants.try_insert(hash, c.value.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.constants.try_insert(hash, value.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 meta::Kind::Const
             }
             ModuleAssociatedKind::Function(f) =&gt; {
                 <span class="kw">let </span>signature = meta::Signature {
                     <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
                     </span>is_async: f.is_async,
-                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                    </span>deprecated: assoc.deprecated.try_clone()<span class="question-mark">?</span>,
                     <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
                     </span>args: f.args,
                     <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
@@ -1774,111 +1773,10 @@
             item: item.map(|(<span class="kw">_</span>, item)| item),
             kind,
             <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>docs: assoc.docs.try_clone()<span class="question-mark">?</span>,
-        })<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="doccomment">/// Install generator state types.
-    </span><span class="kw">fn </span>install_internal_enum(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        module: <span class="kw-2">&amp;</span>Module,
-        internal_enum: <span class="kw-2">&amp;</span>InternalEnum,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
-        <span class="kw">if </span>!<span class="self">self</span>.internal_enums.try_insert(internal_enum.static_type)<span class="question-mark">? </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ContextError::InternalAlreadyPresent {
-                name: internal_enum.name,
-            });
-        }
-
-        <span class="kw">let </span>item = module.item.join(<span class="kw-2">&amp;</span>internal_enum.base_type)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>enum_hash = internal_enum.static_type.hash;
-
-        <span class="self">self</span>.install_meta(ContextMeta {
-            hash: enum_hash,
-            item: <span class="prelude-val">Some</span>(item.try_clone()<span class="question-mark">?</span>),
-            kind: meta::Kind::Enum {
-                parameters: Hash::EMPTY,
-            },
+            </span>deprecated: assoc.common.deprecated.try_clone()<span class="question-mark">?</span>,
             <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-            </span>docs: internal_enum.docs.try_clone()<span class="question-mark">?</span>,
+            </span>docs: assoc.common.docs.try_clone()<span class="question-mark">?</span>,
         })<span class="question-mark">?</span>;
-
-        <span class="self">self</span>.install_type_info(ContextType {
-            item: item.try_clone()<span class="question-mark">?</span>,
-            hash: enum_hash,
-            type_check: <span class="prelude-val">None</span>,
-            type_info: internal_enum.static_type.type_info(),
-            type_parameters: Hash::EMPTY,
-        })<span class="question-mark">?</span>;
-
-        <span class="kw">for </span>(index, variant) <span class="kw">in </span>internal_enum.variants.iter().enumerate() {
-            <span class="kw">let </span><span class="prelude-val">Some</span>(fields) = <span class="kw-2">&amp;</span>variant.fields <span class="kw">else </span>{
-                <span class="kw">continue</span>;
-            };
-
-            <span class="kw">let </span>item = item.extended(variant.name)<span class="question-mark">?</span>;
-            <span class="kw">let </span>hash = Hash::type_hash(<span class="kw-2">&amp;</span>item);
-
-            <span class="self">self</span>.install_type_info(ContextType {
-                item: item.try_clone()<span class="question-mark">?</span>,
-                hash,
-                type_check: variant.type_check,
-                type_info: internal_enum.static_type.type_info(),
-                type_parameters: Hash::EMPTY,
-            })<span class="question-mark">?</span>;
-
-            <span class="kw">let </span>constructor = <span class="kw">if let </span><span class="prelude-val">Some</span>(constructor) = <span class="kw-2">&amp;</span>variant.constructor {
-                <span class="self">self</span>.insert_native_fn(hash, constructor)<span class="question-mark">?</span>;
-
-                <span class="prelude-val">Some</span>(meta::Signature {
-                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                    </span>is_async: <span class="bool-val">false</span>,
-                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                    </span>deprecated: <span class="prelude-val">None</span>,
-                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                    </span>args: <span class="prelude-val">Some</span>(<span class="kw">match </span>fields {
-                        Fields::Named(names) =&gt; names.len(),
-                        Fields::Unnamed(args) =&gt; <span class="kw-2">*</span>args,
-                        Fields::Empty =&gt; <span class="number">0</span>,
-                    }),
-                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                    </span>return_type: <span class="prelude-val">Some</span>(enum_hash),
-                    <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                    </span>argument_types: Box::default(),
-                })
-            } <span class="kw">else </span>{
-                <span class="prelude-val">None
-            </span>};
-
-            <span class="self">self</span>.install_meta(ContextMeta {
-                hash,
-                item: <span class="prelude-val">Some</span>(item),
-                kind: meta::Kind::Variant {
-                    enum_hash,
-                    index,
-                    fields: <span class="kw">match </span>fields {
-                        Fields::Named(fields) =&gt; meta::Fields::Named(meta::FieldsNamed {
-                            fields: fields
-                                .iter()
-                                .copied()
-                                .enumerate()
-                                .map(|(position, name)| {
-                                    <span class="prelude-val">Ok</span>((Box::&lt;str&gt;::try_from(name)<span class="question-mark">?</span>, meta::FieldMeta { position }))
-                                })
-                                .try_collect::&lt;alloc::Result&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">??</span>,
-                        }),
-                        Fields::Unnamed(args) =&gt; meta::Fields::Unnamed(<span class="kw-2">*</span>args),
-                        Fields::Empty =&gt; meta::Fields::Empty,
-                    },
-                    constructor,
-                },
-                <span class="attr">#[cfg(feature = <span class="string">&quot;doc&quot;</span>)]
-                </span>docs: variant.docs.try_clone()<span class="question-mark">?</span>,
-            })<span class="question-mark">?</span>;
-        }
 
         <span class="prelude-val">Ok</span>(())
     }

@@ -385,8 +385,6 @@
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
 <a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::compile::context::ContextMeta;
@@ -406,6 +404,8 @@
 
 <span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Meta&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Kind of the meta item.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: Kind&lt;<span class="lifetime">&#39;a</span>&gt;,
     <span class="doccomment">/// Item of the meta.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) item: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Item&gt;,
     <span class="doccomment">/// The meta source.
@@ -413,8 +413,8 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) source: MetaSource&lt;<span class="lifetime">&#39;a</span>&gt;,
     <span class="doccomment">/// Type hash for the meta item.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) hash: Hash,
-    <span class="doccomment">/// Kind of the meta item.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: Kind&lt;<span class="lifetime">&#39;a</span>&gt;,
+    <span class="doccomment">/// Indicates if the item is deprecated.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) deprecated: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
     <span class="doccomment">/// Documentation for the meta item.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) docs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[String],
 }
@@ -422,7 +422,6 @@
 <span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Function&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) is_async: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) deprecated: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) arg_names: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[String]&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) args: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) signature: Signature,
@@ -454,15 +453,15 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AssocFn&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) kind: AssocFnKind&lt;<span class="lifetime">&#39;a</span>&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) is_async: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) deprecated: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) return_type: <span class="prelude-ty">Option</span>&lt;Hash&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) argument_types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[<span class="prelude-ty">Option</span>&lt;Hash&gt;],
-    <span class="kw">pub</span>(<span class="kw">crate</span>) docs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[String],
     <span class="doccomment">/// Literal argument replacements.
     /// TODO: replace this with structured information that includes type hash so it can be linked if it&#39;s available.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) arg_names: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[String]&gt;,
     <span class="doccomment">/// Generic instance parameters for function.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) parameter_types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Hash],
+    <span class="kw">pub</span>(<span class="kw">crate</span>) deprecated: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) docs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[String],
 }
 
 <span class="doccomment">/// Information on an associated item.
@@ -516,14 +515,13 @@
             <span class="prelude-val">Some</span>(associated.iter().flat_map(<span class="kw">move </span>|hash| {
                 <span class="kw">let </span>data = visitor.data.get(hash)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>(is_async, deprecated, kind) = <span class="kw">match </span><span class="kw-2">&amp;</span>data.kind {
+                <span class="kw">let </span>(is_async, kind) = <span class="kw">match </span><span class="kw-2">&amp;</span>data.kind {
                     <span class="prelude-val">Some</span>(meta::Kind::Function {
                         associated: <span class="prelude-val">None</span>,
                         signature: f,
                         ..
                     }) =&gt; (
                         f.is_async,
-                        f.deprecated.as_deref(),
                         AssocFnKind::Method(data.item.last()<span class="question-mark">?</span>.as_str()<span class="question-mark">?</span>, f.args, Signature::Function),
                     ),
                     <span class="prelude-val">Some</span>(meta::Kind::Function {
@@ -532,7 +530,6 @@
                         ..
                     }) =&gt; (
                         f.is_async,
-                        f.deprecated.as_deref(),
                         AssocFnKind::Method(name.as_ref(), f.args, Signature::Instance),
                     ),
                     <span class="prelude-val">Some</span>(meta::Kind::Variant { .. }) =&gt; {
@@ -547,12 +544,12 @@
                 <span class="prelude-val">Some</span>(Assoc::Fn(AssocFn {
                     kind,
                     is_async,
-                    deprecated,
                     return_type: <span class="prelude-val">None</span>,
                     argument_types: <span class="kw-2">&amp;</span>[],
-                    docs: <span class="kw-2">&amp;</span>data.docs,
                     arg_names: <span class="prelude-val">None</span>,
                     parameter_types: <span class="kw-2">&amp;</span>[],
+                    deprecated: data.deprecated.as_deref(),
+                    docs: <span class="kw-2">&amp;</span>data.docs,
                 }))
             }))
         }
@@ -580,13 +577,13 @@
                     <span class="prelude-val">Some</span>(Assoc::Fn(AssocFn {
                         kind,
                         is_async: signature.is_async,
-                        deprecated: signature.deprecated.as_deref(),
                         return_type: signature.return_type,
                         argument_types: <span class="kw-2">&amp;</span>signature
                             .argument_types,
-                        docs: meta.docs.lines(),
                         arg_names: meta.docs.args(),
                         parameter_types: <span class="kw-2">&amp;</span>parameter_types[..],
+                        deprecated: meta.deprecated.as_deref(),
+                        docs: meta.docs.lines(),
                     }))
                 }
                 meta::Kind::Function { associated: <span class="prelude-val">None</span>, signature, .. } =&gt; {
@@ -596,13 +593,13 @@
                     <span class="prelude-val">Some</span>(Assoc::Fn(AssocFn {
                         kind,
                         is_async: signature.is_async,
-                        deprecated: signature.deprecated.as_deref(),
                         return_type: signature.return_type,
                         argument_types: <span class="kw-2">&amp;</span>signature
                             .argument_types,
-                        docs: meta.docs.lines(),
                         arg_names: meta.docs.args(),
                         parameter_types: <span class="kw-2">&amp;</span>[],
+                        deprecated: meta.deprecated.as_deref(),
+                        docs: meta.docs.lines(),
                     }))
                 }
                 kind =&gt; {
@@ -696,7 +693,6 @@
             } =&gt; {
                 Kind::Function(Function {
                     is_async: f.is_async,
-                    deprecated: f.deprecated.as_deref(),
                     signature: Signature::Function,
                     arg_names: meta.docs.args(),
                     args: f.args,
@@ -711,7 +707,6 @@
             } =&gt; {
                 Kind::Function(Function {
                     is_async: f.is_async,
-                    deprecated: f.deprecated.as_deref(),
                     signature: Signature::Instance,
                     arg_names: meta.docs.args(),
                     args: f.args,
@@ -729,11 +724,12 @@
         };
 
         <span class="prelude-val">Some</span>(Meta {
+            kind,
             source: MetaSource::Context,
             item: meta.item.as_deref(),
             hash: meta.hash,
+            deprecated: meta.deprecated.as_deref(),
             docs: meta.docs.lines(),
-            kind,
         })
     }
 
@@ -754,7 +750,6 @@
         <span class="prelude-val">Some</span>(meta::Kind::Enum { .. }) =&gt; Kind::Enum,
         <span class="prelude-val">Some</span>(meta::Kind::Function { associated, signature: f, .. }) =&gt; Kind::Function(Function {
             is_async: f.is_async,
-            deprecated: f.deprecated.as_deref(),
             arg_names: <span class="prelude-val">None</span>,
             args: f.args,
             signature: <span class="kw">match </span>associated {
@@ -772,6 +767,7 @@
         source: MetaSource::Source(base),
         item: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>data.item),
         hash: data.hash,
+        deprecated: <span class="prelude-val">None</span>,
         docs: data.docs.as_slice(),
         kind,
     }
