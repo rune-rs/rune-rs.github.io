@@ -39,7 +39,7 @@ var srcIndex = JSON.parse('{\
 "getopts":["",[],["lib.rs"]],\
 "getrandom":["",[],["error.rs","error_impls.rs","lib.rs","linux_android.rs","use_file.rs","util.rs","util_libc.rs"]],\
 "handlebars":["",[["decorators",[],["inline.rs","mod.rs"]],["helpers",[],["block_util.rs","helper_each.rs","helper_extras.rs","helper_if.rs","helper_log.rs","helper_lookup.rs","helper_raw.rs","helper_with.rs","mod.rs"]],["json",[],["mod.rs","path.rs","value.rs"]]],["block.rs","context.rs","error.rs","grammar.rs","lib.rs","local_vars.rs","macros.rs","output.rs","partial.rs","registry.rs","render.rs","sources.rs","support.rs","template.rs","util.rs"]],\
-"hashbrown":["",[["external_trait_impls",[],["mod.rs"]],["raw",[],["alloc.rs","bitmask.rs","mod.rs","sse2.rs"]]],["lib.rs","macros.rs","map.rs","scopeguard.rs","set.rs"]],\
+"hashbrown":["",[["external_trait_impls",[],["mod.rs"]],["raw",[],["alloc.rs","bitmask.rs","mod.rs","sse2.rs"]]],["lib.rs","macros.rs","map.rs","scopeguard.rs","set.rs","table.rs"]],\
 "heck":["",[],["kebab.rs","lib.rs","lower_camel.rs","shouty_kebab.rs","shouty_snake.rs","snake.rs","title.rs","train.rs","upper_camel.rs"]],\
 "home":["",[],["env.rs","lib.rs"]],\
 "idna":["",[],["lib.rs","punycode.rs","uts46.rs"]],\
@@ -84,6 +84,7 @@ var srcIndex = JSON.parse('{\
 "pin_project_lite":["",[],["lib.rs"]],\
 "pin_utils":["",[],["lib.rs","projection.rs","stack_pin.rs"]],\
 "plist":["",[["stream",[],["binary_reader.rs","binary_writer.rs","mod.rs","xml_reader.rs","xml_writer.rs"]]],["data.rs","date.rs","de.rs","dictionary.rs","error.rs","integer.rs","lib.rs","ser.rs","uid.rs","value.rs"]],\
+"powerfmt":["",[],["buf.rs","ext.rs","lib.rs","smart_display.rs","smart_display_impls.rs"]],\
 "ppv_lite86":["",[["x86_64",[],["mod.rs","sse2.rs"]]],["lib.rs","soft.rs","types.rs"]],\
 "proc_macro2":["",[],["detection.rs","extra.rs","fallback.rs","lib.rs","marker.rs","parse.rs","rcvec.rs","wrapper.rs"]],\
 "pulldown_cmark":["",[],["entities.rs","escape.rs","firstpass.rs","html.rs","lib.rs","linklabel.rs","parse.rs","puncttable.rs","scanners.rs","strings.rs","tree.rs"]],\
@@ -127,7 +128,7 @@ var srcIndex = JSON.parse('{\
 "syntect":["",[["highlighting",[],["highlighter.rs","mod.rs","selector.rs","settings.rs","style.rs","theme.rs","theme_load.rs","theme_set.rs"]],["parsing",[],["mod.rs","parser.rs","regex.rs","scope.rs","syntax_definition.rs","syntax_set.rs","yaml_load.rs"]]],["dumps.rs","easy.rs","escape.rs","html.rs","lib.rs","util.rs","utils.rs"]],\
 "termcolor":["",[],["lib.rs"]],\
 "thiserror":["",[],["aserror.rs","display.rs","lib.rs","provide.rs"]],\
-"thiserror_impl":["",[],["ast.rs","attr.rs","expand.rs","fmt.rs","generics.rs","lib.rs","prop.rs","valid.rs"]],\
+"thiserror_impl":["",[],["ast.rs","attr.rs","expand.rs","fmt.rs","generics.rs","lib.rs","prop.rs","span.rs","valid.rs"]],\
 "thread_local":["",[],["cached.rs","lib.rs","thread_id.rs","unreachable.rs"]],\
 "time":["",[["error",[],["component_range.rs","conversion_range.rs","different_variant.rs","format.rs","invalid_format_description.rs","invalid_variant.rs","mod.rs","parse.rs","parse_from_description.rs","try_from_parsed.rs"]],["format_description",[["parse",[],["ast.rs","format_item.rs","lexer.rs","mod.rs"]],["well_known",[["iso8601",[],["adt_hack.rs"]]],["iso8601.rs","rfc2822.rs","rfc3339.rs"]]],["borrowed_format_item.rs","component.rs","mod.rs","modifier.rs","owned_format_item.rs"]],["formatting",[],["formattable.rs","iso8601.rs","mod.rs"]],["parsing",[["combinator",[["rfc",[],["iso8601.rs","mod.rs","rfc2234.rs","rfc2822.rs"]]],["mod.rs"]]],["component.rs","iso8601.rs","mod.rs","parsable.rs","parsed.rs","shim.rs"]],["sys",[],["mod.rs"]]],["date.rs","date_time.rs","duration.rs","ext.rs","instant.rs","internal_macros.rs","lib.rs","month.rs","offset_date_time.rs","primitive_date_time.rs","time.rs","utc_offset.rs","util.rs","weekday.rs"]],\
 "time_core":["",[],["convert.rs","lib.rs","util.rs"]],\
@@ -156,6 +157,7 @@ var srcIndex = JSON.parse('{\
 "walkdir":["",[],["dent.rs","error.rs","lib.rs","util.rs"]],\
 "webbrowser":["",[],["common.rs","lib.rs","unix.rs"]],\
 "winnow":["",[["ascii",[],["mod.rs"]],["binary",[["bits",[],["mod.rs"]]],["mod.rs"]],["combinator",[],["branch.rs","core.rs","mod.rs","multi.rs","parser.rs","sequence.rs"]],["stream",[],["impls.rs","mod.rs"]],["token",[],["mod.rs"]],["trace",[],["mod.rs"]]],["error.rs","lib.rs","macros.rs","parser.rs"]],\
-"yaml_rust":["",[],["emitter.rs","lib.rs","parser.rs","scanner.rs","yaml.rs"]]\
+"yaml_rust":["",[],["emitter.rs","lib.rs","parser.rs","scanner.rs","yaml.rs"]],\
+"zerocopy":["",[["third_party",[["rust",[],["layout.rs"]]]]],["lib.rs","macro_util.rs","macros.rs","util.rs","wrappers.rs"]]\
 }');
 createSrcSidebar();
