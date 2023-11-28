@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (75b064d26 2023-11-01)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3394,6 +3394,23 @@
 <a href="#3394" id="3394">3394</a>
 <a href="#3395" id="3395">3395</a>
 <a href="#3396" id="3396">3396</a>
+<a href="#3397" id="3397">3397</a>
+<a href="#3398" id="3398">3398</a>
+<a href="#3399" id="3399">3399</a>
+<a href="#3400" id="3400">3400</a>
+<a href="#3401" id="3401">3401</a>
+<a href="#3402" id="3402">3402</a>
+<a href="#3403" id="3403">3403</a>
+<a href="#3404" id="3404">3404</a>
+<a href="#3405" id="3405">3405</a>
+<a href="#3406" id="3406">3406</a>
+<a href="#3407" id="3407">3407</a>
+<a href="#3408" id="3408">3408</a>
+<a href="#3409" id="3409">3409</a>
+<a href="#3410" id="3410">3410</a>
+<a href="#3411" id="3411">3411</a>
+<a href="#3412" id="3412">3412</a>
+<a href="#3413" id="3413">3413</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::mem::{replace, swap};
 <span class="kw">use </span>core::ops;
@@ -4739,10 +4756,12 @@
     }
 
     <span class="doccomment">/// Internal impl of a numeric operation.
-    </span><span class="kw">fn </span>internal_infallible_bitwise(
+    </span><span class="kw">fn </span>internal_infallible_bitwise_bool(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         protocol: Protocol,
         integer_op: <span class="kw">fn</span>(i64, i64) -&gt; i64,
+        byte_op: <span class="kw">fn</span>(u8, u8) -&gt; u8,
+        bool_op: <span class="kw">fn</span>(bool, bool) -&gt; bool,
         lhs: InstAddress,
         rhs: InstAddress,
     ) -&gt; VmResult&lt;()&gt; {
@@ -4754,36 +4773,8 @@
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(Value::from(integer_op(lhs, rhs))));
                 <span class="kw">return </span>VmResult::Ok(());
             }
-            (lhs, rhs) =&gt; (lhs, rhs),
-        };
-
-        <span class="kw">if let </span>CallResult::Unsupported(lhs) = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(lhs, protocol, (<span class="kw-2">&amp;</span>rhs,)))
-        {
-            <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
-                op: protocol.name,
-                lhs: <span class="macro">vm_try!</span>(lhs.type_info()),
-                rhs: <span class="macro">vm_try!</span>(rhs.type_info()),
-            });
-        }
-
-        VmResult::Ok(())
-    }
-
-    <span class="doccomment">/// Internal impl of a numeric operation.
-    </span><span class="kw">fn </span>internal_infallible_bitwise_bool(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        protocol: Protocol,
-        integer_op: <span class="kw">fn</span>(i64, i64) -&gt; i64,
-        bool_op: <span class="kw">fn</span>(bool, bool) -&gt; bool,
-        lhs: InstAddress,
-        rhs: InstAddress,
-    ) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.address(rhs));
-        <span class="kw">let </span>lhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.address(lhs));
-
-        <span class="kw">let </span>(lhs, rhs) = <span class="kw">match </span>(lhs, rhs) {
-            (Value::Integer(lhs), Value::Integer(rhs)) =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(Value::from(integer_op(lhs, rhs))));
+            (Value::Byte(lhs), Value::Byte(rhs)) =&gt; {
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(Value::from(byte_op(lhs, rhs))));
                 <span class="kw">return </span>VmResult::Ok(());
             }
             (Value::Bool(lhs), Value::Bool(rhs)) =&gt; {
@@ -4810,6 +4801,8 @@
         target: InstTarget,
         protocol: Protocol,
         integer_op: <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>i64, i64),
+        byte_op: <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>u8, u8),
+        bool_op: <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>bool, bool),
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>lhs;
         <span class="kw">let </span><span class="kw-2">mut </span>guard;
@@ -4818,6 +4811,14 @@
             TargetValue::Value(lhs, rhs) =&gt; <span class="kw">match </span>(lhs, rhs) {
                 (Value::Integer(lhs), Value::Integer(rhs)) =&gt; {
                     integer_op(lhs, rhs);
+                    <span class="kw">return </span>VmResult::Ok(());
+                }
+                (Value::Byte(lhs), Value::Byte(rhs)) =&gt; {
+                    byte_op(lhs, rhs);
+                    <span class="kw">return </span>VmResult::Ok(());
+                }
+                (Value::Bool(lhs), Value::Bool(rhs)) =&gt; {
+                    bool_op(lhs, rhs);
                     <span class="kw">return </span>VmResult::Ok(());
                 }
                 (lhs, rhs) =&gt; TargetFallback::Value(lhs.clone(), rhs),
@@ -4833,6 +4834,7 @@
         protocol: Protocol,
         error: <span class="kw">fn</span>() -&gt; VmErrorKind,
         integer_op: <span class="kw">fn</span>(i64, i64) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt;,
+        byte_op: <span class="kw">fn</span>(u8, i64) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt;,
         lhs: InstAddress,
         rhs: InstAddress,
     ) -&gt; VmResult&lt;()&gt; {
@@ -4843,6 +4845,11 @@
             (Value::Integer(lhs), Value::Integer(rhs)) =&gt; {
                 <span class="kw">let </span>integer = <span class="macro">vm_try!</span>(integer_op(lhs, rhs).ok_or_else(error));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(Value::from(integer)));
+                <span class="kw">return </span>VmResult::Ok(());
+            }
+            (Value::Byte(lhs), Value::Integer(rhs)) =&gt; {
+                <span class="kw">let </span>byte = <span class="macro">vm_try!</span>(byte_op(lhs, rhs).ok_or_else(error));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(Value::from(byte)));
                 <span class="kw">return </span>VmResult::Ok(());
             }
             (lhs, rhs) =&gt; (lhs, rhs),
@@ -4866,6 +4873,7 @@
         protocol: Protocol,
         error: <span class="kw">fn</span>() -&gt; VmErrorKind,
         integer_op: <span class="kw">fn</span>(i64, i64) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt;,
+        byte_op: <span class="kw">fn</span>(u8, i64) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt;,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>lhs;
         <span class="kw">let </span><span class="kw-2">mut </span>guard;
@@ -4874,6 +4882,11 @@
             TargetValue::Value(lhs, rhs) =&gt; <span class="kw">match </span>(lhs, rhs) {
                 (Value::Integer(lhs), Value::Integer(rhs)) =&gt; {
                     <span class="kw">let </span>out = <span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
+                    <span class="kw-2">*</span>lhs = out;
+                    <span class="kw">return </span>VmResult::Ok(());
+                }
+                (Value::Byte(lhs), Value::Integer(rhs)) =&gt; {
+                    <span class="kw">let </span>out = <span class="macro">vm_try!</span>(byte_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
                     <span class="kw-2">*</span>lhs = out;
                     <span class="kw">return </span>VmResult::Ok(());
                 }
@@ -5108,6 +5121,7 @@
         <span class="kw">let </span>value = <span class="kw">match </span>value {
             Value::Bool(value) =&gt; Value::from(!value),
             Value::Integer(value) =&gt; Value::from(!value),
+            Value::Byte(value) =&gt; Value::from(!value),
             other =&gt; {
                 <span class="kw">let </span>operand = <span class="macro">vm_try!</span>(other.type_info());
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedUnaryOperation { op: <span class="string">&quot;!&quot;</span>, operand });
@@ -5193,6 +5207,7 @@
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_infallible_bitwise_bool(
                     Protocol::BIT_AND,
                     i64::bitand,
+                    u8::bitand,
                     bool::bitand,
                     lhs,
                     rhs,
@@ -5203,6 +5218,7 @@
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_infallible_bitwise_bool(
                     Protocol::BIT_XOR,
                     i64::bitxor,
+                    u8::bitxor,
                     bool::bitxor,
                     lhs,
                     rhs,
@@ -5213,6 +5229,7 @@
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_infallible_bitwise_bool(
                     Protocol::BIT_OR,
                     i64::bitor,
+                    u8::bitor,
                     bool::bitor,
                     lhs,
                     rhs,
@@ -5223,12 +5240,20 @@
                     Protocol::SHL,
                     || VmErrorKind::Overflow,
                     |a, b| a.checked_shl(u32::try_from(b).ok()<span class="question-mark">?</span>),
+                    |a, b| a.checked_shl(u32::try_from(b).ok()<span class="question-mark">?</span>),
                     lhs,
                     rhs,
                 ));
             }
             InstOp::Shr =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_infallible_bitwise(Protocol::SHR, ops::Shr::shr, lhs, rhs));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_bitwise(
+                    Protocol::SHR,
+                    || VmErrorKind::Underflow,
+                    |a, b| a.checked_shr(u32::try_from(b).ok()<span class="question-mark">?</span>),
+                    |a, b| a.checked_shr(u32::try_from(b).ok()<span class="question-mark">?</span>),
+                    lhs,
+                    rhs
+                ));
             }
             InstOp::Gt =&gt; {
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_ops(
@@ -5354,6 +5379,8 @@
                     target,
                     Protocol::BIT_AND_ASSIGN,
                     ops::BitAndAssign::bitand_assign,
+                    ops::BitAndAssign::bitand_assign,
+                    ops::BitAndAssign::bitand_assign,
                 ));
             }
             InstAssignOp::BitXor =&gt; {
@@ -5361,12 +5388,16 @@
                     target,
                     Protocol::BIT_XOR_ASSIGN,
                     ops::BitXorAssign::bitxor_assign,
+                    ops::BitXorAssign::bitxor_assign,
+                    ops::BitXorAssign::bitxor_assign,
                 ));
             }
             InstAssignOp::BitOr =&gt; {
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_infallible_bitwise_assign(
                     target,
                     Protocol::BIT_OR_ASSIGN,
+                    ops::BitOrAssign::bitor_assign,
+                    ops::BitOrAssign::bitor_assign,
                     ops::BitOrAssign::bitor_assign,
                 ));
             }
@@ -5376,13 +5407,16 @@
                     Protocol::SHL_ASSIGN,
                     || VmErrorKind::Overflow,
                     |a, b| a.checked_shl(u32::try_from(b).ok()<span class="question-mark">?</span>),
+                    |a, b| a.checked_shl(u32::try_from(b).ok()<span class="question-mark">?</span>),
                 ));
             }
             InstAssignOp::Shr =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_infallible_bitwise_assign(
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_bitwise_assign(
                     target,
                     Protocol::SHR_ASSIGN,
-                    ops::ShrAssign::shr_assign,
+                    || VmErrorKind::Underflow,
+                    |a, b| a.checked_shr(u32::try_from(b).ok()<span class="question-mark">?</span>),
+                    |a, b| a.checked_shr(u32::try_from(b).ok()<span class="question-mark">?</span>),
                 ));
             }
         }
