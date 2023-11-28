@@ -207,15 +207,35 @@
 <a href="#207" id="207">207</a>
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::{Context, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>serde::Serialize;
 
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{Vec, String};
 <span class="kw">use </span><span class="kw">crate</span>::alloc::borrow::Cow;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{String, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{ComponentRef, Item};
+<span class="kw">use </span><span class="kw">crate</span>::doc::build::{Builder, Ctxt, IndexEntry, IndexKind};
 <span class="kw">use </span><span class="kw">crate</span>::doc::context::{Assoc, AssocFnKind, Meta};
-<span class="kw">use </span><span class="kw">crate</span>::doc::build::{Ctxt, IndexEntry, IndexKind, Builder};
 
 <span class="attr">#[derive(Serialize)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Protocol&lt;<span class="lifetime">&#39;a</span>&gt; {
@@ -247,7 +267,12 @@
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>build_assoc_fns&lt;<span class="lifetime">&#39;m</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;m</span>&gt;,
     meta: Meta&lt;<span class="lifetime">&#39;m</span>&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;Protocol&lt;<span class="lifetime">&#39;m</span>&gt;&gt;, Vec&lt;Method&lt;<span class="lifetime">&#39;m</span>&gt;&gt;, Vec&lt;Variant&lt;<span class="lifetime">&#39;m</span>&gt;&gt;, Vec&lt;IndexEntry&lt;<span class="lifetime">&#39;m</span>&gt;&gt;)&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;(
+    Vec&lt;Protocol&lt;<span class="lifetime">&#39;m</span>&gt;&gt;,
+    Vec&lt;Method&lt;<span class="lifetime">&#39;m</span>&gt;&gt;,
+    Vec&lt;Variant&lt;<span class="lifetime">&#39;m</span>&gt;&gt;,
+    Vec&lt;IndexEntry&lt;<span class="lifetime">&#39;m</span>&gt;&gt;,
+)&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>protocols = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>methods = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>variants = Vec::new();
@@ -257,7 +282,8 @@
     <span class="kw">for </span>assoc <span class="kw">in </span>cx.context.associated(meta.hash) {
         <span class="kw">match </span>assoc {
             Assoc::Variant(variant) =&gt; {
-                <span class="kw">let </span>line_doc = cx.render_line_docs(meta, variant.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>;
+                <span class="kw">let </span>line_doc =
+                    cx.render_line_docs(meta, variant.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>;
                 <span class="kw">let </span>doc = cx.render_docs(meta, variant.docs, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
 
                 variants.try_push(Variant {
@@ -280,14 +306,15 @@
                         (protocol, value.as_str())
                     }
                     AssocFnKind::Method(name, args, sig) =&gt; {
-                        <span class="kw">let </span>line_doc = cx.render_line_docs(meta, assoc.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>;
+                        <span class="kw">let </span>line_doc =
+                            cx.render_line_docs(meta, assoc.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>;
 
                         cx.state.item.push(name)<span class="question-mark">?</span>;
                         <span class="kw">let </span>doc = cx.render_docs(meta, assoc.docs, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                         cx.state.item.pop()<span class="question-mark">?</span>;
 
                         <span class="kw">let </span><span class="kw-2">mut </span>list = Vec::new();
-        
+
                         <span class="kw">for </span><span class="kw-2">&amp;</span>hash <span class="kw">in </span>assoc.parameter_types {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(link) = cx.link(hash, <span class="prelude-val">None</span>)<span class="question-mark">? </span>{
                                 list.try_push(link)<span class="question-mark">?</span>;
@@ -296,7 +323,9 @@
                             }
                         }
 
-                        <span class="kw">let </span>parameters = (!list.is_empty()).then(|| list.iter().try_join(<span class="string">&quot;, &quot;</span>)).transpose()<span class="question-mark">?</span>;
+                        <span class="kw">let </span>parameters = (!list.is_empty())
+                            .then(|| list.iter().try_join(<span class="string">&quot;, &quot;</span>))
+                            .transpose()<span class="question-mark">?</span>;
 
                         methods.try_push(Method {
                             is_async: assoc.is_async,
@@ -316,7 +345,7 @@
                             line_doc,
                             doc,
                         })<span class="question-mark">?</span>;
-        
+
                         <span class="kw">continue</span>;
                     }
                 };
@@ -353,7 +382,10 @@
 
         <span class="kw">for </span>m <span class="kw">in </span><span class="kw-2">&amp;</span>methods {
             index.try_push(IndexEntry {
-                path: cx.state.path.with_file_name(<span class="macro">format!</span>(<span class="string">&quot;{name}#method.{}&quot;</span>, m.name)),
+                path: cx
+                    .state
+                    .path
+                    .with_file_name(<span class="macro">format!</span>(<span class="string">&quot;{name}#method.{}&quot;</span>, m.name)),
                 item: Cow::Owned(meta_item.join([m.name])<span class="question-mark">?</span>),
                 kind: IndexKind::Method,
                 doc: m.line_doc.try_clone()<span class="question-mark">?</span>,
@@ -362,7 +394,10 @@
 
         <span class="kw">for </span>m <span class="kw">in </span><span class="kw-2">&amp;</span>variants {
             index.try_push(IndexEntry {
-                path: cx.state.path.with_file_name(<span class="macro">format!</span>(<span class="string">&quot;{name}#variant.{}&quot;</span>, m.name)),
+                path: cx
+                    .state
+                    .path
+                    .with_file_name(<span class="macro">format!</span>(<span class="string">&quot;{name}#variant.{}&quot;</span>, m.name)),
                 item: Cow::Owned(meta_item.join([m.name])<span class="question-mark">?</span>),
                 kind: IndexKind::Variant,
                 doc: m.line_doc.try_clone()<span class="question-mark">?</span>,
@@ -391,7 +426,12 @@
 
 <span class="doccomment">/// Build an unknown type.
 </span><span class="attr">#[tracing::instrument(skip_all)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build&lt;<span class="lifetime">&#39;m</span>&gt;(cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;m</span>&gt;, what: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, what_class: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, meta: Meta&lt;<span class="lifetime">&#39;m</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(Builder&lt;<span class="lifetime">&#39;m</span>&gt;, Vec&lt;IndexEntry&lt;<span class="lifetime">&#39;m</span>&gt;&gt;)&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build&lt;<span class="lifetime">&#39;m</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;m</span>&gt;,
+    what: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+    what_class: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+    meta: Meta&lt;<span class="lifetime">&#39;m</span>&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(Builder&lt;<span class="lifetime">&#39;m</span>&gt;, Vec&lt;IndexEntry&lt;<span class="lifetime">&#39;m</span>&gt;&gt;)&gt; {
     <span class="kw">let </span>module = cx.module_path_html(meta, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>(protocols, methods, <span class="kw">_</span>, index) = build_assoc_fns(cx, meta)<span class="question-mark">?</span>;

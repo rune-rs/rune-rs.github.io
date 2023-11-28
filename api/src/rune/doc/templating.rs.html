@@ -98,14 +98,27 @@
 <a href="#98" id="98">98</a>
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::std::sync::Mutex;
-<span class="kw">use </span>::rust_alloc::sync::Arc;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String, HashMap};
-<span class="kw">use </span><span class="kw">crate</span>::alloc::borrow::Cow;
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::borrow::Cow;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, HashMap, String};
+<span class="kw">use </span><span class="kw">crate</span>::std::sync::Mutex;
+<span class="kw">use </span>::rust_alloc::sync::Arc;
 
 <span class="kw">use </span>handlebars::{
-    Context, Handlebars, Helper, HelperResult, Output, RenderContext, Renderable, StringOutput, HelperDef,
+    Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext, Renderable,
+    StringOutput,
 };
 <span class="kw">use </span>serde::Serialize;
 
@@ -140,7 +153,10 @@
 <span class="kw">impl </span>Paths {
     <span class="doccomment">/// Insert a path redirect.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str) -&gt; alloc::Result&lt;()&gt; {
-        <span class="self">self</span>.inner.lock().unwrap().try_insert(from.try_to_owned()<span class="question-mark">?</span>, to.try_to_owned()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.inner
+            .lock()
+            .unwrap()
+            .try_insert(from.try_to_owned()<span class="question-mark">?</span>, to.try_to_owned()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -152,7 +168,10 @@
 
 <span class="kw">impl </span>Templating {
     <span class="doccomment">/// Set up a new templating engine.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new&lt;<span class="lifetime">&#39;a</span>, I&gt;(partials: I, paths: Paths) -&gt; <span class="prelude-ty">Result</span>&lt;Templating&gt; <span class="kw">where </span>I: IntoIterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, Cow&lt;<span class="lifetime">&#39;a</span>, str&gt;)&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new&lt;<span class="lifetime">&#39;a</span>, I&gt;(partials: I, paths: Paths) -&gt; <span class="prelude-ty">Result</span>&lt;Templating&gt;
+    <span class="kw">where
+        </span>I: IntoIterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, Cow&lt;<span class="lifetime">&#39;a</span>, str&gt;)&gt;,
+    {
         <span class="kw">let </span><span class="kw-2">mut </span>handlebars = Handlebars::new();
         handlebars.register_helper(<span class="string">&quot;literal&quot;</span>, ::rust_alloc::boxed::Box::new(literal));
         handlebars.register_helper(<span class="string">&quot;path&quot;</span>, ::rust_alloc::boxed::Box::new(path(paths)));
@@ -190,7 +209,12 @@
 }
 
 <span class="kw">fn </span>path(paths: Paths) -&gt; <span class="kw">impl </span>HelperDef + Send + Sync + <span class="lifetime">&#39;static </span>{
-    <span class="kw">move </span>|h: <span class="kw-2">&amp;</span>Helper&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;</span>Handlebars&lt;<span class="lifetime">&#39;_</span>&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;</span>Context, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>RenderContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;, out: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Output| -&gt; HelperResult {
+    <span class="kw">move </span>|h: <span class="kw-2">&amp;</span>Helper&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+          <span class="kw">_</span>: <span class="kw-2">&amp;</span>Handlebars&lt;<span class="lifetime">&#39;_</span>&gt;,
+          <span class="kw">_</span>: <span class="kw-2">&amp;</span>Context,
+          <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>RenderContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+          out: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Output|
+          -&gt; HelperResult {
         <span class="kw">let </span>param = h.param(<span class="number">0</span>).and_then(|v| v.value().as_str()).unwrap_or(<span class="string">&quot;&quot;</span>);
         <span class="kw">let </span>inner = paths.inner.lock().unwrap();
         <span class="kw">let </span>path = inner.get(param).map(String::as_str).unwrap_or(param);

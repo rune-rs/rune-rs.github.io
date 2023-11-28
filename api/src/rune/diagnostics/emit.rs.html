@@ -669,6 +669,12 @@
 <a href="#669" id="669">669</a>
 <a href="#670" id="670">670</a>
 <a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Runtime helpers for loading code and emitting diagnostics.
 
 </span><span class="kw">use </span>core::fmt;
@@ -680,17 +686,17 @@
 <span class="kw">pub use </span>codespan_reporting::term::termcolor;
 <span class="kw">use </span>codespan_reporting::term::termcolor::WriteColor;
 
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::compile::{ErrorKind, Location, LinkerError};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
+<span class="kw">use </span><span class="kw">crate</span>::ast::{Span, Spanned};
+<span class="kw">use </span><span class="kw">crate</span>::compile::{ErrorKind, LinkerError, Location};
 <span class="kw">use </span><span class="kw">crate</span>::diagnostics::{
     Diagnostic, FatalDiagnostic, FatalDiagnosticKind, WarningDiagnostic, WarningDiagnosticKind,
 };
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Unit, VmErrorKind, VmError, DebugInst, VmErrorAt, Protocol};
-<span class="kw">use crate</span>::{Source, Diagnostics, SourceId, Sources};
-<span class="kw">use </span><span class="kw">crate</span>::ast::{Span, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::hash::Hash;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{DebugInst, Protocol, Unit, VmError, VmErrorAt, VmErrorKind};
+<span class="kw">use crate</span>::{Diagnostics, Source, SourceId, Sources};
 
 <span class="kw">struct </span>StackFrame {
     source_id: SourceId,
@@ -755,11 +761,7 @@
     /// hints.
     ///
     /// See [prepare][crate::prepare] for how to use.
-    </span><span class="kw">pub fn </span>emit&lt;O&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        out: <span class="kw-2">&amp;mut </span>O,
-        sources: <span class="kw-2">&amp;</span>Sources,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EmitError&gt;
+    </span><span class="kw">pub fn </span>emit&lt;O&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, out: <span class="kw-2">&amp;mut </span>O, sources: <span class="kw-2">&amp;</span>Sources) -&gt; <span class="prelude-ty">Result</span>&lt;(), EmitError&gt;
     <span class="kw">where
         </span>O: WriteColor,
     {
@@ -789,11 +791,7 @@
     /// hints.
     ///
     /// See [prepare][crate::prepare] for how to use.
-    </span><span class="kw">pub fn </span>emit&lt;O&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        out: <span class="kw-2">&amp;mut </span>O,
-        sources: <span class="kw-2">&amp;</span>Sources,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EmitError&gt;
+    </span><span class="kw">pub fn </span>emit&lt;O&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, out: <span class="kw-2">&amp;mut </span>O, sources: <span class="kw-2">&amp;</span>Sources) -&gt; <span class="prelude-ty">Result</span>&lt;(), EmitError&gt;
     <span class="kw">where
         </span>O: WriteColor,
     {
@@ -809,7 +807,10 @@
                 <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
             };
 
-            <span class="kw">for </span>ip <span class="kw">in </span>[l.ip].into_iter().chain(l.frames.iter().rev().map(|v| v.ip)) {
+            <span class="kw">for </span>ip <span class="kw">in </span>[l.ip]
+                .into_iter()
+                .chain(l.frames.iter().rev().map(|v| v.ip))
+            {
                 <span class="kw">let </span>debug_inst = <span class="kw">match </span>debug_info.instruction_at(ip) {
                     <span class="prelude-val">Some</span>(debug_inst) =&gt; debug_inst,
                     <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
@@ -856,15 +857,20 @@
                 <span class="kw">_ </span>=&gt; {}
             };
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>DebugInst { source_id, span, .. }) = get(at) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>DebugInst {
+                source_id, span, ..
+            }) = get(at)
+            {
                 labels.push(
-                    d::Label::primary(source_id, span.range())
-                        .with_message(at.try_to_string()<span class="question-mark">?</span>),
+                    d::Label::primary(source_id, span.range()).with_message(at.try_to_string()<span class="question-mark">?</span>),
                 );
             }
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>DebugInst { source_id, span, .. }) = get(<span class="kw-2">&amp;</span><span class="self">self</span>.inner.error) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>DebugInst {
+            source_id, span, ..
+        }) = get(<span class="kw-2">&amp;</span><span class="self">self</span>.inner.error)
+        {
             labels.push(
                 d::Label::primary(source_id, span.range())
                     .with_message(<span class="self">self</span>.inner.error.try_to_string()<span class="question-mark">?</span>),
@@ -880,14 +886,18 @@
                 // the values together with an associated function seed. But
                 // this is not guaranteed to work everywhere.
 
-                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>DebugInst { source_id, span, .. }) = get(at) {
+                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>DebugInst {
+                    source_id, span, ..
+                }) = get(at)
+                {
                     <span class="kw">let </span>instance_hash = Hash::associated_function(instance.type_hash(), <span class="kw-2">*</span>hash);
 
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(ident) = get_ident(at, instance_hash) {
-                        labels.push(
-                            d::Label::secondary(source_id, span.range())
-                                .with_message(<span class="macro">format!</span>(<span class="string">&quot;This corresponds to the `{instance}::{ident}` instance function&quot;</span>)),
-                        );
+                        labels.push(d::Label::secondary(source_id, span.range()).with_message(
+                            <span class="macro">format!</span>(
+                                <span class="string">&quot;This corresponds to the `{instance}::{ident}` instance function&quot;
+                            </span>),
+                        ));
                     }
 
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(protocol) = Protocol::from_hash(instance_hash) {
@@ -900,7 +910,8 @@
             };
         }
 
-        <span class="kw">let </span>diagnostic = d::Diagnostic::error().with_message(<span class="self">self</span>.inner.error.try_to_string()<span class="question-mark">?</span>)
+        <span class="kw">let </span>diagnostic = d::Diagnostic::error()
+            .with_message(<span class="self">self</span>.inner.error.try_to_string()<span class="question-mark">?</span>)
             .with_labels(labels)
             .with_notes(notes);
 
@@ -915,11 +926,9 @@
                 };
 
                 <span class="kw">let </span>(line, line_count, [prefix, mid, suffix]) = <span class="kw">match </span>source.line(frame.span) {
-                    <span class="prelude-val">Some</span>((line, line_count, text)) =&gt; (
-                        line.saturating_add(<span class="number">1</span>),
-                        line_count.saturating_add(<span class="number">1</span>),
-                        text,
-                    ),
+                    <span class="prelude-val">Some</span>((line, line_count, text)) =&gt; {
+                        (line.saturating_add(<span class="number">1</span>), line_count.saturating_add(<span class="number">1</span>), text)
+                    }
                     <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
                 };
 
@@ -928,7 +937,11 @@
                 out.set_color(<span class="kw-2">&amp;</span>red)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(out, <span class="string">&quot;{mid}&quot;</span>)<span class="question-mark">?</span>;
                 out.reset()<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(out, <span class="string">&quot;{}&quot;</span>, suffix.trim_end_matches(|c| <span class="macro">matches!</span>(c, <span class="string">&#39;\n&#39; </span>| <span class="string">&#39;\r&#39;</span>)))<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(
+                    out,
+                    <span class="string">&quot;{}&quot;</span>,
+                    suffix.trim_end_matches(|c| <span class="macro">matches!</span>(c, <span class="string">&#39;\n&#39; </span>| <span class="string">&#39;\r&#39;</span>))
+                )<span class="question-mark">?</span>;
             }
         }
 
@@ -941,11 +954,7 @@
     /// hints.
     ///
     /// See [prepare][crate::prepare] for how to use.
-    </span><span class="kw">pub fn </span>emit&lt;O&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        out: <span class="kw-2">&amp;mut </span>O,
-        sources: <span class="kw-2">&amp;</span>Sources,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), EmitError&gt;
+    </span><span class="kw">pub fn </span>emit&lt;O&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, out: <span class="kw-2">&amp;mut </span>O, sources: <span class="kw-2">&amp;</span>Sources) -&gt; <span class="prelude-ty">Result</span>&lt;(), EmitError&gt;
     <span class="kw">where
         </span>O: WriteColor,
     {
@@ -1083,7 +1092,10 @@
     <span class="kw">let </span><span class="kw-2">mut </span>notes = ::rust_alloc::vec::Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>labels = ::rust_alloc::vec::Vec::new();
 
-    labels.push(d::Label::primary(this.source_id(), this.span().range()).with_message(this.try_to_string()<span class="question-mark">?</span>));
+    labels.push(
+        d::Label::primary(this.source_id(), this.span().range())
+            .with_message(this.try_to_string()<span class="question-mark">?</span>),
+    );
 
     <span class="kw">match </span>this.kind() {
         WarningDiagnosticKind::LetPatternMightPanic { span, .. } =&gt; {
@@ -1096,10 +1108,7 @@
                 notes.push(note.into_std());
             }
         }
-        WarningDiagnosticKind::RemoveTupleCallParams {
-            variant,
-            ..
-        } =&gt; {
+        WarningDiagnosticKind::RemoveTupleCallParams { variant, .. } =&gt; {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(variant) = sources.source(this.source_id(), <span class="kw-2">*</span>variant) {
                 <span class="kw">let </span><span class="kw-2">mut </span>note = String::new();
                 <span class="macro">writeln!</span>(note, <span class="string">&quot;Hint: Rewrite to `{}`&quot;</span>, variant)<span class="question-mark">?</span>;
@@ -1138,7 +1147,10 @@
     <span class="kw">let </span><span class="kw-2">mut </span>notes = ::rust_alloc::vec::Vec::new();
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = this.span() {
-        labels.push(d::Label::primary(this.source_id(), span.range()).with_message(this.kind().try_to_string()<span class="question-mark">?</span>));
+        labels.push(
+            d::Label::primary(this.source_id(), span.range())
+                .with_message(this.kind().try_to_string()<span class="question-mark">?</span>),
+        );
     }
 
     <span class="kw">match </span>this.kind() {
@@ -1319,11 +1331,7 @@
                 );
             }
             ErrorKind::PatternMissingFields { fields, .. } =&gt; {
-                <span class="kw">let </span>pl = <span class="kw">if </span>fields.len() == <span class="number">1 </span>{
-                    <span class="string">&quot;field&quot;
-                </span>} <span class="kw">else </span>{
-                    <span class="string">&quot;fields&quot;
-                </span>};
+                <span class="kw">let </span>pl = <span class="kw">if </span>fields.len() == <span class="number">1 </span>{ <span class="string">&quot;field&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;fields&quot; </span>};
 
                 <span class="kw">let </span>fields = fields.join(<span class="string">&quot;, &quot;</span>);
 
@@ -1332,7 +1340,11 @@
                         .with_message(<span class="macro">format!</span>(<span class="string">&quot;Missing {}: {}&quot;</span>, pl, fields)),
                 );
 
-                notes.push(<span class="string">&quot;You can also make the pattern non-exhaustive by adding `..`&quot;</span>.try_to_string()<span class="question-mark">?</span>.into_std());
+                notes.push(
+                    <span class="string">&quot;You can also make the pattern non-exhaustive by adding `..`&quot;
+                        </span>.try_to_string()<span class="question-mark">?
+                        </span>.into_std(),
+                );
             }
             <span class="kw">_ </span>=&gt; (),
         }

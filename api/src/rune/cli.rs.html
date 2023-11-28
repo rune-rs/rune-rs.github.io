@@ -911,7 +911,6 @@
 <a href="#911" id="911">911</a>
 <a href="#912" id="912">912</a>
 <a href="#913" id="913">913</a>
-<a href="#914" id="914">914</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helper to build customized commandline interfaces using custom rune
 //! contexts.
 //!
@@ -926,16 +925,16 @@
 <span class="kw">mod </span>format;
 <span class="kw">mod </span>languageserver;
 <span class="kw">mod </span>loader;
+<span class="kw">mod </span>naming;
 <span class="kw">mod </span>run;
 <span class="kw">mod </span>tests;
 <span class="kw">mod </span>visitor;
-<span class="kw">mod </span>naming;
 
+<span class="kw">use </span>rust_alloc::string::String;
+<span class="kw">use </span>rust_alloc::vec::Vec;
 <span class="kw">use </span>std::fmt;
 <span class="kw">use </span>std::io::{<span class="self">self</span>, Write};
 <span class="kw">use </span>std::path::{Path, PathBuf};
-<span class="kw">use </span>rust_alloc::string::String;
-<span class="kw">use </span>rust_alloc::vec::Vec;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -948,7 +947,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::{ItemBuf, ParseOptionError};
 <span class="kw">use </span><span class="kw">crate</span>::modules::capture_io::CaptureIo;
 <span class="kw">use </span><span class="kw">crate</span>::termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
-<span class="kw">use crate</span>::{Context, ContextError, Options, Hash};
+<span class="kw">use crate</span>::{Context, ContextError, Hash, Options};
 
 <span class="doccomment">/// Default about splash.
 </span><span class="kw">const </span>DEFAULT_ABOUT: <span class="kw-2">&amp;</span>str = <span class="string">&quot;The Rune Language Interpreter&quot;</span>;
@@ -997,7 +996,11 @@
     ///     .run();
     ///```
     </span><span class="kw">pub fn </span>about(<span class="kw-2">mut </span><span class="self">self</span>, about: <span class="kw">impl </span>fmt::Display) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.about = <span class="prelude-val">Some</span>(about.try_to_string().expect(<span class="string">&quot;Failed to format about string&quot;</span>));
+        <span class="self">self</span>.about = <span class="prelude-val">Some</span>(
+            about
+                .try_to_string()
+                .expect(<span class="string">&quot;Failed to format about string&quot;</span>),
+        );
         <span class="self">self
     </span>}
 
@@ -1180,7 +1183,10 @@
     </span>command: T,
 }
 
-<span class="kw">impl</span>&lt;T&gt; CommandShared&lt;T&gt; <span class="kw">where </span>T: CommandBase + clap::Args {
+<span class="kw">impl</span>&lt;T&gt; CommandShared&lt;T&gt;
+<span class="kw">where
+    </span>T: CommandBase + clap::Args,
+{
     <span class="doccomment">/// Construct compiler options from arguments.
     </span><span class="kw">fn </span>options(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Options, ParseOptionError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>options = Options::default();
@@ -1293,8 +1299,7 @@
 
     <span class="doccomment">/// Propagate related flags from command and config.
     </span><span class="attr">#[inline]
-    </span><span class="kw">fn </span>propagate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Config, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>SharedFlags) {
-    }
+    </span><span class="kw">fn </span>propagate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Config, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>SharedFlags) {}
 }
 
 <span class="attr">#[derive(Subcommand, Debug)]
@@ -1356,10 +1361,7 @@
             Command::Hash(..) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         };
 
-        <span class="prelude-val">Some</span>(CommandSharedRef {
-            shared,
-            command,
-        })
+        <span class="prelude-val">Some</span>(CommandSharedRef { shared, command })
     }
 }
 
@@ -1402,25 +1404,25 @@
                 build_paths.try_push(BuildPath::Package(p))<span class="question-mark">?</span>;
             }
         }
-    
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(test) = cmd.find_tests() {
             <span class="kw">for </span>p <span class="kw">in </span><span class="self">self</span>.manifest.find_tests(test)<span class="question-mark">? </span>{
                 build_paths.try_push(BuildPath::Package(p))<span class="question-mark">?</span>;
             }
         }
-    
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(example) = cmd.find_examples() {
             <span class="kw">for </span>p <span class="kw">in </span><span class="self">self</span>.manifest.find_examples(example)<span class="question-mark">? </span>{
                 build_paths.try_push(BuildPath::Package(p))<span class="question-mark">?</span>;
             }
         }
-    
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(bench) = cmd.find_benches() {
             <span class="kw">for </span>p <span class="kw">in </span><span class="self">self</span>.manifest.find_benches(bench)<span class="question-mark">? </span>{
                 build_paths.try_push(BuildPath::Package(p))<span class="question-mark">?</span>;
             }
         }
-    
+
         <span class="prelude-val">Ok</span>(build_paths)
     }
 }
@@ -1439,7 +1441,11 @@
             test: c.test,
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>context = entry.context.as_mut().context(<span class="string">&quot;Context builder not configured with Entry::context&quot;</span>)<span class="question-mark">?</span>(opts)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>context =
+            entry
+                .context
+                .as_mut()
+                .context(<span class="string">&quot;Context builder not configured with Entry::context&quot;</span>)<span class="question-mark">?</span>(opts)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(capture) = capture {
             context.install(<span class="kw">crate</span>::modules::capture_io::module(capture)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
@@ -1595,12 +1601,8 @@
 }
 
 <span class="kw">fn </span>populate_config(io: <span class="kw-2">&amp;mut </span>Io&lt;<span class="lifetime">&#39;_</span>&gt;, c: <span class="kw-2">&amp;mut </span>Config, cmd: CommandSharedRef&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    c.found_paths.try_extend(
-        cmd.shared
-            .paths
-            .iter()
-            .map(|p| p.as_path().into()),
-    )<span class="question-mark">?</span>;
+    c.found_paths
+        .try_extend(cmd.shared.paths.iter().map(|p| p.as_path().into()))<span class="question-mark">?</span>;
 
     <span class="kw">if </span>!c.found_paths.is_empty() &amp;&amp; !cmd.shared.workspace {
         <span class="kw">return </span><span class="prelude-val">Ok</span>(());
@@ -1658,18 +1660,18 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(ExitCode::Failure);
         }
     };
-    
+
     <span class="kw">let </span><span class="kw-2">mut </span>entrys = alloc::Vec::new();
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>(cmd) = cmd.as_command_shared_ref() {
         populate_config(io, <span class="kw-2">&amp;mut </span>c, cmd)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>build_paths = c.build_paths(cmd)<span class="question-mark">?</span>;
-    
+
         <span class="kw">let </span>what = cmd.command.describe();
         <span class="kw">let </span>verbose = c.verbose;
         <span class="kw">let </span>recursive = cmd.shared.recursive;
-    
+
         <span class="kw">for </span>build_path <span class="kw">in </span>build_paths {
             <span class="kw">match </span>build_path {
                 BuildPath::Path(path) =&gt; {
@@ -1685,9 +1687,15 @@
                         o.set_color(<span class="kw-2">&amp;</span>ColorSpec::new())<span class="question-mark">?</span>;
                         o.flush()<span class="question-mark">?</span>;
                         result<span class="question-mark">?</span>;
-                        <span class="macro">writeln!</span>(o, <span class="string">&quot; {} `{}` (from {})&quot;</span>, p.found.kind, p.found.path.display(), p.package.name)<span class="question-mark">?</span>;
+                        <span class="macro">writeln!</span>(
+                            o,
+                            <span class="string">&quot; {} `{}` (from {})&quot;</span>,
+                            p.found.kind,
+                            p.found.path.display(),
+                            p.package.name
+                        )<span class="question-mark">?</span>;
                     }
-    
+
                     entrys.try_push(EntryPoint::Package(p))<span class="question-mark">?</span>;
                 }
             }
@@ -1737,17 +1745,7 @@
         Command::Test(f) =&gt; {
             <span class="kw">let </span>options = f.options()<span class="question-mark">?</span>;
 
-            <span class="kw">match </span>tests::run(
-                io,
-                c,
-                <span class="kw-2">&amp;</span>f.command,
-                <span class="kw-2">&amp;</span>f.shared,
-                <span class="kw-2">&amp;</span>options,
-                entry,
-                entries,
-            )
-            .<span class="kw">await</span><span class="question-mark">?
-            </span>{
+            <span class="kw">match </span>tests::run(io, c, <span class="kw-2">&amp;</span>f.command, <span class="kw-2">&amp;</span>f.shared, <span class="kw-2">&amp;</span>options, entry, entries).<span class="kw">await</span><span class="question-mark">? </span>{
                 ExitCode::Success =&gt; (),
                 other =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(other),
             }

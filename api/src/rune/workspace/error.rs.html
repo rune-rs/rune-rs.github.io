@@ -206,16 +206,27 @@
 <a href="#206" id="206">206</a>
 <a href="#207" id="207">207</a>
 <a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>std::path::Path;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box, String};
-<span class="kw">use </span><span class="kw">crate</span>::SourceId;
-<span class="kw">use </span><span class="kw">crate</span>::compile::HasSpan;
 <span class="kw">use </span><span class="kw">crate</span>::ast::{Span, Spanned};
-<span class="kw">use </span><span class="kw">crate</span>::workspace::glob;
+<span class="kw">use </span><span class="kw">crate</span>::compile::HasSpan;
 <span class="kw">use </span><span class="kw">crate</span>::source;
+<span class="kw">use </span><span class="kw">crate</span>::workspace::glob;
+<span class="kw">use </span><span class="kw">crate</span>::SourceId;
 
 <span class="doccomment">/// An error raised when interacting with workspaces.
 </span><span class="attr">#[derive(Debug)]
@@ -244,7 +255,12 @@
         </span>S: Spanned,
         M: fmt::Display + fmt::Debug + Send + Sync + <span class="lifetime">&#39;static</span>,
     {
-        <span class="self">Self</span>::new(spanned, WorkspaceErrorKind::Custom { error: anyhow::Error::msg(message) })
+        <span class="self">Self</span>::new(
+            spanned,
+            WorkspaceErrorKind::Custom {
+                error: anyhow::Error::msg(message),
+            },
+        )
     }
 }
 
@@ -295,7 +311,9 @@
 #[allow(missing_docs)]
 #[non_exhaustive]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>WorkspaceErrorKind {
-    Custom { error: anyhow::Error },
+    Custom {
+        error: anyhow::Error,
+    },
     GlobError {
         path: Box&lt;Path&gt;,
         error: glob::GlobError,
@@ -304,15 +322,27 @@
         path: Box&lt;Path&gt;,
         error: source::FromPathError,
     },
-    Toml { error: toml::de::Error },
-    Key { error: serde_hashkey::Error },
-    MissingSourceId { source_id: SourceId },
-    MissingField { field: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str },
+    Toml {
+        error: toml::de::Error,
+    },
+    Key {
+        error: serde_hashkey::Error,
+    },
+    MissingSourceId {
+        source_id: SourceId,
+    },
+    MissingField {
+        field: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+    },
     ExpectedArray,
     MissingManifestPath,
     ExpectedTable,
-    UnsupportedKey { key: String },
-    AllocError { error: alloc::Error },
+    UnsupportedKey {
+        key: String,
+    },
+    AllocError {
+        error: alloc::Error,
+    },
 }
 
 <span class="macro">cfg_std! </span>{
@@ -340,44 +370,36 @@
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>WorkspaceErrorKind {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
-            WorkspaceErrorKind::Custom { error } =&gt; {
-                error.fmt(f)
-            }
+            WorkspaceErrorKind::Custom { error } =&gt; error.fmt(f),
             WorkspaceErrorKind::GlobError { path, error } =&gt; <span class="macro">write!</span>(
                 f,
-                <span class="string">&quot;Failed to glob at `{path}`: {error}&quot;</span>, path = path.display()
+                <span class="string">&quot;Failed to glob at `{path}`: {error}&quot;</span>,
+                path = path.display()
             ),
             WorkspaceErrorKind::Source { path, error } =&gt; <span class="macro">write!</span>(
                 f,
-                <span class="string">&quot;Failed to load source at `{path}`: {error}&quot;</span>, path = path.display()
+                <span class="string">&quot;Failed to load source at `{path}`: {error}&quot;</span>,
+                path = path.display()
             ),
-            WorkspaceErrorKind::Toml { error } =&gt; <span class="macro">write!</span>(
-                f,
-                <span class="string">&quot;Failed to deserialize manifest: {error}&quot;</span>,
-            ),
-            WorkspaceErrorKind::Key { error } =&gt; <span class="macro">write!</span>(
-                f,
-                <span class="string">&quot;Failed to deserialize: {error}&quot;</span>,
-                error = error
-            ),
-            WorkspaceErrorKind::MissingSourceId { source_id } =&gt; <span class="macro">write!</span>(
-                f,
-                <span class="string">&quot;Missing source id `{source_id}`&quot;</span>,
-            ),
-            WorkspaceErrorKind::MissingField { field } =&gt; <span class="macro">write!</span>(
-                f,
-                <span class="string">&quot;Missing required field `{field}`&quot;</span>,
-            ),
+            WorkspaceErrorKind::Toml { error } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">&quot;Failed to deserialize manifest: {error}&quot;</span>,)
+            }
+            WorkspaceErrorKind::Key { error } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">&quot;Failed to deserialize: {error}&quot;</span>, error = error)
+            }
+            WorkspaceErrorKind::MissingSourceId { source_id } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">&quot;Missing source id `{source_id}`&quot;</span>,)
+            }
+            WorkspaceErrorKind::MissingField { field } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">&quot;Missing required field `{field}`&quot;</span>,)
+            }
             WorkspaceErrorKind::ExpectedArray {} =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;Expected array&quot;</span>),
             WorkspaceErrorKind::MissingManifestPath {} =&gt; <span class="macro">write!</span>(
                 f,
                 <span class="string">&quot;Element `[workspace]` can only be used in manifests with a valid path&quot;
             </span>),
             WorkspaceErrorKind::ExpectedTable {} =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;Expected table&quot;</span>),
-            WorkspaceErrorKind::UnsupportedKey { key } =&gt; <span class="macro">write!</span>(
-                f,
-                <span class="string">&quot;Key `{key}` not supported&quot;</span>,
-            ),
+            WorkspaceErrorKind::UnsupportedKey { key } =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;Key `{key}` not supported&quot;</span>,),
             WorkspaceErrorKind::AllocError { error } =&gt; error.fmt(f),
         }
     }
