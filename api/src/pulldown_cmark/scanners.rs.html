@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pulldown-cmark-0.9.3/src/scanners.rs`."><title>scanners.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pulldown_cmark" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pulldown-cmark-0.9.3/src/scanners.rs`."><title>scanners.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pulldown_cmark" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1328,7 +1328,7 @@
 </pre></div><pre class="rust"><code><span class="comment">// Copyright 2015 Google Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the &quot;Software&quot;), to deal
+// of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
@@ -1337,7 +1337,7 @@
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -1360,75 +1360,75 @@
 
 <span class="comment">// sorted for binary search
 </span><span class="kw">const </span>HTML_TAGS: [<span class="kw-2">&amp;</span>str; <span class="number">62</span>] = [
-    <span class="string">&quot;address&quot;</span>,
-    <span class="string">&quot;article&quot;</span>,
-    <span class="string">&quot;aside&quot;</span>,
-    <span class="string">&quot;base&quot;</span>,
-    <span class="string">&quot;basefont&quot;</span>,
-    <span class="string">&quot;blockquote&quot;</span>,
-    <span class="string">&quot;body&quot;</span>,
-    <span class="string">&quot;caption&quot;</span>,
-    <span class="string">&quot;center&quot;</span>,
-    <span class="string">&quot;col&quot;</span>,
-    <span class="string">&quot;colgroup&quot;</span>,
-    <span class="string">&quot;dd&quot;</span>,
-    <span class="string">&quot;details&quot;</span>,
-    <span class="string">&quot;dialog&quot;</span>,
-    <span class="string">&quot;dir&quot;</span>,
-    <span class="string">&quot;div&quot;</span>,
-    <span class="string">&quot;dl&quot;</span>,
-    <span class="string">&quot;dt&quot;</span>,
-    <span class="string">&quot;fieldset&quot;</span>,
-    <span class="string">&quot;figcaption&quot;</span>,
-    <span class="string">&quot;figure&quot;</span>,
-    <span class="string">&quot;footer&quot;</span>,
-    <span class="string">&quot;form&quot;</span>,
-    <span class="string">&quot;frame&quot;</span>,
-    <span class="string">&quot;frameset&quot;</span>,
-    <span class="string">&quot;h1&quot;</span>,
-    <span class="string">&quot;h2&quot;</span>,
-    <span class="string">&quot;h3&quot;</span>,
-    <span class="string">&quot;h4&quot;</span>,
-    <span class="string">&quot;h5&quot;</span>,
-    <span class="string">&quot;h6&quot;</span>,
-    <span class="string">&quot;head&quot;</span>,
-    <span class="string">&quot;header&quot;</span>,
-    <span class="string">&quot;hr&quot;</span>,
-    <span class="string">&quot;html&quot;</span>,
-    <span class="string">&quot;iframe&quot;</span>,
-    <span class="string">&quot;legend&quot;</span>,
-    <span class="string">&quot;li&quot;</span>,
-    <span class="string">&quot;link&quot;</span>,
-    <span class="string">&quot;main&quot;</span>,
-    <span class="string">&quot;menu&quot;</span>,
-    <span class="string">&quot;menuitem&quot;</span>,
-    <span class="string">&quot;nav&quot;</span>,
-    <span class="string">&quot;noframes&quot;</span>,
-    <span class="string">&quot;ol&quot;</span>,
-    <span class="string">&quot;optgroup&quot;</span>,
-    <span class="string">&quot;option&quot;</span>,
-    <span class="string">&quot;p&quot;</span>,
-    <span class="string">&quot;param&quot;</span>,
-    <span class="string">&quot;section&quot;</span>,
-    <span class="string">&quot;source&quot;</span>,
-    <span class="string">&quot;summary&quot;</span>,
-    <span class="string">&quot;table&quot;</span>,
-    <span class="string">&quot;tbody&quot;</span>,
-    <span class="string">&quot;td&quot;</span>,
-    <span class="string">&quot;tfoot&quot;</span>,
-    <span class="string">&quot;th&quot;</span>,
-    <span class="string">&quot;thead&quot;</span>,
-    <span class="string">&quot;title&quot;</span>,
-    <span class="string">&quot;tr&quot;</span>,
-    <span class="string">&quot;track&quot;</span>,
-    <span class="string">&quot;ul&quot;</span>,
+    <span class="string">"address"</span>,
+    <span class="string">"article"</span>,
+    <span class="string">"aside"</span>,
+    <span class="string">"base"</span>,
+    <span class="string">"basefont"</span>,
+    <span class="string">"blockquote"</span>,
+    <span class="string">"body"</span>,
+    <span class="string">"caption"</span>,
+    <span class="string">"center"</span>,
+    <span class="string">"col"</span>,
+    <span class="string">"colgroup"</span>,
+    <span class="string">"dd"</span>,
+    <span class="string">"details"</span>,
+    <span class="string">"dialog"</span>,
+    <span class="string">"dir"</span>,
+    <span class="string">"div"</span>,
+    <span class="string">"dl"</span>,
+    <span class="string">"dt"</span>,
+    <span class="string">"fieldset"</span>,
+    <span class="string">"figcaption"</span>,
+    <span class="string">"figure"</span>,
+    <span class="string">"footer"</span>,
+    <span class="string">"form"</span>,
+    <span class="string">"frame"</span>,
+    <span class="string">"frameset"</span>,
+    <span class="string">"h1"</span>,
+    <span class="string">"h2"</span>,
+    <span class="string">"h3"</span>,
+    <span class="string">"h4"</span>,
+    <span class="string">"h5"</span>,
+    <span class="string">"h6"</span>,
+    <span class="string">"head"</span>,
+    <span class="string">"header"</span>,
+    <span class="string">"hr"</span>,
+    <span class="string">"html"</span>,
+    <span class="string">"iframe"</span>,
+    <span class="string">"legend"</span>,
+    <span class="string">"li"</span>,
+    <span class="string">"link"</span>,
+    <span class="string">"main"</span>,
+    <span class="string">"menu"</span>,
+    <span class="string">"menuitem"</span>,
+    <span class="string">"nav"</span>,
+    <span class="string">"noframes"</span>,
+    <span class="string">"ol"</span>,
+    <span class="string">"optgroup"</span>,
+    <span class="string">"option"</span>,
+    <span class="string">"p"</span>,
+    <span class="string">"param"</span>,
+    <span class="string">"section"</span>,
+    <span class="string">"source"</span>,
+    <span class="string">"summary"</span>,
+    <span class="string">"table"</span>,
+    <span class="string">"tbody"</span>,
+    <span class="string">"td"</span>,
+    <span class="string">"tfoot"</span>,
+    <span class="string">"th"</span>,
+    <span class="string">"thead"</span>,
+    <span class="string">"title"</span>,
+    <span class="string">"tr"</span>,
+    <span class="string">"track"</span>,
+    <span class="string">"ul"</span>,
 ];
 
 <span class="doccomment">/// Analysis of the beginning of a line, including indentation and container
 /// markers.
 </span><span class="attr">#[derive(Clone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>LineStart&lt;<span class="lifetime">&#39;a</span>&gt; {
-    bytes: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8],
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>LineStart&lt;<span class="lifetime">'a</span>&gt; {
+    bytes: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8],
     tab_start: usize,
     ix: usize,
     spaces_remaining: usize,
@@ -1437,7 +1437,7 @@
     </span>min_hrule_offset: usize,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; LineStart&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; LineStart&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; LineStart {
         LineStart {
             bytes,
@@ -1471,11 +1471,11 @@
         n_space -= n_from_remaining;
         <span class="kw">while </span>n_space &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.ix &lt; <span class="self">self</span>.bytes.len() {
             <span class="kw">match </span><span class="self">self</span>.bytes[<span class="self">self</span>.ix] {
-                <span class="string">b&#39; &#39; </span>=&gt; {
+                <span class="string">b' ' </span>=&gt; {
                     <span class="self">self</span>.ix += <span class="number">1</span>;
                     n_space -= <span class="number">1</span>;
                 }
-                <span class="string">b&#39;\t&#39; </span>=&gt; {
+                <span class="string">b'\t' </span>=&gt; {
                     <span class="kw">let </span>spaces = <span class="number">4 </span>- (<span class="self">self</span>.ix - <span class="self">self</span>.tab_start) % <span class="number">4</span>;
                     <span class="self">self</span>.ix += <span class="number">1</span>;
                     <span class="self">self</span>.tab_start = <span class="self">self</span>.ix;
@@ -1494,15 +1494,15 @@
         <span class="self">self</span>.spaces_remaining = <span class="number">0</span>;
         <span class="self">self</span>.ix += <span class="self">self</span>.bytes[<span class="self">self</span>.ix..]
             .iter()
-            .take_while(|&amp;&amp;b| b == <span class="string">b&#39; &#39; </span>|| b == <span class="string">b&#39;\t&#39;</span>)
+            .take_while(|&amp;&amp;b| b == <span class="string">b' ' </span>|| b == <span class="string">b'\t'</span>)
             .count();
     }
 
-    <span class="doccomment">/// Determine whether we&#39;re at end of line (includes end of file).
+    <span class="doccomment">/// Determine whether we're at end of line (includes end of file).
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_at_eol(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.bytes
             .get(<span class="self">self</span>.ix)
-            .map(|<span class="kw-2">&amp;</span>c| c == <span class="string">b&#39;\r&#39; </span>|| c == <span class="string">b&#39;\n&#39;</span>)
+            .map(|<span class="kw-2">&amp;</span>c| c == <span class="string">b'\r' </span>|| c == <span class="string">b'\n'</span>)
             .unwrap_or(<span class="bool-val">true</span>)
     }
 
@@ -1518,7 +1518,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_blockquote_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; bool {
         <span class="kw">let </span>save = <span class="self">self</span>.clone();
         <span class="kw">let _ </span>= <span class="self">self</span>.scan_space(<span class="number">3</span>);
-        <span class="kw">if </span><span class="self">self</span>.scan_ch(<span class="string">b&#39;&gt;&#39;</span>) {
+        <span class="kw">if </span><span class="self">self</span>.scan_ch(<span class="string">b'&gt;'</span>) {
             <span class="kw">let _ </span>= <span class="self">self</span>.scan_space(<span class="number">1</span>);
             <span class="bool-val">true
         </span>} <span class="kw">else </span>{
@@ -1530,14 +1530,14 @@
     <span class="doccomment">/// Scan a list marker.
     ///
     /// Return value is the character, the start index, and the indent in spaces.
-    /// For ordered list markers, the character will be one of b&#39;.&#39; or b&#39;)&#39;. For
-    /// bullet list markers, it will be one of b&#39;-&#39;, b&#39;+&#39;, or b&#39;*&#39;.
+    /// For ordered list markers, the character will be one of b'.' or b')'. For
+    /// bullet list markers, it will be one of b'-', b'+', or b'*'.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_list_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(u8, u64, usize)&gt; {
         <span class="kw">let </span>save = <span class="self">self</span>.clone();
         <span class="kw">let </span>indent = <span class="self">self</span>.scan_space_upto(<span class="number">4</span>);
         <span class="kw">if </span>indent &lt; <span class="number">4 </span>&amp;&amp; <span class="self">self</span>.ix &lt; <span class="self">self</span>.bytes.len() {
             <span class="kw">let </span>c = <span class="self">self</span>.bytes[<span class="self">self</span>.ix];
-            <span class="kw">if </span>c == <span class="string">b&#39;-&#39; </span>|| c == <span class="string">b&#39;+&#39; </span>|| c == <span class="string">b&#39;*&#39; </span>{
+            <span class="kw">if </span>c == <span class="string">b'-' </span>|| c == <span class="string">b'+' </span>|| c == <span class="string">b'*' </span>{
                 <span class="kw">if </span><span class="self">self</span>.ix &gt;= <span class="self">self</span>.min_hrule_offset {
                     <span class="comment">// there could be an hrule here
                     </span><span class="kw">if let </span><span class="prelude-val">Err</span>(min_offset) = scan_hrule(<span class="kw-2">&amp;</span><span class="self">self</span>.bytes[<span class="self">self</span>.ix..]) {
@@ -1551,16 +1551,16 @@
                 <span class="kw">if </span><span class="self">self</span>.scan_space(<span class="number">1</span>) || <span class="self">self</span>.is_at_eol() {
                     <span class="kw">return </span><span class="self">self</span>.finish_list_marker(c, <span class="number">0</span>, indent + <span class="number">2</span>);
                 }
-            } <span class="kw">else if </span>c &gt;= <span class="string">b&#39;0&#39; </span>&amp;&amp; c &lt;= <span class="string">b&#39;9&#39; </span>{
+            } <span class="kw">else if </span>c &gt;= <span class="string">b'0' </span>&amp;&amp; c &lt;= <span class="string">b'9' </span>{
                 <span class="kw">let </span>start_ix = <span class="self">self</span>.ix;
                 <span class="kw">let </span><span class="kw-2">mut </span>ix = <span class="self">self</span>.ix + <span class="number">1</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>val = u64::from(c - <span class="string">b&#39;0&#39;</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>val = u64::from(c - <span class="string">b'0'</span>);
                 <span class="kw">while </span>ix &lt; <span class="self">self</span>.bytes.len() &amp;&amp; ix - start_ix &lt; <span class="number">10 </span>{
                     <span class="kw">let </span>c = <span class="self">self</span>.bytes[ix];
                     ix += <span class="number">1</span>;
-                    <span class="kw">if </span>c &gt;= <span class="string">b&#39;0&#39; </span>&amp;&amp; c &lt;= <span class="string">b&#39;9&#39; </span>{
-                        val = val * <span class="number">10 </span>+ u64::from(c - <span class="string">b&#39;0&#39;</span>);
-                    } <span class="kw">else if </span>c == <span class="string">b&#39;)&#39; </span>|| c == <span class="string">b&#39;.&#39; </span>{
+                    <span class="kw">if </span>c &gt;= <span class="string">b'0' </span>&amp;&amp; c &lt;= <span class="string">b'9' </span>{
+                        val = val * <span class="number">10 </span>+ u64::from(c - <span class="string">b'0'</span>);
+                    } <span class="kw">else if </span>c == <span class="string">b')' </span>|| c == <span class="string">b'.' </span>{
                         <span class="self">self</span>.ix = ix;
                         <span class="kw">if </span><span class="self">self</span>.scan_space(<span class="number">1</span>) || <span class="self">self</span>.is_at_eol() {
                             <span class="kw">return </span><span class="self">self</span>.finish_list_marker(c, val, indent + <span class="self">self</span>.ix - start_ix);
@@ -1585,7 +1585,7 @@
     ) -&gt; <span class="prelude-ty">Option</span>&lt;(u8, u64, usize)&gt; {
         <span class="kw">let </span>save = <span class="self">self</span>.clone();
 
-        <span class="comment">// skip the rest of the line if it&#39;s blank
+        <span class="comment">// skip the rest of the line if it's blank
         </span><span class="kw">if </span>scan_blank_line(<span class="kw-2">&amp;</span><span class="self">self</span>.bytes[<span class="self">self</span>.ix..]).is_some() {
             <span class="kw">return </span><span class="prelude-val">Some</span>((c, start, indent));
         }
@@ -1605,7 +1605,7 @@
         <span class="kw">let </span>save = <span class="self">self</span>.clone();
         <span class="self">self</span>.scan_space_upto(<span class="number">3</span>);
 
-        <span class="kw">if </span>!<span class="self">self</span>.scan_ch(<span class="string">b&#39;[&#39;</span>) {
+        <span class="kw">if </span>!<span class="self">self</span>.scan_ch(<span class="string">b'['</span>) {
             <span class="kw-2">*</span><span class="self">self </span>= save;
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
@@ -1614,7 +1614,7 @@
                 <span class="self">self</span>.ix += <span class="number">1</span>;
                 <span class="bool-val">false
             </span>}
-            <span class="prelude-val">Some</span>(<span class="string">b&#39;x&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">b&#39;X&#39;</span>) =&gt; {
+            <span class="prelude-val">Some</span>(<span class="string">b'x'</span>) | <span class="prelude-val">Some</span>(<span class="string">b'X'</span>) =&gt; {
                 <span class="self">self</span>.ix += <span class="number">1</span>;
                 <span class="bool-val">true
             </span>}
@@ -1623,7 +1623,7 @@
                 <span class="kw">return </span><span class="prelude-val">None</span>;
             }
         };
-        <span class="kw">if </span>!<span class="self">self</span>.scan_ch(<span class="string">b&#39;]&#39;</span>) {
+        <span class="kw">if </span>!<span class="self">self</span>.scan_ch(<span class="string">b']'</span>) {
             <span class="kw-2">*</span><span class="self">self </span>= save;
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
@@ -1649,33 +1649,33 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_ascii_whitespace(c: u8) -&gt; bool {
-    (c &gt;= <span class="number">0x09 </span>&amp;&amp; c &lt;= <span class="number">0x0d</span>) || c == <span class="string">b&#39; &#39;
+    (c &gt;= <span class="number">0x09 </span>&amp;&amp; c &lt;= <span class="number">0x0d</span>) || c == <span class="string">b' '
 </span>}
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_ascii_whitespace_no_nl(c: u8) -&gt; bool {
-    c == <span class="string">b&#39;\t&#39; </span>|| c == <span class="number">0x0b </span>|| c == <span class="number">0x0c </span>|| c == <span class="string">b&#39; &#39;
+    c == <span class="string">b'\t' </span>|| c == <span class="number">0x0b </span>|| c == <span class="number">0x0c </span>|| c == <span class="string">b' '
 </span>}
 
 <span class="kw">fn </span>is_ascii_alpha(c: u8) -&gt; bool {
-    <span class="macro">matches!</span>(c, <span class="string">b&#39;a&#39;</span>..=<span class="string">b&#39;z&#39; </span>| <span class="string">b&#39;A&#39;</span>..=<span class="string">b&#39;Z&#39;</span>)
+    <span class="macro">matches!</span>(c, <span class="string">b'a'</span>..=<span class="string">b'z' </span>| <span class="string">b'A'</span>..=<span class="string">b'Z'</span>)
 }
 
 <span class="kw">fn </span>is_ascii_alphanumeric(c: u8) -&gt; bool {
-    <span class="macro">matches!</span>(c, <span class="string">b&#39;0&#39;</span>..=<span class="string">b&#39;9&#39; </span>| <span class="string">b&#39;a&#39;</span>..=<span class="string">b&#39;z&#39; </span>| <span class="string">b&#39;A&#39;</span>..=<span class="string">b&#39;Z&#39;</span>)
+    <span class="macro">matches!</span>(c, <span class="string">b'0'</span>..=<span class="string">b'9' </span>| <span class="string">b'a'</span>..=<span class="string">b'z' </span>| <span class="string">b'A'</span>..=<span class="string">b'Z'</span>)
 }
 
 <span class="kw">fn </span>is_ascii_letterdigitdash(c: u8) -&gt; bool {
-    c == <span class="string">b&#39;-&#39; </span>|| is_ascii_alphanumeric(c)
+    c == <span class="string">b'-' </span>|| is_ascii_alphanumeric(c)
 }
 
 <span class="kw">fn </span>is_digit(c: u8) -&gt; bool {
-    <span class="string">b&#39;0&#39; </span>&lt;= c &amp;&amp; c &lt;= <span class="string">b&#39;9&#39;
+    <span class="string">b'0' </span>&lt;= c &amp;&amp; c &lt;= <span class="string">b'9'
 </span>}
 
 <span class="kw">fn </span>is_valid_unquoted_attr_value_char(c: u8) -&gt; bool {
     !<span class="macro">matches!</span>(
         c,
-        <span class="string">b&#39;\&#39;&#39; </span>| <span class="string">b&#39;&quot;&#39; </span>| <span class="string">b&#39; &#39; </span>| <span class="string">b&#39;=&#39; </span>| <span class="string">b&#39;&gt;&#39; </span>| <span class="string">b&#39;&lt;&#39; </span>| <span class="string">b&#39;`&#39; </span>| <span class="string">b&#39;\n&#39; </span>| <span class="string">b&#39;\r&#39;
+        <span class="string">b'\'' </span>| <span class="string">b'"' </span>| <span class="string">b' ' </span>| <span class="string">b'=' </span>| <span class="string">b'&gt;' </span>| <span class="string">b'&lt;' </span>| <span class="string">b'`' </span>| <span class="string">b'\n' </span>| <span class="string">b'\r'
     </span>)
 }
 
@@ -1721,8 +1721,8 @@
         <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="number">0</span>);
     }
     <span class="kw">match </span>bytes[<span class="number">0</span>] {
-        <span class="string">b&#39;\n&#39; </span>=&gt; <span class="prelude-val">Some</span>(<span class="number">1</span>),
-        <span class="string">b&#39;\r&#39; </span>=&gt; <span class="prelude-val">Some</span>(<span class="kw">if </span>bytes.get(<span class="number">1</span>) == <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">b&#39;\n&#39;</span>) { <span class="number">2 </span>} <span class="kw">else </span>{ <span class="number">1 </span>}),
+        <span class="string">b'\n' </span>=&gt; <span class="prelude-val">Some</span>(<span class="number">1</span>),
+        <span class="string">b'\r' </span>=&gt; <span class="prelude-val">Some</span>(<span class="kw">if </span>bytes.get(<span class="number">1</span>) == <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">b'\n'</span>) { <span class="number">2 </span>} <span class="kw">else </span>{ <span class="number">1 </span>}),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
 }
@@ -1733,7 +1733,7 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_nextline(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; usize {
-    memchr(<span class="string">b&#39;\n&#39;</span>, bytes).map_or(bytes.len(), |x| x + <span class="number">1</span>)
+    memchr(<span class="string">b'\n'</span>, bytes).map_or(bytes.len(), |x| x + <span class="number">1</span>)
 }
 
 <span class="comment">// return: end byte for closing code fence, or None
@@ -1752,7 +1752,7 @@
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
     i += num_fence_chars_found;
-    <span class="kw">let </span>num_trailing_spaces = scan_ch_repeat(<span class="kw-2">&amp;</span>bytes[i..], <span class="string">b&#39; &#39;</span>);
+    <span class="kw">let </span>num_trailing_spaces = scan_ch_repeat(<span class="kw-2">&amp;</span>bytes[i..], <span class="string">b' '</span>);
     i += num_trailing_spaces;
     scan_eol(<span class="kw-2">&amp;</span>bytes[i..]).map(|<span class="kw">_</span>| i)
 }
@@ -1764,13 +1764,13 @@
 
     <span class="kw">for </span>(i, <span class="kw-2">&amp;</span>b) <span class="kw">in </span>text.iter().enumerate() {
         <span class="kw">match </span>b {
-            <span class="string">b&#39; &#39; </span>=&gt; {
+            <span class="string">b' ' </span>=&gt; {
                 spaces += <span class="number">1</span>;
                 <span class="kw">if </span>spaces == max {
                     <span class="kw">break</span>;
                 }
             }
-            <span class="string">b&#39;\t&#39; </span>=&gt; {
+            <span class="string">b'\t' </span>=&gt; {
                 <span class="kw">let </span>new_spaces = spaces + <span class="number">4 </span>- (spaces &amp; <span class="number">3</span>);
                 <span class="kw">if </span>new_spaces &gt; max {
                     <span class="kw">break</span>;
@@ -1797,7 +1797,7 @@
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="number">0</span>);
     }
     <span class="kw">let </span>c = bytes[<span class="number">0</span>];
-    <span class="kw">if </span>!(c == <span class="string">b&#39;*&#39; </span>|| c == <span class="string">b&#39;-&#39; </span>|| c == <span class="string">b&#39;_&#39;</span>) {
+    <span class="kw">if </span>!(c == <span class="string">b'*' </span>|| c == <span class="string">b'-' </span>|| c == <span class="string">b'_'</span>) {
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="number">0</span>);
     }
     <span class="kw">let </span><span class="kw-2">mut </span>n = <span class="number">0</span>;
@@ -1805,14 +1805,14 @@
 
     <span class="kw">while </span>i &lt; bytes.len() {
         <span class="kw">match </span>bytes[i] {
-            <span class="string">b&#39;\n&#39; </span>| <span class="string">b&#39;\r&#39; </span>=&gt; {
+            <span class="string">b'\n' </span>| <span class="string">b'\r' </span>=&gt; {
                 i += scan_eol(<span class="kw-2">&amp;</span>bytes[i..]).unwrap_or(<span class="number">0</span>);
                 <span class="kw">break</span>;
             }
             c2 <span class="kw">if </span>c2 == c =&gt; {
                 n += <span class="number">1</span>;
             }
-            <span class="string">b&#39; &#39; </span>| <span class="string">b&#39;\t&#39; </span>=&gt; (),
+            <span class="string">b' ' </span>| <span class="string">b'\t' </span>=&gt; (),
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(i),
         }
         i += <span class="number">1</span>;
@@ -1828,7 +1828,7 @@
 ///
 /// Returns number of bytes in prefix and level.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_atx_heading(data: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;HeadingLevel&gt; {
-    <span class="kw">let </span>level = scan_ch_repeat(data, <span class="string">b&#39;#&#39;</span>);
+    <span class="kw">let </span>level = scan_ch_repeat(data, <span class="string">b'#'</span>);
     <span class="kw">if </span>data.get(level).copied().map_or(<span class="bool-val">true</span>, is_ascii_whitespace) {
         HeadingLevel::try_from(level).ok()
     } <span class="kw">else </span>{
@@ -1841,9 +1841,9 @@
 /// Returns number of bytes in line (including trailing newline) and level.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_setext_heading(data: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, HeadingLevel)&gt; {
     <span class="kw">let </span>c = <span class="kw-2">*</span>data.get(<span class="number">0</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>level = <span class="kw">if </span>c == <span class="string">b&#39;=&#39; </span>{
+    <span class="kw">let </span>level = <span class="kw">if </span>c == <span class="string">b'=' </span>{
         HeadingLevel::H1
-    } <span class="kw">else if </span>c == <span class="string">b&#39;-&#39; </span>{
+    } <span class="kw">else if </span>c == <span class="string">b'-' </span>{
         HeadingLevel::H2
     } <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">None</span>;
@@ -1863,7 +1863,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>cols = <span class="macro">vec!</span>[];
     <span class="kw">let </span><span class="kw-2">mut </span>active_col = Alignment::None;
     <span class="kw">let </span><span class="kw-2">mut </span>start_col = <span class="bool-val">true</span>;
-    <span class="kw">if </span>data[i] == <span class="string">b&#39;|&#39; </span>{
+    <span class="kw">if </span>data[i] == <span class="string">b'|' </span>{
         i += <span class="number">1</span>;
     }
     <span class="kw">for </span>c <span class="kw">in </span><span class="kw-2">&amp;</span>data[i..] {
@@ -1872,8 +1872,8 @@
             <span class="kw">break</span>;
         }
         <span class="kw">match </span><span class="kw-2">*</span>c {
-            <span class="string">b&#39; &#39; </span>=&gt; (),
-            <span class="string">b&#39;:&#39; </span>=&gt; {
+            <span class="string">b' ' </span>=&gt; (),
+            <span class="string">b':' </span>=&gt; {
                 active_col = <span class="kw">match </span>(start_col, active_col) {
                     (<span class="bool-val">true</span>, Alignment::None) =&gt; Alignment::Left,
                     (<span class="bool-val">false</span>, Alignment::Left) =&gt; Alignment::Center,
@@ -1882,10 +1882,10 @@
                 };
                 start_col = <span class="bool-val">false</span>;
             }
-            <span class="string">b&#39;-&#39; </span>=&gt; {
+            <span class="string">b'-' </span>=&gt; {
                 start_col = <span class="bool-val">false</span>;
             }
-            <span class="string">b&#39;|&#39; </span>=&gt; {
+            <span class="string">b'|' </span>=&gt; {
                 start_col = <span class="bool-val">true</span>;
                 cols.push(active_col);
                 active_col = Alignment::None;
@@ -1911,16 +1911,16 @@
 /// Returns number of bytes scanned and the char that is repeated to make the code fence.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_code_fence(data: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, u8)&gt; {
     <span class="kw">let </span>c = <span class="kw-2">*</span>data.get(<span class="number">0</span>)<span class="question-mark">?</span>;
-    <span class="kw">if </span>!(c == <span class="string">b&#39;`&#39; </span>|| c == <span class="string">b&#39;~&#39;</span>) {
+    <span class="kw">if </span>!(c == <span class="string">b'`' </span>|| c == <span class="string">b'~'</span>) {
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
     <span class="kw">let </span>i = <span class="number">1 </span>+ scan_ch_repeat(<span class="kw-2">&amp;</span>data[<span class="number">1</span>..], c);
     <span class="kw">if </span>i &gt;= <span class="number">3 </span>{
-        <span class="kw">if </span>c == <span class="string">b&#39;`&#39; </span>{
+        <span class="kw">if </span>c == <span class="string">b'`' </span>{
             <span class="kw">let </span>suffix = <span class="kw-2">&amp;</span>data[i..];
             <span class="kw">let </span>next_line = i + scan_nextline(suffix);
             <span class="comment">// FIXME: make sure this is correct
-            </span><span class="kw">if </span>suffix[..(next_line - i)].iter().any(|<span class="kw-2">&amp;</span>b| b == <span class="string">b&#39;`&#39;</span>) {
+            </span><span class="kw">if </span>suffix[..(next_line - i)].iter().any(|<span class="kw-2">&amp;</span>b| b == <span class="string">b'`'</span>) {
                 <span class="kw">return </span><span class="prelude-val">None</span>;
             }
         }
@@ -1931,7 +1931,7 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_blockquote_start(data: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-    <span class="kw">if </span>data.starts_with(<span class="string">b&quot;&gt; &quot;</span>) {
+    <span class="kw">if </span>data.starts_with(<span class="string">b"&gt; "</span>) {
         <span class="prelude-val">Some</span>(<span class="number">2</span>)
     } <span class="kw">else </span>{
         <span class="prelude-val">None
@@ -1955,11 +1955,11 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_listitem(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, u8, usize, usize)&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>c = <span class="kw-2">*</span>bytes.get(<span class="number">0</span>)<span class="question-mark">?</span>;
     <span class="kw">let </span>(w, start) = <span class="kw">match </span>c {
-        <span class="string">b&#39;-&#39; </span>| <span class="string">b&#39;+&#39; </span>| <span class="string">b&#39;*&#39; </span>=&gt; (<span class="number">1</span>, <span class="number">0</span>),
-        <span class="string">b&#39;0&#39;</span>..=<span class="string">b&#39;9&#39; </span>=&gt; {
+        <span class="string">b'-' </span>| <span class="string">b'+' </span>| <span class="string">b'*' </span>=&gt; (<span class="number">1</span>, <span class="number">0</span>),
+        <span class="string">b'0'</span>..=<span class="string">b'9' </span>=&gt; {
             <span class="kw">let </span>(length, start) = parse_decimal(bytes);
             c = <span class="kw-2">*</span>bytes.get(length)<span class="question-mark">?</span>;
-            <span class="kw">if </span>!(c == <span class="string">b&#39;.&#39; </span>|| c == <span class="string">b&#39;)&#39;</span>) {
+            <span class="kw">if </span>!(c == <span class="string">b'.' </span>|| c == <span class="string">b')'</span>) {
                 <span class="kw">return </span><span class="prelude-val">None</span>;
             }
             (length + <span class="number">1</span>, start)
@@ -1990,7 +1990,7 @@
         .iter()
         .take_while(|&amp;&amp;b| is_digit(b))
         .try_fold((<span class="number">0</span>, <span class="number">0usize</span>), |(count, acc), c| {
-            <span class="kw">let </span>digit = usize::from(c - <span class="string">b&#39;0&#39;</span>);
+            <span class="kw">let </span>digit = usize::from(c - <span class="string">b'0'</span>);
             <span class="kw">match </span>acc
                 .checked_mul(<span class="number">10</span>)
                 .and_then(|ten_acc| ten_acc.checked_add(digit))
@@ -2008,13 +2008,13 @@
 </span><span class="kw">fn </span>parse_hex(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; (usize, usize) {
     <span class="kw">match </span>bytes.iter().try_fold((<span class="number">0</span>, <span class="number">0usize</span>), |(count, acc), c| {
         <span class="kw">let </span><span class="kw-2">mut </span>c = <span class="kw-2">*</span>c;
-        <span class="kw">let </span>digit = <span class="kw">if </span>c &gt;= <span class="string">b&#39;0&#39; </span>&amp;&amp; c &lt;= <span class="string">b&#39;9&#39; </span>{
-            usize::from(c - <span class="string">b&#39;0&#39;</span>)
+        <span class="kw">let </span>digit = <span class="kw">if </span>c &gt;= <span class="string">b'0' </span>&amp;&amp; c &lt;= <span class="string">b'9' </span>{
+            usize::from(c - <span class="string">b'0'</span>)
         } <span class="kw">else </span>{
             <span class="comment">// make lower case
             </span>c |= <span class="number">0x20</span>;
-            <span class="kw">if </span>c &gt;= <span class="string">b&#39;a&#39; </span>&amp;&amp; c &lt;= <span class="string">b&#39;f&#39; </span>{
-                usize::from(c - <span class="string">b&#39;a&#39; </span>+ <span class="number">10</span>)
+            <span class="kw">if </span>c &gt;= <span class="string">b'a' </span>&amp;&amp; c &lt;= <span class="string">b'f' </span>{
+                usize::from(c - <span class="string">b'a' </span>+ <span class="number">10</span>)
             } <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>((count, acc));
             }
@@ -2040,19 +2040,19 @@
     char::from_u32(codepoint)
 }
 
-<span class="comment">// doesn&#39;t bother to check data[0] == &#39;&amp;&#39;
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_entity(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; (usize, <span class="prelude-ty">Option</span>&lt;CowStr&lt;<span class="lifetime">&#39;static</span>&gt;&gt;) {
+<span class="comment">// doesn't bother to check data[0] == '&amp;'
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_entity(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; (usize, <span class="prelude-ty">Option</span>&lt;CowStr&lt;<span class="lifetime">'static</span>&gt;&gt;) {
     <span class="kw">let </span><span class="kw-2">mut </span>end = <span class="number">1</span>;
-    <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[end..], <span class="string">b&#39;#&#39;</span>) == <span class="number">1 </span>{
+    <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[end..], <span class="string">b'#'</span>) == <span class="number">1 </span>{
         end += <span class="number">1</span>;
-        <span class="kw">let </span>(bytecount, codepoint) = <span class="kw">if </span>end &lt; bytes.len() &amp;&amp; bytes[end] | <span class="number">0x20 </span>== <span class="string">b&#39;x&#39; </span>{
+        <span class="kw">let </span>(bytecount, codepoint) = <span class="kw">if </span>end &lt; bytes.len() &amp;&amp; bytes[end] | <span class="number">0x20 </span>== <span class="string">b'x' </span>{
             end += <span class="number">1</span>;
             parse_hex(<span class="kw-2">&amp;</span>bytes[end..])
         } <span class="kw">else </span>{
             parse_decimal(<span class="kw-2">&amp;</span>bytes[end..])
         };
         end += bytecount;
-        <span class="kw">return if </span>bytecount == <span class="number">0 </span>|| scan_ch(<span class="kw-2">&amp;</span>bytes[end..], <span class="string">b&#39;;&#39;</span>) == <span class="number">0 </span>{
+        <span class="kw">return if </span>bytecount == <span class="number">0 </span>|| scan_ch(<span class="kw-2">&amp;</span>bytes[end..], <span class="string">b';'</span>) == <span class="number">0 </span>{
             (<span class="number">0</span>, <span class="prelude-val">None</span>)
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(c) = char_from_codepoint(codepoint) {
             (end + <span class="number">1</span>, <span class="prelude-val">Some</span>(c.into()))
@@ -2061,7 +2061,7 @@
         };
     }
     end += scan_while(<span class="kw-2">&amp;</span>bytes[end..], is_ascii_alphanumeric);
-    <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[end..], <span class="string">b&#39;;&#39;</span>) == <span class="number">1 </span>{
+    <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[end..], <span class="string">b';'</span>) == <span class="number">1 </span>{
         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = entities::get_entity(<span class="kw-2">&amp;</span>bytes[<span class="number">1</span>..end]) {
             <span class="kw">return </span>(end + <span class="number">1</span>, <span class="prelude-val">Some</span>(value.into()));
         }
@@ -2074,28 +2074,28 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_refdef_title(text: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, <span class="kw-2">&amp;</span>str)&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>chars = text.chars().peekable();
     <span class="kw">let </span>closing_delim = <span class="kw">match </span>chars.next()<span class="question-mark">? </span>{
-        <span class="string">&#39;\&#39;&#39; </span>=&gt; <span class="string">&#39;\&#39;&#39;</span>,
-        <span class="string">&#39;&quot;&#39; </span>=&gt; <span class="string">&#39;&quot;&#39;</span>,
-        <span class="string">&#39;(&#39; </span>=&gt; <span class="string">&#39;)&#39;</span>,
+        <span class="string">'\'' </span>=&gt; <span class="string">'\''</span>,
+        <span class="string">'"' </span>=&gt; <span class="string">'"'</span>,
+        <span class="string">'(' </span>=&gt; <span class="string">')'</span>,
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
     };
     <span class="kw">let </span><span class="kw-2">mut </span>bytecount = <span class="number">1</span>;
 
     <span class="kw">while let </span><span class="prelude-val">Some</span>(c) = chars.next() {
         <span class="kw">match </span>c {
-            <span class="string">&#39;\n&#39; </span>=&gt; {
+            <span class="string">'\n' </span>=&gt; {
                 bytecount += <span class="number">1</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>next = <span class="kw-2">*</span>chars.peek()<span class="question-mark">?</span>;
                 <span class="kw">while </span>is_ascii_whitespace_no_nl(next <span class="kw">as </span>u8) {
                     bytecount += chars.next()<span class="question-mark">?</span>.len_utf8();
                     next = <span class="kw-2">*</span>chars.peek()<span class="question-mark">?</span>;
                 }
-                <span class="kw">if </span><span class="kw-2">*</span>chars.peek()<span class="question-mark">? </span>== <span class="string">&#39;\n&#39; </span>{
+                <span class="kw">if </span><span class="kw-2">*</span>chars.peek()<span class="question-mark">? </span>== <span class="string">'\n' </span>{
                     <span class="comment">// blank line - not allowed
                     </span><span class="kw">return </span><span class="prelude-val">None</span>;
                 }
             }
-            <span class="string">&#39;\\&#39; </span>=&gt; {
+            <span class="string">'\\' </span>=&gt; {
                 <span class="kw">let </span>next_char = chars.next()<span class="question-mark">?</span>;
                 bytecount += <span class="number">1 </span>+ next_char.len_utf8();
             }
@@ -2119,15 +2119,15 @@
     max_next: usize,
 ) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, <span class="kw-2">&amp;</span>str)&gt; {
     <span class="kw">let </span>bytes = <span class="kw-2">&amp;</span>data.as_bytes()[start_ix..];
-    <span class="kw">let </span><span class="kw-2">mut </span>i = scan_ch(bytes, <span class="string">b&#39;&lt;&#39;</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>i = scan_ch(bytes, <span class="string">b'&lt;'</span>);
 
     <span class="kw">if </span>i != <span class="number">0 </span>{
         <span class="comment">// pointy links
         </span><span class="kw">while </span>i &lt; bytes.len() {
             <span class="kw">match </span>bytes[i] {
-                <span class="string">b&#39;\n&#39; </span>| <span class="string">b&#39;\r&#39; </span>| <span class="string">b&#39;&lt;&#39; </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-                <span class="string">b&#39;&gt;&#39; </span>=&gt; <span class="kw">return </span><span class="prelude-val">Some</span>((i + <span class="number">1</span>, <span class="kw-2">&amp;</span>data[(start_ix + <span class="number">1</span>)..(start_ix + i)])),
-                <span class="string">b&#39;\\&#39; </span><span class="kw">if </span>i + <span class="number">1 </span>&lt; bytes.len() &amp;&amp; is_ascii_punctuation(bytes[i + <span class="number">1</span>]) =&gt; {
+                <span class="string">b'\n' </span>| <span class="string">b'\r' </span>| <span class="string">b'&lt;' </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+                <span class="string">b'&gt;' </span>=&gt; <span class="kw">return </span><span class="prelude-val">Some</span>((i + <span class="number">1</span>, <span class="kw-2">&amp;</span>data[(start_ix + <span class="number">1</span>)..(start_ix + i)])),
+                <span class="string">b'\\' </span><span class="kw">if </span>i + <span class="number">1 </span>&lt; bytes.len() &amp;&amp; is_ascii_punctuation(bytes[i + <span class="number">1</span>]) =&gt; {
                     i += <span class="number">1</span>;
                 }
                 <span class="kw">_ </span>=&gt; {}
@@ -2143,19 +2143,19 @@
                 <span class="number">0x0</span>..=<span class="number">0x20 </span>=&gt; {
                     <span class="kw">break</span>;
                 }
-                <span class="string">b&#39;(&#39; </span>=&gt; {
+                <span class="string">b'(' </span>=&gt; {
                     <span class="kw">if </span>nest &gt; max_next {
                         <span class="kw">return </span><span class="prelude-val">None</span>;
                     }
                     nest += <span class="number">1</span>;
                 }
-                <span class="string">b&#39;)&#39; </span>=&gt; {
+                <span class="string">b')' </span>=&gt; {
                     <span class="kw">if </span>nest == <span class="number">0 </span>{
                         <span class="kw">break</span>;
                     }
                     nest -= <span class="number">1</span>;
                 }
-                <span class="string">b&#39;\\&#39; </span><span class="kw">if </span>i + <span class="number">1 </span>&lt; bytes.len() &amp;&amp; is_ascii_punctuation(bytes[i + <span class="number">1</span>]) =&gt; {
+                <span class="string">b'\\' </span><span class="kw">if </span>i + <span class="number">1 </span>&lt; bytes.len() &amp;&amp; is_ascii_punctuation(bytes[i + <span class="number">1</span>]) =&gt; {
                     i += <span class="number">1</span>;
                 }
                 <span class="kw">_ </span>=&gt; {}
@@ -2169,10 +2169,10 @@
 <span class="doccomment">/// Returns bytes scanned
 </span><span class="kw">fn </span>scan_attribute_name(data: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
     <span class="kw">let </span>(<span class="kw-2">&amp;</span>c, tail) = data.split_first()<span class="question-mark">?</span>;
-    <span class="kw">if </span>is_ascii_alpha(c) || c == <span class="string">b&#39;_&#39; </span>|| c == <span class="string">b&#39;:&#39; </span>{
+    <span class="kw">if </span>is_ascii_alpha(c) || c == <span class="string">b'_' </span>|| c == <span class="string">b':' </span>{
         <span class="prelude-val">Some</span>(
             <span class="number">1 </span>+ scan_while(tail, |c| {
-                is_ascii_alphanumeric(c) || c == <span class="string">b&#39;_&#39; </span>|| c == <span class="string">b&#39;.&#39; </span>|| c == <span class="string">b&#39;:&#39; </span>|| c == <span class="string">b&#39;-&#39;
+                is_ascii_alphanumeric(c) || c == <span class="string">b'_' </span>|| c == <span class="string">b'.' </span>|| c == <span class="string">b':' </span>|| c == <span class="string">b'-'
             </span>}),
         )
     } <span class="kw">else </span>{
@@ -2194,7 +2194,7 @@
     <span class="kw">let </span>n_whitespace =
         scan_whitespace_with_newline_handler(data, ix, newline_handler, buffer, buffer_ix)<span class="question-mark">? </span>- ix;
     ix += n_whitespace;
-    <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>data[ix..], <span class="string">b&#39;=&#39;</span>) == <span class="number">1 </span>{
+    <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>data[ix..], <span class="string">b'='</span>) == <span class="number">1 </span>{
         ix += <span class="number">1</span>;
         ix = scan_whitespace_with_newline_handler(data, ix, newline_handler, buffer, buffer_ix)<span class="question-mark">?</span>;
         ix = scan_attribute_value(data, ix, newline_handler, buffer, buffer_ix)<span class="question-mark">?</span>;
@@ -2247,7 +2247,7 @@
     buffer_ix: <span class="kw-2">&amp;mut </span>usize,
 ) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
     <span class="kw">match </span><span class="kw-2">*</span>data.get(i)<span class="question-mark">? </span>{
-        b @ <span class="string">b&#39;&quot;&#39; </span>| b @ <span class="string">b&#39;\&#39;&#39; </span>=&gt; {
+        b @ <span class="string">b'"' </span>| b @ <span class="string">b'\'' </span>=&gt; {
             i += <span class="number">1</span>;
             <span class="kw">while </span>i &lt; data.len() {
                 <span class="kw">if </span>data[i] == b {
@@ -2269,7 +2269,7 @@
             }
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="string">b&#39; &#39; </span>| <span class="string">b&#39;=&#39; </span>| <span class="string">b&#39;&gt;&#39; </span>| <span class="string">b&#39;&lt;&#39; </span>| <span class="string">b&#39;`&#39; </span>| <span class="string">b&#39;\n&#39; </span>| <span class="string">b&#39;\r&#39; </span>=&gt; {
+        <span class="string">b' ' </span>| <span class="string">b'=' </span>| <span class="string">b'&gt;' </span>| <span class="string">b'&lt;' </span>| <span class="string">b'`' </span>| <span class="string">b'\n' </span>| <span class="string">b'\r' </span>=&gt; {
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
         <span class="kw">_ </span>=&gt; {
@@ -2282,19 +2282,19 @@
 }
 
 <span class="comment">// Remove backslash escapes and resolve entities
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unescape(input: <span class="kw-2">&amp;</span>str) -&gt; CowStr&lt;<span class="lifetime">&#39;_</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unescape(input: <span class="kw-2">&amp;</span>str) -&gt; CowStr&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>result = String::new();
     <span class="kw">let </span><span class="kw-2">mut </span>mark = <span class="number">0</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
     <span class="kw">let </span>bytes = input.as_bytes();
     <span class="kw">while </span>i &lt; bytes.len() {
         <span class="kw">match </span>bytes[i] {
-            <span class="string">b&#39;\\&#39; </span><span class="kw">if </span>i + <span class="number">1 </span>&lt; bytes.len() &amp;&amp; is_ascii_punctuation(bytes[i + <span class="number">1</span>]) =&gt; {
+            <span class="string">b'\\' </span><span class="kw">if </span>i + <span class="number">1 </span>&lt; bytes.len() &amp;&amp; is_ascii_punctuation(bytes[i + <span class="number">1</span>]) =&gt; {
                 result.push_str(<span class="kw-2">&amp;</span>input[mark..i]);
                 mark = i + <span class="number">1</span>;
                 i += <span class="number">2</span>;
             }
-            <span class="string">b&#39;&amp;&#39; </span>=&gt; <span class="kw">match </span>scan_entity(<span class="kw-2">&amp;</span>bytes[i..]) {
+            <span class="string">b'&amp;' </span>=&gt; <span class="kw">match </span>scan_entity(<span class="kw-2">&amp;</span>bytes[i..]) {
                 (n, <span class="prelude-val">Some</span>(value)) =&gt; {
                     result.push_str(<span class="kw-2">&amp;</span>input[mark..i]);
                     result.push_str(<span class="kw-2">&amp;</span>value);
@@ -2303,7 +2303,7 @@
                 }
                 <span class="kw">_ </span>=&gt; i += <span class="number">1</span>,
             },
-            <span class="string">b&#39;\r&#39; </span>=&gt; {
+            <span class="string">b'\r' </span>=&gt; {
                 result.push_str(<span class="kw-2">&amp;</span>input[mark..i]);
                 i += <span class="number">1</span>;
                 mark = i;
@@ -2321,7 +2321,7 @@
 
 <span class="doccomment">/// Assumes `data` is preceded by `&lt;`.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>starts_html_block_type_6(data: <span class="kw-2">&amp;</span>[u8]) -&gt; bool {
-    <span class="kw">let </span>i = scan_ch(data, <span class="string">b&#39;/&#39;</span>);
+    <span class="kw">let </span>i = scan_ch(data, <span class="string">b'/'</span>);
     <span class="kw">let </span>tail = <span class="kw-2">&amp;</span>data[i..];
     <span class="kw">let </span>n = scan_while(tail, is_ascii_alphanumeric);
     <span class="kw">if </span>!is_html_tag(<span class="kw-2">&amp;</span>tail[..n]) {
@@ -2331,12 +2331,12 @@
     // the end of the line, the string &gt;, or the string /&gt;
     </span><span class="kw">let </span>tail = <span class="kw-2">&amp;</span>tail[n..];
     tail.is_empty()
-        || tail[<span class="number">0</span>] == <span class="string">b&#39; &#39;
-        </span>|| tail[<span class="number">0</span>] == <span class="string">b&#39;\t&#39;
-        </span>|| tail[<span class="number">0</span>] == <span class="string">b&#39;\r&#39;
-        </span>|| tail[<span class="number">0</span>] == <span class="string">b&#39;\n&#39;
-        </span>|| tail[<span class="number">0</span>] == <span class="string">b&#39;&gt;&#39;
-        </span>|| tail.len() &gt;= <span class="number">2 </span>&amp;&amp; <span class="kw-2">&amp;</span>tail[..<span class="number">2</span>] == <span class="string">b&quot;/&gt;&quot;
+        || tail[<span class="number">0</span>] == <span class="string">b' '
+        </span>|| tail[<span class="number">0</span>] == <span class="string">b'\t'
+        </span>|| tail[<span class="number">0</span>] == <span class="string">b'\r'
+        </span>|| tail[<span class="number">0</span>] == <span class="string">b'\n'
+        </span>|| tail[<span class="number">0</span>] == <span class="string">b'&gt;'
+        </span>|| tail.len() &gt;= <span class="number">2 </span>&amp;&amp; <span class="kw-2">&amp;</span>tail[..<span class="number">2</span>] == <span class="string">b"/&gt;"
 </span>}
 
 <span class="kw">fn </span>is_html_tag(tag: <span class="kw-2">&amp;</span>[u8]) -&gt; bool {
@@ -2384,7 +2384,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>buffer = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>last_buf_index = <span class="number">0</span>;
 
-    <span class="kw">let </span>close_tag_bytes = scan_ch(<span class="kw-2">&amp;</span>data[<span class="number">1</span>..], <span class="string">b&#39;/&#39;</span>);
+    <span class="kw">let </span>close_tag_bytes = scan_ch(<span class="kw-2">&amp;</span>data[<span class="number">1</span>..], <span class="string">b'/'</span>);
     <span class="kw">let </span>l = scan_while(<span class="kw-2">&amp;</span>data[(<span class="number">1 </span>+ close_tag_bytes)..], is_ascii_alpha);
     <span class="kw">if </span>l == <span class="number">0 </span>{
         <span class="kw">return </span><span class="prelude-val">None</span>;
@@ -2409,7 +2409,7 @@
 
                     <span class="macro">debug_assert!</span>(
                         skipped_bytes &lt;= data_len,
-                        <span class="string">&quot;Handler tried to skip too many bytes, fed {}, skipped {}&quot;</span>,
+                        <span class="string">"Handler tried to skip too many bytes, fed {}, skipped {}"</span>,
                         data_len,
                         skipped_bytes
                     );
@@ -2423,7 +2423,7 @@
                     <span class="kw">break</span>;
                 }
             }
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="string">b&#39;/&#39;</span>) | <span class="prelude-val">Some</span>(<span class="string">b&#39;&gt;&#39;</span>) = data.get(i) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="string">b'/'</span>) | <span class="prelude-val">Some</span>(<span class="string">b'&gt;'</span>) = data.get(i) {
                 <span class="kw">break</span>;
             }
             <span class="kw">if </span>old_i == i {
@@ -2437,10 +2437,10 @@
     i += scan_whitespace_no_nl(<span class="kw-2">&amp;</span>data[i..]);
 
     <span class="kw">if </span>close_tag_bytes == <span class="number">0 </span>{
-        i += scan_ch(<span class="kw-2">&amp;</span>data[i..], <span class="string">b&#39;/&#39;</span>);
+        i += scan_ch(<span class="kw-2">&amp;</span>data[i..], <span class="string">b'/'</span>);
     }
 
-    <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>data[i..], <span class="string">b&#39;&gt;&#39;</span>) == <span class="number">0 </span>{
+    <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>data[i..], <span class="string">b'&gt;'</span>) == <span class="number">0 </span>{
         <span class="prelude-val">None
     </span>} <span class="kw">else </span>{
         i += <span class="number">1</span>;
@@ -2452,17 +2452,17 @@
 }
 
 <span class="doccomment">/// Returns (next_byte_offset, uri, type)
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_autolink(text: <span class="kw-2">&amp;</span>str, start_ix: usize) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, CowStr&lt;<span class="lifetime">&#39;_</span>&gt;, LinkType)&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_autolink(text: <span class="kw-2">&amp;</span>str, start_ix: usize) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, CowStr&lt;<span class="lifetime">'_</span>&gt;, LinkType)&gt; {
     scan_uri(text, start_ix)
         .map(|(bytes, uri)| (bytes, uri, LinkType::Autolink))
         .or_else(|| scan_email(text, start_ix).map(|(bytes, uri)| (bytes, uri, LinkType::Email)))
 }
 
 <span class="doccomment">/// Returns (next_byte_offset, uri)
-</span><span class="kw">fn </span>scan_uri(text: <span class="kw-2">&amp;</span>str, start_ix: usize) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, CowStr&lt;<span class="lifetime">&#39;_</span>&gt;)&gt; {
+</span><span class="kw">fn </span>scan_uri(text: <span class="kw-2">&amp;</span>str, start_ix: usize) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, CowStr&lt;<span class="lifetime">'_</span>&gt;)&gt; {
     <span class="kw">let </span>bytes = <span class="kw-2">&amp;</span>text.as_bytes()[start_ix..];
 
-    <span class="comment">// scheme&#39;s first byte must be an ascii letter
+    <span class="comment">// scheme's first byte must be an ascii letter
     </span><span class="kw">if </span>bytes.is_empty() || !is_ascii_alpha(bytes[<span class="number">0</span>]) {
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
@@ -2474,8 +2474,8 @@
         i += <span class="number">1</span>;
         <span class="kw">match </span>c {
             c <span class="kw">if </span>is_ascii_alphanumeric(c) =&gt; (),
-            <span class="string">b&#39;.&#39; </span>| <span class="string">b&#39;-&#39; </span>| <span class="string">b&#39;+&#39; </span>=&gt; (),
-            <span class="string">b&#39;:&#39; </span>=&gt; <span class="kw">break</span>,
+            <span class="string">b'.' </span>| <span class="string">b'-' </span>| <span class="string">b'+' </span>=&gt; (),
+            <span class="string">b':' </span>=&gt; <span class="kw">break</span>,
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         }
     }
@@ -2488,8 +2488,8 @@
 
     <span class="kw">while </span>i &lt; bytes.len() {
         <span class="kw">match </span>bytes[i] {
-            <span class="string">b&#39;&gt;&#39; </span>=&gt; <span class="kw">return </span><span class="prelude-val">Some</span>((start_ix + i + <span class="number">1</span>, text[start_ix..(start_ix + i)].into())),
-            <span class="string">b&#39;\0&#39;</span>..=<span class="string">b&#39; &#39; </span>| <span class="string">b&#39;&lt;&#39; </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+            <span class="string">b'&gt;' </span>=&gt; <span class="kw">return </span><span class="prelude-val">Some</span>((start_ix + i + <span class="number">1</span>, text[start_ix..(start_ix + i)].into())),
+            <span class="string">b'\0'</span>..=<span class="string">b' ' </span>| <span class="string">b'&lt;' </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
             <span class="kw">_ </span>=&gt; (),
         }
         i += <span class="number">1</span>;
@@ -2499,7 +2499,7 @@
 </span>}
 
 <span class="doccomment">/// Returns (next_byte_offset, email)
-</span><span class="kw">fn </span>scan_email(text: <span class="kw-2">&amp;</span>str, start_ix: usize) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, CowStr&lt;<span class="lifetime">&#39;_</span>&gt;)&gt; {
+</span><span class="kw">fn </span>scan_email(text: <span class="kw-2">&amp;</span>str, start_ix: usize) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, CowStr&lt;<span class="lifetime">'_</span>&gt;)&gt; {
     <span class="comment">// using a regex library would be convenient, but doing it by hand is not too bad
     </span><span class="kw">let </span>bytes = <span class="kw-2">&amp;</span>text.as_bytes()[start_ix..];
     <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
@@ -2509,9 +2509,9 @@
         i += <span class="number">1</span>;
         <span class="kw">match </span>c {
             c <span class="kw">if </span>is_ascii_alphanumeric(c) =&gt; (),
-            <span class="string">b&#39;.&#39; </span>| <span class="string">b&#39;!&#39; </span>| <span class="string">b&#39;#&#39; </span>| <span class="string">b&#39;$&#39; </span>| <span class="string">b&#39;%&#39; </span>| <span class="string">b&#39;&amp;&#39; </span>| <span class="string">b&#39;\&#39;&#39; </span>| <span class="string">b&#39;*&#39; </span>| <span class="string">b&#39;+&#39; </span>| <span class="string">b&#39;/&#39; </span>| <span class="string">b&#39;=&#39; </span>| <span class="string">b&#39;?&#39;
-            </span>| <span class="string">b&#39;^&#39; </span>| <span class="string">b&#39;_&#39; </span>| <span class="string">b&#39;`&#39; </span>| <span class="string">b&#39;{&#39; </span>| <span class="string">b&#39;|&#39; </span>| <span class="string">b&#39;}&#39; </span>| <span class="string">b&#39;~&#39; </span>| <span class="string">b&#39;-&#39; </span>=&gt; (),
-            <span class="string">b&#39;@&#39; </span>=&gt; <span class="kw">break</span>,
+            <span class="string">b'.' </span>| <span class="string">b'!' </span>| <span class="string">b'#' </span>| <span class="string">b'$' </span>| <span class="string">b'%' </span>| <span class="string">b'&amp;' </span>| <span class="string">b'\'' </span>| <span class="string">b'*' </span>| <span class="string">b'+' </span>| <span class="string">b'/' </span>| <span class="string">b'=' </span>| <span class="string">b'?'
+            </span>| <span class="string">b'^' </span>| <span class="string">b'_' </span>| <span class="string">b'`' </span>| <span class="string">b'{' </span>| <span class="string">b'|' </span>| <span class="string">b'}' </span>| <span class="string">b'~' </span>| <span class="string">b'-' </span>=&gt; (),
+            <span class="string">b'@' </span>=&gt; <span class="kw">break</span>,
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         }
     }
@@ -2523,34 +2523,34 @@
         <span class="kw">while </span>i &lt; bytes.len() {
             <span class="kw">match </span>bytes[i] {
                 c <span class="kw">if </span>is_ascii_alphanumeric(c) =&gt; (),
-                <span class="string">b&#39;-&#39; </span><span class="kw">if </span>fresh_label =&gt; {
+                <span class="string">b'-' </span><span class="kw">if </span>fresh_label =&gt; {
                     <span class="kw">return </span><span class="prelude-val">None</span>;
                 }
-                <span class="string">b&#39;-&#39; </span>=&gt; (),
+                <span class="string">b'-' </span>=&gt; (),
                 <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
             }
             fresh_label = <span class="bool-val">false</span>;
             i += <span class="number">1</span>;
         }
 
-        <span class="kw">if </span>i == label_start_ix || i - label_start_ix &gt; <span class="number">63 </span>|| bytes[i - <span class="number">1</span>] == <span class="string">b&#39;-&#39; </span>{
+        <span class="kw">if </span>i == label_start_ix || i - label_start_ix &gt; <span class="number">63 </span>|| bytes[i - <span class="number">1</span>] == <span class="string">b'-' </span>{
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[i..], <span class="string">b&#39;.&#39;</span>) == <span class="number">0 </span>{
+        <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[i..], <span class="string">b'.'</span>) == <span class="number">0 </span>{
             <span class="kw">break</span>;
         }
         i += <span class="number">1</span>;
     }
 
-    <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[i..], <span class="string">b&#39;&gt;&#39;</span>) == <span class="number">0 </span>{
+    <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[i..], <span class="string">b'&gt;'</span>) == <span class="number">0 </span>{
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
     <span class="prelude-val">Some</span>((start_ix + i + <span class="number">1</span>, text[start_ix..(start_ix + i)].into()))
 }
 
-<span class="doccomment">/// Scan comment, declaration, or CDATA section, with initial &quot;&lt;!&quot; already consumed.
+<span class="doccomment">/// Scan comment, declaration, or CDATA section, with initial "&lt;!" already consumed.
 /// Returns byte offset on match.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_inline_html_comment(
     bytes: <span class="kw-2">&amp;</span>[u8],
@@ -2560,22 +2560,22 @@
     <span class="kw">let </span>c = <span class="kw-2">*</span>bytes.get(ix)<span class="question-mark">?</span>;
     ix += <span class="number">1</span>;
     <span class="kw">match </span>c {
-        <span class="string">b&#39;-&#39; </span>=&gt; {
-            <span class="kw">let </span>dashes = scan_ch_repeat(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b&#39;-&#39;</span>);
+        <span class="string">b'-' </span>=&gt; {
+            <span class="kw">let </span>dashes = scan_ch_repeat(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b'-'</span>);
             <span class="kw">if </span>dashes &lt; <span class="number">1 </span>{
                 <span class="kw">return </span><span class="prelude-val">None</span>;
             }
-            <span class="comment">// Saw &quot;&lt;!--&quot;, scan comment.
+            <span class="comment">// Saw "&lt;!--", scan comment.
             </span>ix += dashes;
-            <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b&#39;&gt;&#39;</span>) == <span class="number">1 </span>{
+            <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b'&gt;'</span>) == <span class="number">1 </span>{
                 <span class="kw">return </span><span class="prelude-val">None</span>;
             }
 
-            <span class="kw">while let </span><span class="prelude-val">Some</span>(x) = memchr(<span class="string">b&#39;-&#39;</span>, <span class="kw-2">&amp;</span>bytes[ix..]) {
+            <span class="kw">while let </span><span class="prelude-val">Some</span>(x) = memchr(<span class="string">b'-'</span>, <span class="kw-2">&amp;</span>bytes[ix..]) {
                 ix += x + <span class="number">1</span>;
-                <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b&#39;-&#39;</span>) == <span class="number">1 </span>{
+                <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b'-'</span>) == <span class="number">1 </span>{
                     ix += <span class="number">1</span>;
-                    <span class="kw">return if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b&#39;&gt;&#39;</span>) == <span class="number">1 </span>{
+                    <span class="kw">return if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b'&gt;'</span>) == <span class="number">1 </span>{
                         <span class="prelude-val">Some</span>(ix + <span class="number">1</span>)
                     } <span class="kw">else </span>{
                         <span class="prelude-val">None
@@ -2584,29 +2584,29 @@
             }
             <span class="prelude-val">None
         </span>}
-        <span class="string">b&#39;[&#39; </span><span class="kw">if </span>bytes[ix..].starts_with(<span class="string">b&quot;CDATA[&quot;</span>) &amp;&amp; ix &gt; scan_guard.cdata =&gt; {
-            ix += <span class="string">b&quot;CDATA[&quot;</span>.len();
-            ix = memchr(<span class="string">b&#39;]&#39;</span>, <span class="kw-2">&amp;</span>bytes[ix..]).map_or(bytes.len(), |x| ix + x);
-            <span class="kw">let </span>close_brackets = scan_ch_repeat(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b&#39;]&#39;</span>);
+        <span class="string">b'[' </span><span class="kw">if </span>bytes[ix..].starts_with(<span class="string">b"CDATA["</span>) &amp;&amp; ix &gt; scan_guard.cdata =&gt; {
+            ix += <span class="string">b"CDATA["</span>.len();
+            ix = memchr(<span class="string">b']'</span>, <span class="kw-2">&amp;</span>bytes[ix..]).map_or(bytes.len(), |x| ix + x);
+            <span class="kw">let </span>close_brackets = scan_ch_repeat(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b']'</span>);
             ix += close_brackets;
 
-            <span class="kw">if </span>close_brackets == <span class="number">0 </span>|| scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b&#39;&gt;&#39;</span>) == <span class="number">0 </span>{
+            <span class="kw">if </span>close_brackets == <span class="number">0 </span>|| scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b'&gt;'</span>) == <span class="number">0 </span>{
                 scan_guard.cdata = ix;
                 <span class="prelude-val">None
             </span>} <span class="kw">else </span>{
                 <span class="prelude-val">Some</span>(ix + <span class="number">1</span>)
             }
         }
-        <span class="string">b&#39;A&#39;</span>..=<span class="string">b&#39;Z&#39; </span><span class="kw">if </span>ix &gt; scan_guard.declaration =&gt; {
+        <span class="string">b'A'</span>..=<span class="string">b'Z' </span><span class="kw">if </span>ix &gt; scan_guard.declaration =&gt; {
             <span class="comment">// Scan declaration.
-            </span>ix += scan_while(<span class="kw-2">&amp;</span>bytes[ix..], |c| c &gt;= <span class="string">b&#39;A&#39; </span>&amp;&amp; c &lt;= <span class="string">b&#39;Z&#39;</span>);
+            </span>ix += scan_while(<span class="kw-2">&amp;</span>bytes[ix..], |c| c &gt;= <span class="string">b'A' </span>&amp;&amp; c &lt;= <span class="string">b'Z'</span>);
             <span class="kw">let </span>whitespace = scan_while(<span class="kw-2">&amp;</span>bytes[ix..], is_ascii_whitespace);
             <span class="kw">if </span>whitespace == <span class="number">0 </span>{
                 <span class="kw">return </span><span class="prelude-val">None</span>;
             }
             ix += whitespace;
-            ix = memchr(<span class="string">b&#39;&gt;&#39;</span>, <span class="kw-2">&amp;</span>bytes[ix..]).map_or(bytes.len(), |x| ix + x);
-            <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b&#39;&gt;&#39;</span>) == <span class="number">0 </span>{
+            ix = memchr(<span class="string">b'&gt;'</span>, <span class="kw-2">&amp;</span>bytes[ix..]).map_or(bytes.len(), |x| ix + x);
+            <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b'&gt;'</span>) == <span class="number">0 </span>{
                 scan_guard.declaration = ix;
                 <span class="prelude-val">None
             </span>} <span class="kw">else </span>{
@@ -2617,7 +2617,7 @@
     }
 }
 
-<span class="doccomment">/// Scan processing directive, with initial &quot;&lt;?&quot; already consumed.
+<span class="doccomment">/// Scan processing directive, with initial "&lt;?" already consumed.
 /// Returns the next byte offset on success.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scan_inline_html_processing(
     bytes: <span class="kw-2">&amp;</span>[u8],
@@ -2627,9 +2627,9 @@
     <span class="kw">if </span>ix &lt;= scan_guard.processing {
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="kw">while let </span><span class="prelude-val">Some</span>(offset) = memchr(<span class="string">b&#39;?&#39;</span>, <span class="kw-2">&amp;</span>bytes[ix..]) {
+    <span class="kw">while let </span><span class="prelude-val">Some</span>(offset) = memchr(<span class="string">b'?'</span>, <span class="kw-2">&amp;</span>bytes[ix..]) {
         ix += offset + <span class="number">1</span>;
-        <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b&#39;&gt;&#39;</span>) == <span class="number">1 </span>{
+        <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>bytes[ix..], <span class="string">b'&gt;'</span>) == <span class="number">1 </span>{
             <span class="kw">return </span><span class="prelude-val">Some</span>(ix + <span class="number">1</span>);
         }
     }
@@ -2643,13 +2643,13 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>overflow_list() {
         <span class="macro">assert!</span>(
-            scan_listitem(<span class="string">b&quot;4444444444444444444444444444444444444444444444444444444444!&quot;</span>).is_none()
+            scan_listitem(<span class="string">b"4444444444444444444444444444444444444444444444444444444444!"</span>).is_none()
         );
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>overflow_by_addition() {
-        <span class="macro">assert!</span>(scan_listitem(<span class="string">b&quot;1844674407370955161615!&quot;</span>).is_none());
+        <span class="macro">assert!</span>(scan_listitem(<span class="string">b"1844674407370955161615!"</span>).is_none());
     }
 }
 </code></pre></div></section></main></body></html>

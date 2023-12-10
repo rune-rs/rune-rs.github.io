@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/compile.rs`."><title>compile.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/compile.rs`."><title>compile.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -559,7 +559,7 @@
 
     <span class="kw">loop </span>{
         <span class="kw">while let </span><span class="prelude-val">Some</span>(entry) = worker.q.next_build_entry() {
-            <span class="macro">tracing::trace!</span>(item = <span class="question-mark">?</span>worker.q.pool.item(entry.item_meta.item), <span class="string">&quot;next build entry&quot;</span>);
+            <span class="macro">tracing::trace!</span>(item = <span class="question-mark">?</span>worker.q.pool.item(entry.item_meta.item), <span class="string">"next build entry"</span>);
             <span class="kw">let </span>source_id = entry.item_meta.location.source_id;
 
             <span class="kw">let </span>task = CompileBuildEntry {
@@ -586,18 +586,18 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">struct </span>CompileBuildEntry&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;arena</span>&gt; {
-    options: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Options,
-    q: Query&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;arena</span>&gt;,
+<span class="kw">struct </span>CompileBuildEntry&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; {
+    options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Options,
+    q: Query&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;arena</span>&gt; CompileBuildEntry&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;arena</span>&gt; {
-    <span class="kw">fn </span>compiler1&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;hir</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">'arena</span>&gt; CompileBuildEntry&lt;<span class="lifetime">'_</span>, <span class="lifetime">'arena</span>&gt; {
+    <span class="kw">fn </span>compiler1&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>,
         location: Location,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
-        asm: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Assembly,
-    ) -&gt; alloc::Result&lt;v1::Ctxt&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;arena</span>&gt;&gt; {
+        asm: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Assembly,
+    ) -&gt; alloc::Result&lt;v1::Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'arena</span>&gt;&gt; {
         <span class="prelude-val">Ok</span>(v1::Ctxt {
             source_id: location.source_id,
             q: <span class="self">self</span>.q.borrow(),
@@ -623,7 +623,7 @@
 
         <span class="kw">match </span>build {
             Build::Query =&gt; {
-                <span class="macro">tracing::trace!</span>(<span class="string">&quot;query: {}&quot;</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
+                <span class="macro">tracing::trace!</span>(<span class="string">"query: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
                 <span class="kw">let </span>used = <span class="kw">if </span><span class="self">self</span>.q.is_used(<span class="kw-2">&amp;</span>item_meta) {
                     Used::Used
@@ -645,7 +645,7 @@
                 }
             }
             Build::Function(f) =&gt; {
-                <span class="macro">tracing::trace!</span>(<span class="string">&quot;function: {}&quot;</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
+                <span class="macro">tracing::trace!</span>(<span class="string">"function: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
                 <span class="kw">use </span><span class="self">self</span>::v1::assemble;
 
@@ -658,7 +658,7 @@
                     <span class="kw">else </span>{
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
                             <span class="kw-2">&amp;</span>f.ast,
-                            <span class="string">&quot;Impl item has not been expanded&quot;</span>,
+                            <span class="string">"Impl item has not been expanded"</span>,
                         ));
                     };
 
@@ -672,7 +672,7 @@
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_meta(
                             <span class="kw-2">&amp;</span>f.ast,
                             meta.info(<span class="self">self</span>.q.pool)<span class="question-mark">?</span>,
-                            <span class="string">&quot;type for associated function&quot;</span>,
+                            <span class="string">"type for associated function"</span>,
                         ));
                     };
 
@@ -737,7 +737,7 @@
                 }
             }
             Build::Closure(closure) =&gt; {
-                <span class="macro">tracing::trace!</span>(<span class="string">&quot;closure: {}&quot;</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
+                <span class="macro">tracing::trace!</span>(<span class="string">"closure: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
                 <span class="kw">use </span><span class="self">self</span>::v1::assemble;
 
@@ -776,7 +776,7 @@
                 }
             }
             Build::AsyncBlock(b) =&gt; {
-                <span class="macro">tracing::trace!</span>(<span class="string">&quot;async block: {}&quot;</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
+                <span class="macro">tracing::trace!</span>(<span class="string">"async block: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
                 <span class="kw">use </span><span class="self">self</span>::v1::assemble;
 
@@ -812,7 +812,7 @@
                 }
             }
             Build::Unused =&gt; {
-                <span class="macro">tracing::trace!</span>(<span class="string">&quot;unused: {}&quot;</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
+                <span class="macro">tracing::trace!</span>(<span class="string">"unused: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
                 <span class="kw">if </span>!item_meta.visibility.is_public() {
                     <span class="self">self</span>.q
@@ -821,7 +821,7 @@
                 }
             }
             Build::Import(import) =&gt; {
-                <span class="macro">tracing::trace!</span>(<span class="string">&quot;import: {}&quot;</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
+                <span class="macro">tracing::trace!</span>(<span class="string">"import: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
                 <span class="kw">let </span>used = <span class="kw">if </span><span class="self">self</span>.q.is_used(<span class="kw-2">&amp;</span>item_meta) {
                     Used::Used
@@ -863,7 +863,7 @@
                 }
             }
             Build::ReExport =&gt; {
-                <span class="macro">tracing::trace!</span>(<span class="string">&quot;re-export: {}&quot;</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
+                <span class="macro">tracing::trace!</span>(<span class="string">"re-export: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
                 <span class="kw">let </span>used = <span class="kw">if </span><span class="self">self</span>.q.is_used(<span class="kw-2">&amp;</span>item_meta) {
                     Used::Used
@@ -895,20 +895,20 @@
     }
 }
 
-<span class="kw">fn </span>format_fn_args&lt;<span class="lifetime">&#39;a</span>, I&gt;(
+<span class="kw">fn </span>format_fn_args&lt;<span class="lifetime">'a</span>, I&gt;(
     sources: <span class="kw-2">&amp;</span>Sources,
     location: Location,
     arguments: I,
 ) -&gt; compile::Result&lt;Box&lt;[Box&lt;str&gt;]&gt;&gt;
 <span class="kw">where
-    </span>I: IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ast::FnArg&gt;,
+    </span>I: IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ast::FnArg&gt;,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>args = Vec::new();
 
     <span class="kw">for </span>arg <span class="kw">in </span>arguments {
         <span class="kw">match </span>arg {
             ast::FnArg::SelfValue(..) =&gt; {
-                args.try_push(Box::try_from(<span class="string">&quot;self&quot;</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                args.try_push(Box::try_from(<span class="string">"self"</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
             }
             ast::FnArg::Pat(pat) =&gt; {
                 <span class="kw">let </span>span = pat.span();
@@ -916,7 +916,7 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = sources.source(location.source_id, span) {
                     args.try_push(Box::try_from(s)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    args.try_push(Box::try_from(<span class="string">&quot;*&quot;</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                    args.try_push(Box::try_from(<span class="string">"*"</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 }
             }
         }

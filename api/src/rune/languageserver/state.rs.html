@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/languageserver/state.rs`."><title>state.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/languageserver/state.rs`."><title>state.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1248,12 +1248,12 @@
 }
 
 <span class="doccomment">/// Shared server state.
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>State&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>State&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The output abstraction.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) output: Output,
     <span class="doccomment">/// Sender to indicate interest in rebuilding the project.
     /// Can be triggered on modification.
-    </span>rebuild_notify: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Notify,
+    </span>rebuild_notify: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Notify,
     <span class="doccomment">/// The rune context to build for.
     </span>context: <span class="kw">crate</span>::Context,
     <span class="doccomment">/// Build options.
@@ -1266,11 +1266,11 @@
     </span>workspace: Workspace,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; State&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; State&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Construct a new state.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new(
         output: Output,
-        rebuild_notify: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Notify,
+        rebuild_notify: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Notify,
         context: Context,
         options: Options,
     ) -&gt; <span class="self">Self </span>{
@@ -1350,7 +1350,7 @@
 
         <span class="kw">let </span>location = lsp::Location { uri: url, range };
 
-        <span class="macro">tracing::trace!</span>(<span class="string">&quot;go to location: {:?}&quot;</span>, location);
+        <span class="macro">tracing::trace!</span>(<span class="string">"go to location: {:?}"</span>, location);
         <span class="prelude-val">Some</span>(location)
     }
 
@@ -1382,7 +1382,7 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>results = Vec::new();
 
-        <span class="kw">let </span>can_use_instance_fn: <span class="kw-2">&amp;</span>[<span class="kw">_</span>] = <span class="kw-2">&amp;</span>[<span class="string">&#39;.&#39;</span>];
+        <span class="kw">let </span>can_use_instance_fn: <span class="kw-2">&amp;</span>[<span class="kw">_</span>] = <span class="kw-2">&amp;</span>[<span class="string">'.'</span>];
         <span class="kw">let </span>first_char = symbol.remove(<span class="number">0</span>);
         <span class="kw">let </span>symbol = symbol.trim();
 
@@ -1429,7 +1429,7 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
         };
 
-        <span class="kw">let </span>formatted = String::from_utf8(formatted).context(<span class="string">&quot;Format produced invalid utf8&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>formatted = String::from_utf8(formatted).context(<span class="string">"Format produced invalid utf8"</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Only modify if changed
         </span><span class="prelude-val">Ok</span>(<span class="kw">if </span>source != formatted {
@@ -1474,10 +1474,10 @@
 
             <span class="kw">match </span>result {
                 <span class="prelude-val">Err</span>(error) =&gt; {
-                    <span class="macro">tracing::error!</span>(<span class="string">&quot;error loading workspace: {error}&quot;</span>);
+                    <span class="macro">tracing::error!</span>(<span class="string">"error loading workspace: {error}"</span>);
 
                     <span class="kw">for </span>error <span class="kw">in </span>error.chain().skip(<span class="number">1</span>) {
-                        <span class="macro">tracing::error!</span>(<span class="string">&quot;caused by: {error}&quot;</span>);
+                        <span class="macro">tracing::error!</span>(<span class="string">"caused by: {error}"</span>);
                     }
                 }
                 <span class="prelude-val">Ok</span>(script_builds) =&gt; {
@@ -1493,7 +1493,7 @@
 
         <span class="kw">for </span>(url, source) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.workspace.sources {
             <span class="kw">if </span>visited.contains(url) {
-                <span class="macro">tracing::trace!</span>(url = <span class="question-mark">?</span>url.try_to_string()<span class="question-mark">?</span>, <span class="string">&quot;already populated by workspace&quot;</span>);
+                <span class="macro">tracing::trace!</span>(url = <span class="question-mark">?</span>url.try_to_string()<span class="question-mark">?</span>, <span class="string">"already populated by workspace"</span>);
                 <span class="kw">continue</span>;
             }
 
@@ -1501,7 +1501,7 @@
                 <span class="kw">continue</span>;
             }
 
-            <span class="macro">tracing::trace!</span>(url = <span class="question-mark">?</span>url.try_to_string()<span class="question-mark">?</span>, <span class="string">&quot;build plain source&quot;</span>);
+            <span class="macro">tracing::trace!</span>(url = <span class="question-mark">?</span>url.try_to_string()<span class="question-mark">?</span>, <span class="string">"build plain source"</span>);
 
             <span class="kw">let </span><span class="kw-2">mut </span>build = Build::default();
 
@@ -1515,7 +1515,7 @@
         }
 
         <span class="comment">// We need to pupulate diagnostics for everything we know about, in
-        // order to clear errors which might&#39;ve previously been set.
+        // order to clear errors which might've previously been set.
         </span><span class="kw">for </span>url <span class="kw">in </span><span class="self">self</span>.workspace.removed.drain(..) {
             reporter.ensure(<span class="kw-2">&amp;</span>url);
         }
@@ -1556,7 +1556,7 @@
             <span class="macro">tracing::info!</span>(
                 url = <span class="question-mark">?</span>url.try_to_string()<span class="question-mark">?</span>,
                 diagnostics = diagnostics.len(),
-                <span class="string">&quot;publishing diagnostics&quot;
+                <span class="string">"publishing diagnostics"
             </span>);
 
             <span class="kw">let </span>diagnostics = lsp::PublishDiagnosticsParams {
@@ -1582,7 +1582,7 @@
         diagnostics: <span class="kw-2">&amp;mut </span>workspace::Diagnostics,
         workspace: <span class="kw-2">&amp;</span>Workspace,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Build&gt;, anyhow::Error&gt; {
-        <span class="macro">tracing::info!</span>(url = <span class="question-mark">?</span>url.try_to_string(), <span class="string">&quot;building workspace&quot;</span>);
+        <span class="macro">tracing::info!</span>(url = <span class="question-mark">?</span>url.try_to_string(), <span class="string">"building workspace"</span>);
 
         <span class="kw">let </span>source = <span class="kw">match </span>workspace.sources.get(url) {
             <span class="prelude-val">Some</span>(source) =&gt; source.chunks().try_collect::&lt;String&gt;()<span class="question-mark">?</span>,
@@ -1612,7 +1612,7 @@
                 <span class="kw">continue</span>;
             };
 
-            <span class="macro">tracing::trace!</span>(<span class="string">&quot;Found manifest source: {}&quot;</span>, url);
+            <span class="macro">tracing::trace!</span>(<span class="string">"Found manifest source: {}"</span>, url);
 
             <span class="kw">let </span>source = <span class="kw">match </span>workspace.sources.get(<span class="kw-2">&amp;</span>url) {
                 <span class="prelude-val">Some</span>(source) =&gt; source.chunks().try_collect::&lt;String&gt;()<span class="question-mark">?</span>,
@@ -1680,11 +1680,11 @@
             .map(|(k, v)| <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, alloc::Error&gt;((<span class="kw-2">*</span>k, v.try_to_string()<span class="question-mark">?</span>)))
             .try_collect::&lt;alloc::Result&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">??</span>;
 
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>id_to_url, <span class="string">&quot;emitting manifest diagnostics&quot;</span>);
+        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>id_to_url, <span class="string">"emitting manifest diagnostics"</span>);
     }
 
     <span class="kw">for </span>diagnostic <span class="kw">in </span>diagnostics.diagnostics() {
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>diagnostic, <span class="string">&quot;workspace diagnostic&quot;</span>);
+        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>diagnostic, <span class="string">"workspace diagnostic"</span>);
 
         <span class="kw">let </span>workspace::Diagnostic::Fatal(f) = diagnostic;
         report(build, reporter, f.source_id(), f.error(), to_error)<span class="question-mark">?</span>;
@@ -1706,11 +1706,11 @@
             .map(|(k, v)| <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, alloc::Error&gt;((<span class="kw-2">*</span>k, v.try_to_string()<span class="question-mark">?</span>)))
             .try_collect::&lt;alloc::Result&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">??</span>;
 
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>id_to_url, <span class="string">&quot;emitting script diagnostics&quot;</span>);
+        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>id_to_url, <span class="string">"emitting script diagnostics"</span>);
     }
 
     <span class="kw">for </span>diagnostic <span class="kw">in </span>diagnostics.diagnostics() {
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>diagnostic, id_to_url = <span class="question-mark">?</span>build.id_to_url, <span class="string">&quot;script diagnostic&quot;</span>);
+        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>diagnostic, id_to_url = <span class="question-mark">?</span>build.id_to_url, <span class="string">"script diagnostic"</span>);
 
         <span class="kw">match </span>diagnostic {
             Diagnostic::Fatal(f) =&gt; <span class="kw">match </span>f.kind() {
@@ -1735,7 +1735,7 @@
 
                             diagnostics.try_push(to_error(
                                 range,
-                                <span class="macro">format_args!</span>(<span class="string">&quot;Missing function with hash `{}`&quot;</span>, hash),
+                                <span class="macro">format_args!</span>(<span class="string">"Missing function with hash `{}`"</span>, hash),
                             )<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                         }
                     }
@@ -1827,7 +1827,7 @@
         <span class="kw">let </span>(found_span, definition) = <span class="self">self</span>.index.definitions.range(..=span).next_back()<span class="question-mark">?</span>;
 
         <span class="kw">if </span>span.start &gt;= found_span.start &amp;&amp; span.end &lt;= found_span.end {
-            <span class="macro">tracing::trace!</span>(<span class="string">&quot;found {:?}&quot;</span>, definition);
+            <span class="macro">tracing::trace!</span>(<span class="string">"found {:?}"</span>, definition);
             <span class="kw">return </span><span class="prelude-val">Some</span>(definition);
         }
 
@@ -1865,7 +1865,7 @@
 
         <span class="comment">// The set of tokens that delimit symbols.
         </span><span class="kw">let </span>x: <span class="kw-2">&amp;</span>[<span class="kw">_</span>] = <span class="kw-2">&amp;</span>[
-            <span class="string">&#39;,&#39;</span>, <span class="string">&#39;;&#39;</span>, <span class="string">&#39;(&#39;</span>, <span class="string">&#39;.&#39;</span>, <span class="string">&#39;=&#39;</span>, <span class="string">&#39;+&#39;</span>, <span class="string">&#39;-&#39;</span>, <span class="string">&#39;*&#39;</span>, <span class="string">&#39;/&#39;</span>, <span class="string">&#39;}&#39;</span>, <span class="string">&#39;{&#39;</span>, <span class="string">&#39;]&#39;</span>, <span class="string">&#39;[&#39;</span>, <span class="string">&#39;)&#39;</span>, <span class="string">&#39;:&#39;</span>,
+            <span class="string">','</span>, <span class="string">';'</span>, <span class="string">'('</span>, <span class="string">'.'</span>, <span class="string">'='</span>, <span class="string">'+'</span>, <span class="string">'-'</span>, <span class="string">'*'</span>, <span class="string">'/'</span>, <span class="string">'}'</span>, <span class="string">'{'</span>, <span class="string">']'</span>, <span class="string">'['</span>, <span class="string">')'</span>, <span class="string">':'</span>,
         ];
 
         <span class="kw">let </span>end_search = (offset - start_byte + <span class="number">1</span>).min(chunk.len());
@@ -1886,8 +1886,8 @@
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>Source {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.content)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="self">self</span>.content)
     }
 }
 
@@ -1919,7 +1919,7 @@
         }
 
         <span class="kw">if </span>utf16_offset &gt; character {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;character is not on an offset boundary&quot;</span>));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">"character is not on an offset boundary"</span>));
         }
 
         utf16_offset += c.len_utf16();
@@ -2109,7 +2109,7 @@
 }
 
 <span class="kw">impl </span>CompileVisitor <span class="kw">for </span>Visitor {
-    <span class="kw">fn </span>visit_meta(<span class="kw-2">&amp;mut </span><span class="self">self</span>, location: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Located, meta: MetaRef&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), MetaError&gt; {
+    <span class="kw">fn </span>visit_meta(<span class="kw-2">&amp;mut </span><span class="self">self</span>, location: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Located, meta: MetaRef&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), MetaError&gt; {
         <span class="kw">let </span><span class="prelude-val">Some</span>(source) = meta.source <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         };
@@ -2160,7 +2160,7 @@
         <span class="kw">let </span>index = <span class="self">self</span>.indexes.entry(location.source_id).or_try_default()<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(d) = index.definitions.insert(location.span, definition) {
-            <span class="macro">tracing::warn!</span>(<span class="string">&quot;Replaced definition: {:?}&quot;</span>, d.kind)
+            <span class="macro">tracing::warn!</span>(<span class="string">"Replaced definition: {:?}"</span>, d.kind)
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -2180,7 +2180,7 @@
         <span class="kw">let </span>index = <span class="self">self</span>.indexes.entry(source_id).or_try_default()<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(d) = index.definitions.insert(span.span(), definition) {
-            <span class="macro">tracing::warn!</span>(<span class="string">&quot;replaced definition: {:?}&quot;</span>, d.kind)
+            <span class="macro">tracing::warn!</span>(<span class="string">"replaced definition: {:?}"</span>, d.kind)
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -2197,21 +2197,21 @@
         <span class="kw">let </span>index = <span class="self">self</span>.indexes.entry(location.source_id).or_try_default()<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(d) = index.definitions.insert(location.span, definition) {
-            <span class="macro">tracing::warn!</span>(<span class="string">&quot;replaced definition: {:?}&quot;</span>, d.kind)
+            <span class="macro">tracing::warn!</span>(<span class="string">"replaced definition: {:?}"</span>, d.kind)
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">struct </span>ScriptSourceLoader&lt;<span class="lifetime">&#39;a</span>&gt; {
-    sources: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;Url, Source&gt;,
+<span class="kw">struct </span>ScriptSourceLoader&lt;<span class="lifetime">'a</span>&gt; {
+    sources: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>HashMap&lt;Url, Source&gt;,
     base: compile::FileSourceLoader,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ScriptSourceLoader&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ScriptSourceLoader&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Construct a new source loader.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new(sources: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;Url, Source&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new(sources: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>HashMap&lt;Url, Source&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             sources,
             base: compile::FileSourceLoader::new(),
@@ -2251,11 +2251,11 @@
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>a = base.clone();
-        a.push(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}.rn&quot;</span>, last));
+        a.push(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}.rn"</span>, last));
 
         <span class="kw">let </span><span class="kw-2">mut </span>b = base;
         b.push(last);
-        b.push(<span class="string">&quot;mod.rn&quot;</span>);
+        b.push(<span class="string">"mod.rn"</span>);
 
         <span class="kw">let </span>a_url = <span class="kw">crate</span>::languageserver::url::from_file_path(<span class="kw-2">&amp;</span>a).with_span(span)<span class="question-mark">?</span>;
         <span class="kw">let </span>b_url = <span class="kw">crate</span>::languageserver::url::from_file_path(<span class="kw-2">&amp;</span>b).with_span(span)<span class="question-mark">?</span>;
@@ -2264,14 +2264,14 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">crate</span>::compile::SourceLoader <span class="kw">for </span>ScriptSourceLoader&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; <span class="kw">crate</span>::compile::SourceLoader <span class="kw">for </span>ScriptSourceLoader&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>load(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         root: <span class="kw-2">&amp;</span>Path,
         item: <span class="kw-2">&amp;</span>Item,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     ) -&gt; compile::Result&lt;<span class="kw">crate</span>::Source&gt; {
-        <span class="macro">tracing::trace!</span>(<span class="string">&quot;load {} (root: {})&quot;</span>, item, root.display());
+        <span class="macro">tracing::trace!</span>(<span class="string">"load {} (root: {})"</span>, item, root.display());
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(candidates) = <span class="self">Self</span>::candidates(root, item, span)<span class="question-mark">? </span>{
             <span class="kw">for </span>(url, path) <span class="kw">in </span>candidates {
@@ -2285,14 +2285,14 @@
     }
 }
 
-<span class="kw">struct </span>WorkspaceSourceLoader&lt;<span class="lifetime">&#39;a</span>&gt; {
-    sources: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;Url, Source&gt;,
+<span class="kw">struct </span>WorkspaceSourceLoader&lt;<span class="lifetime">'a</span>&gt; {
+    sources: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>HashMap&lt;Url, Source&gt;,
     base: workspace::FileSourceLoader,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; WorkspaceSourceLoader&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; WorkspaceSourceLoader&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Construct a new source loader.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new(sources: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;Url, Source&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new(sources: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>HashMap&lt;Url, Source&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             sources,
             base: workspace::FileSourceLoader::new(),
@@ -2300,7 +2300,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; workspace::SourceLoader <span class="kw">for </span>WorkspaceSourceLoader&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; workspace::SourceLoader <span class="kw">for </span>WorkspaceSourceLoader&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>load(<span class="kw-2">&amp;mut </span><span class="self">self</span>, span: Span, path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::Source, WorkspaceError&gt; {
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(url) = <span class="kw">crate</span>::languageserver::url::from_file_path(path) {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = <span class="self">self</span>.sources.get(<span class="kw-2">&amp;</span>url) {

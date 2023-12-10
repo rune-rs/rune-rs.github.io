@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/diagnostics/emit.rs`."><title>emit.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/diagnostics/emit.rs`."><title>emit.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -746,7 +746,7 @@
 
 <span class="macro">cfg_std! </span>{
     <span class="kw">impl </span>std::error::Error <span class="kw">for </span>EmitError {
-        <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>std::error::Error + <span class="lifetime">&#39;static</span>)&gt; {
+        <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>std::error::Error + <span class="lifetime">'static</span>)&gt; {
             <span class="kw">match </span><span class="self">self </span>{
                 EmitError::Io(error) =&gt; <span class="prelude-val">Some</span>(error),
                 EmitError::Alloc(error) =&gt; <span class="prelude-val">Some</span>(error),
@@ -844,14 +844,14 @@
             </span><span class="kw">match </span>at.kind() {
                 VmErrorKind::UnsupportedBinaryOperation { lhs, rhs, .. } =&gt; {
                     notes.extend(<span class="macro">vec!</span>[
-                        <span class="macro">format!</span>(<span class="string">&quot;Left hand side has type `{}`&quot;</span>, lhs),
-                        <span class="macro">format!</span>(<span class="string">&quot;Right hand side has type `{}`&quot;</span>, rhs),
+                        <span class="macro">format!</span>(<span class="string">"Left hand side has type `{}`"</span>, lhs),
+                        <span class="macro">format!</span>(<span class="string">"Right hand side has type `{}`"</span>, rhs),
                     ]);
                 }
                 VmErrorKind::BadArgumentCount { actual, expected } =&gt; {
                     notes.extend([
-                        <span class="macro">format!</span>(<span class="string">&quot;Expected `{}`&quot;</span>, expected),
-                        <span class="macro">format!</span>(<span class="string">&quot;Got `{}`&quot;</span>, actual),
+                        <span class="macro">format!</span>(<span class="string">"Expected `{}`"</span>, expected),
+                        <span class="macro">format!</span>(<span class="string">"Got `{}`"</span>, actual),
                     ]);
                 }
                 <span class="kw">_ </span>=&gt; {}
@@ -895,7 +895,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(ident) = get_ident(at, instance_hash) {
                         labels.push(d::Label::secondary(source_id, span.range()).with_message(
                             <span class="macro">format!</span>(
-                                <span class="string">&quot;This corresponds to the `{instance}::{ident}` instance function&quot;
+                                <span class="string">"This corresponds to the `{instance}::{ident}` instance function"
                             </span>),
                         ));
                     }
@@ -903,7 +903,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(protocol) = Protocol::from_hash(instance_hash) {
                         labels.push(
                             d::Label::secondary(source_id, span.range())
-                                .with_message(<span class="macro">format!</span>(<span class="string">&quot;This corresponds to the `{protocol}` protocol function for `{instance}`&quot;</span>)),
+                                .with_message(<span class="macro">format!</span>(<span class="string">"This corresponds to the `{protocol}` protocol function for `{instance}`"</span>)),
                         );
                     }
                 }
@@ -918,7 +918,7 @@
         term::emit(out, <span class="kw-2">&amp;</span>config, sources, <span class="kw-2">&amp;</span>diagnostic)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>!backtrace.is_empty() {
-            <span class="macro">writeln!</span>(out, <span class="string">&quot;Backtrace:&quot;</span>)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(out, <span class="string">"Backtrace:"</span>)<span class="question-mark">?</span>;
 
             <span class="kw">for </span>frame <span class="kw">in </span><span class="kw-2">&amp;</span>backtrace {
                 <span class="kw">let </span><span class="prelude-val">Some</span>(source) = sources.get(frame.source_id) <span class="kw">else </span>{
@@ -932,15 +932,15 @@
                     <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
                 };
 
-                <span class="macro">writeln!</span>(out, <span class="string">&quot;{}:{line}:{line_count}:&quot;</span>, source.name())<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(out, <span class="string">&quot;{prefix}&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(out, <span class="string">"{}:{line}:{line_count}:"</span>, source.name())<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(out, <span class="string">"{prefix}"</span>)<span class="question-mark">?</span>;
                 out.set_color(<span class="kw-2">&amp;</span>red)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(out, <span class="string">&quot;{mid}&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(out, <span class="string">"{mid}"</span>)<span class="question-mark">?</span>;
                 out.reset()<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(
                     out,
-                    <span class="string">&quot;{}&quot;</span>,
-                    suffix.trim_end_matches(|c| <span class="macro">matches!</span>(c, <span class="string">&#39;\n&#39; </span>| <span class="string">&#39;\r&#39;</span>))
+                    <span class="string">"{}"</span>,
+                    suffix.trim_end_matches(|c| <span class="macro">matches!</span>(c, <span class="string">'\n' </span>| <span class="string">'\r'</span>))
                 )<span class="question-mark">?</span>;
             }
         }
@@ -984,7 +984,7 @@
                     <span class="macro">writeln!</span>(out)<span class="question-mark">?</span>;
                 }
 
-                <span class="macro">writeln!</span>(out, <span class="string">&quot;fn {} ({}):&quot;</span>, signature, hash)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(out, <span class="string">"fn {} ({}):"</span>, signature, hash)<span class="question-mark">?</span>;
             }
 
             <span class="kw">if </span>with_source {
@@ -996,13 +996,13 @@
             }
 
             <span class="kw">for </span>label <span class="kw">in </span>debug.map(|d| d.labels.as_slice()).unwrap_or_default() {
-                <span class="macro">writeln!</span>(out, <span class="string">&quot;{}:&quot;</span>, label)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(out, <span class="string">"{}:"</span>, label)<span class="question-mark">?</span>;
             }
 
-            <span class="macro">write!</span>(out, <span class="string">&quot;  {:04} = {}&quot;</span>, n, inst)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(out, <span class="string">"  {:04} = {}"</span>, n, inst)<span class="question-mark">?</span>;
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(comment) = debug.and_then(|d| d.comment.as_ref()) {
-                <span class="macro">write!</span>(out, <span class="string">&quot; // {}&quot;</span>, comment)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(out, <span class="string">" // {}"</span>, comment)<span class="question-mark">?</span>;
             }
 
             <span class="macro">writeln!</span>(out)<span class="question-mark">?</span>;
@@ -1031,15 +1031,15 @@
             <span class="kw">let </span>inner = <span class="kw-2">&amp;</span>line[span.start.into_usize()..end];
             <span class="kw">let </span>after = <span class="kw-2">&amp;</span>line[end..];
 
-            <span class="macro">write!</span>(out, <span class="string">&quot;  {}:{: &lt;3} - {}&quot;</span>, <span class="self">self</span>.name(), count + <span class="number">1</span>, before,)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(out, <span class="string">"  {}:{: &lt;3} - {}"</span>, <span class="self">self</span>.name(), count + <span class="number">1</span>, before,)<span class="question-mark">?</span>;
 
             out.set_color(<span class="kw-2">&amp;</span>highlight)<span class="question-mark">?</span>;
-            <span class="macro">write!</span>(out, <span class="string">&quot;{}&quot;</span>, inner)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(out, <span class="string">"{}"</span>, inner)<span class="question-mark">?</span>;
             out.reset()<span class="question-mark">?</span>;
-            <span class="macro">write!</span>(out, <span class="string">&quot;{}&quot;</span>, after)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(out, <span class="string">"{}"</span>, after)<span class="question-mark">?</span>;
 
             <span class="kw">if </span>span.end != end {
-                <span class="macro">write!</span>(out, <span class="string">&quot; .. trimmed&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(out, <span class="string">" .. trimmed"</span>)<span class="question-mark">?</span>;
             }
 
             <span class="macro">writeln!</span>(out)<span class="question-mark">?</span>;
@@ -1101,17 +1101,17 @@
         WarningDiagnosticKind::LetPatternMightPanic { span, .. } =&gt; {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(binding) = sources.source(this.source_id(), <span class="kw-2">*</span>span) {
                 <span class="kw">let </span><span class="kw-2">mut </span>note = String::new();
-                <span class="macro">writeln!</span>(note, <span class="string">&quot;Hint: Rewrite to:&quot;</span>)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(note, <span class="string">&quot;if {} {{&quot;</span>, binding)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(note, <span class="string">&quot;    // ..&quot;</span>)<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(note, <span class="string">&quot;}}&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(note, <span class="string">"Hint: Rewrite to:"</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(note, <span class="string">"if {} {{"</span>, binding)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(note, <span class="string">"    // .."</span>)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(note, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
                 notes.push(note.into_std());
             }
         }
         WarningDiagnosticKind::RemoveTupleCallParams { variant, .. } =&gt; {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(variant) = sources.source(this.source_id(), <span class="kw-2">*</span>variant) {
                 <span class="kw">let </span><span class="kw-2">mut </span>note = String::new();
-                <span class="macro">writeln!</span>(note, <span class="string">&quot;Hint: Rewrite to `{}`&quot;</span>, variant)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(note, <span class="string">"Hint: Rewrite to `{}`"</span>, variant)<span class="question-mark">?</span>;
                 notes.push(note.into_std());
             }
         }
@@ -1120,12 +1120,12 @@
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>(context) = this.context() {
         labels.push(
-            d::Label::secondary(this.source_id(), context.range()).with_message(<span class="string">&quot;In this context&quot;</span>),
+            d::Label::secondary(this.source_id(), context.range()).with_message(<span class="string">"In this context"</span>),
         );
     }
 
     <span class="kw">let </span>diagnostic = d::Diagnostic::warning()
-        .with_message(<span class="string">&quot;Warning&quot;</span>)
+        .with_message(<span class="string">"Warning"</span>)
         .with_labels(labels)
         .with_notes(notes);
 
@@ -1155,7 +1155,7 @@
 
     <span class="kw">match </span>this.kind() {
         FatalDiagnosticKind::Internal(message) =&gt; {
-            <span class="macro">writeln!</span>(out, <span class="string">&quot;internal error: {}&quot;</span>, message)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(out, <span class="string">"internal error: {}"</span>, message)<span class="question-mark">?</span>;
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
         FatalDiagnosticKind::LinkError(error) =&gt; {
@@ -1166,13 +1166,13 @@
                     <span class="kw">for </span>(span, source_id) <span class="kw">in </span>spans {
                         labels.push(
                             d::Label::primary(<span class="kw-2">*</span>source_id, span.range())
-                                .with_message(<span class="string">&quot;called here.&quot;</span>),
+                                .with_message(<span class="string">"called here."</span>),
                         );
                     }
 
                     <span class="kw">let </span>diagnostic = d::Diagnostic::error()
                         .with_message(<span class="macro">format!</span>(
-                            <span class="string">&quot;linker error: missing function with hash `{}`&quot;</span>,
+                            <span class="string">"linker error: missing function with hash `{}`"</span>,
                             hash
                         ))
                         .with_labels(labels);
@@ -1219,14 +1219,14 @@
                 <span class="kw">for </span>(step, entry) <span class="kw">in </span>(<span class="number">1</span>..).zip(it) {
                     labels.push(
                         d::Label::secondary(entry.location.source_id, entry.location.span.range())
-                            .with_message(<span class="macro">format!</span>(<span class="string">&quot;Step #{} for `{}`&quot;</span>, step, entry.item)),
+                            .with_message(<span class="macro">format!</span>(<span class="string">"Step #{} for `{}`"</span>, step, entry.item)),
                     );
                 }
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = last {
                     labels.push(
                         d::Label::secondary(entry.location.source_id, entry.location.span.range())
-                            .with_message(<span class="macro">format!</span>(<span class="string">&quot;Final step cycling back to `{}`&quot;</span>, entry.item)),
+                            .with_message(<span class="macro">format!</span>(<span class="string">"Final step cycling back to `{}`"</span>, entry.item)),
                     );
                 }
             }
@@ -1238,12 +1238,12 @@
                 <span class="kw">for </span>Location { source_id, span } <span class="kw">in </span>chain {
                     labels.push(
                         d::Label::secondary(<span class="kw-2">*</span>source_id, span.range())
-                            .with_message(<span class="string">&quot;Re-exported here&quot;</span>),
+                            .with_message(<span class="string">"Re-exported here"</span>),
                     );
                 }
 
                 labels.push(
-                    d::Label::secondary(<span class="kw-2">*</span>source_id, span.range()).with_message(<span class="string">&quot;defined here&quot;</span>),
+                    d::Label::secondary(<span class="kw-2">*</span>source_id, span.range()).with_message(<span class="string">"defined here"</span>),
                 );
             }
             ErrorKind::NotVisibleMod {
@@ -1254,20 +1254,20 @@
                 <span class="kw">for </span>Location { source_id, span } <span class="kw">in </span>chain {
                     labels.push(
                         d::Label::secondary(<span class="kw-2">*</span>source_id, span.range())
-                            .with_message(<span class="string">&quot;Re-exported here&quot;</span>),
+                            .with_message(<span class="string">"Re-exported here"</span>),
                     );
                 }
 
                 labels.push(
                     d::Label::secondary(<span class="kw-2">*</span>source_id, span.range())
-                        .with_message(<span class="string">&quot;Module defined here&quot;</span>),
+                        .with_message(<span class="string">"Module defined here"</span>),
                 );
             }
             ErrorKind::AmbiguousItem { locations, .. } =&gt; {
                 <span class="kw">for </span>(Location { source_id, span }, item) <span class="kw">in </span>locations {
                     labels.push(
                         d::Label::secondary(<span class="kw-2">*</span>source_id, span.range())
-                            .with_message(<span class="macro">format!</span>(<span class="string">&quot;Here as `{item}`&quot;</span>)),
+                            .with_message(<span class="macro">format!</span>(<span class="string">"Here as `{item}`"</span>)),
                     );
                 }
             }
@@ -1275,19 +1275,19 @@
                 <span class="kw">for </span>info <span class="kw">in </span>infos.as_ref() {
                     labels.push(
                         d::Label::secondary(this.source_id, span.range())
-                            .with_message(<span class="macro">format!</span>(<span class="string">&quot;Could be `{info}`&quot;</span>)),
+                            .with_message(<span class="macro">format!</span>(<span class="string">"Could be `{info}`"</span>)),
                     );
                 }
             }
             ErrorKind::DuplicateObjectKey { existing, object } =&gt; {
                 labels.push(
                     d::Label::secondary(this.source_id(), existing.range())
-                        .with_message(<span class="string">&quot;Previously defined here&quot;</span>),
+                        .with_message(<span class="string">"Previously defined here"</span>),
                 );
 
                 labels.push(
                     d::Label::secondary(this.source_id(), object.range())
-                        .with_message(<span class="string">&quot;Object being defined here&quot;</span>),
+                        .with_message(<span class="string">"Object being defined here"</span>),
                 );
             }
             ErrorKind::ModAlreadyLoaded { existing, .. } =&gt; {
@@ -1295,53 +1295,53 @@
 
                 labels.push(
                     d::Label::secondary(existing_source_id, existing_span.range())
-                        .with_message(<span class="string">&quot;Previously loaded here&quot;</span>),
+                        .with_message(<span class="string">"Previously loaded here"</span>),
                 );
             }
             ErrorKind::ExpectedBlockSemiColon { followed_span } =&gt; {
                 labels.push(
                     d::Label::secondary(this.source_id(), followed_span.range())
-                        .with_message(<span class="string">&quot;Because this immediately follows&quot;</span>),
+                        .with_message(<span class="string">"Because this immediately follows"</span>),
                 );
 
                 <span class="kw">let </span>binding = sources.source(this.source_id(), span);
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(binding) = binding {
                     <span class="kw">let </span><span class="kw-2">mut </span>note = String::new();
-                    <span class="macro">writeln!</span>(note, <span class="string">&quot;Hint: Rewrite to `{};`&quot;</span>, binding)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(note, <span class="string">"Hint: Rewrite to `{};`"</span>, binding)<span class="question-mark">?</span>;
                     notes.push(note.into_std());
                 }
             }
             ErrorKind::VariableMoved { moved_at, .. } =&gt; {
                 labels.push(
                     d::Label::secondary(this.source_id(), moved_at.range())
-                        .with_message(<span class="string">&quot;Moved here&quot;</span>),
+                        .with_message(<span class="string">"Moved here"</span>),
                 );
             }
             ErrorKind::NestedTest { nested_span } =&gt; {
                 labels.push(
                     d::Label::secondary(this.source_id(), nested_span.range())
-                        .with_message(<span class="string">&quot;Nested in here&quot;</span>),
+                        .with_message(<span class="string">"Nested in here"</span>),
                 );
             }
             ErrorKind::NestedBench { nested_span } =&gt; {
                 labels.push(
                     d::Label::secondary(this.source_id(), nested_span.range())
-                        .with_message(<span class="string">&quot;Nested in here&quot;</span>),
+                        .with_message(<span class="string">"Nested in here"</span>),
                 );
             }
             ErrorKind::PatternMissingFields { fields, .. } =&gt; {
-                <span class="kw">let </span>pl = <span class="kw">if </span>fields.len() == <span class="number">1 </span>{ <span class="string">&quot;field&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;fields&quot; </span>};
+                <span class="kw">let </span>pl = <span class="kw">if </span>fields.len() == <span class="number">1 </span>{ <span class="string">"field" </span>} <span class="kw">else </span>{ <span class="string">"fields" </span>};
 
-                <span class="kw">let </span>fields = fields.join(<span class="string">&quot;, &quot;</span>);
+                <span class="kw">let </span>fields = fields.join(<span class="string">", "</span>);
 
                 labels.push(
                     d::Label::secondary(this.source_id(), span.range())
-                        .with_message(<span class="macro">format!</span>(<span class="string">&quot;Missing {}: {}&quot;</span>, pl, fields)),
+                        .with_message(<span class="macro">format!</span>(<span class="string">"Missing {}: {}"</span>, pl, fields)),
                 );
 
                 notes.push(
-                    <span class="string">&quot;You can also make the pattern non-exhaustive by adding `..`&quot;
+                    <span class="string">"You can also make the pattern non-exhaustive by adding `..`"
                         </span>.try_to_string()<span class="question-mark">?
                         </span>.into_std(),
                 );

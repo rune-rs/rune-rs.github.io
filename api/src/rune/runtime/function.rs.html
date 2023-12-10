@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/function.rs`."><title>function.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/function.rs`."><title>function.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1097,7 +1097,7 @@
     ///
     /// assert_eq!(function.type_hash(), Hash::EMPTY);
     ///
-    /// let value = vm.call([&quot;main&quot;], (function,))?;
+    /// let value = vm.call(["main"], (function,))?;
     /// let value: u32 = rune::from_value(value)?;
     /// assert_eq!(value, 42);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
@@ -1126,7 +1126,7 @@
     ///
     /// assert_eq!(function.type_hash(), Hash::EMPTY);
     ///
-    /// let value = vm.async_call([&quot;main&quot;], (function,)).await?;
+    /// let value = vm.async_call(["main"], (function,)).await?;
     /// let value: u32 = rune::from_value(value)?;
     /// assert_eq!(value, 42);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
@@ -1147,7 +1147,7 @@
     }
 
     <span class="doccomment">/// See [`Function::new`].
-    </span><span class="attr">#[deprecated = <span class="string">&quot;Use Function::new() instead&quot;</span>]
+    </span><span class="attr">#[deprecated = <span class="string">"Use Function::new() instead"</span>]
     </span><span class="kw">pub fn </span>function&lt;F, A, K&gt;(f: F) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>F: module::Function&lt;A, K&gt;,
@@ -1157,7 +1157,7 @@
     }
 
     <span class="doccomment">/// See [`Function::function`].
-    </span><span class="attr">#[deprecated = <span class="string">&quot;Use Function::new() instead&quot;</span>]
+    </span><span class="attr">#[deprecated = <span class="string">"Use Function::new() instead"</span>]
     </span><span class="kw">pub fn </span>async_function&lt;F, A&gt;(f: F) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>F: module::Function&lt;A, module::Async&gt;,
@@ -1196,7 +1196,7 @@
     ///
     /// let unit = rune::prepare(&amp;mut sources).build()?;
     /// let mut vm = Vm::without_runtime(Arc::new(unit));
-    /// let value = vm.call([&quot;main&quot;], ())?;
+    /// let value = vm.call(["main"], ())?;
     ///
     /// let value: Function = rune::from_value(value)?;
     /// assert_eq!(value.call::&lt;_, u32&gt;((1, 2)).into_result()?, 3);
@@ -1302,10 +1302,10 @@
     ///
     /// let unit = rune::prepare(&amp;mut sources).build()?;
     /// let mut vm = Vm::without_runtime(Arc::new(unit));
-    /// let pony = vm.call([&quot;main&quot;], ())?;
+    /// let pony = vm.call(["main"], ())?;
     /// let pony: Function = rune::from_value(pony)?;
     ///
-    /// assert_eq!(pony.type_hash(), Hash::type_hash([&quot;pony&quot;]));
+    /// assert_eq!(pony.type_hash(), Hash::type_hash(["pony"]));
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
@@ -1333,13 +1333,13 @@
     ///
     /// let unit = rune::prepare(&amp;mut sources).build()?;
     /// let mut vm = Vm::without_runtime(Arc::new(unit));
-    /// let pony = vm.call([&quot;main&quot;], ())?;
+    /// let pony = vm.call(["main"], ())?;
     /// let pony: Function = rune::from_value(pony)?;
     ///
     /// // This is fine, since `pony` is a free function.
     /// let pony = pony.into_sync().into_result()?;
     ///
-    /// assert_eq!(pony.type_hash(), Hash::type_hash([&quot;pony&quot;]));
+    /// assert_eq!(pony.type_hash(), Hash::type_hash(["pony"]));
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     ///
@@ -1370,7 +1370,7 @@
     ///
     /// let unit = rune::prepare(&amp;mut sources).build()?;
     /// let mut vm = Vm::without_runtime(Arc::new(unit));
-    /// let closure = vm.call([&quot;main&quot;], ())?;
+    /// let closure = vm.call(["main"], ())?;
     /// let closure: Function = rune::from_value(closure)?;
     ///
     /// // This is *not* fine since the returned closure has captured a
@@ -1412,7 +1412,7 @@
     ///
     /// let unit = rune::prepare(&amp;mut sources).build()?;
     /// let mut vm = Vm::without_runtime(Arc::new(unit));
-    /// let add = vm.call([&quot;main&quot;], ())?;
+    /// let add = vm.call(["main"], ())?;
     /// let add: SyncFunction = rune::from_value(add)?;
     ///
     /// let value = add.async_send_call::&lt;_, u32&gt;((1, 2)).await.into_result()?;
@@ -1450,7 +1450,7 @@
     ///
     /// let unit = rune::prepare(&amp;mut sources).build()?;
     /// let mut vm = Vm::without_runtime(Arc::new(unit));
-    /// let add = vm.call([&quot;main&quot;], ())?;
+    /// let add = vm.call(["main"], ())?;
     /// let add: SyncFunction = rune::from_value(add)?;
     ///
     /// assert_eq!(add.call::&lt;_, u32&gt;((1, 2)).into_result()?, 3);
@@ -1486,10 +1486,10 @@
     ///
     /// let unit = rune::prepare(&amp;mut sources).build()?;
     /// let mut vm = Vm::without_runtime(Arc::new(unit));
-    /// let pony = vm.call([&quot;main&quot;], ())?;
+    /// let pony = vm.call(["main"], ())?;
     /// let pony: SyncFunction = rune::from_value(pony)?;
     ///
-    /// assert_eq!(pony.type_hash(), Hash::type_hash([&quot;pony&quot;]));
+    /// assert_eq!(pony.type_hash(), Hash::type_hash(["pony"]));
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
@@ -1572,10 +1572,10 @@
         T::from_value(value)
     }
 
-    <span class="kw">fn </span>async_send_call&lt;<span class="lifetime">&#39;a</span>, A, T&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, args: A) -&gt; <span class="kw">impl </span>Future&lt;Output = VmResult&lt;T&gt;&gt; + Send + <span class="lifetime">&#39;a
+    <span class="kw">fn </span>async_send_call&lt;<span class="lifetime">'a</span>, A, T&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, args: A) -&gt; <span class="kw">impl </span>Future&lt;Output = VmResult&lt;T&gt;&gt; + Send + <span class="lifetime">'a
     </span><span class="kw">where
-        </span>A: <span class="lifetime">&#39;a </span>+ Send + Args,
-        T: <span class="lifetime">&#39;a </span>+ Send + FromValue,
+        </span>A: <span class="lifetime">'a </span>+ Send + Args,
+        T: <span class="lifetime">'a </span>+ Send + FromValue,
     {
         <span class="kw">let </span>future = <span class="kw">async move </span>{
             <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.call(args));
@@ -1795,32 +1795,32 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Function {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.inner {
             Inner::FnHandler(handler) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">&quot;native function ({:p})&quot;</span>, handler.handler.as_ref())<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(f, <span class="string">"native function ({:p})"</span>, handler.handler.as_ref())<span class="question-mark">?</span>;
             }
             Inner::FnOffset(offset) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">&quot;dynamic function (at: 0x{:x})&quot;</span>, offset.offset)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(f, <span class="string">"dynamic function (at: 0x{:x})"</span>, offset.offset)<span class="question-mark">?</span>;
             }
             Inner::FnClosureOffset(closure) =&gt; {
                 <span class="macro">write!</span>(
                     f,
-                    <span class="string">&quot;closure (at: 0x{:x}, env:{:?})&quot;</span>,
+                    <span class="string">"closure (at: 0x{:x}, env:{:?})"</span>,
                     closure.fn_offset.offset, closure.environment
                 )<span class="question-mark">?</span>;
             }
             Inner::FnUnitStruct(empty) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">&quot;empty {}&quot;</span>, empty.rtti.item)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(f, <span class="string">"empty {}"</span>, empty.rtti.item)<span class="question-mark">?</span>;
             }
             Inner::FnTupleStruct(tuple) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">&quot;tuple {}&quot;</span>, tuple.rtti.item)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(f, <span class="string">"tuple {}"</span>, tuple.rtti.item)<span class="question-mark">?</span>;
             }
             Inner::FnUnitVariant(empty) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">&quot;variant empty {}&quot;</span>, empty.rtti.item)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(f, <span class="string">"variant empty {}"</span>, empty.rtti.item)<span class="question-mark">?</span>;
             }
             Inner::FnTupleVariant(tuple) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">&quot;variant tuple {}&quot;</span>, tuple.rtti.item)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(f, <span class="string">"variant tuple {}"</span>, tuple.rtti.item)<span class="question-mark">?</span>;
             }
         }
 
@@ -1879,8 +1879,8 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>FnHandler {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;FnHandler&quot;</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"FnHandler"</span>)
     }
 }
 
@@ -1919,14 +1919,14 @@
 
     <span class="doccomment">/// Perform a potentially optimized call into the specified vm.
     ///
-    /// This will cause a halt in case the vm being called into isn&#39;t the same
+    /// This will cause a halt in case the vm being called into isn't the same
     /// as the context and unit of the function.
     </span><span class="attr">#[tracing::instrument(skip_all, fields(args, extra = extra.count(), <span class="question-mark">?</span><span class="self">self</span>.offset, <span class="question-mark">?</span><span class="self">self</span>.call, <span class="question-mark">?</span><span class="self">self</span>.args, <span class="question-mark">?</span><span class="self">self</span>.hash))]
     </span><span class="kw">fn </span>call_with_vm&lt;E&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, vm: <span class="kw-2">&amp;mut </span>Vm, args: usize, extra: E) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;VmCall&gt;&gt;
     <span class="kw">where
         </span>E: Args,
     {
-        <span class="macro">tracing::trace!</span>(<span class="string">&quot;calling&quot;</span>);
+        <span class="macro">tracing::trace!</span>(<span class="string">"calling"</span>);
 
         <span class="macro">vm_try!</span>(check_args(args, <span class="self">self</span>.args));
 
@@ -1939,7 +1939,7 @@
 
         <span class="comment">// Fast path, just allocate a call frame and keep running.
         </span><span class="kw">if </span>same_context &amp;&amp; same_unit {
-            <span class="macro">tracing::trace!</span>(<span class="string">&quot;same context and unit&quot;</span>);
+            <span class="macro">tracing::trace!</span>(<span class="string">"same context and unit"</span>);
             <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
         }
 
@@ -1952,13 +1952,13 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>FnOffset {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;FnOffset&quot;</span>)
-            .field(<span class="string">&quot;context&quot;</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.context <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>))
-            .field(<span class="string">&quot;unit&quot;</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.unit <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>))
-            .field(<span class="string">&quot;offset&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.offset)
-            .field(<span class="string">&quot;call&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.call)
-            .field(<span class="string">&quot;args&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.args)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"FnOffset"</span>)
+            .field(<span class="string">"context"</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.context <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>))
+            .field(<span class="string">"unit"</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.unit <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>))
+            .field(<span class="string">"offset"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.offset)
+            .field(<span class="string">"call"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.call)
+            .field(<span class="string">"args"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.args)
             .finish()
     }
 }

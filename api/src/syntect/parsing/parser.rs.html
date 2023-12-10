@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syntect-5.1.0/src/parsing/parser.rs`."><title>parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syntect" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syntect-5.1.0/src/parsing/parser.rs`."><title>parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syntect" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1871,15 +1871,15 @@
 </span><span class="attr">#[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>ParsingError {
-    <span class="attr">#[error(<span class="string">&quot;Somehow main context was popped from the stack&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Somehow main context was popped from the stack"</span>)]
     </span>MissingMainContext,
     <span class="doccomment">/// A context is missing. Usually caused by a syntax referencing a another
     /// syntax that is not known to syntect. See e.g. &lt;https://github.com/trishume/syntect/issues/421&gt;
-    </span><span class="attr">#[error(<span class="string">&quot;Missing context with ID &#39;{0:?}&#39;&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Missing context with ID '{0:?}'"</span>)]
     </span>MissingContext(ContextId),
-    <span class="attr">#[error(<span class="string">&quot;Bad index to match_at: {0}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Bad index to match_at: {0}"</span>)]
     </span>BadMatchIndex(usize),
-    <span class="attr">#[error(<span class="string">&quot;Tried to use a ContextReference that has not bee resolved yet: {0:?}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Tried to use a ContextReference that has not bee resolved yet: {0:?}"</span>)]
     </span>UnresolvedContextReference(ContextReference),
 }
 
@@ -1894,8 +1894,8 @@
 /// these (probably along with a [`HighlightState`]) and only re-start parsing from the point of a change.
 /// See the docs for [`HighlightState`] for more in-depth discussion of caching.
 ///
-/// This state doesn&#39;t keep track of the current scope stack and parsing only returns changes to this stack
-/// so if you want to construct scope stacks you&#39;ll need to keep track of that as well.
+/// This state doesn't keep track of the current scope stack and parsing only returns changes to this stack
+/// so if you want to construct scope stacks you'll need to keep track of that as well.
 /// Note that [`HighlightState`] contains exactly this as a public field that you can use.
 ///
 /// **Note:** Caching is for advanced users who have tons of time to maximize performance or want to do so eventually.
@@ -1907,7 +1907,7 @@
     stack: Vec&lt;StateLevel&gt;,
     first_line: bool,
     <span class="comment">// See issue #101. Contains indices of frames pushed by `with_prototype`s.
-    // Doesn&#39;t look at `with_prototype`s below top of stack.
+    // Doesn't look at `with_prototype`s below top of stack.
     </span>proto_starts: Vec&lt;usize&gt;,
 }
 
@@ -1919,9 +1919,9 @@
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">struct </span>RegexMatch&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">struct </span>RegexMatch&lt;<span class="lifetime">'a</span>&gt; {
     regions: Region,
-    context: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Context,
+    context: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Context,
     pat_index: usize,
     from_with_prototype: bool,
     would_loop: bool,
@@ -1930,10 +1930,10 @@
 <span class="doccomment">/// Maps the pattern to the start index, which is -1 if not found.
 </span><span class="kw">type </span>SearchCache = HashMap&lt;<span class="kw-2">*const </span>MatchPattern, <span class="prelude-ty">Option</span>&lt;Region&gt;, BuildHasherDefault&lt;FnvHasher&gt;&gt;;
 
-<span class="comment">// To understand the implementation of this, here&#39;s an introduction to how
+<span class="comment">// To understand the implementation of this, here's an introduction to how
 // Sublime Text syntax definitions work.
 //
-// Let&#39;s say we have the following made-up syntax definition:
+// Let's say we have the following made-up syntax definition:
 //
 //     contexts:
 //       main:
@@ -1953,44 +1953,44 @@
 // There are two contexts, `main` and `context-a`. Each context contains a list
 // of match rules with instructions for how to proceed.
 //
-// Let&#39;s say we have the input string &quot; Aaaabxxx&quot;. We start at position 0 in
+// Let's say we have the input string " Aaaabxxx". We start at position 0 in
 // the string. We keep a stack of contexts, which at the beginning is just main.
 //
 // So we start by looking at the top of the context stack (main), and look at
 // the rules in order. The rule that wins is the first one that matches
-// &quot;earliest&quot; in the input string. In our example:
+// "earliest" in the input string. In our example:
 //
-// 1. The first one matches &quot;A&quot;. Note that matches are not anchored, so this
+// 1. The first one matches "A". Note that matches are not anchored, so this
 //    matches at position 1.
-// 2. The second one matches &quot;b&quot;, so position 5. The first rule is winning.
-// 3. The third one matches &quot;\w+&quot;, so also position 1. But because the first
+// 2. The second one matches "b", so position 5. The first rule is winning.
+// 3. The third one matches "\w+", so also position 1. But because the first
 //    rule comes first, it wins.
 //
 // So now we execute the winning rule. Whenever we matched some text, we assign
 // the scope (if there is one) to the matched text and advance our position to
-// after the matched text. The scope is &quot;scope.a.first&quot; and our new position is
-// after the &quot;A&quot;, so 2. The &quot;push&quot; means that we should change our stack by
+// after the matched text. The scope is "scope.a.first" and our new position is
+// after the "A", so 2. The "push" means that we should change our stack by
 // pushing `context-a` on top of it.
 //
 // In the next step, we repeat the above, but now with the rules in `context-a`.
-// The result is that we match &quot;a+&quot; and assign &quot;scope.a.rest&quot; to &quot;aaa&quot;, and our
-// new position is now after the &quot;aaa&quot;. Note that there was no instruction for
+// The result is that we match "a+" and assign "scope.a.rest" to "aaa", and our
+// new position is now after the "aaa". Note that there was no instruction for
 // changing the stack, so we stay in that context.
 //
-// In the next step, the first rule doesn&#39;t match anymore, so we go to the next
-// rule where &quot;(?=.)&quot; matches. The instruction is to &quot;pop&quot;, which means we
-// pop the top of our context stack, which means we&#39;re now back in main.
+// In the next step, the first rule doesn't match anymore, so we go to the next
+// rule where "(?=.)" matches. The instruction is to "pop", which means we
+// pop the top of our context stack, which means we're now back in main.
 //
-// This time in main, we match &quot;b&quot;, and in the next step we match the rest with
-// &quot;\w+&quot;, and we&#39;re done.
+// This time in main, we match "b", and in the next step we match the rest with
+// "\w+", and we're done.
 //
 //
 // ## Preventing loops
 //
 // These are the basics of how matching works. Now, you saw that you can write
-// patterns that result in an empty match and don&#39;t change the position. These
+// patterns that result in an empty match and don't change the position. These
 // are called non-consuming matches. The problem with them is that they could
-// result in infinite loops. Let&#39;s look at a syntax where that is the case:
+// result in infinite loops. Let's look at a syntax where that is the case:
 //
 //     contexts:
 //       main:
@@ -2002,32 +2002,32 @@
 //         - match: (?=.)
 //           pop: true
 //
-// This is a bit silly, but it&#39;s a minimal example for explaining how matching
+// This is a bit silly, but it's a minimal example for explaining how matching
 // works in that case.
 //
-// Let&#39;s say we have the input string &quot; hello&quot;. In `main`, our rule matches and
+// Let's say we have the input string " hello". In `main`, our rule matches and
 // we go into `test` and stay at position 0. Now, the best match is the rule
-// with &quot;pop&quot;. But if we used that rule, we&#39;d pop back to `main` and would still
+// with "pop". But if we used that rule, we'd pop back to `main` and would still
 // be at the same position we started at! So this would be an infinite loop,
-// which we don&#39;t want.
+// which we don't want.
 //
-// So what Sublime Text does in case a looping rule &quot;won&quot;:
+// So what Sublime Text does in case a looping rule "won":
 //
-// * If there&#39;s another rule that matches at the same position and does not
+// * If there's another rule that matches at the same position and does not
 //   result in a loop, use that instead.
 // * Otherwise, go to the next position and go through all the rules in the
-//   current context again. Note that it means that the &quot;pop&quot; could again be the
-//   winning rule, but that&#39;s ok as it wouldn&#39;t result in a loop anymore.
+//   current context again. Note that it means that the "pop" could again be the
+//   winning rule, but that's ok as it wouldn't result in a loop anymore.
 //
-// So in our input string, we&#39;d skip one character and try to match the rules
-// again. This time, the &quot;\w+&quot; wins because it comes first.
+// So in our input string, we'd skip one character and try to match the rules
+// again. This time, the "\w+" wins because it comes first.
 
 </span><span class="kw">impl </span>ParseState {
     <span class="doccomment">/// Creates a state from a syntax definition, keeping its own reference-counted point to the
     /// main context of the syntax
     </span><span class="kw">pub fn </span>new(syntax: <span class="kw-2">&amp;</span>SyntaxReference) -&gt; ParseState {
         <span class="kw">let </span>start_state = StateLevel {
-            context: syntax.context_ids()[<span class="string">&quot;__start&quot;</span>],
+            context: syntax.context_ids()[<span class="string">"__start"</span>],
             prototypes: Vec::new(),
             captures: <span class="prelude-val">None</span>,
         };
@@ -2121,15 +2121,15 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(reg_match) = best_match {
             <span class="kw">if </span>reg_match.would_loop {
-                <span class="comment">// A push that doesn&#39;t consume anything (a regex that resulted
+                <span class="comment">// A push that doesn't consume anything (a regex that resulted
                 // in an empty match at the current position) can not be
-                // followed by a non-consuming pop. Otherwise we&#39;re back where
+                // followed by a non-consuming pop. Otherwise we're back where
                 // we started and would try the same sequence of matches again,
                 // resulting in an infinite loop. In this case, Sublime Text
                 // advances one character and tries again, thus preventing the
                 // loop.
 
-                // println!(&quot;pop_would_loop for match {:?}, start {}&quot;, reg_match, *start);
+                // println!("pop_would_loop for match {:?}, start {}", reg_match, *start);
 
                 // nth(1) gets the next character if there is one. Need to do
                 // this instead of just += 1 because we have byte indices and
@@ -2148,10 +2148,10 @@
 
             <span class="kw">let </span>consuming = match_end &gt; <span class="kw-2">*</span>start;
             <span class="kw">if </span>!consuming {
-                <span class="comment">// The match doesn&#39;t consume any characters. If this is a
-                // &quot;push&quot;, remember the position and stack size so that we can
-                // check the next &quot;pop&quot; for loops. Otherwise leave the state,
-                // e.g. non-consuming &quot;set&quot; could also result in a loop.
+                <span class="comment">// The match doesn't consume any characters. If this is a
+                // "push", remember the position and stack size so that we can
+                // check the next "pop" for loops. Otherwise leave the state,
+                // e.g. non-consuming "set" could also result in a loop.
                 </span><span class="kw">let </span>context = reg_match.context;
                 <span class="kw">let </span>match_pattern = context.match_at(reg_match.pat_index)<span class="question-mark">?</span>;
                 <span class="kw">if let </span>MatchOperation::Push(<span class="kw">_</span>) = match_pattern.operation {
@@ -2163,7 +2163,7 @@
 
             <span class="comment">// ignore `with_prototype`s below this if a context is pushed
             </span><span class="kw">if </span>reg_match.from_with_prototype {
-                <span class="comment">// use current height, since we&#39;re before the actual push
+                <span class="comment">// use current height, since we're before the actual push
                 </span><span class="self">self</span>.proto_starts.push(<span class="self">self</span>.stack.len());
             }
 
@@ -2179,15 +2179,15 @@
         }
     }
 
-    <span class="kw">fn </span>find_best_match&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>find_best_match&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         line: <span class="kw-2">&amp;</span>str,
         start: usize,
-        syntax_set: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>SyntaxSet,
+        syntax_set: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SyntaxSet,
         search_cache: <span class="kw-2">&amp;mut </span>SearchCache,
         regions: <span class="kw-2">&amp;mut </span>Region,
         check_pop_loop: bool,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;RegexMatch&lt;<span class="lifetime">&#39;a</span>&gt;&gt;, ParsingError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;RegexMatch&lt;<span class="lifetime">'a</span>&gt;&gt;, ParsingError&gt; {
         <span class="kw">let </span>cur_level = <span class="kw-2">&amp;</span><span class="self">self</span>.stack[<span class="self">self</span>.stack.len() - <span class="number">1</span>];
         <span class="kw">let </span>context = syntax_set.get_context(<span class="kw-2">&amp;</span>cur_level.context)<span class="question-mark">?</span>;
         <span class="kw">let </span>prototype = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>p) = context.prototype {
@@ -2206,11 +2206,11 @@
             with_prototypes.chain(cur_prototype).chain(cur_context)
         };
 
-        <span class="comment">// println!(&quot;{:#?}&quot;, cur_level);
-        // println!(&quot;token at {} on {}&quot;, start, line.trim_right());
+        <span class="comment">// println!("{:#?}", cur_level);
+        // println!("token at {} on {}", start, line.trim_right());
 
         </span><span class="kw">let </span><span class="kw-2">mut </span>min_start = usize::MAX;
-        <span class="kw">let </span><span class="kw-2">mut </span>best_match: <span class="prelude-ty">Option</span>&lt;RegexMatch&lt;<span class="lifetime">&#39;_</span>&gt;&gt; = <span class="prelude-val">None</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>best_match: <span class="prelude-ty">Option</span>&lt;RegexMatch&lt;<span class="lifetime">'_</span>&gt;&gt; = <span class="prelude-val">None</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>pop_would_loop = <span class="bool-val">false</span>;
 
         <span class="kw">for </span>(from_with_proto, ctx, captures) <span class="kw">in </span>context_chain {
@@ -2222,14 +2222,14 @@
                 ) {
                     <span class="kw">let </span>(match_start, match_end) = match_region.pos(<span class="number">0</span>).unwrap();
 
-                    <span class="comment">// println!(&quot;matched pattern {:?} at start {} end {}&quot;, match_pat.regex_str, match_start, match_end);
+                    <span class="comment">// println!("matched pattern {:?} at start {} end {}", match_pat.regex_str, match_start, match_end);
 
                     </span><span class="kw">if </span>match_start &lt; min_start || (match_start == min_start &amp;&amp; pop_would_loop) {
                         <span class="comment">// New match is earlier in text than old match,
                         // or old match was a looping pop at the same
                         // position.
 
-                        // println!(&quot;setting as current match&quot;);
+                        // println!("setting as current match");
 
                         </span>min_start = match_start;
 
@@ -2247,7 +2247,7 @@
                         });
 
                         <span class="kw">if </span>match_start == start &amp;&amp; !pop_would_loop {
-                            <span class="comment">// We&#39;re not gonna find a better match after this,
+                            <span class="comment">// We're not gonna find a better match after this,
                             // so as an optimization we can stop matching now.
                             </span><span class="kw">return </span><span class="prelude-val">Ok</span>(best_match);
                         }
@@ -2266,7 +2266,7 @@
               search_cache: <span class="kw-2">&amp;mut </span>SearchCache,
               regions: <span class="kw-2">&amp;mut </span>Region,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;Region&gt; {
-        <span class="comment">// println!(&quot;{} - {:?} - {:?}&quot;, match_pat.regex_str, match_pat.has_captures, cur_level.captures.is_some());
+        <span class="comment">// println!("{} - {:?} - {:?}", match_pat.regex_str, match_pat.has_captures, cur_level.captures.is_some());
         </span><span class="kw">let </span>match_ptr = match_pat <span class="kw">as </span><span class="kw-2">*const </span>MatchPattern;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(maybe_region) = search_cache.get(<span class="kw-2">&amp;</span>match_ptr) {
@@ -2278,7 +2278,7 @@
                     </span><span class="kw">return </span><span class="prelude-val">Some</span>(region.clone());
                 }
             } <span class="kw">else </span>{
-                <span class="comment">// Didn&#39;t find a match earlier, so no point trying to match it again
+                <span class="comment">// Didn't find a match earlier, so no point trying to match it again
                 </span><span class="kw">return </span><span class="prelude-val">None</span>;
             }
         }
@@ -2308,7 +2308,7 @@
                 search_cache.insert(match_pat, <span class="prelude-val">Some</span>(regions.clone()));
             }
             <span class="kw">if </span>does_something {
-                <span class="comment">// print!(&quot;catch {} at {} on {}&quot;, match_pat.regex_str, match_start, line);
+                <span class="comment">// print!("catch {} at {} on {}", match_pat.regex_str, match_start, line);
                 </span><span class="kw">return </span><span class="prelude-val">Some</span>(regions.clone());
             }
         } <span class="kw">else if </span>can_cache {
@@ -2318,28 +2318,28 @@
     </span>}
 
     <span class="doccomment">/// Returns true if the stack was changed
-    </span><span class="kw">fn </span>exec_pattern&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">fn </span>exec_pattern&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         line: <span class="kw-2">&amp;</span>str,
-        reg_match: <span class="kw-2">&amp;</span>RegexMatch&lt;<span class="lifetime">&#39;a</span>&gt;,
-        level_context: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Context,
-        syntax_set: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>SyntaxSet,
+        reg_match: <span class="kw-2">&amp;</span>RegexMatch&lt;<span class="lifetime">'a</span>&gt;,
+        level_context: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Context,
+        syntax_set: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SyntaxSet,
         ops: <span class="kw-2">&amp;mut </span>Vec&lt;(usize, ScopeStackOp)&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, ParsingError&gt; {
         <span class="kw">let </span>(match_start, match_end) = reg_match.regions.pos(<span class="number">0</span>).unwrap();
         <span class="kw">let </span>context = reg_match.context;
         <span class="kw">let </span>pat = context.match_at(reg_match.pat_index)<span class="question-mark">?</span>;
-        <span class="comment">// println!(&quot;running pattern {:?} on &#39;{}&#39; at {}, operation {:?}&quot;, pat.regex_str, line, match_start, pat.operation);
+        <span class="comment">// println!("running pattern {:?} on '{}' at {}, operation {:?}", pat.regex_str, line, match_start, pat.operation);
 
         </span><span class="self">self</span>.push_meta_ops(<span class="bool-val">true</span>, match_start, level_context, <span class="kw-2">&amp;</span>pat.operation, syntax_set, ops)<span class="question-mark">?</span>;
         <span class="kw">for </span>s <span class="kw">in </span><span class="kw-2">&amp;</span>pat.scope {
-            <span class="comment">// println!(&quot;pushing {:?} at {}&quot;, s, match_start);
+            <span class="comment">// println!("pushing {:?} at {}", s, match_start);
             </span>ops.push((match_start, ScopeStackOp::Push(<span class="kw-2">*</span>s)));
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>capture_map) = pat.captures {
             <span class="comment">// captures could appear in an arbitrary order, have to produce ops in right order
             // ex: ((bob)|(hi))* could match hibob in wrong order, and outer has to push first
-            // we don&#39;t have to handle a capture matching multiple times, Sublime doesn&#39;t
+            // we don't have to handle a capture matching multiple times, Sublime doesn't
             </span><span class="kw">let </span><span class="kw-2">mut </span>map: Vec&lt;((usize, i32), ScopeStackOp)&gt; = Vec::new();
             <span class="kw">for </span><span class="kw-2">&amp;</span>(cap_index, <span class="kw-2">ref </span>scopes) <span class="kw">in </span>capture_map.iter() {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>((cap_start, cap_end)) = reg_match.regions.pos(cap_index) {
@@ -2347,7 +2347,7 @@
                     </span><span class="kw">if </span>cap_start == cap_end {
                         <span class="kw">continue</span>;
                     }
-                    <span class="comment">// println!(&quot;capture {:?} at {:?}-{:?}&quot;, scopes[0], cap_start, cap_end);
+                    <span class="comment">// println!("capture {:?} at {:?}-{:?}", scopes[0], cap_start, cap_end);
                     </span><span class="kw">for </span>scope <span class="kw">in </span>scopes.iter() {
                         map.push(((cap_start, -((cap_end - cap_start) <span class="kw">as </span>i32)),
                                   ScopeStackOp::Push(<span class="kw-2">*</span>scope)));
@@ -2361,7 +2361,7 @@
             }
         }
         <span class="kw">if </span>!pat.scope.is_empty() {
-            <span class="comment">// println!(&quot;popping at {}&quot;, match_end);
+            <span class="comment">// println!("popping at {}", match_end);
             </span>ops.push((match_end, ScopeStackOp::Pop(pat.scope.len())));
         }
         <span class="self">self</span>.push_meta_ops(<span class="bool-val">false</span>, match_end, <span class="kw-2">&amp;*</span>level_context, <span class="kw-2">&amp;</span>pat.operation, syntax_set, ops)<span class="question-mark">?</span>;
@@ -2369,19 +2369,19 @@
         <span class="self">self</span>.perform_op(line, <span class="kw-2">&amp;</span>reg_match.regions, pat, syntax_set)
     }
 
-    <span class="kw">fn </span>push_meta_ops&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>push_meta_ops&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         initial: bool,
         index: usize,
         cur_context: <span class="kw-2">&amp;</span>Context,
         match_op: <span class="kw-2">&amp;</span>MatchOperation,
-        syntax_set: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>SyntaxSet,
+        syntax_set: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>SyntaxSet,
         ops: <span class="kw-2">&amp;mut </span>Vec&lt;(usize, ScopeStackOp)&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ParsingError&gt;{
-        <span class="comment">// println!(&quot;metas ops for {:?}, initial: {}&quot;,
+        <span class="comment">// println!("metas ops for {:?}, initial: {}",
         //          match_op,
         //          initial);
-        // println!(&quot;{:?}&quot;, cur_context.meta_scope);
+        // println!("{:?}", cur_context.meta_scope);
         </span><span class="kw">match </span><span class="kw-2">*</span>match_op {
             MatchOperation::Pop =&gt; {
                 <span class="kw">let </span>v = <span class="kw">if </span>initial {
@@ -2405,13 +2405,13 @@
             </span>MatchOperation::Push(<span class="kw-2">ref </span>context_refs) |
             MatchOperation::Set(<span class="kw-2">ref </span>context_refs) =&gt; {
                 <span class="kw">let </span>is_set = <span class="macro">matches!</span>(<span class="kw-2">*</span>match_op, MatchOperation::Set(<span class="kw">_</span>));
-                <span class="comment">// a match pattern that &quot;set&quot;s keeps the meta_content_scope and meta_scope from the previous context
+                <span class="comment">// a match pattern that "set"s keeps the meta_content_scope and meta_scope from the previous context
                 </span><span class="kw">if </span>initial {
                     <span class="kw">if </span>is_set &amp;&amp; cur_context.clear_scopes != <span class="prelude-val">None </span>{
                         <span class="comment">// cleared scopes from the old context are restored immediately
                         </span>ops.push((index, ScopeStackOp::Restore));
                     }
-                    <span class="comment">// add each context&#39;s meta scope
+                    <span class="comment">// add each context's meta scope
                     </span><span class="kw">for </span>r <span class="kw">in </span>context_refs.iter() {
                         <span class="kw">let </span>ctx = r.resolve(syntax_set)<span class="question-mark">?</span>;
 
@@ -2438,7 +2438,7 @@
                             ctx.meta_scope.len()
                         }).sum();
 
-                        <span class="comment">// also pop off the original context&#39;s meta scopes
+                        <span class="comment">// also pop off the original context's meta scopes
                         </span><span class="kw">if </span>is_set {
                             num_to_pop += cur_context.meta_content_scope.len() + cur_context.meta_scope.len();
                         }
@@ -2509,7 +2509,7 @@
                 <span class="comment">// if a with_prototype was specified, and multiple contexts were pushed,
                 // then the with_prototype applies only to the last context pushed, i.e.
                 // top most on the stack after all the contexts are pushed - this is also
-                // referred to as the &quot;target&quot; of the push by sublimehq - see
+                // referred to as the "target" of the push by sublimehq - see
                 // https://forum.sublimetext.com/t/dev-build-3111/19240/17 for more info
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>p) = pat.with_prototype {
                     proto_ids.push(p.id()<span class="question-mark">?</span>);
@@ -2538,7 +2538,7 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;yaml-load&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"yaml-load"</span>)]
 #[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
@@ -2546,39 +2546,39 @@
     <span class="kw">use </span><span class="kw">crate</span>::parsing::ScopeStackOp::{Push, Pop, Clear, Restore};
     <span class="kw">use </span><span class="kw">crate</span>::util::debug_print_ops;
 
-    <span class="kw">const </span>TEST_SYNTAX: <span class="kw-2">&amp;</span>str = <span class="macro">include_str!</span>(<span class="string">&quot;../../testdata/parser_tests.sublime-syntax&quot;</span>);
+    <span class="kw">const </span>TEST_SYNTAX: <span class="kw-2">&amp;</span>str = <span class="macro">include_str!</span>(<span class="string">"../../testdata/parser_tests.sublime-syntax"</span>);
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_simple() {
-        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">&quot;testdata/Packages&quot;</span>).unwrap();
+        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">"testdata/Packages"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state = {
-            <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">&quot;Ruby on Rails&quot;</span>).unwrap();
+            <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">"Ruby on Rails"</span>).unwrap();
             ParseState::new(syntax)
         };
 
-        <span class="kw">let </span>ops1 = ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;module Bob::Wow::Troll::Five; 5; end&quot;</span>, <span class="kw-2">&amp;</span>ss);
+        <span class="kw">let </span>ops1 = ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"module Bob::Wow::Troll::Five; 5; end"</span>, <span class="kw-2">&amp;</span>ss);
         <span class="kw">let </span>test_ops1 = <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;source.ruby.rails&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;meta.module.ruby&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;keyword.control.module.ruby&quot;</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"source.ruby.rails"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"meta.module.ruby"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"keyword.control.module.ruby"</span>).unwrap())),
             (<span class="number">6</span>, Pop(<span class="number">2</span>)),
-            (<span class="number">6</span>, Push(Scope::new(<span class="string">&quot;meta.module.ruby&quot;</span>).unwrap())),
+            (<span class="number">6</span>, Push(Scope::new(<span class="string">"meta.module.ruby"</span>).unwrap())),
             (<span class="number">7</span>, Pop(<span class="number">1</span>)),
-            (<span class="number">7</span>, Push(Scope::new(<span class="string">&quot;meta.module.ruby&quot;</span>).unwrap())),
-            (<span class="number">7</span>, Push(Scope::new(<span class="string">&quot;entity.name.module.ruby&quot;</span>).unwrap())),
-            (<span class="number">7</span>, Push(Scope::new(<span class="string">&quot;support.other.namespace.ruby&quot;</span>).unwrap())),
+            (<span class="number">7</span>, Push(Scope::new(<span class="string">"meta.module.ruby"</span>).unwrap())),
+            (<span class="number">7</span>, Push(Scope::new(<span class="string">"entity.name.module.ruby"</span>).unwrap())),
+            (<span class="number">7</span>, Push(Scope::new(<span class="string">"support.other.namespace.ruby"</span>).unwrap())),
             (<span class="number">10</span>, Pop(<span class="number">1</span>)),
-            (<span class="number">10</span>, Push(Scope::new(<span class="string">&quot;punctuation.accessor.ruby&quot;</span>).unwrap())),
+            (<span class="number">10</span>, Push(Scope::new(<span class="string">"punctuation.accessor.ruby"</span>).unwrap())),
         ];
         <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>ops1[<span class="number">0</span>..test_ops1.len()], <span class="kw-2">&amp;</span>test_ops1[..]);
 
-        <span class="kw">let </span>ops2 = ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;def lol(wow = 5)&quot;</span>, <span class="kw-2">&amp;</span>ss);
+        <span class="kw">let </span>ops2 = ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"def lol(wow = 5)"</span>, <span class="kw-2">&amp;</span>ss);
         <span class="kw">let </span>test_ops2 = <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;meta.function.ruby&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;keyword.control.def.ruby&quot;</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"meta.function.ruby"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"keyword.control.def.ruby"</span>).unwrap())),
             (<span class="number">3</span>, Pop(<span class="number">2</span>)),
-            (<span class="number">3</span>, Push(Scope::new(<span class="string">&quot;meta.function.ruby&quot;</span>).unwrap())),
-            (<span class="number">4</span>, Push(Scope::new(<span class="string">&quot;entity.name.function.ruby&quot;</span>).unwrap())),
+            (<span class="number">3</span>, Push(Scope::new(<span class="string">"meta.function.ruby"</span>).unwrap())),
+            (<span class="number">4</span>, Push(Scope::new(<span class="string">"entity.name.function.ruby"</span>).unwrap())),
             (<span class="number">7</span>, Pop(<span class="number">1</span>))
         ];
         <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>ops2[<span class="number">0</span>..test_ops2.len()], <span class="kw-2">&amp;</span>test_ops2[..]);
@@ -2586,82 +2586,82 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_yaml() {
-        <span class="kw">let </span>ps = SyntaxSet::load_from_folder(<span class="string">&quot;testdata/Packages&quot;</span>).unwrap();
+        <span class="kw">let </span>ps = SyntaxSet::load_from_folder(<span class="string">"testdata/Packages"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state = {
-            <span class="kw">let </span>syntax = ps.find_syntax_by_name(<span class="string">&quot;YAML&quot;</span>).unwrap();
+            <span class="kw">let </span>syntax = ps.find_syntax_by_name(<span class="string">"YAML"</span>).unwrap();
             ParseState::new(syntax)
         };
 
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;key: value\n&quot;</span>, <span class="kw-2">&amp;</span>ps), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;source.yaml&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;string.unquoted.plain.out.yaml&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;entity.name.tag.yaml&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"key: value\n"</span>, <span class="kw-2">&amp;</span>ps), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"source.yaml"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"string.unquoted.plain.out.yaml"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"entity.name.tag.yaml"</span>).unwrap())),
             (<span class="number">3</span>, Pop(<span class="number">2</span>)),
-            (<span class="number">3</span>, Push(Scope::new(<span class="string">&quot;punctuation.separator.key-value.mapping.yaml&quot;</span>).unwrap())),
+            (<span class="number">3</span>, Push(Scope::new(<span class="string">"punctuation.separator.key-value.mapping.yaml"</span>).unwrap())),
             (<span class="number">4</span>, Pop(<span class="number">1</span>)),
-            (<span class="number">5</span>, Push(Scope::new(<span class="string">&quot;string.unquoted.plain.out.yaml&quot;</span>).unwrap())),
+            (<span class="number">5</span>, Push(Scope::new(<span class="string">"string.unquoted.plain.out.yaml"</span>).unwrap())),
             (<span class="number">10</span>, Pop(<span class="number">1</span>)),
         ]);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_includes() {
-        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">&quot;testdata/Packages&quot;</span>).unwrap();
+        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">"testdata/Packages"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state = {
-            <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">&quot;HTML (Rails)&quot;</span>).unwrap();
+            <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">"HTML (Rails)"</span>).unwrap();
             ParseState::new(syntax)
         };
 
-        <span class="kw">let </span>ops = ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;&lt;script&gt;var lol = &#39;&lt;% def wow(&quot;</span>, <span class="kw-2">&amp;</span>ss);
+        <span class="kw">let </span>ops = ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"&lt;script&gt;var lol = '&lt;% def wow("</span>, <span class="kw-2">&amp;</span>ss);
 
         <span class="kw">let </span><span class="kw-2">mut </span>test_stack = ScopeStack::new();
-        test_stack.push(Scope::new(<span class="string">&quot;text.html.ruby&quot;</span>).unwrap());
-        test_stack.push(Scope::new(<span class="string">&quot;text.html.basic&quot;</span>).unwrap());
-        test_stack.push(Scope::new(<span class="string">&quot;source.js.embedded.html&quot;</span>).unwrap());
-        test_stack.push(Scope::new(<span class="string">&quot;source.js&quot;</span>).unwrap());
-        test_stack.push(Scope::new(<span class="string">&quot;string.quoted.single.js&quot;</span>).unwrap());
-        test_stack.push(Scope::new(<span class="string">&quot;source.ruby.rails.embedded.html&quot;</span>).unwrap());
-        test_stack.push(Scope::new(<span class="string">&quot;meta.function.parameters.ruby&quot;</span>).unwrap());
+        test_stack.push(Scope::new(<span class="string">"text.html.ruby"</span>).unwrap());
+        test_stack.push(Scope::new(<span class="string">"text.html.basic"</span>).unwrap());
+        test_stack.push(Scope::new(<span class="string">"source.js.embedded.html"</span>).unwrap());
+        test_stack.push(Scope::new(<span class="string">"source.js"</span>).unwrap());
+        test_stack.push(Scope::new(<span class="string">"string.quoted.single.js"</span>).unwrap());
+        test_stack.push(Scope::new(<span class="string">"source.ruby.rails.embedded.html"</span>).unwrap());
+        test_stack.push(Scope::new(<span class="string">"meta.function.parameters.ruby"</span>).unwrap());
 
         <span class="kw">let </span><span class="kw-2">mut </span>stack = ScopeStack::new();
         <span class="kw">for </span><span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="kw-2">ref </span>op) <span class="kw">in </span>ops.iter() {
-            stack.apply(op).expect(<span class="string">&quot;#[cfg(test)]&quot;</span>);
+            stack.apply(op).expect(<span class="string">"#[cfg(test)]"</span>);
         }
         <span class="macro">assert_eq!</span>(stack, test_stack);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_backrefs() {
-        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">&quot;testdata/Packages&quot;</span>).unwrap();
+        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">"testdata/Packages"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state = {
-            <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">&quot;Ruby on Rails&quot;</span>).unwrap();
+            <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">"Ruby on Rails"</span>).unwrap();
             ParseState::new(syntax)
         };
 
-        <span class="comment">// For parsing HEREDOC, the &quot;SQL&quot; is captured at the beginning and then used in another
+        <span class="comment">// For parsing HEREDOC, the "SQL" is captured at the beginning and then used in another
         // regex with a backref, to match the end of the HEREDOC. Note that there can be code
         // after the marker (`.strip`) here.
-        </span><span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;lol = &lt;&lt;-SQL.strip&quot;</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;source.ruby.rails&quot;</span>).unwrap())),
-            (<span class="number">4</span>, Push(Scope::new(<span class="string">&quot;keyword.operator.assignment.ruby&quot;</span>).unwrap())),
+        </span><span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"lol = &lt;&lt;-SQL.strip"</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"source.ruby.rails"</span>).unwrap())),
+            (<span class="number">4</span>, Push(Scope::new(<span class="string">"keyword.operator.assignment.ruby"</span>).unwrap())),
             (<span class="number">5</span>, Pop(<span class="number">1</span>)),
-            (<span class="number">6</span>, Push(Scope::new(<span class="string">&quot;string.unquoted.embedded.sql.ruby&quot;</span>).unwrap())),
-            (<span class="number">6</span>, Push(Scope::new(<span class="string">&quot;punctuation.definition.string.begin.ruby&quot;</span>).unwrap())),
+            (<span class="number">6</span>, Push(Scope::new(<span class="string">"string.unquoted.embedded.sql.ruby"</span>).unwrap())),
+            (<span class="number">6</span>, Push(Scope::new(<span class="string">"punctuation.definition.string.begin.ruby"</span>).unwrap())),
             (<span class="number">12</span>, Pop(<span class="number">1</span>)),
             (<span class="number">12</span>, Pop(<span class="number">1</span>)),
-            (<span class="number">12</span>, Push(Scope::new(<span class="string">&quot;string.unquoted.embedded.sql.ruby&quot;</span>).unwrap())),
-            (<span class="number">12</span>, Push(Scope::new(<span class="string">&quot;text.sql.embedded.ruby&quot;</span>).unwrap())),
+            (<span class="number">12</span>, Push(Scope::new(<span class="string">"string.unquoted.embedded.sql.ruby"</span>).unwrap())),
+            (<span class="number">12</span>, Push(Scope::new(<span class="string">"text.sql.embedded.ruby"</span>).unwrap())),
             (<span class="number">12</span>, Clear(ClearAmount::TopN(<span class="number">2</span>))),
-            (<span class="number">12</span>, Push(Scope::new(<span class="string">&quot;punctuation.accessor.ruby&quot;</span>).unwrap())),
+            (<span class="number">12</span>, Push(Scope::new(<span class="string">"punctuation.accessor.ruby"</span>).unwrap())),
             (<span class="number">13</span>, Pop(<span class="number">1</span>)),
             (<span class="number">18</span>, Restore),
         ]);
 
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;wow&quot;</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[]);
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"wow"</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[]);
 
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;SQL&quot;</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"SQL"</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
             (<span class="number">0</span>, Pop(<span class="number">1</span>)),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;punctuation.definition.string.end.ruby&quot;</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"punctuation.definition.string.end.ruby"</span>).unwrap())),
             (<span class="number">3</span>, Pop(<span class="number">1</span>)),
             (<span class="number">3</span>, Pop(<span class="number">1</span>)),
         ]);
@@ -2669,50 +2669,50 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_preprocessor_rules() {
-        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">&quot;testdata/Packages&quot;</span>).unwrap();
+        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">"testdata/Packages"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state = {
-            <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">&quot;C&quot;</span>).unwrap();
+            <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">"C"</span>).unwrap();
             ParseState::new(syntax)
         };
 
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;#ifdef FOO&quot;</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;source.c&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;meta.preprocessor.c&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;keyword.control.import.c&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"#ifdef FOO"</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"source.c"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"meta.preprocessor.c"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"keyword.control.import.c"</span>).unwrap())),
             (<span class="number">6</span>, Pop(<span class="number">1</span>)),
             (<span class="number">10</span>, Pop(<span class="number">1</span>)),
         ]);
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;{&quot;</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;meta.block.c&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;punctuation.section.block.begin.c&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"{"</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"meta.block.c"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"punctuation.section.block.begin.c"</span>).unwrap())),
             (<span class="number">1</span>, Pop(<span class="number">1</span>)),
         ]);
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;#else&quot;</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;meta.preprocessor.c&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;keyword.control.import.c&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"#else"</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"meta.preprocessor.c"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"keyword.control.import.c"</span>).unwrap())),
             (<span class="number">5</span>, Pop(<span class="number">1</span>)),
             (<span class="number">5</span>, Pop(<span class="number">1</span>)),
         ]);
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;{&quot;</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;meta.block.c&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;punctuation.section.block.begin.c&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"{"</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"meta.block.c"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"punctuation.section.block.begin.c"</span>).unwrap())),
             (<span class="number">1</span>, Pop(<span class="number">1</span>)),
         ]);
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;#endif&quot;</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"#endif"</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
             (<span class="number">0</span>, Pop(<span class="number">1</span>)),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;meta.block.c&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;meta.preprocessor.c&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;keyword.control.import.c&quot;</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"meta.block.c"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"meta.preprocessor.c"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"keyword.control.import.c"</span>).unwrap())),
             (<span class="number">6</span>, Pop(<span class="number">2</span>)),
             (<span class="number">6</span>, Pop(<span class="number">2</span>)),
-            (<span class="number">6</span>, Push(Scope::new(<span class="string">&quot;meta.block.c&quot;</span>).unwrap())),
+            (<span class="number">6</span>, Push(Scope::new(<span class="string">"meta.block.c"</span>).unwrap())),
         ]);
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;    foo;&quot;</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
-            (<span class="number">7</span>, Push(Scope::new(<span class="string">&quot;punctuation.terminator.c&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"    foo;"</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
+            (<span class="number">7</span>, Push(Scope::new(<span class="string">"punctuation.terminator.c"</span>).unwrap())),
             (<span class="number">8</span>, Pop(<span class="number">1</span>)),
         ]);
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;}&quot;</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;punctuation.section.block.end.c&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"}"</span>, <span class="kw-2">&amp;</span>ss), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"punctuation.section.block.end.c"</span>).unwrap())),
             (<span class="number">1</span>, Pop(<span class="number">1</span>)),
             (<span class="number">1</span>, Pop(<span class="number">1</span>)),
         ]);
@@ -2720,70 +2720,70 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_issue25() {
-        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">&quot;testdata/Packages&quot;</span>).unwrap();
+        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">"testdata/Packages"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state = {
-            <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">&quot;C&quot;</span>).unwrap();
+            <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">"C"</span>).unwrap();
             ParseState::new(syntax)
         };
 
         <span class="comment">// test fix for issue #25
-        </span><span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;struct{estruct&quot;</span>, <span class="kw-2">&amp;</span>ss).len(), <span class="number">10</span>);
+        </span><span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"struct{estruct"</span>, <span class="kw-2">&amp;</span>ss).len(), <span class="number">10</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_compare_parse_states() {
-        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">&quot;testdata/Packages&quot;</span>).unwrap();
-        <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">&quot;Java&quot;</span>).unwrap();
+        <span class="kw">let </span>ss = SyntaxSet::load_from_folder(<span class="string">"testdata/Packages"</span>).unwrap();
+        <span class="kw">let </span>syntax = ss.find_syntax_by_name(<span class="string">"Java"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state1 = ParseState::new(syntax);
         <span class="kw">let </span><span class="kw-2">mut </span>state2 = ParseState::new(syntax);
 
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state1, <span class="string">&quot;class Foo {&quot;</span>, <span class="kw-2">&amp;</span>ss).len(), <span class="number">11</span>);
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state2, <span class="string">&quot;class Fooo {&quot;</span>, <span class="kw-2">&amp;</span>ss).len(), <span class="number">11</span>);
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state1, <span class="string">"class Foo {"</span>, <span class="kw-2">&amp;</span>ss).len(), <span class="number">11</span>);
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state2, <span class="string">"class Fooo {"</span>, <span class="kw-2">&amp;</span>ss).len(), <span class="number">11</span>);
 
         <span class="macro">assert_eq!</span>(state1, state2);
-        ops(<span class="kw-2">&amp;mut </span>state1, <span class="string">&quot;}&quot;</span>, <span class="kw-2">&amp;</span>ss);
+        ops(<span class="kw-2">&amp;mut </span>state1, <span class="string">"}"</span>, <span class="kw-2">&amp;</span>ss);
         <span class="macro">assert_ne!</span>(state1, state2);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_nested_clear_scopes() {
-        <span class="kw">let </span>line = <span class="string">&quot;&#39;hello #simple_cleared_scopes_test world test \\n &#39;&quot;</span>;
+        <span class="kw">let </span>line = <span class="string">"'hello #simple_cleared_scopes_test world test \\n '"</span>;
         <span class="kw">let </span>expect = [
-            <span class="string">&quot;&lt;source.test&gt;, &lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pushes-clear-scopes.example&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pops-clear-scopes.example&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;string.quoted.single.example&gt;, &lt;constant.character.escape.example&gt;&quot;</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pushes-clear-scopes.example&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pops-clear-scopes.example&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;string.quoted.single.example&gt;, &lt;constant.character.escape.example&gt;"</span>,
         ];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, TEST_SYNTAX);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_nested_too_many_clear_scopes() {
-        <span class="kw">let </span>line = <span class="string">&quot;&#39;hello #too_many_cleared_scopes_test world test \\n &#39;&quot;</span>;
+        <span class="kw">let </span>line = <span class="string">"'hello #too_many_cleared_scopes_test world test \\n '"</span>;
         <span class="kw">let </span>expect = [
-            <span class="string">&quot;&lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pushes-clear-scopes.example&gt;&quot;</span>,
-            <span class="string">&quot;&lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pops-clear-scopes.example&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;string.quoted.single.example&gt;, &lt;constant.character.escape.example&gt;&quot;</span>,
+            <span class="string">"&lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pushes-clear-scopes.example&gt;"</span>,
+            <span class="string">"&lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pops-clear-scopes.example&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;string.quoted.single.example&gt;, &lt;constant.character.escape.example&gt;"</span>,
         ];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, TEST_SYNTAX);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_nested_clear_scopes() {
-        <span class="kw">let </span>line = <span class="string">&quot;&#39;hello #nested_clear_scopes_test world foo bar test \\n &#39;&quot;</span>;
+        <span class="kw">let </span>line = <span class="string">"'hello #nested_clear_scopes_test world foo bar test \\n '"</span>;
         <span class="kw">let </span>expect = [
-            <span class="string">&quot;&lt;source.test&gt;, &lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pushes-clear-scopes.example&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;example.meta-scope.cleared-previous-meta-scope.example&gt;, &lt;foo&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pops-clear-scopes.example&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;string.quoted.single.example&gt;, &lt;constant.character.escape.example&gt;&quot;</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pushes-clear-scopes.example&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;example.meta-scope.cleared-previous-meta-scope.example&gt;, &lt;foo&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;example.meta-scope.after-clear-scopes.example&gt;, &lt;example.pops-clear-scopes.example&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;string.quoted.single.example&gt;, &lt;constant.character.escape.example&gt;"</span>,
         ];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, TEST_SYNTAX);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_infinite_loop() {
-        <span class="kw">let </span>line = <span class="string">&quot;#infinite_loop_test 123&quot;</span>;
+        <span class="kw">let </span>line = <span class="string">"#infinite_loop_test 123"</span>;
         <span class="kw">let </span>expect = [
-            <span class="string">&quot;&lt;source.test&gt;, &lt;constant.numeric.test&gt;&quot;</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;constant.numeric.test&gt;"</span>,
         ];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, TEST_SYNTAX);
     }
@@ -2792,18 +2792,18 @@
     </span><span class="kw">fn </span>can_parse_infinite_seeming_loop() {
         <span class="comment">// See https://github.com/SublimeTextIssues/Core/issues/1190 for an
         // explanation.
-        </span><span class="kw">let </span>line = <span class="string">&quot;#infinite_seeming_loop_test hello&quot;</span>;
+        </span><span class="kw">let </span>line = <span class="string">"#infinite_seeming_loop_test hello"</span>;
         <span class="kw">let </span>expect = [
-            <span class="string">&quot;&lt;source.test&gt;, &lt;keyword.test&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;test&gt;, &lt;string.unquoted.test&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;test&gt;, &lt;keyword.control.test&gt;&quot;</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;keyword.test&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;test&gt;, &lt;string.unquoted.test&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;test&gt;, &lt;keyword.control.test&gt;"</span>,
         ];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, TEST_SYNTAX);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_prototype_that_pops_main() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
@@ -2815,16 +2815,16 @@ contexts:
   main:
     - match: foo
       scope: test.good
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;foo!&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.good&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"foo!"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.good&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_syntax_with_newline_in_character_class() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
@@ -2833,17 +2833,17 @@ contexts:
       scope: foo.end
     - match: foo
       scope: foo.any
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;foo&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;foo.end&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"foo"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;foo.end&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
 
-        <span class="kw">let </span>line = <span class="string">&quot;foofoofoo&quot;</span>;
+        <span class="kw">let </span>line = <span class="string">"foofoofoo"</span>;
         <span class="kw">let </span>expect = [
-            <span class="string">&quot;&lt;source.test&gt;, &lt;foo.any&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;foo.any&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;foo.end&gt;&quot;</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;foo.any&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;foo.any&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;foo.end&gt;"</span>,
         ];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
@@ -2851,27 +2851,27 @@ contexts:
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_issue120() {
         <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(
-            <span class="macro">include_str!</span>(<span class="string">&quot;../../testdata/embed_escape_test.sublime-syntax&quot;</span>),
+            <span class="macro">include_str!</span>(<span class="string">"../../testdata/embed_escape_test.sublime-syntax"</span>),
             <span class="bool-val">false</span>,
             <span class="prelude-val">None
         </span>).unwrap();
 
-        <span class="kw">let </span>line1 = <span class="string">&quot;\&quot;abctest\&quot; foobar&quot;</span>;
+        <span class="kw">let </span>line1 = <span class="string">"\"abctest\" foobar"</span>;
         <span class="kw">let </span>expect1 = [
-            <span class="string">&quot;&lt;meta.attribute-with-value.style.html&gt;, &lt;string.quoted.double&gt;, &lt;punctuation.definition.string.begin.html&gt;&quot;</span>,
-            <span class="string">&quot;&lt;meta.attribute-with-value.style.html&gt;, &lt;source.css&gt;&quot;</span>,
-            <span class="string">&quot;&lt;meta.attribute-with-value.style.html&gt;, &lt;string.quoted.double&gt;, &lt;punctuation.definition.string.end.html&gt;&quot;</span>,
-            <span class="string">&quot;&lt;meta.attribute-with-value.style.html&gt;, &lt;source.css&gt;, &lt;test.embedded&gt;&quot;</span>,
-            <span class="string">&quot;&lt;top-level.test&gt;&quot;</span>,
+            <span class="string">"&lt;meta.attribute-with-value.style.html&gt;, &lt;string.quoted.double&gt;, &lt;punctuation.definition.string.begin.html&gt;"</span>,
+            <span class="string">"&lt;meta.attribute-with-value.style.html&gt;, &lt;source.css&gt;"</span>,
+            <span class="string">"&lt;meta.attribute-with-value.style.html&gt;, &lt;string.quoted.double&gt;, &lt;punctuation.definition.string.end.html&gt;"</span>,
+            <span class="string">"&lt;meta.attribute-with-value.style.html&gt;, &lt;source.css&gt;, &lt;test.embedded&gt;"</span>,
+            <span class="string">"&lt;top-level.test&gt;"</span>,
         ];
 
         expect_scope_stacks_with_syntax(line1, <span class="kw-2">&amp;</span>expect1, syntax.clone());
 
-        <span class="kw">let </span>line2 = <span class="string">&quot;&gt;abctest&lt;/style&gt;foobar&quot;</span>;
+        <span class="kw">let </span>line2 = <span class="string">"&gt;abctest&lt;/style&gt;foobar"</span>;
         <span class="kw">let </span>expect2 = [
-            <span class="string">&quot;&lt;meta.tag.style.begin.html&gt;, &lt;punctuation.definition.tag.end.html&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.css.embedded.html&gt;, &lt;test.embedded&gt;&quot;</span>,
-            <span class="string">&quot;&lt;top-level.test&gt;&quot;</span>,
+            <span class="string">"&lt;meta.tag.style.begin.html&gt;, &lt;punctuation.definition.tag.end.html&gt;"</span>,
+            <span class="string">"&lt;source.css.embedded.html&gt;, &lt;test.embedded&gt;"</span>,
+            <span class="string">"&lt;top-level.test&gt;"</span>,
         ];
         expect_scope_stacks_with_syntax(line2, <span class="kw-2">&amp;</span>expect2, syntax);
     }
@@ -2879,89 +2879,89 @@ contexts:
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_consuming_pop_that_would_loop() {
         <span class="comment">// See https://github.com/trishume/syntect/issues/127
-        </span><span class="kw">let </span>syntax = <span class="string">r#&quot;
+        </span><span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
   main:
-    # This makes us go into &quot;test&quot; without consuming any characters
+    # This makes us go into "test" without consuming any characters
     - match: (?=hello)
       push: test
   test:
-    # If we used this match, we&#39;d go back to &quot;main&quot; without consuming anything,
-    # and then back into &quot;test&quot;, infinitely looping. ST detects this at this
+    # If we used this match, we'd go back to "main" without consuming anything,
+    # and then back into "test", infinitely looping. ST detects this at this
     # point and ignores this match until at least one character matched.
     - match: (?!world)
       pop: true
     - match: \w+
       scope: test.matched
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;hello&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.matched&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"hello"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.matched&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_consuming_set_and_pop_that_would_loop() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
   main:
-    # This makes us go into &quot;a&quot; without advancing
+    # This makes us go into "a" without advancing
     - match: (?=test)
       push: a
   a:
-    # This makes us go into &quot;b&quot; without advancing
+    # This makes us go into "b" without advancing
     - match: (?=t)
       set: b
   b:
-    # If we used this match, we&#39;d go back to &quot;main&quot; without having advanced,
-    # which means we&#39;d have an infinite loop like with the previous test.
-    # So even for a &quot;set&quot;, we have to check if we&#39;re advancing or not.
+    # If we used this match, we'd go back to "main" without having advanced,
+    # which means we'd have an infinite loop like with the previous test.
+    # So even for a "set", we have to check if we're advancing or not.
     - match: (?=t)
       pop: true
     - match: \w+
       scope: test.matched
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;test&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.matched&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"test"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.matched&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_consuming_set_after_consuming_push_that_does_not_loop() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
   main:
-    # This makes us go into &quot;a&quot;, but we consumed a character
+    # This makes us go into "a", but we consumed a character
     - match: t
       push: a
     - match: \w+
       scope: test.matched
   a:
-    # This makes us go into &quot;b&quot; without consuming
+    # This makes us go into "b" without consuming
     - match: (?=e)
       set: b
   b:
     # This match does not result in an infinite loop because we already consumed
-    # a character to get into &quot;a&quot;, so it&#39;s ok to pop back into &quot;main&quot;.
+    # a character to get into "a", so it's ok to pop back into "main".
     - match: (?=e)
       pop: true
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;test&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.matched&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"test"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.matched&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_consuming_set_after_consuming_set_that_does_not_loop() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
@@ -2977,42 +2977,42 @@ contexts:
     - match: (?=e)
       set: c
   c:
-    # This is not an infinite loop because &quot;a&quot; consumed a character, so we can
+    # This is not an infinite loop because "a" consumed a character, so we can
     # actually pop back into main and then match the rest of the input.
     - match: (?=e)
       pop: true
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;hello&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.matched&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"hello"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.matched&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_consuming_pop_that_would_loop_at_end_of_line() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
   main:
-    # This makes us go into &quot;test&quot; without consuming, even at the end of line
-    - match: &quot;&quot;
+    # This makes us go into "test" without consuming, even at the end of line
+    - match: ""
       push: test
   test:
-    - match: &quot;&quot;
+    - match: ""
       pop: true
     - match: \w+
       scope: test.matched
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;hello&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.matched&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"hello"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.matched&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_empty_but_consuming_set_that_does_not_loop() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
@@ -3022,60 +3022,60 @@ contexts:
     - match: ello
       scope: test.good
   a:
-    # This is an empty match, but it consumed a character (the &quot;h&quot;)
+    # This is an empty match, but it consumed a character (the "h")
     - match: (?=e)
       set: b
   b:
-    # .. so it&#39;s ok to pop back to main from here
-    - match: &quot;&quot;
+    # .. so it's ok to pop back to main from here
+    - match: ""
       pop: true
     - match: ello
       scope: test.bad
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;hello&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.good&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"hello"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.good&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_consuming_pop_that_does_not_loop() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
   main:
-    # This is a non-consuming push, so &quot;b&quot; will need to check for a
+    # This is a non-consuming push, so "b" will need to check for a
     # non-consuming pop
     - match: (?=hello)
       push: [b, a]
     - match: ello
       scope: test.good
   a:
-    # This pop is ok, it consumed &quot;h&quot;
+    # This pop is ok, it consumed "h"
     - match: (?=e)
       pop: true
   b:
-    # This is non-consuming, and we set to &quot;c&quot;
+    # This is non-consuming, and we set to "c"
     - match: (?=e)
       set: c
   c:
-    # It&#39;s ok to pop back to &quot;main&quot; here because we consumed a character in the
+    # It's ok to pop back to "main" here because we consumed a character in the
     # meantime.
-    - match: &quot;&quot;
+    - match: ""
       pop: true
     - match: ello
       scope: test.bad
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;hello&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.good&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"hello"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.good&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_consuming_pop_with_multi_push_that_does_not_loop() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
@@ -3085,25 +3085,25 @@ contexts:
     - match: ello
       scope: test.good
   a:
-    # This pop is ok, as we&#39;re not popping back to &quot;main&quot; yet (which would loop),
-    # we&#39;re popping to &quot;b&quot;
-    - match: &quot;&quot;
+    # This pop is ok, as we're not popping back to "main" yet (which would loop),
+    # we're popping to "b"
+    - match: ""
       pop: true
     - match: \w+
       scope: test.bad
   b:
     - match: \w+
       scope: test.good
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;hello&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.good&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"hello"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.good&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_consuming_pop_of_recursive_context_that_does_not_loop() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
@@ -3113,7 +3113,7 @@ contexts:
     - include: basic-identifiers
 
   basic-identifiers:
-    - match: &#39;\w+::&#39;
+    - match: '\w+::'
       scope: test.matched
       push: no-type-names
 
@@ -3122,20 +3122,20 @@ contexts:
       - match: \w+
         scope: test.matched.inside
       # This is a tricky one because when this is the best match,
-      # we have two instances of &quot;no-type-names&quot; on the stack, so we&#39;re popping
-      # back from &quot;no-type-names&quot; to another &quot;no-type-names&quot;.
-      - match: &#39;&#39;
+      # we have two instances of "no-type-names" on the stack, so we're popping
+      # back from "no-type-names" to another "no-type-names".
+      - match: ''
         pop: true
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;foo::bar::* xxx&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.good&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"foo::bar::* xxx"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.good&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_non_consuming_pop_order() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
@@ -3146,10 +3146,10 @@ contexts:
     # This matches first
     - match: (?=e)
       push: good
-    # But this (looping) match replaces it, because it&#39;s an earlier match
+    # But this (looping) match replaces it, because it's an earlier match
     - match: (?=h)
       pop: true
-    # And this should not replace it, as it&#39;s a later match (only matches at
+    # And this should not replace it, as it's a later match (only matches at
     # the same position can replace looping pops).
     - match: (?=o)
       push: bad
@@ -3159,16 +3159,16 @@ contexts:
   bad:
     - match: \w+
       scope: test.bad
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;hello&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;test.good&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"hello"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;test.good&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_prototype_with_embed() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: Javadoc
 scope: text.html.javadoc
 contexts:
@@ -3187,16 +3187,16 @@ contexts:
         0: comment.block.documentation.javadoc punctuation.definition.comment.end.javadoc
 
   contents:
-    - match: &#39;&#39;
-&quot;#</span>;
+    - match: ''
+"#</span>;
 
         <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(syntax, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
-        expect_scope_stacks_with_syntax(<span class="string">&quot;/** * */&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;comment.block.documentation.javadoc&gt;, &lt;punctuation.definition.comment.begin.javadoc&gt;&quot;</span>, <span class="string">&quot;&lt;comment.block.documentation.javadoc&gt;, &lt;text.html.javadoc&gt;, &lt;punctuation.definition.comment.javadoc&gt;&quot;</span>, <span class="string">&quot;&lt;comment.block.documentation.javadoc&gt;, &lt;punctuation.definition.comment.end.javadoc&gt;&quot;</span>], syntax);
+        expect_scope_stacks_with_syntax(<span class="string">"/** * */"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;comment.block.documentation.javadoc&gt;, &lt;punctuation.definition.comment.begin.javadoc&gt;"</span>, <span class="string">"&lt;comment.block.documentation.javadoc&gt;, &lt;text.html.javadoc&gt;, &lt;punctuation.definition.comment.javadoc&gt;"</span>, <span class="string">"&lt;comment.block.documentation.javadoc&gt;, &lt;punctuation.definition.comment.end.javadoc&gt;"</span>], syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_context_included_in_prototype_via_named_reference() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 scope: source.test
 contexts:
   prototype:
@@ -3207,24 +3207,24 @@ contexts:
   main:
     - match: unused
   # This context is included in the prototype (see `push: a`).
-  # Because of that, ST doesn&#39;t apply the prototype to this context, so if
-  # we&#39;re in here the &quot;b&quot; shouldn&#39;t match.
+  # Because of that, ST doesn't apply the prototype to this context, so if
+  # we're in here the "b" shouldn't match.
   a:
     - match: a
       scope: test.good
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>stack_states = stack_states(parse(<span class="string">&quot;aa b&quot;</span>, syntax));
+        <span class="kw">let </span>stack_states = stack_states(parse(<span class="string">"aa b"</span>, syntax));
         <span class="macro">assert_eq!</span>(stack_states, <span class="macro">vec!</span>[
-            <span class="string">&quot;&lt;source.test&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;, &lt;test.good&gt;&quot;</span>,
-            <span class="string">&quot;&lt;source.test&gt;&quot;</span>,
-        ], <span class="string">&quot;Expected test.bad to not match&quot;</span>);
+            <span class="string">"&lt;source.test&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;, &lt;test.good&gt;"</span>,
+            <span class="string">"&lt;source.test&gt;"</span>,
+        ], <span class="string">"Expected test.bad to not match"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_with_prototype_set() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;%YAML 1.2
+        <span class="kw">let </span>syntax = <span class="string">r#"%YAML 1.2
 ---
 scope: source.test-set-with-proto
 contexts:
@@ -3233,16 +3233,16 @@ contexts:
       scope: a
       set: next1
       with_prototype:
-        - match: &#39;1&#39;
-          scope: &#39;1&#39;
-        - match: &#39;2&#39;
-          scope: &#39;2&#39;
-        - match: &#39;3&#39;
-          scope: &#39;3&#39;
-        - match: &#39;4&#39;
-          scope: &#39;4&#39;
-    - match: &#39;5&#39;
-      scope: &#39;5&#39;
+        - match: '1'
+          scope: '1'
+        - match: '2'
+          scope: '2'
+        - match: '3'
+          scope: '3'
+        - match: '4'
+          scope: '4'
+    - match: '5'
+      scope: '5'
       set: [next3, next2]
       with_prototype:
         - match: c
@@ -3268,25 +3268,25 @@ contexts:
       pop: true
     - match: c
       scope: cwithout
-&quot;#</span>;
+"#</span>;
 
         expect_scope_stacks_with_syntax(
-            <span class="string">&quot;a1b2c3d4e5&quot;</span>,
+            <span class="string">"a1b2c3d4e5"</span>,
             <span class="kw-2">&amp;</span>[
-                <span class="string">&quot;&lt;a&gt;&quot;</span>, <span class="string">&quot;&lt;1&gt;&quot;</span>, <span class="string">&quot;&lt;b&gt;&quot;</span>, <span class="string">&quot;&lt;2&gt;&quot;</span>, <span class="string">&quot;&lt;c&gt;&quot;</span>, <span class="string">&quot;&lt;3&gt;&quot;</span>, <span class="string">&quot;&lt;d&gt;&quot;</span>, <span class="string">&quot;&lt;4&gt;&quot;</span>, <span class="string">&quot;&lt;e&gt;&quot;</span>, <span class="string">&quot;&lt;5&gt;&quot;
+                <span class="string">"&lt;a&gt;"</span>, <span class="string">"&lt;1&gt;"</span>, <span class="string">"&lt;b&gt;"</span>, <span class="string">"&lt;2&gt;"</span>, <span class="string">"&lt;c&gt;"</span>, <span class="string">"&lt;3&gt;"</span>, <span class="string">"&lt;d&gt;"</span>, <span class="string">"&lt;4&gt;"</span>, <span class="string">"&lt;e&gt;"</span>, <span class="string">"&lt;5&gt;"
             </span>], SyntaxDefinition::load_from_str(syntax, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap()
         );
         expect_scope_stacks_with_syntax(
-            <span class="string">&quot;5cfcecbedcdea&quot;</span>,
+            <span class="string">"5cfcecbedcdea"</span>,
             <span class="kw-2">&amp;</span>[
-                <span class="string">&quot;&lt;5&gt;&quot;</span>, <span class="string">&quot;&lt;cwith&gt;&quot;</span>, <span class="string">&quot;&lt;f&gt;&quot;</span>, <span class="string">&quot;&lt;e&gt;&quot;</span>, <span class="string">&quot;&lt;b&gt;&quot;</span>, <span class="string">&quot;&lt;d&gt;&quot;</span>, <span class="string">&quot;&lt;cwithout&gt;&quot;</span>, <span class="string">&quot;&lt;a&gt;&quot;
+                <span class="string">"&lt;5&gt;"</span>, <span class="string">"&lt;cwith&gt;"</span>, <span class="string">"&lt;f&gt;"</span>, <span class="string">"&lt;e&gt;"</span>, <span class="string">"&lt;b&gt;"</span>, <span class="string">"&lt;d&gt;"</span>, <span class="string">"&lt;cwithout&gt;"</span>, <span class="string">"&lt;a&gt;"
             </span>], SyntaxDefinition::load_from_str(syntax, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap()
         );
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_issue176() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 scope: source.dummy
 contexts:
   main:
@@ -3299,15 +3299,15 @@ contexts:
         - match: (oo)
           captures:
             1: keyword
-&quot;#</span>;
+"#</span>;
 
         <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(syntax, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
-        expect_scope_stacks_with_syntax(<span class="string">&quot;testfoo&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;test&gt;&quot;</span>, <span class="comment">/*&quot;&lt;ignored&gt;&quot;,*/ </span><span class="string">&quot;&lt;f&gt;&quot;</span>, <span class="string">&quot;&lt;keyword&gt;&quot;</span>], syntax);
+        expect_scope_stacks_with_syntax(<span class="string">"testfoo"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;test&gt;"</span>, <span class="comment">/*"&lt;ignored&gt;",*/ </span><span class="string">"&lt;f&gt;"</span>, <span class="string">"&lt;keyword&gt;"</span>], syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_two_with_prototypes_at_same_stack_level() {
-        <span class="kw">let </span>syntax_yamlstr = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax_yamlstr = <span class="string">r#"
 %YAML 1.2
 ---
 # See http://www.sublimetext.com/docs/3/syntax.html
@@ -3323,20 +3323,20 @@ contexts:
             - match: c
               scope: c
           with_prototype:
-            - match: &#39;2&#39;
-              scope: &#39;2&#39;
+            - match: '2'
+              scope: '2'
       with_prototype:
-        - match: &#39;1&#39;
-          scope: &#39;1&#39;
-&quot;#</span>;
+        - match: '1'
+          scope: '1'
+"#</span>;
 
         <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(syntax_yamlstr, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
-        expect_scope_stacks_with_syntax(<span class="string">&quot;abc12&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;1&gt;&quot;</span>, <span class="string">&quot;&lt;2&gt;&quot;</span>], syntax);
+        expect_scope_stacks_with_syntax(<span class="string">"abc12"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;1&gt;"</span>, <span class="string">"&lt;2&gt;"</span>], syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_two_with_prototypes_at_same_stack_level_set_multiple() {
-        <span class="kw">let </span>syntax_yamlstr = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax_yamlstr = <span class="string">r#"
 %YAML 1.2
 ---
 # See http://www.sublimetext.com/docs/3/syntax.html
@@ -3350,43 +3350,43 @@ contexts:
           scope: b
           set: [context1, context2, context3]
           with_prototype:
-            - match: &#39;2&#39;
-              scope: &#39;2&#39;
+            - match: '2'
+              scope: '2'
       with_prototype:
-        - match: &#39;1&#39;
-          scope: &#39;1&#39;
-    - match: &#39;1&#39;
+        - match: '1'
+          scope: '1'
+    - match: '1'
       scope: digit1
-    - match: &#39;2&#39;
+    - match: '2'
       scope: digit2
   context1:
     - match: e
       scope: e
       pop: true
-    - match: &#39;2&#39;
+    - match: '2'
       scope: digit2
   context2:
     - match: d
       scope: d
       pop: true
-    - match: &#39;2&#39;
+    - match: '2'
       scope: digit2
   context3:
     - match: c
       scope: c
       pop: true
-&quot;#</span>;
+"#</span>;
 
         <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(syntax_yamlstr, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
-        expect_scope_stacks_with_syntax(<span class="string">&quot;ab12&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;1&gt;&quot;</span>, <span class="string">&quot;&lt;2&gt;&quot;</span>], syntax.clone());
-        expect_scope_stacks_with_syntax(<span class="string">&quot;abc12&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;1&gt;&quot;</span>, <span class="string">&quot;&lt;digit2&gt;&quot;</span>], syntax.clone());
-        expect_scope_stacks_with_syntax(<span class="string">&quot;abcd12&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;1&gt;&quot;</span>, <span class="string">&quot;&lt;digit2&gt;&quot;</span>], syntax.clone());
-        expect_scope_stacks_with_syntax(<span class="string">&quot;abcde12&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;digit1&gt;&quot;</span>, <span class="string">&quot;&lt;digit2&gt;&quot;</span>], syntax);
+        expect_scope_stacks_with_syntax(<span class="string">"ab12"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;1&gt;"</span>, <span class="string">"&lt;2&gt;"</span>], syntax.clone());
+        expect_scope_stacks_with_syntax(<span class="string">"abc12"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;1&gt;"</span>, <span class="string">"&lt;digit2&gt;"</span>], syntax.clone());
+        expect_scope_stacks_with_syntax(<span class="string">"abcd12"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;1&gt;"</span>, <span class="string">"&lt;digit2&gt;"</span>], syntax.clone());
+        expect_scope_stacks_with_syntax(<span class="string">"abcde12"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;digit1&gt;"</span>, <span class="string">"&lt;digit2&gt;"</span>], syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_two_with_prototypes_at_same_stack_level_updated_captures() {
-        <span class="kw">let </span>syntax_yamlstr = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax_yamlstr = <span class="string">r#"
 %YAML 1.2
 ---
 # See http://www.sublimetext.com/docs/3/syntax.html
@@ -3406,18 +3406,18 @@ contexts:
               scope: d
       with_prototype:
         - match: \1
-          scope: &#39;1&#39;
+          scope: '1'
           pop: true
-&quot;#</span>;
+"#</span>;
 
         <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(syntax_yamlstr, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
-        expect_scope_stacks_with_syntax(<span class="string">&quot;aa&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;a&gt;&quot;</span>, <span class="string">&quot;&lt;1&gt;&quot;</span>], syntax.clone());
-        expect_scope_stacks_with_syntax(<span class="string">&quot;abcdb&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;a&gt;&quot;</span>, <span class="string">&quot;&lt;b&gt;&quot;</span>, <span class="string">&quot;&lt;c&gt;&quot;</span>, <span class="string">&quot;&lt;d&gt;&quot;</span>, <span class="string">&quot;&lt;1&gt;&quot;</span>], syntax);
+        expect_scope_stacks_with_syntax(<span class="string">"aa"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;a&gt;"</span>, <span class="string">"&lt;1&gt;"</span>], syntax.clone());
+        expect_scope_stacks_with_syntax(<span class="string">"abcdb"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;a&gt;"</span>, <span class="string">"&lt;b&gt;"</span>, <span class="string">"&lt;c&gt;"</span>, <span class="string">"&lt;d&gt;"</span>, <span class="string">"&lt;1&gt;"</span>], syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_two_with_prototypes_at_same_stack_level_updated_captures_ignore_unexisting() {
-        <span class="kw">let </span>syntax_yamlstr = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax_yamlstr = <span class="string">r#"
 %YAML 1.2
 ---
 # See http://www.sublimetext.com/docs/3/syntax.html
@@ -3437,55 +3437,55 @@ contexts:
               scope: d
       with_prototype:
         - match: \2
-          scope: &#39;2&#39;
+          scope: '2'
           pop: true
         - match: \1
-          scope: &#39;1&#39;
+          scope: '1'
           pop: true
-&quot;#</span>;
+"#</span>;
 
         <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(syntax_yamlstr, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
-        expect_scope_stacks_with_syntax(<span class="string">&quot;a--&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;a&gt;&quot;</span>, <span class="string">&quot;&lt;2&gt;&quot;</span>], syntax.clone());
-        <span class="comment">// it seems that when ST encounters a non existing pop backreference, it just pops back to the with_prototype&#39;s original parent context - i.e. cdb is unscoped
+        expect_scope_stacks_with_syntax(<span class="string">"a--"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;a&gt;"</span>, <span class="string">"&lt;2&gt;"</span>], syntax.clone());
+        <span class="comment">// it seems that when ST encounters a non existing pop backreference, it just pops back to the with_prototype's original parent context - i.e. cdb is unscoped
         // TODO: it would be useful to have syntest functionality available here for easier testing and clarity
-        </span>expect_scope_stacks_with_syntax(<span class="string">&quot;a-bcdba-&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;a&gt;&quot;</span>, <span class="string">&quot;&lt;b&gt;&quot;</span>], syntax);
+        </span>expect_scope_stacks_with_syntax(<span class="string">"a-bcdba-"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;a&gt;"</span>, <span class="string">"&lt;b&gt;"</span>], syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_syntax_with_eol_and_newline() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
   main:
     - match: foo$\n
       scope: foo.newline
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;foo&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;foo.newline&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"foo"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;foo.newline&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_syntax_with_eol_only() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
   main:
     - match: foo$
       scope: foo.newline
-&quot;#</span>;
+"#</span>;
 
-        <span class="kw">let </span>line = <span class="string">&quot;foo&quot;</span>;
-        <span class="kw">let </span>expect = [<span class="string">&quot;&lt;source.test&gt;, &lt;foo.newline&gt;&quot;</span>];
+        <span class="kw">let </span>line = <span class="string">"foo"</span>;
+        <span class="kw">let </span>expect = [<span class="string">"&lt;source.test&gt;, &lt;foo.newline&gt;"</span>];
         expect_scope_stacks(line, <span class="kw-2">&amp;</span>expect, syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_syntax_with_beginning_of_line() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
@@ -3501,53 +3501,53 @@ contexts:
           pop: true
     - match: .*
       scope: other
-&quot;#</span>;
+"#</span>;
 
         <span class="kw">let </span>syntax_newlines = SyntaxDefinition::load_from_str(syntax, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
         <span class="kw">let </span>syntax_set = link(syntax_newlines);
 
         <span class="kw">let </span><span class="kw-2">mut </span>state = ParseState::new(<span class="kw-2">&amp;</span>syntax_set.syntaxes()[<span class="number">0</span>]);
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;foo\n&quot;</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;source.test&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;word&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"foo\n"</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"source.test"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"word"</span>).unwrap())),
             (<span class="number">3</span>, Pop(<span class="number">1</span>))
         ]);
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;===\n&quot;</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;heading&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"===\n"</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"heading"</span>).unwrap())),
             (<span class="number">3</span>, Pop(<span class="number">1</span>))
         ]);
 
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;bar\n&quot;</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;word&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"bar\n"</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"word"</span>).unwrap())),
             (<span class="number">3</span>, Pop(<span class="number">1</span>))
         ]);
         <span class="comment">// This should result in popping out of the context
-        </span><span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;\n&quot;</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[]);
+        </span><span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"\n"</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[]);
         <span class="comment">// So now this matches other
-        </span><span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;====\n&quot;</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;other&quot;</span>).unwrap())),
+        </span><span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"====\n"</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"other"</span>).unwrap())),
             (<span class="number">4</span>, Pop(<span class="number">1</span>))
         ]);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_syntax_with_comment_and_eol() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
   main:
     - match: (//).*$
       scope: comment.line.double-slash
-&quot;#</span>;
+"#</span>;
 
         <span class="kw">let </span>syntax_newlines = SyntaxDefinition::load_from_str(syntax, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
         <span class="kw">let </span>syntax_set = link(syntax_newlines);
 
         <span class="kw">let </span><span class="kw-2">mut </span>state = ParseState::new(<span class="kw-2">&amp;</span>syntax_set.syntaxes()[<span class="number">0</span>]);
-        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">&quot;// foo\n&quot;</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;source.test&quot;</span>).unwrap())),
-            (<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;comment.line.double-slash&quot;</span>).unwrap())),
+        <span class="macro">assert_eq!</span>(ops(<span class="kw-2">&amp;mut </span>state, <span class="string">"// foo\n"</span>, <span class="kw-2">&amp;</span>syntax_set), <span class="macro">vec!</span>[
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"source.test"</span>).unwrap())),
+            (<span class="number">0</span>, Push(Scope::new(<span class="string">"comment.line.double-slash"</span>).unwrap())),
             <span class="comment">// 6 is important here, should not be 7. The pattern should *not* consume the newline,
             // but instead match before it. This is important for whitespace-sensitive syntaxes
             // where newlines terminate statements such as Scala.
@@ -3557,7 +3557,7 @@ contexts:
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_text_with_unicode_to_skip() {
-        <span class="kw">let </span>syntax = <span class="string">r#&quot;
+        <span class="kw">let </span>syntax = <span class="string">r#"
 name: test
 scope: source.test
 contexts:
@@ -3569,19 +3569,19 @@ contexts:
       pop: true
     - match: x
       scope: test.good
-&quot;#</span>;
+"#</span>;
 
         <span class="comment">// U+03C0 GREEK SMALL LETTER PI, 2 bytes in UTF-8
-        </span>expect_scope_stacks(<span class="string">&quot;\u{03C0}x&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;source.test&gt;, &lt;test.good&gt;&quot;</span>], syntax);
+        </span>expect_scope_stacks(<span class="string">"\u{03C0}x"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;source.test&gt;, &lt;test.good&gt;"</span>], syntax);
         <span class="comment">// U+0800 SAMARITAN LETTER ALAF, 3 bytes in UTF-8
-        </span>expect_scope_stacks(<span class="string">&quot;\u{0800}x&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;source.test&gt;, &lt;test.good&gt;&quot;</span>], syntax);
+        </span>expect_scope_stacks(<span class="string">"\u{0800}x"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;source.test&gt;, &lt;test.good&gt;"</span>], syntax);
         <span class="comment">// U+1F600 GRINNING FACE, 4 bytes in UTF-8
-        </span>expect_scope_stacks(<span class="string">&quot;\u{1F600}x&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;source.test&gt;, &lt;test.good&gt;&quot;</span>], syntax);
+        </span>expect_scope_stacks(<span class="string">"\u{1F600}x"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;source.test&gt;, &lt;test.good&gt;"</span>], syntax);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_include_backrefs() {
-        <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(<span class="string">r#&quot;
+        <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(<span class="string">r#"
                 name: Backref Include Test
                 scope: source.backrefinc
                 contexts:
@@ -3595,14 +3595,14 @@ contexts:
                     - match: \1
                       scope: b
                       pop: true
-                &quot;#</span>, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
+                "#</span>, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
 
-        expect_scope_stacks_with_syntax(<span class="string">&quot;aa&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;a&gt;&quot;</span>, <span class="string">&quot;&lt;b&gt;&quot;</span>], syntax);
+        expect_scope_stacks_with_syntax(<span class="string">"aa"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;a&gt;"</span>, <span class="string">"&lt;b&gt;"</span>], syntax);
     }
     
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_include_nested_backrefs() {
-        <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(<span class="string">r#&quot;
+        <span class="kw">let </span>syntax = SyntaxDefinition::load_from_str(<span class="string">r#"
                 name: Backref Include Test
                 scope: source.backrefinc
                 contexts:
@@ -3618,18 +3618,18 @@ contexts:
                     - match: \1
                       scope: b
                       pop: true
-                &quot;#</span>, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
+                "#</span>, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
 
-        expect_scope_stacks_with_syntax(<span class="string">&quot;aa&quot;</span>, <span class="kw-2">&amp;</span>[<span class="string">&quot;&lt;a&gt;&quot;</span>, <span class="string">&quot;&lt;b&gt;&quot;</span>], syntax);
+        expect_scope_stacks_with_syntax(<span class="string">"aa"</span>, <span class="kw-2">&amp;</span>[<span class="string">"&lt;a&gt;"</span>, <span class="string">"&lt;b&gt;"</span>], syntax);
     }
 
     <span class="kw">fn </span>expect_scope_stacks(line_without_newline: <span class="kw-2">&amp;</span>str, expect: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], syntax: <span class="kw-2">&amp;</span>str) {
-        <span class="macro">println!</span>(<span class="string">&quot;Parsing with newlines&quot;</span>);
-        <span class="kw">let </span>line_with_newline = <span class="macro">format!</span>(<span class="string">&quot;{}\n&quot;</span>, line_without_newline);
+        <span class="macro">println!</span>(<span class="string">"Parsing with newlines"</span>);
+        <span class="kw">let </span>line_with_newline = <span class="macro">format!</span>(<span class="string">"{}\n"</span>, line_without_newline);
         <span class="kw">let </span>syntax_newlines = SyntaxDefinition::load_from_str(syntax, <span class="bool-val">true</span>, <span class="prelude-val">None</span>).unwrap();
         expect_scope_stacks_with_syntax(<span class="kw-2">&amp;</span>line_with_newline, expect, syntax_newlines);
 
-        <span class="macro">println!</span>(<span class="string">&quot;Parsing without newlines&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Parsing without newlines"</span>);
         <span class="kw">let </span>syntax_nonewlines = SyntaxDefinition::load_from_str(syntax, <span class="bool-val">false</span>, <span class="prelude-val">None</span>).unwrap();
         expect_scope_stacks_with_syntax(line_without_newline, expect, syntax_nonewlines);
     }
@@ -3646,7 +3646,7 @@ contexts:
     <span class="kw">fn </span>expect_scope_stacks_for_ops(ops: Vec&lt;(usize, ScopeStackOp)&gt;, expect: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]) {
         <span class="kw">let </span><span class="kw-2">mut </span>criteria_met = Vec::new();
         <span class="kw">for </span>stack_str <span class="kw">in </span>stack_states(ops) {
-            <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, stack_str);
+            <span class="macro">println!</span>(<span class="string">"{}"</span>, stack_str);
             <span class="kw">for </span>expectation <span class="kw">in </span>expect.iter() {
                 <span class="kw">if </span>stack_str.contains(expectation) {
                     criteria_met.push(expectation);
@@ -3654,7 +3654,7 @@ contexts:
             }
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(missing) = expect.iter().find(|e| !criteria_met.contains(e)) {
-            <span class="macro">panic!</span>(<span class="string">&quot;expected scope stack &#39;{}&#39; missing&quot;</span>, missing);
+            <span class="macro">panic!</span>(<span class="string">"expected scope stack '{}' missing"</span>, missing);
         }
     }
 
@@ -3673,7 +3673,7 @@ contexts:
     }
 
     <span class="kw">fn </span>ops(state: <span class="kw-2">&amp;mut </span>ParseState, line: <span class="kw-2">&amp;</span>str, syntax_set: <span class="kw-2">&amp;</span>SyntaxSet) -&gt; Vec&lt;(usize, ScopeStackOp)&gt; {
-        <span class="kw">let </span>ops = state.parse_line(line, syntax_set).expect(<span class="string">&quot;#[cfg(test)]&quot;</span>);
+        <span class="kw">let </span>ops = state.parse_line(line, syntax_set).expect(<span class="string">"#[cfg(test)]"</span>);
         debug_print_ops(line, <span class="kw-2">&amp;</span>ops);
         ops
     }
@@ -3682,9 +3682,9 @@ contexts:
         <span class="kw">let </span><span class="kw-2">mut </span>states = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>stack = ScopeStack::new();
         <span class="kw">for </span><span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="kw-2">ref </span>op) <span class="kw">in </span>ops.iter() {
-            stack.apply(op).expect(<span class="string">&quot;#[cfg(test)]&quot;</span>);
-            <span class="kw">let </span>scopes: Vec&lt;String&gt; = stack.as_slice().iter().map(|s| <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, s)).collect();
-            <span class="kw">let </span>stack_str = scopes.join(<span class="string">&quot;, &quot;</span>);
+            stack.apply(op).expect(<span class="string">"#[cfg(test)]"</span>);
+            <span class="kw">let </span>scopes: Vec&lt;String&gt; = stack.as_slice().iter().map(|s| <span class="macro">format!</span>(<span class="string">"{:?}"</span>, s)).collect();
+            <span class="kw">let </span>stack_str = scopes.join(<span class="string">", "</span>);
             states.push(stack_str);
         }
         states

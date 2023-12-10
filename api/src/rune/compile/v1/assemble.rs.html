@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2591,24 +2591,24 @@
 }
 
 <span class="doccomment">/// Assemble context.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Ctxt&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;arena</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'arena</span>&gt; {
     <span class="doccomment">/// The source id of the source.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) source_id: SourceId,
     <span class="doccomment">/// Query system to compile required items.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) q: Query&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;arena</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) q: Query&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt;,
     <span class="doccomment">/// The assembly we are generating.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) asm: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Assembly,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) asm: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Assembly,
     <span class="doccomment">/// Scopes defined in the compiler.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) scopes: Scopes&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) scopes: Scopes&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Context for which to emit warnings.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) contexts: Vec&lt;Span&gt;,
     <span class="doccomment">/// The nesting of loop we are currently in.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) loops: Loops&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) loops: Loops&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Enabled optimizations.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) options: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Options,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Options,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;arena</span>&gt; Ctxt&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;arena</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'arena</span>&gt; Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'arena</span>&gt; {
     <span class="doccomment">/// Pop locals by simply popping them.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>locals_pop(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -2678,7 +2678,7 @@
         from_module: ModId,
         from_item: ItemId,
         query_const_fn: <span class="kw-2">&amp;</span>ConstFn,
-        args: <span class="kw-2">&amp;</span>[hir::Expr&lt;<span class="lifetime">&#39;_</span>&gt;],
+        args: <span class="kw-2">&amp;</span>[hir::Expr&lt;<span class="lifetime">'_</span>&gt;],
     ) -&gt; compile::Result&lt;ConstValue&gt; {
         <span class="kw">if </span>query_const_fn.ir_fn.args.len() != args.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
@@ -2723,13 +2723,13 @@
 }
 
 <span class="attr">#[derive(Debug)]
-#[must_use = <span class="string">&quot;must be consumed to make sure the value is realized&quot;</span>]
-</span><span class="kw">struct </span>Asm&lt;<span class="lifetime">&#39;hir</span>&gt; {
+#[must_use = <span class="string">"must be consumed to make sure the value is realized"</span>]
+</span><span class="kw">struct </span>Asm&lt;<span class="lifetime">'hir</span>&gt; {
     span: Span,
-    kind: AsmKind&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    kind: AsmKind&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;hir</span>&gt; Asm&lt;<span class="lifetime">&#39;hir</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Asm&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Construct an assembly result that leaves the value on the top of the
     /// stack.
     </span><span class="kw">fn </span>top(span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned) -&gt; <span class="self">Self </span>{
@@ -2739,7 +2739,7 @@
         }
     }
 
-    <span class="kw">fn </span>var(span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned, var: Var&lt;<span class="lifetime">&#39;hir</span>&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>var(span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned, var: Var&lt;<span class="lifetime">'hir</span>&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             span: span.span(),
             kind: AsmKind::Var(var),
@@ -2748,18 +2748,18 @@
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>AsmKind&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>AsmKind&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="comment">// Result is pushed onto the top of the stack.
     </span>Top,
     <span class="comment">// Result belongs to the the given stack offset.
-    </span>Var(Var&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Var(Var&lt;<span class="lifetime">'hir</span>&gt;),
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;hir</span>&gt; Asm&lt;<span class="lifetime">&#39;hir</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Asm&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Assemble into an instruction.
     </span><span class="kw">fn </span>apply(<span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Ctxt) -&gt; compile::Result&lt;()&gt; {
         <span class="kw">if let </span>AsmKind::Var(var) = <span class="self">self</span>.kind {
-            var.copy(cx, <span class="kw-2">&amp;</span><span class="self">self</span>.span, <span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">&quot;var `{}`&quot;</span>, var))<span class="question-mark">?</span>;
+            var.copy(cx, <span class="kw-2">&amp;</span><span class="self">self</span>.span, <span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">"var `{}`"</span>, var))<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -2779,11 +2779,11 @@
     }
 }
 
-<span class="doccomment">/// Assemble a function from an [hir::ItemFn&lt;&#39;_&gt;].
+<span class="doccomment">/// Assemble a function from an [hir::ItemFn&lt;'_&gt;].
 </span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>fn_from_item_fn&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ItemFn&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>fn_from_item_fn&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ItemFn&lt;<span class="lifetime">'hir</span>&gt;,
     instance_fn: bool,
 ) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>patterns = Vec::new();
@@ -2834,9 +2834,9 @@
 
 <span class="doccomment">/// Assemble an async block.
 </span><span class="attr">#[instrument(span = hir.block.span)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>async_block_secondary&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::AsyncBlock&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>async_block_secondary&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::AsyncBlock&lt;<span class="lifetime">'hir</span>&gt;,
 ) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">for </span>name <span class="kw">in </span>hir.captures.iter().copied() {
         cx.scopes.define(name, <span class="kw-2">&amp;</span>hir.block)<span class="question-mark">?</span>;
@@ -2849,10 +2849,10 @@
 
 <span class="doccomment">/// Assemble the body of a closure function.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expr_closure_secondary&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::ExprClosure&lt;<span class="lifetime">&#39;hir</span>&gt;,
-    span: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span><span class="kw">dyn </span>Spanned,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expr_closure_secondary&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprClosure&lt;<span class="lifetime">'hir</span>&gt;,
+    span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
 ) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>patterns = Vec::new();
 
@@ -2886,11 +2886,11 @@
 }
 
 <span class="doccomment">/// Assemble a return statement from the given Assemble.
-</span><span class="kw">fn </span>return_&lt;<span class="lifetime">&#39;hir</span>, T&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
+</span><span class="kw">fn </span>return_&lt;<span class="lifetime">'hir</span>, T&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     hir: T,
-    asm: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, T, Needs) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;,
+    asm: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, T, Needs) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt;,
 ) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span>clean = cx.scopes.total(span)<span class="question-mark">?</span>;
 
@@ -2908,12 +2908,12 @@
 
 <span class="doccomment">/// Compile a pattern based on the given offset.
 </span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">fn </span>pat_with_offset&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Pat&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>pat_with_offset&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Pat&lt;<span class="lifetime">'hir</span>&gt;,
     offset: usize,
 ) -&gt; compile::Result&lt;()&gt; {
-    <span class="kw">let </span>load = |cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, needs: Needs| {
+    <span class="kw">let </span>load = |cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, needs: Needs| {
         <span class="kw">if </span>needs.value() {
             cx.asm.push(Inst::Copy { offset }, hir)<span class="question-mark">?</span>;
         }
@@ -2921,13 +2921,13 @@
         <span class="prelude-val">Ok</span>(())
     };
 
-    <span class="kw">let </span>false_label = cx.asm.new_label(<span class="string">&quot;let_panic&quot;</span>);
+    <span class="kw">let </span>false_label = cx.asm.new_label(<span class="string">"let_panic"</span>);
 
     <span class="kw">if </span>pat(cx, hir, <span class="kw-2">&amp;</span>false_label, <span class="kw-2">&amp;</span>load)<span class="question-mark">? </span>{
         cx.q.diagnostics
             .let_pattern_might_panic(cx.source_id, hir, cx.context())<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>ok_label = cx.asm.new_label(<span class="string">&quot;let_ok&quot;</span>);
+        <span class="kw">let </span>ok_label = cx.asm.new_label(<span class="string">"let_ok"</span>);
         cx.asm.jump(<span class="kw-2">&amp;</span>ok_label, hir)<span class="question-mark">?</span>;
         cx.asm.label(<span class="kw-2">&amp;</span>false_label)<span class="question-mark">?</span>;
         cx.asm.push(
@@ -2950,11 +2950,11 @@
 ///
 /// Returns a boolean indicating if the label was used.
 </span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">fn </span>pat&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Pat&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>pat&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Pat&lt;<span class="lifetime">'hir</span>&gt;,
     false_label: <span class="kw-2">&amp;</span>Label,
-    load: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, Needs) -&gt; compile::Result&lt;()&gt;,
+    load: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, Needs) -&gt; compile::Result&lt;()&gt;,
 ) -&gt; compile::Result&lt;bool&gt; {
     <span class="kw">let </span>span = hir;
 
@@ -2993,11 +2993,11 @@
 
 <span class="doccomment">/// Assemble a pattern literal.
 </span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">fn </span>pat_lit&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::Expr&lt;<span class="lifetime">&#39;_</span>&gt;,
+</span><span class="kw">fn </span>pat_lit&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::Expr&lt;<span class="lifetime">'_</span>&gt;,
     false_label: <span class="kw-2">&amp;</span>Label,
-    load: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, Needs) -&gt; compile::Result&lt;()&gt;,
+    load: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, Needs) -&gt; compile::Result&lt;()&gt;,
 ) -&gt; compile::Result&lt;bool&gt; {
     <span class="kw">let </span><span class="prelude-val">Some</span>(inst) = pat_lit_inst(cx, hir)<span class="question-mark">? </span><span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(hir, ErrorKind::UnsupportedPatternExpr));
@@ -3011,9 +3011,9 @@
 }
 
 <span class="attr">#[instrument(span = hir)]
-</span><span class="kw">fn </span>pat_lit_inst&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::Expr&lt;<span class="lifetime">&#39;_</span>&gt;,
+</span><span class="kw">fn </span>pat_lit_inst&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::Expr&lt;<span class="lifetime">'_</span>&gt;,
 ) -&gt; compile::Result&lt;<span class="prelude-ty">Option</span>&lt;Inst&gt;&gt; {
     <span class="kw">let </span>hir::ExprKind::Lit(lit) = hir.kind <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
@@ -3036,13 +3036,13 @@
     <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(inst))
 }
 
-<span class="doccomment">/// Assemble an [hir::Condition&lt;&#39;_&gt;].
+<span class="doccomment">/// Assemble an [hir::Condition&lt;'_&gt;].
 </span><span class="attr">#[instrument(span = condition)]
-</span><span class="kw">fn </span>condition&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    condition: <span class="kw-2">&amp;</span>hir::Condition&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>condition&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    condition: <span class="kw-2">&amp;</span>hir::Condition&lt;<span class="lifetime">'hir</span>&gt;,
     then_label: <span class="kw-2">&amp;</span>Label,
-) -&gt; compile::Result&lt;Layer&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Layer&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">match </span><span class="kw-2">*</span>condition {
         hir::Condition::Expr(e) =&gt; {
             <span class="kw">let </span>guard = cx.scopes.child(e)<span class="question-mark">?</span>;
@@ -3053,11 +3053,11 @@
         hir::Condition::ExprLet(expr_let) =&gt; {
             <span class="kw">let </span>span = expr_let;
 
-            <span class="kw">let </span>false_label = cx.asm.new_label(<span class="string">&quot;if_condition_false&quot;</span>);
+            <span class="kw">let </span>false_label = cx.asm.new_label(<span class="string">"if_condition_false"</span>);
 
             <span class="kw">let </span>expected = cx.scopes.child(span)<span class="question-mark">?</span>;
 
-            <span class="kw">let </span>load = |cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, needs: Needs| {
+            <span class="kw">let </span>load = |cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, needs: Needs| {
                 expr(cx, <span class="kw-2">&amp;</span>expr_let.expr, needs)<span class="question-mark">?</span>.apply(cx)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(())
             };
@@ -3076,12 +3076,12 @@
 
 <span class="doccomment">/// Encode a vector pattern match.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>pat_sequence&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::PatSequence&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>pat_sequence&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::PatSequence&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     false_label: <span class="kw-2">&amp;</span>Label,
-    load: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, Needs) -&gt; compile::Result&lt;()&gt;,
+    load: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, Needs) -&gt; compile::Result&lt;()&gt;,
 ) -&gt; compile::Result&lt;()&gt; {
     load(cx, Needs::Value)<span class="question-mark">?</span>;
 
@@ -3112,7 +3112,7 @@
         .pop_and_jump_if_not(cx.scopes.local(span)<span class="question-mark">?</span>, false_label, span)<span class="question-mark">?</span>;
 
     <span class="kw">for </span>(index, p) <span class="kw">in </span>hir.items.iter().enumerate() {
-        <span class="kw">let </span>load = <span class="kw">move </span>|cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, needs: Needs| {
+        <span class="kw">let </span>load = <span class="kw">move </span>|cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, needs: Needs| {
             <span class="kw">if </span>needs.value() {
                 cx.asm.push(Inst::TupleIndexGetAt { offset, index }, p)<span class="question-mark">?</span>;
             }
@@ -3153,12 +3153,12 @@
 
 <span class="doccomment">/// Assemble an object pattern.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>pat_object&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::PatObject&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>pat_object&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::PatObject&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     false_label: <span class="kw-2">&amp;</span>Label,
-    load: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, Needs) -&gt; compile::Result&lt;()&gt;,
+    load: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, Needs) -&gt; compile::Result&lt;()&gt;,
 ) -&gt; compile::Result&lt;()&gt; {
     <span class="comment">// NB: bind the loaded variable (once) to an anonymous var.
     // We reduce the number of copy operations by having specialized
@@ -3207,7 +3207,7 @@
     <span class="kw">for </span>(binding, slot) <span class="kw">in </span>hir.bindings.iter().zip(string_slots) {
         <span class="kw">match </span><span class="kw-2">*</span>binding {
             hir::Binding::Binding(span, <span class="kw">_</span>, p) =&gt; {
-                <span class="kw">let </span>load = <span class="kw">move </span>|cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, needs: Needs| {
+                <span class="kw">let </span>load = <span class="kw">move </span>|cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, needs: Needs| {
                     <span class="kw">if </span>needs.value() {
                         cx.asm
                             .push(Inst::ObjectIndexGetAt { offset, slot }, <span class="kw-2">&amp;</span>span)<span class="question-mark">?</span>;
@@ -3231,15 +3231,15 @@
 
 <span class="doccomment">/// Call a block.
 </span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">fn </span>block&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::Block&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>block&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::Block&lt;<span class="lifetime">'hir</span>&gt;,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     cx.contexts.try_push(hir.span())<span class="question-mark">?</span>;
     <span class="kw">let </span>scopes_count = cx.scopes.child(hir)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span><span class="kw-2">mut </span>last = <span class="prelude-val">None</span>::&lt;(<span class="kw-2">&amp;</span>hir::Expr&lt;<span class="lifetime">&#39;_</span>&gt;, bool)&gt;;
+    <span class="kw">let </span><span class="kw-2">mut </span>last = <span class="prelude-val">None</span>::&lt;(<span class="kw-2">&amp;</span>hir::Expr&lt;<span class="lifetime">'_</span>&gt;, bool)&gt;;
 
     <span class="kw">for </span>stmt <span class="kw">in </span>hir.statements {
         <span class="kw">let </span>(e, semi) = <span class="kw">match </span>stmt {
@@ -3290,7 +3290,7 @@
 
     cx.contexts
         .pop()
-        .ok_or(<span class="string">&quot;Missing parent context&quot;</span>)
+        .ok_or(<span class="string">"Missing parent context"</span>)
         .with_span(hir)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(Asm::top(hir))
@@ -3298,14 +3298,14 @@
 
 <span class="doccomment">/// Assemble #[builtin] format_args!(...) macro.
 </span><span class="attr">#[instrument(span = format)]
-</span><span class="kw">fn </span>builtin_format&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    format: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::BuiltInFormat&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>builtin_format&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    format: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::BuiltInFormat&lt;<span class="lifetime">'hir</span>&gt;,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">use </span><span class="kw">crate</span>::runtime::format;
 
-    <span class="kw">let </span>fill = format.fill.unwrap_or(<span class="string">&#39; &#39;</span>);
+    <span class="kw">let </span>fill = format.fill.unwrap_or(<span class="string">' '</span>);
     <span class="kw">let </span>align = format.align.unwrap_or_default();
     <span class="kw">let </span>flags = format.flags.unwrap_or_default();
     <span class="kw">let </span>width = format.width;
@@ -3326,11 +3326,11 @@
 
 <span class="doccomment">/// Assemble #[builtin] template!(...) macro.
 </span><span class="attr">#[instrument(span = template)]
-</span><span class="kw">fn </span>builtin_template&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    template: <span class="kw-2">&amp;</span>hir::BuiltInTemplate&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>builtin_template&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    template: <span class="kw-2">&amp;</span>hir::BuiltInTemplate&lt;<span class="lifetime">'hir</span>&gt;,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span>span = template;
 
     <span class="kw">let </span>expected = cx.scopes.child(span)<span class="question-mark">?</span>;
@@ -3375,8 +3375,8 @@
 
 <span class="doccomment">/// Assemble a constant value.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>const_&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
+</span><span class="kw">fn </span>const_&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     value: <span class="kw-2">&amp;</span>ConstValue,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
@@ -3468,11 +3468,11 @@
 
 <span class="doccomment">/// Assemble an expression.
 </span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">fn </span>expr&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span>span = hir;
 
     <span class="kw">let </span>asm = <span class="kw">match </span>hir.kind {
@@ -3526,7 +3526,7 @@
         hir::ExprKind::Path =&gt; {
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
                 span,
-                <span class="string">&quot;Path expression is not supported here&quot;</span>,
+                <span class="string">"Path expression is not supported here"</span>,
             ))
         }
     };
@@ -3536,12 +3536,12 @@
 
 <span class="doccomment">/// Assemble an assign expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_assign&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::ExprAssign&lt;<span class="lifetime">&#39;hir</span>&gt;,
-    span: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span><span class="kw">dyn </span>Spanned,
+</span><span class="kw">fn </span>expr_assign&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprAssign&lt;<span class="lifetime">'hir</span>&gt;,
+    span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span>supported = <span class="kw">match </span>hir.lhs.kind {
         <span class="comment">// &lt;var&gt; = &lt;value&gt;
         </span>hir::ExprKind::Variable(name) =&gt; {
@@ -3550,7 +3550,7 @@
             cx.asm.push_with_comment(
                 Inst::Replace { offset: var.offset },
                 span,
-                <span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">&quot;var `{var}`&quot;</span>),
+                <span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">"var `{var}`"</span>),
             )<span class="question-mark">?</span>;
             <span class="bool-val">true
         </span>}
@@ -3615,12 +3615,12 @@
 
 <span class="doccomment">/// Assemble an `.await` expression.
 </span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">fn </span>expr_await&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_await&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     expr(cx, hir, Needs::Value)<span class="question-mark">?</span>.apply(cx)<span class="question-mark">?</span>;
     cx.asm.push(Inst::Await, span)<span class="question-mark">?</span>;
 
@@ -3633,12 +3633,12 @@
 
 <span class="doccomment">/// Assemble a binary expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_binary&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::ExprBinary&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_binary&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprBinary&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="comment">// Special expressions which operates on the stack in special ways.
     </span><span class="kw">if </span>hir.op.is_assign() {
         compile_assign_binop(cx, <span class="kw-2">&amp;</span>hir.lhs, <span class="kw-2">&amp;</span>hir.rhs, <span class="kw-2">&amp;</span>hir.op, span, needs)<span class="question-mark">?</span>;
@@ -3691,7 +3691,7 @@
     cx.asm.push(Inst::Op { op, a, b }, span)<span class="question-mark">?</span>;
 
     <span class="comment">// NB: we put it here to preserve the call in case it has side effects.
-    // But if we don&#39;t need the value, then pop it from the stack.
+    // But if we don't need the value, then pop it from the stack.
     </span><span class="kw">if </span>!needs.value() {
         cx.asm.push(Inst::Pop, span)<span class="question-mark">?</span>;
     }
@@ -3699,15 +3699,15 @@
     cx.scopes.pop(guard, span)<span class="question-mark">?</span>;
     <span class="kw">return </span><span class="prelude-val">Ok</span>(Asm::top(span));
 
-    <span class="kw">fn </span>compile_conditional_binop&lt;<span class="lifetime">&#39;hir</span>&gt;(
-        cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-        lhs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
-        rhs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    <span class="kw">fn </span>compile_conditional_binop&lt;<span class="lifetime">'hir</span>&gt;(
+        cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+        lhs: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;,
+        rhs: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;,
         bin_op: <span class="kw-2">&amp;</span>ast::BinOp,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
         needs: Needs,
     ) -&gt; compile::Result&lt;()&gt; {
-        <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">&quot;conditional_end&quot;</span>);
+        <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">"conditional_end"</span>);
 
         expr(cx, lhs, Needs::Value)<span class="question-mark">?</span>.apply(cx)<span class="question-mark">?</span>;
 
@@ -3737,10 +3737,10 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>compile_assign_binop&lt;<span class="lifetime">&#39;hir</span>&gt;(
-        cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-        lhs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
-        rhs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    <span class="kw">fn </span>compile_assign_binop&lt;<span class="lifetime">'hir</span>&gt;(
+        cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+        lhs: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;,
+        rhs: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;,
         bin_op: <span class="kw-2">&amp;</span>ast::BinOp,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
         needs: Needs,
@@ -3804,19 +3804,19 @@
 
 <span class="doccomment">/// Assemble a block expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_async_block&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprAsyncBlock&lt;<span class="lifetime">&#39;hir</span>&gt;,
-    span: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span><span class="kw">dyn </span>Spanned,
+</span><span class="kw">fn </span>expr_async_block&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprAsyncBlock&lt;<span class="lifetime">'hir</span>&gt;,
+    span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">for </span>capture <span class="kw">in </span>hir.captures.iter().copied() {
         <span class="kw">if </span>hir.do_move {
             <span class="kw">let </span>var = cx.scopes.take(<span class="kw-2">&amp;mut </span>cx.q, capture, span)<span class="question-mark">?</span>;
-            var.do_move(cx.asm, span, <span class="kw-2">&amp;</span><span class="string">&quot;capture&quot;</span>)<span class="question-mark">?</span>;
+            var.do_move(cx.asm, span, <span class="kw-2">&amp;</span><span class="string">"capture"</span>)<span class="question-mark">?</span>;
         } <span class="kw">else </span>{
             <span class="kw">let </span>var = cx.scopes.get(<span class="kw-2">&amp;mut </span>cx.q, capture, span)<span class="question-mark">?</span>;
-            var.copy(cx, span, <span class="kw-2">&amp;</span><span class="string">&quot;capture&quot;</span>)<span class="question-mark">?</span>;
+            var.copy(cx, span, <span class="kw-2">&amp;</span><span class="string">"capture"</span>)<span class="question-mark">?</span>;
         }
     }
 
@@ -3826,12 +3826,12 @@
             args: hir.captures.len(),
         },
         span,
-        <span class="kw-2">&amp;</span><span class="string">&quot;async block&quot;</span>,
+        <span class="kw-2">&amp;</span><span class="string">"async block"</span>,
     )<span class="question-mark">?</span>;
 
     <span class="kw">if </span>!needs.value() {
         cx.asm
-            .push_with_comment(Inst::Pop, span, <span class="kw-2">&amp;</span><span class="string">&quot;value is not needed&quot;</span>)<span class="question-mark">?</span>;
+            .push_with_comment(Inst::Pop, span, <span class="kw-2">&amp;</span><span class="string">"value is not needed"</span>)<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(Asm::top(span))
@@ -3839,16 +3839,16 @@
 
 <span class="doccomment">/// Assemble a constant item.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>const_item&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
+</span><span class="kw">fn </span>const_item&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hash: Hash,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span><span class="prelude-val">Some</span>(const_value) = cx.q.get_const_value(hash) <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
             span,
-            <span class="macro">try_format!</span>(<span class="string">&quot;Missing constant value for hash {hash}&quot;</span>),
+            <span class="macro">try_format!</span>(<span class="string">"Missing constant value for hash {hash}"</span>),
         ));
     };
 
@@ -3861,12 +3861,12 @@
 ///
 /// NB: loops are expected to produce a value at the end of their expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_break&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprBreak&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_break&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprBreak&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     <span class="kw">_</span>: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span><span class="prelude-val">Some</span>(current_loop) = cx.loops.last().try_cloned()<span class="question-mark">? </span><span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::BreakOutsideOfLoop));
     };
@@ -3901,7 +3901,7 @@
         .scopes
         .total(span)<span class="question-mark">?
         </span>.checked_sub(last_loop.break_var_count)
-        .ok_or(<span class="string">&quot;Var count should be larger&quot;</span>)
+        .ok_or(<span class="string">"Var count should be larger"</span>)
         .with_span(span)<span class="question-mark">?</span>;
 
     <span class="kw">if </span>last_loop.needs.value() {
@@ -3921,12 +3921,12 @@
 
 <span class="doccomment">/// Assemble a call expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_call&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprCall&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_call&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprCall&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span>args = hir.args.len();
 
     <span class="kw">match </span>hir.call {
@@ -3938,7 +3938,7 @@
                 cx.scopes.alloc(span)<span class="question-mark">?</span>;
             }
 
-            var.copy(cx, span, <span class="kw-2">&amp;</span><span class="string">&quot;call&quot;</span>)<span class="question-mark">?</span>;
+            var.copy(cx, span, <span class="kw-2">&amp;</span><span class="string">"call"</span>)<span class="question-mark">?</span>;
             cx.scopes.alloc(span)<span class="question-mark">?</span>;
 
             cx.asm.push(Inst::CallFn { args }, span)<span class="question-mark">?</span>;
@@ -3999,28 +3999,28 @@
 
 <span class="doccomment">/// Assemble a closure expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_call_closure&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprCallClosure&lt;<span class="lifetime">&#39;hir</span>&gt;,
-    span: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span><span class="kw">dyn </span>Spanned,
+</span><span class="kw">fn </span>expr_call_closure&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprCallClosure&lt;<span class="lifetime">'hir</span>&gt;,
+    span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">if </span>!needs.value() {
         cx.q.diagnostics
             .not_used(cx.source_id, span, cx.context())<span class="question-mark">?</span>;
         <span class="kw">return </span><span class="prelude-val">Ok</span>(Asm::top(span));
     }
 
-    <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>hir.captures, <span class="string">&quot;assemble call closure&quot;</span>);
+    <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>hir.captures, <span class="string">"assemble call closure"</span>);
 
     <span class="comment">// Construct a closure environment.
     </span><span class="kw">for </span>capture <span class="kw">in </span>hir.captures.iter().copied() {
         <span class="kw">if </span>hir.do_move {
             <span class="kw">let </span>var = cx.scopes.take(<span class="kw-2">&amp;mut </span>cx.q, capture, span)<span class="question-mark">?</span>;
-            var.do_move(cx.asm, span, <span class="kw-2">&amp;</span><span class="string">&quot;capture&quot;</span>)<span class="question-mark">?</span>;
+            var.do_move(cx.asm, span, <span class="kw-2">&amp;</span><span class="string">"capture"</span>)<span class="question-mark">?</span>;
         } <span class="kw">else </span>{
             <span class="kw">let </span>var = cx.scopes.get(<span class="kw-2">&amp;mut </span>cx.q, capture, span)<span class="question-mark">?</span>;
-            var.copy(cx, span, <span class="kw-2">&amp;</span><span class="string">&quot;capture&quot;</span>)<span class="question-mark">?</span>;
+            var.copy(cx, span, <span class="kw-2">&amp;</span><span class="string">"capture"</span>)<span class="question-mark">?</span>;
         }
     }
 
@@ -4037,12 +4037,12 @@
 
 <span class="doccomment">/// Assemble a continue expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_continue&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprContinue&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_continue&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprContinue&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     <span class="kw">_</span>: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span><span class="prelude-val">Some</span>(current_loop) = cx.loops.last().try_cloned()<span class="question-mark">? </span><span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::ContinueOutsideOfLoop));
     };
@@ -4058,7 +4058,7 @@
         .scopes
         .total(span)<span class="question-mark">?
         </span>.checked_sub(last_loop.continue_var_count)
-        .ok_or(<span class="string">&quot;Var count should be larger&quot;</span>)
+        .ok_or(<span class="string">"Var count should be larger"</span>)
         .with_span(span)<span class="question-mark">?</span>;
 
     cx.locals_pop(vars, span)<span class="question-mark">?</span>;
@@ -4069,12 +4069,12 @@
 
 <span class="doccomment">/// Assemble an expr field access, like `&lt;value&gt;.&lt;field&gt;`.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_field_access&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::ExprFieldAccess&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_field_access&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprFieldAccess&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="comment">// Optimizations!
     //
     // TODO: perform deferred compilation for expressions instead, so we can
@@ -4136,15 +4136,15 @@
 
 <span class="doccomment">/// Assemble an expression for loop.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_for&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::ExprFor&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_for&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprFor&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
-    <span class="kw">let </span>continue_label = cx.asm.new_label(<span class="string">&quot;for_continue&quot;</span>);
-    <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">&quot;for_end&quot;</span>);
-    <span class="kw">let </span>break_label = cx.asm.new_label(<span class="string">&quot;for_break&quot;</span>);
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+    <span class="kw">let </span>continue_label = cx.asm.new_label(<span class="string">"for_continue"</span>);
+    <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">"for_end"</span>);
+    <span class="kw">let </span>break_label = cx.asm.new_label(<span class="string">"for_break"</span>);
 
     <span class="kw">let </span>break_var_count = cx.scopes.total(span)<span class="question-mark">?</span>;
 
@@ -4160,7 +4160,7 @@
                 args: <span class="number">0</span>,
             },
             <span class="kw-2">&amp;</span>hir.iter,
-            <span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">&quot;into_iter (offset: {})&quot;</span>, iter_offset),
+            <span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">"into_iter (offset: {})"</span>, iter_offset),
         )<span class="question-mark">?</span>;
 
         (iter_offset, loop_scope_expected)
@@ -4182,7 +4182,7 @@
                 offset: iter_offset,
             },
             <span class="kw-2">&amp;</span>hir.iter,
-            <span class="kw-2">&amp;</span><span class="string">&quot;copy iterator (memoize)&quot;</span>,
+            <span class="kw-2">&amp;</span><span class="string">"copy iterator (memoize)"</span>,
         )<span class="question-mark">?</span>;
 
         cx.asm.push_with_comment(
@@ -4190,7 +4190,7 @@
                 hash: <span class="kw-2">*</span>Protocol::NEXT,
             },
             <span class="kw-2">&amp;</span>hir.iter,
-            <span class="kw-2">&amp;</span><span class="string">&quot;load instance fn (memoize)&quot;</span>,
+            <span class="kw-2">&amp;</span><span class="string">"load instance fn (memoize)"</span>,
         )<span class="question-mark">?</span>;
 
         <span class="prelude-val">Some</span>(offset)
@@ -4218,7 +4218,7 @@
                 offset: iter_offset,
             },
             <span class="kw-2">&amp;</span>hir.iter,
-            <span class="kw-2">&amp;</span><span class="string">&quot;copy iterator&quot;</span>,
+            <span class="kw-2">&amp;</span><span class="string">"copy iterator"</span>,
         )<span class="question-mark">?</span>;
 
         cx.asm.push_with_comment(
@@ -4226,7 +4226,7 @@
                 offset: next_offset,
             },
             <span class="kw-2">&amp;</span>hir.iter,
-            <span class="kw-2">&amp;</span><span class="string">&quot;copy next&quot;</span>,
+            <span class="kw-2">&amp;</span><span class="string">"copy next"</span>,
         )<span class="question-mark">?</span>;
 
         cx.asm.push(Inst::CallFn { args: <span class="number">1 </span>}, span)<span class="question-mark">?</span>;
@@ -4253,7 +4253,7 @@
                 args: <span class="number">0</span>,
             },
             span,
-            <span class="kw-2">&amp;</span><span class="string">&quot;next&quot;</span>,
+            <span class="kw-2">&amp;</span><span class="string">"next"</span>,
         )<span class="question-mark">?</span>;
 
         cx.asm.push(
@@ -4300,13 +4300,13 @@
 
 <span class="doccomment">/// Assemble an if expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_if&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::Conditional&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_if&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::Conditional&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
-    <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">&quot;if_end&quot;</span>);
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+    <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">"if_end"</span>);
 
     <span class="kw">let </span><span class="kw-2">mut </span>branches = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>fallback = <span class="prelude-val">None</span>;
@@ -4321,7 +4321,7 @@
             <span class="kw">continue</span>;
         };
 
-        <span class="kw">let </span>label = cx.asm.new_label(<span class="string">&quot;if_branch&quot;</span>);
+        <span class="kw">let </span>label = cx.asm.new_label(<span class="string">"if_branch"</span>);
         <span class="kw">let </span>scope = condition(cx, cond, <span class="kw-2">&amp;</span>label)<span class="question-mark">?</span>;
         branches.try_push((branch, label, scope))<span class="question-mark">?</span>;
     }
@@ -4359,12 +4359,12 @@
 
 <span class="doccomment">/// Assemble an expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_index&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::ExprIndex&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_index&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprIndex&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span>guard = cx.scopes.child(span)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>target = expr(cx, <span class="kw-2">&amp;</span>hir.target, Needs::Value)<span class="question-mark">?</span>.apply_targeted(cx)<span class="question-mark">?</span>;
@@ -4384,24 +4384,24 @@
 
 <span class="doccomment">/// Assemble a let expression.
 </span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">fn </span>expr_let&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::ExprLet&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_let&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprLet&lt;<span class="lifetime">'hir</span>&gt;,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
-    <span class="kw">let </span>load = |cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, needs: Needs| {
-        <span class="comment">// NB: assignments &quot;move&quot; the value being assigned.
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+    <span class="kw">let </span>load = |cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, needs: Needs| {
+        <span class="comment">// NB: assignments "move" the value being assigned.
         </span>expr(cx, <span class="kw-2">&amp;</span>hir.expr, needs)<span class="question-mark">?</span>.apply(cx)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     };
 
-    <span class="kw">let </span>false_label = cx.asm.new_label(<span class="string">&quot;let_panic&quot;</span>);
+    <span class="kw">let </span>false_label = cx.asm.new_label(<span class="string">"let_panic"</span>);
 
     <span class="kw">if </span>pat(cx, <span class="kw-2">&amp;</span>hir.pat, <span class="kw-2">&amp;</span>false_label, <span class="kw-2">&amp;</span>load)<span class="question-mark">? </span>{
         cx.q.diagnostics
             .let_pattern_might_panic(cx.source_id, hir, cx.context())<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>ok_label = cx.asm.new_label(<span class="string">&quot;let_ok&quot;</span>);
+        <span class="kw">let </span>ok_label = cx.asm.new_label(<span class="string">"let_ok"</span>);
         cx.asm.jump(<span class="kw-2">&amp;</span>ok_label, hir)<span class="question-mark">?</span>;
         cx.asm.label(<span class="kw-2">&amp;</span>false_label)<span class="question-mark">?</span>;
         cx.asm.push(
@@ -4423,26 +4423,26 @@
 }
 
 <span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_match&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::ExprMatch&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_match&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprMatch&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span>expected_scopes = cx.scopes.child(span)<span class="question-mark">?</span>;
 
     expr(cx, <span class="kw-2">&amp;</span>hir.expr, Needs::Value)<span class="question-mark">?</span>.apply(cx)<span class="question-mark">?</span>;
     <span class="comment">// Offset of the expression.
     </span><span class="kw">let </span>offset = cx.scopes.alloc(span)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">&quot;match_end&quot;</span>);
+    <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">"match_end"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>branches = Vec::new();
 
     <span class="kw">for </span>branch <span class="kw">in </span>hir.branches {
         <span class="kw">let </span>span = branch;
 
-        <span class="kw">let </span>branch_label = cx.asm.new_label(<span class="string">&quot;match_branch&quot;</span>);
-        <span class="kw">let </span>match_false = cx.asm.new_label(<span class="string">&quot;match_false&quot;</span>);
+        <span class="kw">let </span>branch_label = cx.asm.new_label(<span class="string">"match_branch"</span>);
+        <span class="kw">let </span>match_false = cx.asm.new_label(<span class="string">"match_false"</span>);
 
         <span class="kw">let </span>parent_guard = cx.scopes.child(span)<span class="question-mark">?</span>;
 
@@ -4480,7 +4480,7 @@
         branches.try_push((branch_label, scope))<span class="question-mark">?</span>;
     }
 
-    <span class="comment">// what to do in case nothing matches and the pattern doesn&#39;t have any
+    <span class="comment">// what to do in case nothing matches and the pattern doesn't have any
     // default match branch.
     </span><span class="kw">if </span>needs.value() {
         cx.asm.push(Inst::unit(), span)<span class="question-mark">?</span>;
@@ -4513,12 +4513,12 @@
 
 <span class="doccomment">/// Compile a literal object.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_object&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprObject&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_object&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprObject&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span>guard = cx.scopes.child(span)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>base = cx.scopes.total(span)<span class="question-mark">?</span>;
@@ -4564,9 +4564,9 @@
 
 <span class="doccomment">/// Reorder the position of the field assignments on the stack so that they
 /// match the expected argument order when invoking the constructor function.
-</span><span class="kw">fn </span>reorder_field_assignments&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprObject&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>reorder_field_assignments&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprObject&lt;<span class="lifetime">'hir</span>&gt;,
     base: usize,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
 ) -&gt; compile::Result&lt;()&gt; {
@@ -4576,7 +4576,7 @@
         <span class="kw">let </span><span class="prelude-val">Some</span>(position) = assign.position <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
                 span,
-                <span class="macro">try_format!</span>(<span class="string">&quot;Missing position for field assignment {}&quot;</span>, assign.key.<span class="number">1</span>),
+                <span class="macro">try_format!</span>(<span class="string">"Missing position for field assignment {}"</span>, assign.key.<span class="number">1</span>),
             ));
         };
 
@@ -4586,7 +4586,7 @@
     <span class="kw">for </span>a <span class="kw">in </span><span class="number">0</span>..hir.assignments.len() {
         <span class="kw">loop </span>{
             <span class="kw">let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>b) = order.get(a) <span class="kw">else </span>{
-                <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">&quot;Order out-of-bounds&quot;</span>));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">"Order out-of-bounds"</span>));
             };
 
             <span class="kw">if </span>a == b {
@@ -4598,7 +4598,7 @@
             <span class="kw">let </span>(<span class="prelude-val">Some</span>(a), <span class="prelude-val">Some</span>(b)) = (base.checked_add(a), base.checked_add(b)) <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
                     span,
-                    <span class="string">&quot;Field repositioning out-of-bounds&quot;</span>,
+                    <span class="string">"Field repositioning out-of-bounds"</span>,
                 ));
             };
 
@@ -4611,12 +4611,12 @@
 
 <span class="doccomment">/// Assemble a range expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_range&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::ExprRange&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_range&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprRange&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span>guard = cx.scopes.child(span)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>(range, count) = <span class="kw">match </span>hir {
@@ -4663,12 +4663,12 @@
 
 <span class="doccomment">/// Assemble a return expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_return&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Expr&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;,
+</span><span class="kw">fn </span>expr_return&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     <span class="kw">_</span>: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="comment">// NB: drop any loop temporaries.
     </span><span class="kw">for </span>l <span class="kw">in </span>cx.loops.iter() {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(offset) = l.drop {
@@ -4691,24 +4691,24 @@
 
 <span class="doccomment">/// Assemble a select expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_select&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprSelect&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_select&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprSelect&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     cx.contexts.try_push(span.span())<span class="question-mark">?</span>;
 
     <span class="kw">let </span>len = hir.branches.len();
     <span class="kw">let </span><span class="kw-2">mut </span>default_branch = <span class="prelude-val">None</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>branches = Vec::new();
 
-    <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">&quot;select_end&quot;</span>);
+    <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">"select_end"</span>);
 
     <span class="kw">for </span>branch <span class="kw">in </span>hir.branches {
         <span class="kw">match </span><span class="kw-2">*</span>branch {
             hir::ExprSelectBranch::Pat(pat) =&gt; {
-                <span class="kw">let </span>label = cx.asm.new_label(<span class="string">&quot;select_branch&quot;</span>);
+                <span class="kw">let </span>label = cx.asm.new_label(<span class="string">"select_branch"</span>);
                 branches.try_push((label, pat))<span class="question-mark">?</span>;
             }
             hir::ExprSelectBranch::Default(def) =&gt; {
@@ -4716,7 +4716,7 @@
                     <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::SelectMultipleDefaults));
                 }
 
-                <span class="kw">let </span>label = cx.asm.new_label(<span class="string">&quot;select_default&quot;</span>);
+                <span class="kw">let </span>label = cx.asm.new_label(<span class="string">"select_default"</span>);
                 default_branch = <span class="prelude-val">Some</span>((def, label));
             }
         }
@@ -4778,7 +4778,7 @@
 
     cx.contexts
         .pop()
-        .ok_or(<span class="string">&quot;Missing parent context&quot;</span>)
+        .ok_or(<span class="string">"Missing parent context"</span>)
         .with_span(span)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(Asm::top(span))
@@ -4786,12 +4786,12 @@
 
 <span class="doccomment">/// Assemble a try expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_try&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_try&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span>clean = cx.scopes.total(span)<span class="question-mark">?</span>;
     <span class="kw">let </span>address = expr(cx, hir, Needs::Value)<span class="question-mark">?</span>.apply_targeted(cx)<span class="question-mark">?</span>;
 
@@ -4820,12 +4820,12 @@
 
 <span class="doccomment">/// Assemble a literal tuple.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_tuple&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprSeq&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_tuple&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprSeq&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="macro">macro_rules! </span>tuple {
         (<span class="macro-nonterminal">$variant</span>:ident, $(<span class="macro-nonterminal">$var</span>:ident),<span class="kw-2">*</span>) =&gt; {{
             <span class="kw">let </span>guard = cx.scopes.child(span)<span class="question-mark">?</span>;
@@ -4833,7 +4833,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>it = hir.items.iter();
 
             $(
-            <span class="kw">let </span><span class="macro-nonterminal">$var </span>= it.next().ok_or_else(|| compile::Error::msg(span, <span class="string">&quot;items ended unexpectedly&quot;</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="macro-nonterminal">$var </span>= it.next().ok_or_else(|| compile::Error::msg(span, <span class="string">"items ended unexpectedly"</span>))<span class="question-mark">?</span>;
             <span class="kw">let </span><span class="macro-nonterminal">$var </span>= expr(cx, <span class="macro-nonterminal">$var</span>, Needs::Value)<span class="question-mark">?</span>.apply_targeted(cx)<span class="question-mark">?</span>;
             )*
 
@@ -4885,12 +4885,12 @@
 
 <span class="doccomment">/// Assemble a unary expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_unary&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::ExprUnary&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_unary&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprUnary&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     expr(cx, <span class="kw-2">&amp;</span>hir.expr, Needs::Value)<span class="question-mark">?</span>.apply(cx)<span class="question-mark">?</span>;
 
     <span class="kw">match </span>hir.op {
@@ -4909,7 +4909,7 @@
     }
 
     <span class="comment">// NB: we put it here to preserve the call in case it has side effects.
-    // But if we don&#39;t need the value, then pop it from the stack.
+    // But if we don't need the value, then pop it from the stack.
     </span><span class="kw">if </span>!needs.value() {
         cx.asm.push(Inst::Pop, span)<span class="question-mark">?</span>;
     }
@@ -4919,12 +4919,12 @@
 
 <span class="doccomment">/// Assemble a literal vector.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_vec&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprSeq&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_vec&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprSeq&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span>count = hir.items.len();
 
     <span class="kw">for </span>e <span class="kw">in </span>hir.items {
@@ -4948,16 +4948,16 @@
 
 <span class="doccomment">/// Assemble a while loop.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_loop&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span>hir::ExprLoop&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>expr_loop&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span>hir::ExprLoop&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
-    <span class="kw">let </span>continue_label = cx.asm.new_label(<span class="string">&quot;while_continue&quot;</span>);
-    <span class="kw">let </span>then_label = cx.asm.new_label(<span class="string">&quot;while_then&quot;</span>);
-    <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">&quot;while_end&quot;</span>);
-    <span class="kw">let </span>break_label = cx.asm.new_label(<span class="string">&quot;while_break&quot;</span>);
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+    <span class="kw">let </span>continue_label = cx.asm.new_label(<span class="string">"while_continue"</span>);
+    <span class="kw">let </span>then_label = cx.asm.new_label(<span class="string">"while_then"</span>);
+    <span class="kw">let </span>end_label = cx.asm.new_label(<span class="string">"while_end"</span>);
+    <span class="kw">let </span>break_label = cx.asm.new_label(<span class="string">"while_break"</span>);
 
     <span class="kw">let </span>var_count = cx.scopes.total(span)<span class="question-mark">?</span>;
 
@@ -5005,12 +5005,12 @@
 
 <span class="doccomment">/// Assemble a `yield` expression.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_yield&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Expr&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;,
+</span><span class="kw">fn </span>expr_yield&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = hir {
         expr(cx, e, Needs::Value)<span class="question-mark">?</span>.apply(cx)<span class="question-mark">?</span>;
         cx.asm.push(Inst::Yield, span)<span class="question-mark">?</span>;
@@ -5027,13 +5027,13 @@
 
 <span class="doccomment">/// Assemble a literal value.
 </span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>lit&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: hir::Lit&lt;<span class="lifetime">&#39;_</span>&gt;,
+</span><span class="kw">fn </span>lit&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: hir::Lit&lt;<span class="lifetime">'_</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
-    <span class="comment">// Elide the entire literal if it&#39;s not needed.
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+    <span class="comment">// Elide the entire literal if it's not needed.
     </span><span class="kw">if </span>!needs.value() {
         cx.q.diagnostics
             .not_used(cx.source_id, span, cx.context())<span class="question-mark">?</span>;
@@ -5071,24 +5071,24 @@
 
 <span class="doccomment">/// Assemble a local expression.
 </span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">fn </span>local&lt;<span class="lifetime">&#39;hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;,
-    hir: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>hir::Local&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">fn </span>local&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+    hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Local&lt;<span class="lifetime">'hir</span>&gt;,
     needs: Needs,
-) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
-    <span class="kw">let </span>load = |cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;hir</span>, <span class="lifetime">&#39;_</span>&gt;, needs: Needs| {
-        <span class="comment">// NB: assignments &quot;move&quot; the value being assigned.
+) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+    <span class="kw">let </span>load = |cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, needs: Needs| {
+        <span class="comment">// NB: assignments "move" the value being assigned.
         </span>expr(cx, <span class="kw-2">&amp;</span>hir.expr, needs)<span class="question-mark">?</span>.apply(cx)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     };
 
-    <span class="kw">let </span>false_label = cx.asm.new_label(<span class="string">&quot;let_panic&quot;</span>);
+    <span class="kw">let </span>false_label = cx.asm.new_label(<span class="string">"let_panic"</span>);
 
     <span class="kw">if </span>pat(cx, <span class="kw-2">&amp;</span>hir.pat, <span class="kw-2">&amp;</span>false_label, <span class="kw-2">&amp;</span>load)<span class="question-mark">? </span>{
         cx.q.diagnostics
             .let_pattern_might_panic(cx.source_id, hir, cx.context())<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>ok_label = cx.asm.new_label(<span class="string">&quot;let_ok&quot;</span>);
+        <span class="kw">let </span>ok_label = cx.asm.new_label(<span class="string">"let_ok"</span>);
         cx.asm.jump(<span class="kw-2">&amp;</span>ok_label, hir)<span class="question-mark">?</span>;
         cx.asm.label(<span class="kw-2">&amp;</span>false_label)<span class="question-mark">?</span>;
         cx.asm.push(

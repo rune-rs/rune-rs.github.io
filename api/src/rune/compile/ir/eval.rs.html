@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/ir/eval.rs`."><title>eval.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/ir/eval.rs`."><title>eval.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -468,7 +468,7 @@
 
 <span class="kw">fn </span>eval_ir_assign(
     ir: <span class="kw-2">&amp;</span>ir::IrAssign,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
@@ -483,7 +483,7 @@
 
 <span class="kw">fn </span>eval_ir_binary(
     ir: <span class="kw-2">&amp;</span>ir::IrBinary,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     <span class="kw">let </span>span = ir.span();
@@ -506,12 +506,12 @@
             ir::IrBinaryOp::Div =&gt; {
                 <span class="kw">let </span>number = a
                     .checked_div(b)
-                    .ok_or_else(|| compile::Error::msg(span, <span class="string">&quot;division by zero&quot;</span>))<span class="question-mark">?</span>;
+                    .ok_or_else(|| compile::Error::msg(span, <span class="string">"division by zero"</span>))<span class="question-mark">?</span>;
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Integer(number));
             }
             ir::IrBinaryOp::Shl =&gt; {
                 <span class="kw">let </span>b = u32::try_from(b).map_err(|<span class="kw">_</span>| {
-                    compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">&quot;cannot be converted to shift operand&quot;</span>)
+                    compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">"cannot be converted to shift operand"</span>)
                 })<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>n = a.shl(b);
@@ -519,7 +519,7 @@
             }
             ir::IrBinaryOp::Shr =&gt; {
                 <span class="kw">let </span>b = u32::try_from(b).map_err(|<span class="kw">_</span>| {
-                    compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">&quot;cannot be converted to shift operand&quot;</span>)
+                    compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">"cannot be converted to shift operand"</span>)
                 })<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>n = a.shr(b);
@@ -571,7 +571,7 @@
 
 <span class="kw">fn </span>eval_ir_branches(
     ir: <span class="kw-2">&amp;</span>ir::IrBranches,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     <span class="kw">for </span>(ir_condition, branch) <span class="kw">in </span><span class="kw-2">&amp;</span>ir.branches {
@@ -601,7 +601,7 @@
 
 <span class="kw">fn </span>eval_ir_call(
     ir: <span class="kw-2">&amp;</span>ir::IrCall,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>args = Vec::new();
@@ -615,7 +615,7 @@
 
 <span class="kw">fn </span>eval_ir_condition(
     ir: <span class="kw-2">&amp;</span>ir::IrCondition,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     <span class="prelude-val">Ok</span>(ir::Value::Bool(<span class="kw">match </span>ir {
@@ -632,7 +632,7 @@
 
 <span class="kw">fn </span>eval_ir_decl(
     ir: <span class="kw-2">&amp;</span>ir::IrDecl,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
@@ -643,7 +643,7 @@
 
 <span class="kw">fn </span>eval_ir_loop(
     ir: <span class="kw-2">&amp;</span>ir::IrLoop,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     <span class="kw">let </span>span = ir.span();
@@ -683,7 +683,7 @@
         <span class="kw">if </span>ir.condition.is_some() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::from(compile::Error::msg(
                 span,
-                <span class="string">&quot;break with value is not supported for unconditional loops&quot;</span>,
+                <span class="string">"break with value is not supported for unconditional loops"</span>,
             )));
         }
 
@@ -695,7 +695,7 @@
 
 <span class="kw">fn </span>eval_ir_object(
     ir: <span class="kw-2">&amp;</span>ir::IrObject,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>object = HashMap::try_with_capacity(ir.assignments.len())<span class="question-mark">?</span>;
@@ -709,7 +709,7 @@
 
 <span class="kw">fn </span>eval_ir_scope(
     ir: <span class="kw-2">&amp;</span>ir::IrScope,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
@@ -731,7 +731,7 @@
 
 <span class="kw">fn </span>eval_ir_set(
     ir: <span class="kw-2">&amp;</span>ir::IrSet,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
@@ -742,7 +742,7 @@
 
 <span class="kw">fn </span>eval_ir_template(
     ir: <span class="kw-2">&amp;</span>ir::IrTemplate,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
@@ -759,14 +759,14 @@
 
                 <span class="kw">match </span>const_value {
                     ir::Value::Integer(integer) =&gt; {
-                        <span class="macro">write!</span>(buf, <span class="string">&quot;{}&quot;</span>, integer)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(buf, <span class="string">"{}"</span>, integer)<span class="question-mark">?</span>;
                     }
                     ir::Value::Float(float) =&gt; {
                         <span class="kw">let </span><span class="kw-2">mut </span>buffer = ryu::Buffer::new();
                         buf.try_push_str(buffer.format(float))<span class="question-mark">?</span>;
                     }
                     ir::Value::Bool(b) =&gt; {
-                        <span class="macro">write!</span>(buf, <span class="string">&quot;{}&quot;</span>, b)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(buf, <span class="string">"{}"</span>, b)<span class="question-mark">?</span>;
                     }
                     ir::Value::String(s) =&gt; {
                         <span class="kw">let </span>s = s.borrow_ref().with_span(ir)<span class="question-mark">?</span>;
@@ -785,7 +785,7 @@
 
 <span class="kw">fn </span>eval_ir_tuple(
     ir: <span class="kw-2">&amp;</span>ir::Tuple,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>items = Vec::try_with_capacity(ir.items.len())<span class="question-mark">?</span>;
@@ -801,7 +801,7 @@
 
 <span class="kw">fn </span>eval_ir_vec(
     ir: <span class="kw-2">&amp;</span>ir::IrVec,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>vec = Vec::try_with_capacity(ir.items.len())<span class="question-mark">?</span>;
@@ -816,7 +816,7 @@
 <span class="doccomment">/// IrEval the interior expression.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eval_ir(
     ir: <span class="kw-2">&amp;</span>ir::Ir,
-    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;

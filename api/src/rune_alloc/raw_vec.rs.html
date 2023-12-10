@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/raw_vec.rs`."><title>raw_vec.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/raw_vec.rs`."><title>raw_vec.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -475,7 +475,7 @@
 /// * Produces `Unique::dangling()` on zero-sized types.
 /// * Produces `Unique::dangling()` on zero-length allocations.
 /// * Avoids freeing `Unique::dangling()`.
-/// * Catches all overflows in capacity computations (promotes them to &quot;capacity overflow&quot; panics).
+/// * Catches all overflows in capacity computations (promotes them to "capacity overflow" panics).
 /// * Guards against 32-bit systems allocating more than isize::MAX bytes.
 /// * Guards against overflowing your length.
 /// * Calls `handle_alloc_error` for fallible allocations.
@@ -483,12 +483,12 @@
 /// * Uses the excess returned from the allocator to use the largest available capacity.
 ///
 /// This type does not in anyway inspect the memory that it manages. When dropped it *will*
-/// free its memory, but it *won&#39;t* try to drop its contents. It is up to the user of `RawVec`
+/// free its memory, but it *won't* try to drop its contents. It is up to the user of `RawVec`
 /// to handle the actual things *stored* inside of a `RawVec`.
 ///
 /// Note that the excess of a zero-sized types is always infinite, so `capacity()` always returns
 /// `usize::MAX`. This means that you need to be careful when round-tripping this type with a
-/// `Box&lt;[T]&gt;`, since `capacity()` won&#39;t yield the length.
+/// `Box&lt;[T]&gt;`, since `capacity()` won't yield the length.
 </span><span class="attr">#[allow(missing_debug_implementations)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RawVec&lt;T, A: Allocator = Global&gt; {
     ptr: Unique&lt;T&gt;,
@@ -532,7 +532,7 @@
     <span class="doccomment">/// Like `new`, but parameterized over the choice of allocator for
     /// the returned `RawVec`.
     </span><span class="kw">pub const fn </span>new_in(alloc: A) -&gt; <span class="self">Self </span>{
-        <span class="comment">// `cap: 0` means &quot;unallocated&quot;. zero-sized types are ignored.
+        <span class="comment">// `cap: 0` means "unallocated". zero-sized types are ignored.
         </span><span class="self">Self </span>{
             ptr: Unique::dangling(),
             cap: <span class="number">0</span>,
@@ -570,7 +570,7 @@
         <span class="comment">// Sanity-check one half of the safety requirement (we cannot check the other half).
         </span><span class="macro">debug_assert!</span>(
             len &lt;= <span class="self">self</span>.capacity(),
-            <span class="string">&quot;`len` must be smaller than or equal to `self.capacity()`&quot;
+            <span class="string">"`len` must be smaller than or equal to `self.capacity()`"
         </span>);
 
         <span class="kw">let </span>me = ManuallyDrop::new(<span class="self">self</span>);
@@ -581,7 +581,7 @@
     }
 
     <span class="kw">fn </span>try_allocate_in(capacity: usize, init: AllocInit, alloc: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
-        <span class="comment">// Don&#39;t allocate here because `Drop` will not deallocate when `capacity` is 0.
+        <span class="comment">// Don't allocate here because `Drop` will not deallocate when `capacity` is 0.
         </span><span class="kw">if </span>T::IS_ZST || capacity == <span class="number">0 </span>{
             <span class="prelude-val">Ok</span>(<span class="self">Self</span>::new_in(alloc))
         } <span class="kw">else </span>{
@@ -661,7 +661,7 @@
         </span>} <span class="kw">else </span>{
             <span class="comment">// We could use Layout::array here which ensures the absence of isize and usize overflows
             // and could hypothetically handle differences between stride and size, but this memory
-            // has already been allocated so we know it can&#39;t overflow and currently rust does not
+            // has already been allocated so we know it can't overflow and currently rust does not
             // support such types. So we can do better by skipping some checks and avoid an unwrap.
             </span><span class="macro">assert!</span>(mem::size_of::&lt;T&gt;() % mem::align_of::&lt;T&gt;() == <span class="number">0</span>);
 
@@ -675,7 +675,7 @@
     }
 
     <span class="doccomment">/// Ensures that the buffer contains at least enough space to hold `len +
-    /// additional` elements. If it doesn&#39;t already have enough capacity, will
+    /// additional` elements. If it doesn't already have enough capacity, will
     /// reallocate enough space plus comfortable slack space to get amortized
     /// *O*(1) behavior. Will limit this behavior if it would needlessly cause
     /// itself to panic.
@@ -747,7 +747,7 @@
     // its contents to be statically computable as possible, to make the
     // generated code run faster. Therefore, this method is carefully written
     // so that all of the code that depends on `T` is within it, while as much
-    // of the code that doesn&#39;t depend on `T` as possible is in functions that
+    // of the code that doesn't depend on `T` as possible is in functions that
     // are non-generic over `T`.
     </span><span class="kw">fn </span>grow_amortized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, len: usize, additional: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="comment">// This is ensured by the calling contexts.
@@ -777,7 +777,7 @@
 
     <span class="comment">// The constraints on this method are much the same as those on
     // `grow_amortized`, but this method is usually instantiated less often so
-    // it&#39;s less critical.
+    // it's less critical.
     </span><span class="kw">fn </span>grow_exact(<span class="kw-2">&amp;mut </span><span class="self">self</span>, len: usize, additional: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="kw">if </span>T::IS_ZST {
             <span class="comment">// Since we return a capacity of `usize::MAX` when the type size is
@@ -799,7 +799,7 @@
         </span><span class="macro">assert!</span>(mem::size_of::&lt;T&gt;() % mem::align_of::&lt;T&gt;() == <span class="number">0</span>);
         <span class="macro">assert!</span>(
             cap &lt;= <span class="self">self</span>.capacity(),
-            <span class="string">&quot;Tried to shrink to a larger capacity&quot;
+            <span class="string">"Tried to shrink to a larger capacity"
         </span>);
 
         <span class="kw">let </span>(ptr, layout) = <span class="kw">if let </span><span class="prelude-val">Some</span>(mem) = <span class="self">self</span>.current_memory() {
@@ -808,7 +808,7 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         };
 
-        <span class="comment">// If shrinking to 0, deallocate the buffer. We don&#39;t reach this point
+        <span class="comment">// If shrinking to 0, deallocate the buffer. We don't reach this point
         // for the T::IS_ZST case since current_memory() will have returned
         // None.
         </span><span class="kw">if </span>cap == <span class="number">0 </span>{
@@ -832,7 +832,7 @@
 }
 
 <span class="comment">// This function is outside `RawVec` to minimize compile times. See the comment
-// above `RawVec::grow_amortized` for details. (The `A` parameter isn&#39;t
+// above `RawVec::grow_amortized` for details. (The `A` parameter isn't
 // significant, because the number of different `A` types seen in practice is
 // much smaller than the number of `T` types.)
 </span><span class="attr">#[inline(never)]
@@ -884,12 +884,12 @@
 }
 
 <span class="comment">// We need to guarantee the following:
-// * We don&#39;t ever allocate `&gt; isize::MAX` byte-size objects.
-// * We don&#39;t overflow `usize::MAX` and actually allocate too little.
+// * We don't ever allocate `&gt; isize::MAX` byte-size objects.
+// * We don't overflow `usize::MAX` and actually allocate too little.
 //
 // On 64-bit we just need to check for overflow since trying to allocate
 // `&gt; isize::MAX` bytes will surely fail. On 32-bit and 16-bit we need to add
-// an extra guard for this in case we&#39;re running on a platform which can use
+// an extra guard for this in case we're running on a platform which can use
 // all 4GB in user-space, e.g., PAE or x32.
 
 </span><span class="attr">#[inline]

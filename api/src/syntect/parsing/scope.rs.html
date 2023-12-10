@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syntect-5.1.0/src/parsing/scope.rs`."><title>scope.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syntect" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syntect-5.1.0/src/parsing/scope.rs`."><title>scope.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syntect" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -685,7 +685,7 @@
 </span><span class="attr">#[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>ScopeError {
-    <span class="attr">#[error(<span class="string">&quot;Tried to restore cleared scopes, but none were cleared&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Tried to restore cleared scopes, but none were cleared"</span>)]
     </span>NoClearedScopesToRestore,
 }
 
@@ -697,7 +697,7 @@
 
 <span class="doccomment">/// The global scope repo, exposed in case you want to minimize locking and unlocking.
 ///
-/// Ths shouldn&#39;t be necessary for you to use. See the [`ScopeRepository`] docs.
+/// Ths shouldn't be necessary for you to use. See the [`ScopeRepository`] docs.
 ///
 /// [`ScopeRepository`]: struct.ScopeRepository.html
 </span><span class="kw">pub static </span>SCOPE_REPO: Lazy&lt;Mutex&lt;ScopeRepository&gt;&gt; =
@@ -716,7 +716,7 @@
 /// `syntect` uses an optimized format for storing these that allows super fast comparison and
 /// determining if one scope is a prefix of another. It also always takes 16 bytes of space. It
 /// accomplishes this by using a global repository to store string values and using bit-packed 16
-/// bit numbers to represent and compare atoms. Like &quot;atoms&quot; or &quot;symbols&quot; in other languages. This
+/// bit numbers to represent and compare atoms. Like "atoms" or "symbols" in other languages. This
 /// means that while comparing and prefix are fast, extracting a string is relatively slower but
 /// ideally should be very rare.
 </span><span class="attr">#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Copy, Default, Hash)]
@@ -731,11 +731,11 @@
 </span><span class="kw">pub enum </span>ParseScopeError {
     <span class="doccomment">/// Due to a limitation of the current optimized internal representation
     /// scopes can be at most 8 atoms long
-    </span><span class="attr">#[error(<span class="string">&quot;Too long scope. Scopes can be at most 8 atoms long.&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Too long scope. Scopes can be at most 8 atoms long."</span>)]
     </span>TooLong,
     <span class="doccomment">/// The internal representation uses 16 bits per atom, so if all scopes ever
     /// used by the program have more than 2^16-2 atoms, things break
-    </span><span class="attr">#[error(<span class="string">&quot;Too many atoms. Max 2^16-2 atoms allowed.&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Too many atoms. Max 2^16-2 atoms allowed."</span>)]
     </span>TooManyAtoms,
 }
 
@@ -781,7 +781,7 @@
 
 <span class="doccomment">/// A change to a scope stack
 ///
-/// Generally, `Noop` is only used internally and you won&#39;t need to worry about getting one back
+/// Generally, `Noop` is only used internally and you won't need to worry about getting one back
 /// from calling a public function.
 ///
 /// The change from a `ScopeStackOp` can be applied via [`ScopeStack::apply`].
@@ -839,7 +839,7 @@
         <span class="kw">if </span>s.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(Scope { a: <span class="number">0</span>, b: <span class="number">0 </span>});
         }
-        <span class="kw">let </span>parts: Vec&lt;usize&gt; = s.trim_end_matches(<span class="string">&#39;.&#39;</span>).split(<span class="string">&#39;.&#39;</span>).map(|a| <span class="self">self</span>.atom_to_index(a)).collect();
+        <span class="kw">let </span>parts: Vec&lt;usize&gt; = s.trim_end_matches(<span class="string">'.'</span>).split(<span class="string">'.'</span>).map(|a| <span class="self">self</span>.atom_to_index(a)).collect();
         <span class="kw">if </span>parts.len() &gt; <span class="number">8 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParseScopeError::TooManyAtoms);
         }
@@ -850,13 +850,13 @@
         <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">8 </span>{
             <span class="kw">let </span>atom_number = scope.atom_at(i);
-            <span class="comment">// println!(&quot;atom {} of {:x}-{:x} = {:x}&quot;,
+            <span class="comment">// println!("atom {} of {:x}-{:x} = {:x}",
             //     i, scope.a, scope.b, atom_number);
             </span><span class="kw">if </span>atom_number == <span class="number">0 </span>{
                 <span class="kw">break</span>;
             }
             <span class="kw">if </span>i != <span class="number">0 </span>{
-                s.push(<span class="string">&#39;.&#39;</span>);
+                s.push(<span class="string">'.'</span>);
             }
             s.push_str(<span class="self">self</span>.atom_str(atom_number));
         }
@@ -886,7 +886,7 @@
 <span class="kw">impl </span>Scope {
     <span class="doccomment">/// Parses a `Scope` from a series of atoms separated by dot (`.`) characters
     ///
-    /// Example: `Scope::new(&quot;meta.rails.controller&quot;)`
+    /// Example: `Scope::new("meta.rails.controller")`
     </span><span class="kw">pub fn </span>new(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Scope, ParseScopeError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>repo = SCOPE_REPO.lock().unwrap();
         repo.build(s.trim())
@@ -894,7 +894,7 @@
 
     <span class="doccomment">/// Gets the atom number at a given index.
     ///
-    /// I can&#39;t think of any reason you&#39;d find this useful. It is used internally for turning a
+    /// I can't think of any reason you'd find this useful. It is used internally for turning a
     /// scope back into a string.
     </span><span class="kw">pub fn </span>atom_at(<span class="self">self</span>, index: usize) -&gt; u16 {
         <span class="attr">#[allow(clippy::panic)] </span><span class="comment">// The below panic is too much of an edge-case for it to be worth propagating
@@ -903,7 +903,7 @@
         } <span class="kw">else if </span>index &lt; <span class="number">8 </span>{
             <span class="self">self</span>.b &gt;&gt; ((<span class="number">7 </span>- index) * <span class="number">16</span>)
         } <span class="kw">else </span>{
-            <span class="macro">panic!</span>(<span class="string">&quot;atom index out of bounds {:?}&quot;</span>, index);
+            <span class="macro">panic!</span>(<span class="string">"atom index out of bounds {:?}"</span>, index);
         };
         (shifted &amp; <span class="number">0xFFFF</span>) <span class="kw">as </span>u16
     }
@@ -930,7 +930,7 @@
 
     <span class="doccomment">/// Returns a string representation of this scope
     ///
-    /// This requires locking a global repo and shouldn&#39;t be done frequently.
+    /// This requires locking a global repo and shouldn't be done frequently.
     </span><span class="kw">pub fn </span>build_string(<span class="self">self</span>) -&gt; String {
         <span class="kw">let </span>repo = SCOPE_REPO.lock().unwrap();
         repo.to_string(<span class="self">self</span>)
@@ -944,20 +944,20 @@
     ///
     /// ```
     /// use syntect::parsing::Scope;
-    /// assert!( Scope::new(&quot;string&quot;).unwrap()
-    ///         .is_prefix_of(Scope::new(&quot;string.quoted&quot;).unwrap()));
-    /// assert!( Scope::new(&quot;string.quoted&quot;).unwrap()
-    ///         .is_prefix_of(Scope::new(&quot;string.quoted&quot;).unwrap()));
-    /// assert!( Scope::new(&quot;&quot;).unwrap()
-    ///         .is_prefix_of(Scope::new(&quot;meta.rails.controller&quot;).unwrap()));
-    /// assert!(!Scope::new(&quot;source.php&quot;).unwrap()
-    ///         .is_prefix_of(Scope::new(&quot;source&quot;).unwrap()));
-    /// assert!(!Scope::new(&quot;source.php&quot;).unwrap()
-    ///         .is_prefix_of(Scope::new(&quot;source.ruby&quot;).unwrap()));
-    /// assert!(!Scope::new(&quot;meta.php&quot;).unwrap()
-    ///         .is_prefix_of(Scope::new(&quot;source.php&quot;).unwrap()));
-    /// assert!(!Scope::new(&quot;meta.php&quot;).unwrap()
-    ///         .is_prefix_of(Scope::new(&quot;source.php.wow&quot;).unwrap()));
+    /// assert!( Scope::new("string").unwrap()
+    ///         .is_prefix_of(Scope::new("string.quoted").unwrap()));
+    /// assert!( Scope::new("string.quoted").unwrap()
+    ///         .is_prefix_of(Scope::new("string.quoted").unwrap()));
+    /// assert!( Scope::new("").unwrap()
+    ///         .is_prefix_of(Scope::new("meta.rails.controller").unwrap()));
+    /// assert!(!Scope::new("source.php").unwrap()
+    ///         .is_prefix_of(Scope::new("source").unwrap()));
+    /// assert!(!Scope::new("source.php").unwrap()
+    ///         .is_prefix_of(Scope::new("source.ruby").unwrap()));
+    /// assert!(!Scope::new("meta.php").unwrap()
+    ///         .is_prefix_of(Scope::new("source.php").unwrap()));
+    /// assert!(!Scope::new("meta.php").unwrap()
+    ///         .is_prefix_of(Scope::new("source.php.wow").unwrap()));
     /// ```
     </span><span class="kw">pub fn </span>is_prefix_of(<span class="self">self</span>, s: Scope) -&gt; bool {
         <span class="kw">let </span>pref_missing = <span class="self">self</span>.missing_atoms();
@@ -976,7 +976,7 @@
         <span class="comment">// xor to find the difference
         </span><span class="kw">let </span>ax = (<span class="self">self</span>.a ^ s.a) &amp; mask.<span class="number">0</span>;
         <span class="kw">let </span>bx = (<span class="self">self</span>.b ^ s.b) &amp; mask.<span class="number">1</span>;
-        <span class="comment">// println!(&quot;{:x}-{:x} is_pref {:x}-{:x}: missing {} mask {:x}-{:x} xor {:x}-{:x}&quot;,
+        <span class="comment">// println!("{:x}-{:x} is_pref {:x}-{:x}: missing {} mask {:x}-{:x} xor {:x}-{:x}",
         //     self.a, self.b, s.a, s.b, pref_missing, mask.0, mask.1, ax, bx);
 
         </span>ax == <span class="number">0 </span>&amp;&amp; bx == <span class="number">0
@@ -992,16 +992,16 @@
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>Scope {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span>s = <span class="self">self</span>.build_string();
-        <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, s)
+        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, s)
     }
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Scope {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span>s = <span class="self">self</span>.build_string();
-        <span class="macro">write!</span>(f, <span class="string">&quot;&lt;{}&gt;&quot;</span>, s)
+        <span class="macro">write!</span>(f, <span class="string">"&lt;{}&gt;"</span>, s)
     }
 }
 
@@ -1012,20 +1012,20 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Scope {
-    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt; <span class="kw">where </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; Deserialize&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>Scope {
+    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt; <span class="kw">where </span>D: Deserializer&lt;<span class="lifetime">'de</span>&gt; {
 
         <span class="kw">struct </span>ScopeVisitor;
 
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>ScopeVisitor {
+        <span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; Visitor&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>ScopeVisitor {
             <span class="kw">type </span>Value = Scope;
 
-            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-                formatter.write_str(<span class="string">&quot;a string&quot;</span>)
+            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+                formatter.write_str(<span class="string">"a string"</span>)
             }
 
             <span class="kw">fn </span>visit_str&lt;E&gt;(<span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Scope, E&gt; <span class="kw">where </span>E: Error {
-                Scope::new(v).map_err(|e| Error::custom(<span class="macro">format!</span>(<span class="string">&quot;Invalid scope: {:?}&quot;</span>, e)))
+                Scope::new(v).map_err(|e| Error::custom(<span class="macro">format!</span>(<span class="string">"Invalid scope: {:?}"</span>, e)))
             }
         }
 
@@ -1033,14 +1033,14 @@
     }
 }
 
-<span class="doccomment">/// Wrapper to get around the fact Rust `f64` doesn&#39;t implement `Ord` and there is no non-NaN
+<span class="doccomment">/// Wrapper to get around the fact Rust `f64` doesn't implement `Ord` and there is no non-NaN
 /// float type
 </span><span class="attr">#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 </span><span class="kw">pub struct </span>MatchPower(<span class="kw">pub </span>f64);
 
 <span class="kw">impl </span>Eq <span class="kw">for </span>MatchPower {}
 
-<span class="attr">#[allow(clippy::derive_ord_xor_partial_ord)] </span><span class="comment">// The code works, so let&#39;s keep using it
+<span class="attr">#[allow(clippy::derive_ord_xor_partial_ord)] </span><span class="comment">// The code works, so let's keep using it
 </span><span class="kw">impl </span>Ord <span class="kw">for </span>MatchPower {
     <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; Ordering {
         <span class="self">self</span>.partial_cmp(other).unwrap()
@@ -1055,7 +1055,7 @@
         }
     }
 
-    <span class="doccomment">/// Note: creating a ScopeStack with this doesn&#39;t contain information
+    <span class="doccomment">/// Note: creating a ScopeStack with this doesn't contain information
     /// on what to do when `clear_scopes` contexts end.
     </span><span class="kw">pub fn </span>from_vec(v: Vec&lt;Scope&gt;) -&gt; ScopeStack {
         ScopeStack {
@@ -1106,7 +1106,7 @@
             ScopeStackOp::Clear(amount) =&gt; {
                 <span class="kw">let </span>cleared = <span class="kw">match </span>amount {
                     ClearAmount::TopN(n) =&gt; {
-                        <span class="comment">// don&#39;t try to clear more scopes than are on the stack
+                        <span class="comment">// don't try to clear more scopes than are on the stack
                         </span><span class="kw">let </span>to_leave = <span class="self">self</span>.scopes.len() - min(n, <span class="self">self</span>.scopes.len());
                         <span class="self">self</span>.scopes.split_off(to_leave)
                     }
@@ -1143,7 +1143,7 @@
     /// and then a newline. Top of the stack at the end.
     </span><span class="kw">pub fn </span>debug_print(<span class="kw-2">&amp;</span><span class="self">self</span>, repo: <span class="kw-2">&amp;</span>ScopeRepository) {
         <span class="kw">for </span>s <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.scopes {
-            <span class="macro">print!</span>(<span class="string">&quot;{} &quot;</span>, repo.to_string(<span class="kw-2">*</span>s));
+            <span class="macro">print!</span>(<span class="string">"{} "</span>, repo.to_string(<span class="kw-2">*</span>s));
         }
         <span class="macro">println!</span>();
     }
@@ -1186,11 +1186,11 @@
     /// ```
     /// use syntect::parsing::{ScopeStack, MatchPower};
     /// use std::str::FromStr;
-    /// assert_eq!(ScopeStack::from_str(&quot;a.b c e.f&quot;).unwrap()
-    ///     .does_match(ScopeStack::from_str(&quot;a.b c.d e.f.g&quot;).unwrap().as_slice()),
+    /// assert_eq!(ScopeStack::from_str("a.b c e.f").unwrap()
+    ///     .does_match(ScopeStack::from_str("a.b c.d e.f.g").unwrap().as_slice()),
     ///     Some(MatchPower(0o212u64 as f64)));
-    /// assert_eq!(ScopeStack::from_str(&quot;a c.d.e&quot;).unwrap()
-    ///     .does_match(ScopeStack::from_str(&quot;a.b c.d e.f.g&quot;).unwrap().as_slice()),
+    /// assert_eq!(ScopeStack::from_str("a c.d.e").unwrap()
+    ///     .does_match(ScopeStack::from_str("a.b c.d e.f.g").unwrap().as_slice()),
     ///     None);
     /// ```
     </span><span class="kw">pub fn </span>does_match(<span class="kw-2">&amp;</span><span class="self">self</span>, stack: <span class="kw-2">&amp;</span>[Scope]) -&gt; <span class="prelude-ty">Option</span>&lt;MatchPower&gt; {
@@ -1226,9 +1226,9 @@
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>ScopeStack {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">for </span>s <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.scopes {
-            <span class="macro">write!</span>(f, <span class="string">&quot;{} &quot;</span>, s)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(f, <span class="string">"{} "</span>, s)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -1244,95 +1244,95 @@
         // use std::rc::{Rc};
         // use scope::*;
         // assert_eq!(8, mem::size_of::&lt;Rc&lt;Scope&gt;&gt;());
-        // assert_eq!(Scope::new(&quot;source.php&quot;), Scope::new(&quot;source.php&quot;));
+        // assert_eq!(Scope::new("source.php"), Scope::new("source.php"));
     </span>}
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>repo_works() {
         <span class="kw">let </span><span class="kw-2">mut </span>repo = ScopeRepository::new();
-        <span class="macro">assert_eq!</span>(repo.build(<span class="string">&quot;source.php&quot;</span>).unwrap(),
-                   repo.build(<span class="string">&quot;source.php&quot;</span>).unwrap());
-        <span class="macro">assert_eq!</span>(repo.build(<span class="string">&quot;source.php.wow.hi.bob.troll.clock.5&quot;</span>).unwrap(),
-                   repo.build(<span class="string">&quot;source.php.wow.hi.bob.troll.clock.5&quot;</span>).unwrap());
-        <span class="macro">assert_eq!</span>(repo.build(<span class="string">&quot;&quot;</span>).unwrap(), repo.build(<span class="string">&quot;&quot;</span>).unwrap());
-        <span class="kw">let </span>s1 = repo.build(<span class="string">&quot;&quot;</span>).unwrap();
-        <span class="macro">assert_eq!</span>(repo.to_string(s1), <span class="string">&quot;&quot;</span>);
-        <span class="kw">let </span>s2 = repo.build(<span class="string">&quot;source.php.wow&quot;</span>).unwrap();
-        <span class="macro">assert_eq!</span>(repo.to_string(s2), <span class="string">&quot;source.php.wow&quot;</span>);
-        <span class="macro">assert!</span>(repo.build(<span class="string">&quot;source.php&quot;</span>).unwrap() != repo.build(<span class="string">&quot;source.perl&quot;</span>).unwrap());
-        <span class="macro">assert!</span>(repo.build(<span class="string">&quot;source.php&quot;</span>).unwrap() != repo.build(<span class="string">&quot;source.php.wagon&quot;</span>).unwrap());
-        <span class="macro">assert_eq!</span>(repo.build(<span class="string">&quot;comment.line.&quot;</span>).unwrap(),
-                   repo.build(<span class="string">&quot;comment.line&quot;</span>).unwrap());
+        <span class="macro">assert_eq!</span>(repo.build(<span class="string">"source.php"</span>).unwrap(),
+                   repo.build(<span class="string">"source.php"</span>).unwrap());
+        <span class="macro">assert_eq!</span>(repo.build(<span class="string">"source.php.wow.hi.bob.troll.clock.5"</span>).unwrap(),
+                   repo.build(<span class="string">"source.php.wow.hi.bob.troll.clock.5"</span>).unwrap());
+        <span class="macro">assert_eq!</span>(repo.build(<span class="string">""</span>).unwrap(), repo.build(<span class="string">""</span>).unwrap());
+        <span class="kw">let </span>s1 = repo.build(<span class="string">""</span>).unwrap();
+        <span class="macro">assert_eq!</span>(repo.to_string(s1), <span class="string">""</span>);
+        <span class="kw">let </span>s2 = repo.build(<span class="string">"source.php.wow"</span>).unwrap();
+        <span class="macro">assert_eq!</span>(repo.to_string(s2), <span class="string">"source.php.wow"</span>);
+        <span class="macro">assert!</span>(repo.build(<span class="string">"source.php"</span>).unwrap() != repo.build(<span class="string">"source.perl"</span>).unwrap());
+        <span class="macro">assert!</span>(repo.build(<span class="string">"source.php"</span>).unwrap() != repo.build(<span class="string">"source.php.wagon"</span>).unwrap());
+        <span class="macro">assert_eq!</span>(repo.build(<span class="string">"comment.line."</span>).unwrap(),
+                   repo.build(<span class="string">"comment.line"</span>).unwrap());
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>global_repo_works() {
         <span class="kw">use </span>std::str::FromStr;
-        <span class="macro">assert_eq!</span>(Scope::new(<span class="string">&quot;source.php&quot;</span>).unwrap(),
-                   Scope::new(<span class="string">&quot;source.php&quot;</span>).unwrap());
-        <span class="macro">assert!</span>(Scope::from_str(<span class="string">&quot;1.2.3.4.5.6.7.8&quot;</span>).is_ok());
-        <span class="macro">assert!</span>(Scope::from_str(<span class="string">&quot;1.2.3.4.5.6.7.8.9&quot;</span>).is_err());
+        <span class="macro">assert_eq!</span>(Scope::new(<span class="string">"source.php"</span>).unwrap(),
+                   Scope::new(<span class="string">"source.php"</span>).unwrap());
+        <span class="macro">assert!</span>(Scope::from_str(<span class="string">"1.2.3.4.5.6.7.8"</span>).is_ok());
+        <span class="macro">assert!</span>(Scope::from_str(<span class="string">"1.2.3.4.5.6.7.8.9"</span>).is_err());
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>prefixes_work() {
-        <span class="macro">assert!</span>(Scope::new(<span class="string">&quot;1.2.3.4.5.6.7.8&quot;</span>)
+        <span class="macro">assert!</span>(Scope::new(<span class="string">"1.2.3.4.5.6.7.8"</span>)
             .unwrap()
-            .is_prefix_of(Scope::new(<span class="string">&quot;1.2.3.4.5.6.7.8&quot;</span>).unwrap()));
-        <span class="macro">assert!</span>(Scope::new(<span class="string">&quot;1.2.3.4.5.6&quot;</span>)
+            .is_prefix_of(Scope::new(<span class="string">"1.2.3.4.5.6.7.8"</span>).unwrap()));
+        <span class="macro">assert!</span>(Scope::new(<span class="string">"1.2.3.4.5.6"</span>)
             .unwrap()
-            .is_prefix_of(Scope::new(<span class="string">&quot;1.2.3.4.5.6.7.8&quot;</span>).unwrap()));
-        <span class="macro">assert!</span>(Scope::new(<span class="string">&quot;1.2.3.4&quot;</span>)
+            .is_prefix_of(Scope::new(<span class="string">"1.2.3.4.5.6.7.8"</span>).unwrap()));
+        <span class="macro">assert!</span>(Scope::new(<span class="string">"1.2.3.4"</span>)
             .unwrap()
-            .is_prefix_of(Scope::new(<span class="string">&quot;1.2.3.4.5.6.7.8&quot;</span>).unwrap()));
-        <span class="macro">assert!</span>(!Scope::new(<span class="string">&quot;1.2.3.4.5.6.a&quot;</span>)
+            .is_prefix_of(Scope::new(<span class="string">"1.2.3.4.5.6.7.8"</span>).unwrap()));
+        <span class="macro">assert!</span>(!Scope::new(<span class="string">"1.2.3.4.5.6.a"</span>)
             .unwrap()
-            .is_prefix_of(Scope::new(<span class="string">&quot;1.2.3.4.5.6.7.8&quot;</span>).unwrap()));
-        <span class="macro">assert!</span>(!Scope::new(<span class="string">&quot;1.2.a.4.5.6.7&quot;</span>)
+            .is_prefix_of(Scope::new(<span class="string">"1.2.3.4.5.6.7.8"</span>).unwrap()));
+        <span class="macro">assert!</span>(!Scope::new(<span class="string">"1.2.a.4.5.6.7"</span>)
             .unwrap()
-            .is_prefix_of(Scope::new(<span class="string">&quot;1.2.3.4.5.6.7.8&quot;</span>).unwrap()));
-        <span class="macro">assert!</span>(!Scope::new(<span class="string">&quot;1.2.a.4.5.6.7&quot;</span>)
+            .is_prefix_of(Scope::new(<span class="string">"1.2.3.4.5.6.7.8"</span>).unwrap()));
+        <span class="macro">assert!</span>(!Scope::new(<span class="string">"1.2.a.4.5.6.7"</span>)
             .unwrap()
-            .is_prefix_of(Scope::new(<span class="string">&quot;1.2.3.4.5&quot;</span>).unwrap()));
-        <span class="macro">assert!</span>(!Scope::new(<span class="string">&quot;1.2.a&quot;</span>)
+            .is_prefix_of(Scope::new(<span class="string">"1.2.3.4.5"</span>).unwrap()));
+        <span class="macro">assert!</span>(!Scope::new(<span class="string">"1.2.a"</span>)
             .unwrap()
-            .is_prefix_of(Scope::new(<span class="string">&quot;1.2.3.4.5.6.7.8&quot;</span>).unwrap()));
+            .is_prefix_of(Scope::new(<span class="string">"1.2.3.4.5.6.7.8"</span>).unwrap()));
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>matching_works() {
         <span class="kw">use </span>std::str::FromStr;
-        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">&quot;string&quot;</span>)
+        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">"string"</span>)
                        .unwrap()
-                       .does_match(ScopeStack::from_str(<span class="string">&quot;string.quoted&quot;</span>).unwrap().as_slice()),
+                       .does_match(ScopeStack::from_str(<span class="string">"string.quoted"</span>).unwrap().as_slice()),
                    <span class="prelude-val">Some</span>(MatchPower(<span class="number">0o1u64 </span><span class="kw">as </span>f64)));
-        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">&quot;source&quot;</span>)
+        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">"source"</span>)
                        .unwrap()
-                       .does_match(ScopeStack::from_str(<span class="string">&quot;string.quoted&quot;</span>).unwrap().as_slice()),
+                       .does_match(ScopeStack::from_str(<span class="string">"string.quoted"</span>).unwrap().as_slice()),
                    <span class="prelude-val">None</span>);
-        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">&quot;a.b e.f&quot;</span>)
+        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">"a.b e.f"</span>)
                        .unwrap()
-                       .does_match(ScopeStack::from_str(<span class="string">&quot;a.b c.d e.f.g&quot;</span>).unwrap().as_slice()),
+                       .does_match(ScopeStack::from_str(<span class="string">"a.b c.d e.f.g"</span>).unwrap().as_slice()),
                    <span class="prelude-val">Some</span>(MatchPower(<span class="number">0o202u64 </span><span class="kw">as </span>f64)));
-        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">&quot;c e.f&quot;</span>)
+        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">"c e.f"</span>)
                        .unwrap()
-                       .does_match(ScopeStack::from_str(<span class="string">&quot;a.b c.d e.f.g&quot;</span>).unwrap().as_slice()),
+                       .does_match(ScopeStack::from_str(<span class="string">"a.b c.d e.f.g"</span>).unwrap().as_slice()),
                    <span class="prelude-val">Some</span>(MatchPower(<span class="number">0o210u64 </span><span class="kw">as </span>f64)));
-        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">&quot;c.d e.f&quot;</span>)
+        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">"c.d e.f"</span>)
                        .unwrap()
-                       .does_match(ScopeStack::from_str(<span class="string">&quot;a.b c.d e.f.g&quot;</span>).unwrap().as_slice()),
+                       .does_match(ScopeStack::from_str(<span class="string">"a.b c.d e.f.g"</span>).unwrap().as_slice()),
                    <span class="prelude-val">Some</span>(MatchPower(<span class="number">0o220u64 </span><span class="kw">as </span>f64)));
-        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">&quot;a.b c e.f&quot;</span>)
+        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">"a.b c e.f"</span>)
                        .unwrap()
-                       .does_match(ScopeStack::from_str(<span class="string">&quot;a.b c.d e.f.g&quot;</span>).unwrap().as_slice()),
+                       .does_match(ScopeStack::from_str(<span class="string">"a.b c.d e.f.g"</span>).unwrap().as_slice()),
                    <span class="prelude-val">Some</span>(MatchPower(<span class="number">0o212u64 </span><span class="kw">as </span>f64)));
-        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">&quot;a c.d&quot;</span>)
+        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">"a c.d"</span>)
                        .unwrap()
-                       .does_match(ScopeStack::from_str(<span class="string">&quot;a.b c.d e.f.g&quot;</span>).unwrap().as_slice()),
+                       .does_match(ScopeStack::from_str(<span class="string">"a.b c.d e.f.g"</span>).unwrap().as_slice()),
                    <span class="prelude-val">Some</span>(MatchPower(<span class="number">0o021u64 </span><span class="kw">as </span>f64)));
-        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">&quot;a c.d.e&quot;</span>)
+        <span class="macro">assert_eq!</span>(ScopeStack::from_str(<span class="string">"a c.d.e"</span>)
                        .unwrap()
-                       .does_match(ScopeStack::from_str(<span class="string">&quot;a.b c.d e.f.g&quot;</span>).unwrap().as_slice()),
+                       .does_match(ScopeStack::from_str(<span class="string">"a.b c.d e.f.g"</span>).unwrap().as_slice()),
                    <span class="prelude-val">None</span>);
     }
 }

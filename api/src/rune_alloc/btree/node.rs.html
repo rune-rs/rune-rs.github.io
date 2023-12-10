@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/btree/node.rs`."><title>node.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/btree/node.rs`."><title>node.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2081,19 +2081,19 @@
 // }
 // ```
 //
-// Since Rust doesn&#39;t actually have dependent types and polymorphic recursion,
+// Since Rust doesn't actually have dependent types and polymorphic recursion,
 // we make do with lots of unsafety.
 
 // A major goal of this module is to avoid complexity by treating the tree as a generic (if
 // weirdly shaped) container and avoiding dealing with most of the B-Tree invariants. As such,
-// this module doesn&#39;t care whether the entries are sorted, which nodes can be underfull, or
+// this module doesn't care whether the entries are sorted, which nodes can be underfull, or
 // even what underfull means. However, we do rely on a few invariants:
 //
 // - Trees must have uniform depth/height. This means that every path down to a leaf from a
 //   given node has exactly the same length.
 // - A node of length `n` has `n` keys, `n` values, and `n + 1` edges.
 //   This implies that even an empty node has at least one edge.
-//   For a leaf node, &quot;having an edge&quot; only means we can identify a position in the node,
+//   For a leaf node, "having an edge" only means we can identify a position in the node,
 //   since leaf edges are empty and need no data representation. In an internal node,
 //   an edge both identifies a position and contains a pointer to a child node.
 
@@ -2118,7 +2118,7 @@
     <span class="doccomment">/// We want to be covariant in `K` and `V`.
     </span>parent: <span class="prelude-ty">Option</span>&lt;NonNull&lt;InternalNode&lt;K, V&gt;&gt;&gt;,
 
-    <span class="doccomment">/// This node&#39;s index into the parent node&#39;s `edges` array.
+    <span class="doccomment">/// This node's index into the parent node's `edges` array.
     /// `*node.parent.edges[node.parent_idx]` should be the same thing as `node`.
     /// This is only guaranteed to be initialized when `parent` is non-null.
     </span>parent_idx: MaybeUninit&lt;u16&gt;,
@@ -2207,11 +2207,11 @@
 ///
 /// This type has a number of parameters that controls how it acts:
 /// - `BorrowType`: A dummy type that describes the kind of borrow and carries a lifetime.
-///    - When this is `Immut&lt;&#39;a&gt;`, the `NodeRef` acts roughly like `&amp;&#39;a Node`.
-///    - When this is `ValMut&lt;&#39;a&gt;`, the `NodeRef` acts roughly like `&amp;&#39;a Node`
+///    - When this is `Immut&lt;'a&gt;`, the `NodeRef` acts roughly like `&amp;'a Node`.
+///    - When this is `ValMut&lt;'a&gt;`, the `NodeRef` acts roughly like `&amp;'a Node`
 ///      with respect to keys and tree structure, but also allows many
 ///      mutable references to values throughout the tree to coexist.
-///    - When this is `Mut&lt;&#39;a&gt;`, the `NodeRef` acts roughly like `&amp;&#39;a mut Node`,
+///    - When this is `Mut&lt;'a&gt;`, the `NodeRef` acts roughly like `&amp;'a mut Node`,
 ///      although insert methods allow a mutable pointer to a value to coexist.
 ///    - When this is `Owned`, the `NodeRef` acts roughly like `Box&lt;Node&gt;`,
 ///      but does not have a destructor, and must be cleaned up manually.
@@ -2233,16 +2233,16 @@
 /// - For each type parameter, we can only define a method either generically
 ///   or for one particular type. For example, we cannot define a method like
 ///   `into_kv` generically for all `BorrowType`, or once for all types that
-///   carry a lifetime, because we want it to return `&amp;&#39;a` references.
-///   Therefore, we define it only for the least powerful type `Immut&lt;&#39;a&gt;`.
-/// - We cannot get implicit coercion from say `Mut&lt;&#39;a&gt;` to `Immut&lt;&#39;a&gt;`.
+///   carry a lifetime, because we want it to return `&amp;'a` references.
+///   Therefore, we define it only for the least powerful type `Immut&lt;'a&gt;`.
+/// - We cannot get implicit coercion from say `Mut&lt;'a&gt;` to `Immut&lt;'a&gt;`.
 ///   Therefore, we have to explicitly call `reborrow` on a more powerful
 ///   `NodeRef` in order to reach a method like `into_kv`.
 ///
 /// All methods on `NodeRef` that return some kind of reference, either:
 /// - Take `self` by value, and return the lifetime carried by `BorrowType`.
 ///   Sometimes, to invoke such a method, we need to call `reborrow_mut`.
-/// - Take `self` by reference, and (implicitly) return that reference&#39;s
+/// - Take `self` by reference, and (implicitly) return that reference's
 ///   lifetime, instead of the lifetime carried by `BorrowType`. That way,
 ///   the borrow checker guarantees that the `NodeRef` remains borrowed as long
 ///   as the returned reference is used.
@@ -2252,7 +2252,7 @@
     <span class="doccomment">/// The number of levels that the node and the level of leaves are apart, a
     /// constant of the node that cannot be entirely described by `Type`, and that
     /// the node itself does not store. We only need to store the height of the root
-    /// node, and derive every other node&#39;s height from it.
+    /// node, and derive every other node's height from it.
     /// Must be zero if `Type` is `Leaf` and non-zero if `Type` is `Internal`.
     </span>height: usize,
     <span class="doccomment">/// The pointer to the leaf or internal node. The definition of `InternalNode`
@@ -2266,8 +2266,8 @@
 /// Note that this does not have a destructor, and must be cleaned up manually.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>Root&lt;K, V&gt; = NodeRef&lt;marker::Owned, K, V, marker::LeafOrInternal&gt;;
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>, Type&gt; Copy <span class="kw">for </span>NodeRef&lt;marker::Immut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, Type&gt; {}
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>, Type&gt; Clone <span class="kw">for </span>NodeRef&lt;marker::Immut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, Type&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>, Type&gt; Copy <span class="kw">for </span>NodeRef&lt;marker::Immut&lt;<span class="lifetime">'a</span>&gt;, K, V, Type&gt; {}
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>, Type&gt; Clone <span class="kw">for </span>NodeRef&lt;marker::Immut&lt;<span class="lifetime">'a</span>&gt;, K, V, Type&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="kw-2">*</span><span class="self">self
     </span>}
@@ -2282,10 +2282,10 @@
 
 <span class="kw">unsafe impl</span>&lt;BorrowType, K: Sync, V: Sync, Type&gt; Sync <span class="kw">for </span>NodeRef&lt;BorrowType, K, V, Type&gt; {}
 
-<span class="kw">unsafe impl</span>&lt;K: Sync, V: Sync, Type&gt; Send <span class="kw">for </span>NodeRef&lt;marker::Immut&lt;<span class="lifetime">&#39;_</span>&gt;, K, V, Type&gt; {}
+<span class="kw">unsafe impl</span>&lt;K: Sync, V: Sync, Type&gt; Send <span class="kw">for </span>NodeRef&lt;marker::Immut&lt;<span class="lifetime">'_</span>&gt;, K, V, Type&gt; {}
 <span class="kw">unsafe impl</span>&lt;K: Sync, V: Sync, Type&gt; Send <span class="kw">for </span>NodeRef&lt;marker::Raw, K, V, Type&gt; {}
-<span class="kw">unsafe impl</span>&lt;K: Send, V: Send, Type&gt; Send <span class="kw">for </span>NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;_</span>&gt;, K, V, Type&gt; {}
-<span class="kw">unsafe impl</span>&lt;K: Send, V: Send, Type&gt; Send <span class="kw">for </span>NodeRef&lt;marker::ValMut&lt;<span class="lifetime">&#39;_</span>&gt;, K, V, Type&gt; {}
+<span class="kw">unsafe impl</span>&lt;K: Send, V: Send, Type&gt; Send <span class="kw">for </span>NodeRef&lt;marker::Mut&lt;<span class="lifetime">'_</span>&gt;, K, V, Type&gt; {}
+<span class="kw">unsafe impl</span>&lt;K: Send, V: Send, Type&gt; Send <span class="kw">for </span>NodeRef&lt;marker::ValMut&lt;<span class="lifetime">'_</span>&gt;, K, V, Type&gt; {}
 <span class="kw">unsafe impl</span>&lt;K: Send, V: Send, Type&gt; Send <span class="kw">for </span>NodeRef&lt;marker::Owned, K, V, Type&gt; {}
 <span class="kw">unsafe impl</span>&lt;K: Send, V: Send, Type&gt; Send <span class="kw">for </span>NodeRef&lt;marker::Dying, K, V, Type&gt; {}
 
@@ -2354,7 +2354,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt; {
     <span class="doccomment">/// Borrows exclusive access to the data of an internal node.
     </span><span class="kw">fn </span>as_internal_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>InternalNode&lt;K, V&gt; {
         <span class="kw">let </span>ptr = <span class="self">Self</span>::as_internal_ptr(<span class="self">self</span>);
@@ -2383,7 +2383,7 @@
     }
 
     <span class="doccomment">/// Temporarily takes out another, immutable reference to the same node.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>reborrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NodeRef&lt;marker::Immut&lt;<span class="lifetime">&#39;_</span>&gt;, K, V, Type&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>reborrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NodeRef&lt;marker::Immut&lt;<span class="lifetime">'_</span>&gt;, K, V, Type&gt; {
         NodeRef {
             height: <span class="self">self</span>.height,
             node: <span class="self">self</span>.node,
@@ -2405,7 +2405,7 @@
     /// Returns a raw ptr to avoid invalidating other references to this node.
     </span><span class="kw">fn </span>as_leaf_ptr(this: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="kw-2">*mut </span>LeafNode&lt;K, V&gt; {
         <span class="comment">// The node must be valid for at least the LeafNode portion.
-        // This is not a reference in the NodeRef type because we don&#39;t know if
+        // This is not a reference in the NodeRef type because we don't know if
         // it should be unique or shared.
         </span>this.node.as_ptr()
     }
@@ -2480,9 +2480,9 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>, Type&gt; NodeRef&lt;marker::Immut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, Type&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>, Type&gt; NodeRef&lt;marker::Immut&lt;<span class="lifetime">'a</span>&gt;, K, V, Type&gt; {
     <span class="doccomment">/// Exposes the leaf portion of any leaf or internal node in an immutable tree.
-    </span><span class="kw">fn </span>into_leaf(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>LeafNode&lt;K, V&gt; {
+    </span><span class="kw">fn </span>into_leaf(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span>LeafNode&lt;K, V&gt; {
         <span class="kw">let </span>ptr = <span class="self">Self</span>::as_leaf_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>);
         <span class="comment">// SAFETY: there can be no mutable references into this tree borrowed as `Immut`.
         </span><span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>ptr }
@@ -2515,7 +2515,7 @@
 }
 
 <span class="kw">impl</span>&lt;K, V&gt; NodeRef&lt;marker::Dying, K, V, marker::LeafOrInternal&gt; {
-    <span class="doccomment">/// Similar to `ascend`, gets a reference to a node&#39;s parent node, but also
+    <span class="doccomment">/// Similar to `ascend`, gets a reference to a node's parent node, but also
     /// deallocates the current node in the process. This is unsafe because the
     /// current node will still be accessible despite being deallocated.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>deallocate_and_ascend&lt;A: Allocator&gt;(
@@ -2539,7 +2539,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V, Type&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, Type&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V, Type&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, Type&gt; {
     <span class="doccomment">/// Temporarily takes out another mutable reference to the same node. Beware, as
     /// this method is very dangerous, doubly so since it might not immediately appear
     /// dangerous.
@@ -2550,7 +2550,7 @@
     </span><span class="comment">// FIXME(@gereeter) consider adding yet another type parameter to `NodeRef`
     // that restricts the use of navigation methods on reborrowed pointers,
     // preventing this unsafety.
-    </span><span class="kw">unsafe fn </span>reborrow_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;_</span>&gt;, K, V, Type&gt; {
+    </span><span class="kw">unsafe fn </span>reborrow_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'_</span>&gt;, K, V, Type&gt; {
         NodeRef {
             height: <span class="self">self</span>.height,
             node: <span class="self">self</span>.node,
@@ -2566,7 +2566,7 @@
     }
 
     <span class="doccomment">/// Offers exclusive access to the leaf portion of a leaf or internal node.
-    </span><span class="kw">fn </span>into_leaf_mut(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>LeafNode&lt;K, V&gt; {
+    </span><span class="kw">fn </span>into_leaf_mut(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>LeafNode&lt;K, V&gt; {
         <span class="kw">let </span>ptr = <span class="self">Self</span>::as_leaf_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>);
         <span class="comment">// SAFETY: we have exclusive access to the entire node.
         </span><span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>ptr }
@@ -2590,7 +2590,7 @@
     ///
     /// The reborrow must have ended, i.e., the reference returned by `new` and
     /// all pointers and references derived from it, must not be used anymore.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>awaken&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, Type&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>awaken&lt;<span class="lifetime">'a</span>&gt;(<span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, Type&gt; {
         NodeRef {
             height: <span class="self">self</span>.height,
             node: <span class="self">self</span>.node,
@@ -2608,7 +2608,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>, Type&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, Type&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>, Type&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, Type&gt; {
     <span class="doccomment">/// Borrows exclusive access to an element of the key storage area.
     ///
     /// # Safety
@@ -2628,7 +2628,7 @@
         }
     }
 
-    <span class="doccomment">/// Borrows exclusive access to an element or slice of the node&#39;s value storage area.
+    <span class="doccomment">/// Borrows exclusive access to an element or slice of the node's value storage area.
     ///
     /// # Safety
     /// `index` is in bounds of 0..CAPACITY
@@ -2648,8 +2648,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt; {
-    <span class="doccomment">/// Borrows exclusive access to an element or slice of the node&#39;s storage area for edge contents.
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt; {
+    <span class="doccomment">/// Borrows exclusive access to an element or slice of the node's storage area for edge contents.
     ///
     /// # Safety
     /// `index` is in bounds of 0..CAPACITY + 1
@@ -2669,10 +2669,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V, Type&gt; NodeRef&lt;marker::ValMut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, Type&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V, Type&gt; NodeRef&lt;marker::ValMut&lt;<span class="lifetime">'a</span>&gt;, K, V, Type&gt; {
     <span class="doccomment">/// # Safety
     /// - The node has more than `idx` initialized elements.
-    </span><span class="kw">unsafe fn </span>into_key_val_mut_at(<span class="self">self</span>, idx: usize) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V) {
+    </span><span class="kw">unsafe fn </span>into_key_val_mut_at(<span class="self">self</span>, idx: usize) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V) {
         <span class="comment">// We only create a reference to the one element we are interested in,
         // to avoid aliasing with outstanding references to other elements,
         // in particular, those returned to the caller in earlier iterations.
@@ -2688,14 +2688,14 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>, Type&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, Type&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>, Type&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, Type&gt; {
     <span class="doccomment">/// Borrows exclusive access to the length of the node.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>len_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>u16 {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.as_leaf_mut().len
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt; {
     <span class="doccomment">/// # Safety
     /// Every item returned by `range` is a valid edge index for the node.
     </span><span class="kw">unsafe fn </span>correct_childrens_parent_links&lt;R: Iterator&lt;Item = usize&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: R) {
@@ -2711,8 +2711,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
-    <span class="doccomment">/// Sets the node&#39;s link to its parent edge,
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
+    <span class="doccomment">/// Sets the node's link to its parent edge,
     /// without invalidating other references to the node.
     </span><span class="kw">fn </span>set_parent_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, parent: NonNull&lt;InternalNode&lt;K, V&gt;&gt;, parent_idx: usize) {
         <span class="kw">let </span>leaf = <span class="self">Self</span>::as_leaf_mut(<span class="self">self</span>);
@@ -2722,7 +2722,7 @@
 }
 
 <span class="kw">impl</span>&lt;K, V&gt; NodeRef&lt;marker::Owned, K, V, marker::LeafOrInternal&gt; {
-    <span class="doccomment">/// Clears the root&#39;s link to its parent edge.
+    <span class="doccomment">/// Clears the root's link to its parent edge.
     </span><span class="kw">fn </span>clear_parent_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>root_node = <span class="self">self</span>.borrow_mut();
         <span class="kw">let </span>leaf = root_node.as_leaf_mut();
@@ -2742,12 +2742,12 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_internal_level&lt;A: Allocator&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         alloc: <span class="kw-2">&amp;</span>A,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;_</span>&gt;, K, V, marker::Internal&gt;, AllocError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'_</span>&gt;, K, V, marker::Internal&gt;, AllocError&gt; {
         <span class="kw">super</span>::mem::take_mut(<span class="self">self</span>, |old_root| {
             <span class="prelude-val">Ok</span>(NodeRef::new_internal(old_root, alloc)<span class="question-mark">?</span>.forget_type())
         })<span class="question-mark">?</span>;
 
-        <span class="comment">// `self.borrow_mut()`, except that we just forgot we&#39;re internal now:
+        <span class="comment">// `self.borrow_mut()`, except that we just forgot we're internal now:
         </span><span class="prelude-val">Ok</span>(NodeRef {
             height: <span class="self">self</span>.height,
             node: <span class="self">self</span>.node,
@@ -2788,7 +2788,7 @@
     <span class="doccomment">/// Mutably borrows the owned root node. Unlike `reborrow_mut`, this is safe
     /// because the return value cannot be used to destroy the root, and there
     /// cannot be other references to the tree.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>borrow_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;_</span>&gt;, K, V, Type&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>borrow_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'_</span>&gt;, K, V, Type&gt; {
         NodeRef {
             height: <span class="self">self</span>.height,
             node: <span class="self">self</span>.node,
@@ -2797,7 +2797,7 @@
     }
 
     <span class="doccomment">/// Slightly mutably borrows the owned root node.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>borrow_valmut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NodeRef&lt;marker::ValMut&lt;<span class="lifetime">&#39;_</span>&gt;, K, V, Type&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>borrow_valmut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NodeRef&lt;marker::ValMut&lt;<span class="lifetime">'_</span>&gt;, K, V, Type&gt; {
         NodeRef {
             height: <span class="self">self</span>.height,
             node: <span class="self">self</span>.node,
@@ -2816,7 +2816,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt; {
     <span class="doccomment">/// Adds a key-value pair to the end of the node, and returns
     /// the mutable reference of the inserted value.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: K, val: V) -&gt; <span class="kw-2">&amp;mut </span>V {
@@ -2831,7 +2831,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt; {
     <span class="doccomment">/// Adds a key-value pair, and an edge to go to the right of that pair,
     /// to the end of the node.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: K, val: V, edge: Root&lt;K, V&gt;) {
@@ -2896,9 +2896,9 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
     <span class="doccomment">/// Unsafely asserts to the compiler the static information that this node is a `Leaf`.
-    </span><span class="kw">unsafe fn </span>cast_to_leaf_unchecked(<span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt; {
+    </span><span class="kw">unsafe fn </span>cast_to_leaf_unchecked(<span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt; {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.height == <span class="number">0</span>);
         NodeRef {
             height: <span class="self">self</span>.height,
@@ -2908,7 +2908,7 @@
     }
 
     <span class="doccomment">/// Unsafely asserts to the compiler the static information that this node is an `Internal`.
-    </span><span class="kw">unsafe fn </span>cast_to_internal_unchecked(<span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt; {
+    </span><span class="kw">unsafe fn </span>cast_to_internal_unchecked(<span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt; {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.height &gt; <span class="number">0</span>);
         NodeRef {
             height: <span class="self">self</span>.height,
@@ -2933,7 +2933,7 @@
 }
 
 <span class="kw">impl</span>&lt;Node: Copy, Type&gt; Copy <span class="kw">for </span>Handle&lt;Node, Type&gt; {}
-<span class="comment">// We don&#39;t need the full generality of `#[derive(Clone)]`, as the only time `Node` will be
+<span class="comment">// We don't need the full generality of `#[derive(Clone)]`, as the only time `Node` will be
 // `Clone`able is when it is an immutable reference and therefore `Copy`.
 </span><span class="kw">impl</span>&lt;Node: Copy, Type&gt; Clone <span class="kw">for </span>Handle&lt;Node, Type&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
@@ -2990,8 +2990,8 @@
     <span class="doccomment">/// Temporarily takes out another immutable handle on the same location.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>reborrow(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-    ) -&gt; Handle&lt;NodeRef&lt;marker::Immut&lt;<span class="lifetime">&#39;_</span>&gt;, K, V, NodeType&gt;, HandleType&gt; {
-        <span class="comment">// We can&#39;t use Handle::new_kv or Handle::new_edge because we don&#39;t know our type
+    ) -&gt; Handle&lt;NodeRef&lt;marker::Immut&lt;<span class="lifetime">'_</span>&gt;, K, V, NodeType&gt;, HandleType&gt; {
+        <span class="comment">// We can't use Handle::new_kv or Handle::new_edge because we don't know our type
         </span>Handle {
             node: <span class="self">self</span>.node.reborrow(),
             idx: <span class="self">self</span>.idx,
@@ -3000,7 +3000,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V, NodeType, HandleType&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, NodeType&gt;, HandleType&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V, NodeType, HandleType&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, NodeType&gt;, HandleType&gt; {
     <span class="doccomment">/// Temporarily takes out another mutable handle on the same location. Beware, as
     /// this method is very dangerous, doubly so since it might not immediately appear
     /// dangerous.
@@ -3008,8 +3008,8 @@
     /// For details, see `NodeRef::reborrow_mut`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>reborrow_mut(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;_</span>&gt;, K, V, NodeType&gt;, HandleType&gt; {
-        <span class="comment">// We can&#39;t use Handle::new_kv or Handle::new_edge because we don&#39;t know our type
+    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'_</span>&gt;, K, V, NodeType&gt;, HandleType&gt; {
+        <span class="comment">// We can't use Handle::new_kv or Handle::new_edge because we don't know our type
         </span>Handle {
             node: <span class="kw">unsafe </span>{ <span class="self">self</span>.node.reborrow_mut() },
             idx: <span class="self">self</span>.idx,
@@ -3038,9 +3038,9 @@
     ///
     /// The reborrow must have ended, i.e., the reference returned by `new` and
     /// all pointers and references derived from it, must not be used anymore.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>awaken&lt;<span class="lifetime">&#39;a</span>&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>awaken&lt;<span class="lifetime">'a</span>&gt;(
         <span class="self">self</span>,
-    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, NodeType&gt;, HandleType&gt; {
+    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, NodeType&gt;, HandleType&gt; {
         Handle {
             node: <span class="kw">unsafe </span>{ <span class="self">self</span>.node.awaken() },
             idx: <span class="self">self</span>.idx,
@@ -3107,7 +3107,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt;, marker::Edge&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt;, marker::Edge&gt; {
     <span class="doccomment">/// Inserts a new key-value pair between the key-value pairs to the right and left of
     /// this edge. This method assumes that there is enough space in the node for the new
     /// pair to fit.
@@ -3115,7 +3115,7 @@
         <span class="kw-2">mut </span><span class="self">self</span>,
         key: K,
         val: V,
-    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt;, marker::KV&gt; {
+    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt;, marker::KV&gt; {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.node.len() &lt; CAPACITY);
         <span class="kw">let </span>new_len = <span class="self">self</span>.node.len() + <span class="number">1</span>;
 
@@ -3129,9 +3129,9 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt;, marker::Edge&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt;, marker::Edge&gt; {
     <span class="doccomment">/// Inserts a new key-value pair between the key-value pairs to the right and left of
-    /// this edge. This method splits the node if there isn&#39;t enough room.
+    /// this edge. This method splits the node if there isn't enough room.
     ///
     /// Returns a dormant handle to the inserted node which can be reawakened
     /// once splitting is complete.
@@ -3142,7 +3142,7 @@
         alloc: <span class="kw-2">&amp;</span>A,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;
         (
-            <span class="prelude-ty">Option</span>&lt;SplitResult&lt;<span class="lifetime">&#39;a</span>, K, V, marker::Leaf&gt;&gt;,
+            <span class="prelude-ty">Option</span>&lt;SplitResult&lt;<span class="lifetime">'a</span>, K, V, marker::Leaf&gt;&gt;,
             Handle&lt;NodeRef&lt;marker::DormantMut, K, V, marker::Leaf&gt;, marker::KV&gt;,
         ),
         AllocError,
@@ -3171,7 +3171,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt;, marker::Edge&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt;, marker::Edge&gt; {
     <span class="doccomment">/// Fixes the parent pointer and index in the child node that this edge
     /// links to. This is useful when the ordering of edges has been changed,
     </span><span class="kw">fn </span>correct_parent_link(<span class="self">self</span>) {
@@ -3183,7 +3183,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt;, marker::Edge&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt;, marker::Edge&gt; {
     <span class="doccomment">/// Inserts a new key-value pair and an edge that will go to the right of that new pair
     /// between this edge and the key-value pair to the right of this edge. This method assumes
     /// that there is enough space in the node for the new pair to fit.
@@ -3209,14 +3209,14 @@
 
     <span class="doccomment">/// Inserts a new key-value pair and an edge that will go to the right of that new pair
     /// between this edge and the key-value pair to the right of this edge. This method splits
-    /// the node if there isn&#39;t enough room.
+    /// the node if there isn't enough room.
     </span><span class="kw">fn </span>insert&lt;A: Allocator&gt;(
         <span class="kw-2">mut </span><span class="self">self</span>,
         key: K,
         val: V,
         edge: Root&lt;K, V&gt;,
         alloc: <span class="kw-2">&amp;</span>A,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SplitResult&lt;<span class="lifetime">&#39;a</span>, K, V, marker::Internal&gt;&gt;, AllocError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SplitResult&lt;<span class="lifetime">'a</span>, K, V, marker::Internal&gt;&gt;, AllocError&gt; {
         <span class="macro">assert!</span>(edge.height == <span class="self">self</span>.node.height - <span class="number">1</span>);
 
         <span class="kw">if </span><span class="self">self</span>.node.len() &lt; CAPACITY {
@@ -3240,9 +3240,9 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt;, marker::Edge&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt;, marker::Edge&gt; {
     <span class="doccomment">/// Inserts a new key-value pair between the key-value pairs to the right and left of
-    /// this edge. This method splits the node if there isn&#39;t enough room, and tries to
+    /// this edge. This method splits the node if there isn't enough room, and tries to
     /// insert the split off portion into the parent node recursively, until the root is reached.
     ///
     /// If the returned result is some `SplitResult`, the `left` field will be the root node.
@@ -3253,8 +3253,8 @@
         key: K,
         value: V,
         alloc: <span class="kw-2">&amp;</span>A,
-        split_root: <span class="kw">impl </span>FnOnce(SplitResult&lt;<span class="lifetime">&#39;a</span>, K, V, marker::LeafOrInternal&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), AllocError&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt;, marker::KV&gt;, AllocError&gt; {
+        split_root: <span class="kw">impl </span>FnOnce(SplitResult&lt;<span class="lifetime">'a</span>, K, V, marker::LeafOrInternal&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), AllocError&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt;, marker::KV&gt;, AllocError&gt; {
         <span class="kw">let </span>(<span class="kw-2">mut </span>split, handle) = <span class="kw">match </span><span class="self">self</span>.insert(key, value, alloc)<span class="question-mark">? </span>{
             <span class="comment">// SAFETY: we have finished splitting and can now re-awaken the
             // handle to the inserted element.
@@ -3300,7 +3300,7 @@
 
         <span class="comment">// We need to use raw pointers to nodes because, if BorrowType is
         // marker::ValMut, there might be outstanding mutable references to
-        // values that we must not invalidate. There&#39;s no worry accessing the
+        // values that we must not invalidate. There's no worry accessing the
         // height field because that value is copied. Beware that, once the
         // node pointer is dereferenced, we access the edges array with a
         // reference (Rust issue #73987) and invalidate any other references
@@ -3320,8 +3320,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>, NodeType&gt; Handle&lt;NodeRef&lt;marker::Immut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, NodeType&gt;, marker::KV&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_kv(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V) {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>, NodeType&gt; Handle&lt;NodeRef&lt;marker::Immut&lt;<span class="lifetime">'a</span>&gt;, K, V, NodeType&gt;, marker::KV&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_kv(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V) {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.idx &lt; <span class="self">self</span>.node.len());
         <span class="kw">let </span>leaf = <span class="self">self</span>.node.into_leaf();
         <span class="kw">let </span>k = <span class="kw">unsafe </span>{ leaf.keys.get_unchecked(<span class="self">self</span>.idx).assume_init_ref() };
@@ -3340,18 +3340,18 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>, NodeType&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, NodeType&gt;, marker::KV&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>, NodeType&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, NodeType&gt;, marker::KV&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>key_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>K {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.node.key_area_mut(<span class="self">self</span>.idx).assume_init_mut() }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_val_mut(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_val_mut(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.idx &lt; <span class="self">self</span>.node.len());
         <span class="kw">let </span>leaf = <span class="self">self</span>.node.into_leaf_mut();
         <span class="kw">unsafe </span>{ leaf.vals.get_unchecked_mut(<span class="self">self</span>.idx).assume_init_mut() }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_kv_valmut(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_kv_valmut(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V) {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.idx &lt; <span class="self">self</span>.node.len());
         <span class="kw">let </span>leaf = <span class="self">self</span>.node.into_leaf_mut();
         <span class="kw">let </span>k = <span class="kw">unsafe </span>{ leaf.keys.get_unchecked(<span class="self">self</span>.idx).assume_init_ref() };
@@ -3360,13 +3360,13 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V, NodeType&gt; Handle&lt;NodeRef&lt;marker::ValMut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, NodeType&gt;, marker::KV&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_kv_valmut(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V) {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V, NodeType&gt; Handle&lt;NodeRef&lt;marker::ValMut&lt;<span class="lifetime">'a</span>&gt;, K, V, NodeType&gt;, marker::KV&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_kv_valmut(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V) {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.node.into_key_val_mut_at(<span class="self">self</span>.idx) }
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>, NodeType&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, NodeType&gt;, marker::KV&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>, NodeType&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, NodeType&gt;, marker::KV&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>kv_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (<span class="kw-2">&amp;mut </span>K, <span class="kw-2">&amp;mut </span>V) {
         <span class="macro">debug_assert!</span>(<span class="self">self</span>.idx &lt; <span class="self">self</span>.node.len());
         <span class="comment">// We cannot call separate key and value methods, because calling the second one
@@ -3414,7 +3414,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>, NodeType&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, NodeType&gt;, marker::KV&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>, NodeType&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, NodeType&gt;, marker::KV&gt; {
     <span class="doccomment">/// Helps implementations of `split` for a particular `NodeType`,
     /// by taking care of leaf data.
     </span><span class="kw">fn </span>split_leaf_data(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_node: <span class="kw-2">&amp;mut </span>LeafNode&lt;K, V&gt;) -&gt; (K, V) {
@@ -3441,7 +3441,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt;, marker::KV&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt;, marker::KV&gt; {
     <span class="doccomment">/// Splits the underlying node into three parts:
     ///
     /// - The node is truncated to only contain the key-value pairs to the left of
@@ -3452,7 +3452,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>split&lt;A: Allocator&gt;(
         <span class="kw-2">mut </span><span class="self">self</span>,
         alloc: <span class="kw-2">&amp;</span>A,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;SplitResult&lt;<span class="lifetime">&#39;a</span>, K, V, marker::Leaf&gt;, AllocError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SplitResult&lt;<span class="lifetime">'a</span>, K, V, marker::Leaf&gt;, AllocError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>new_node = LeafNode::new(alloc)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>kv = <span class="self">self</span>.split_leaf_data(<span class="kw">unsafe </span>{ new_node.as_mut() });
@@ -3472,7 +3472,7 @@
         <span class="kw-2">mut </span><span class="self">self</span>,
     ) -&gt; (
         (K, V),
-        Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt;, marker::Edge&gt;,
+        Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt;, marker::Edge&gt;,
     ) {
         <span class="kw">let </span>old_len = <span class="self">self</span>.node.len();
         <span class="kw">unsafe </span>{
@@ -3484,7 +3484,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt;, marker::KV&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt;, marker::KV&gt; {
     <span class="doccomment">/// Splits the underlying node into three parts:
     ///
     /// - The node is truncated to only contain the edges and key-value pairs to the
@@ -3495,7 +3495,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>split&lt;A: Allocator&gt;(
         <span class="kw-2">mut </span><span class="self">self</span>,
         alloc: <span class="kw-2">&amp;</span>A,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;SplitResult&lt;<span class="lifetime">&#39;a</span>, K, V, marker::Internal&gt;, AllocError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SplitResult&lt;<span class="lifetime">'a</span>, K, V, marker::Internal&gt;, AllocError&gt; {
         <span class="kw">let </span>old_len = <span class="self">self</span>.node.len();
         <span class="kw">unsafe </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>new_node = InternalNode::new(alloc)<span class="question-mark">?</span>;
@@ -3527,14 +3527,14 @@
 
 <span class="doccomment">/// Represents a session for evaluating and performing a balancing operation
 /// around an internal key-value pair.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BalancingContext&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    parent: Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt;, marker::KV&gt;,
-    left_child: NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
-    right_child: NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BalancingContext&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    parent: Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt;, marker::KV&gt;,
+    left_child: NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
+    right_child: NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt;, marker::KV&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>consider_for_balancing(<span class="self">self</span>) -&gt; BalancingContext&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt;, marker::KV&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>consider_for_balancing(<span class="self">self</span>) -&gt; BalancingContext&lt;<span class="lifetime">'a</span>, K, V&gt; {
         <span class="kw">let </span>self1 = <span class="kw">unsafe </span>{ ptr::read(<span class="kw-2">&amp;</span><span class="self">self</span>) };
         <span class="kw">let </span>self2 = <span class="kw">unsafe </span>{ ptr::read(<span class="kw-2">&amp;</span><span class="self">self</span>) };
         BalancingContext {
@@ -3545,7 +3545,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
     <span class="doccomment">/// Chooses a balancing context involving the node as a child, thus between
     /// the KV immediately to the left or to the right in the parent node.
     /// Returns an `Err` if there is no parent.
@@ -3555,12 +3555,12 @@
     /// underfull, meaning here only that it has fewer elements than its left
     /// sibling and than its right sibling, if they exist. In that case,
     /// merging with the left sibling is faster, since we only need to move
-    /// the node&#39;s N elements, instead of shifting them to the right and moving
+    /// the node's N elements, instead of shifting them to the right and moving
     /// more than N elements in front. Stealing from the left sibling is also
-    /// typically faster, since we only need to shift the node&#39;s N elements to
-    /// the right, instead of shifting at least N of the sibling&#39;s elements to
+    /// typically faster, since we only need to shift the node's N elements to
+    /// the right, instead of shifting at least N of the sibling's elements to
     /// the left.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>choose_parent_kv(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;LeftOrRight&lt;BalancingContext&lt;<span class="lifetime">&#39;a</span>, K, V&gt;&gt;, <span class="self">Self</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>choose_parent_kv(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;LeftOrRight&lt;BalancingContext&lt;<span class="lifetime">'a</span>, K, V&gt;&gt;, <span class="self">Self</span>&gt; {
         <span class="kw">match unsafe </span>{ ptr::read(<span class="kw-2">&amp;</span><span class="self">self</span>) }.ascend() {
             <span class="prelude-val">Ok</span>(parent_edge) =&gt; <span class="kw">match </span>parent_edge.left_kv() {
                 <span class="prelude-val">Ok</span>(left_parent_kv) =&gt; <span class="prelude-val">Ok</span>(LeftOrRight::Left(BalancingContext {
@@ -3574,7 +3574,7 @@
                         left_child: <span class="self">self</span>,
                         right_child: right_parent_kv.right_edge().descend(),
                     })),
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;empty internal node&quot;</span>),
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(<span class="string">"empty internal node"</span>),
                 },
             },
             <span class="prelude-val">Err</span>(root) =&gt; <span class="prelude-val">Err</span>(root),
@@ -3582,7 +3582,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; BalancingContext&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; BalancingContext&lt;<span class="lifetime">'a</span>, K, V&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>left_child_len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.left_child.len()
     }
@@ -3591,11 +3591,11 @@
         <span class="self">self</span>.right_child.len()
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_left_child(<span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_left_child(<span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
         <span class="self">self</span>.left_child
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_right_child(<span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_right_child(<span class="self">self</span>) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
         <span class="self">self</span>.right_child
     }
 
@@ -3606,12 +3606,12 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; BalancingContext&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; BalancingContext&lt;<span class="lifetime">'a</span>, K, V&gt; {
     <span class="doccomment">/// Performs a merge and lets a closure decide what to return.
     </span><span class="kw">fn </span>do_merge&lt;
         F: FnOnce(
-            NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt;,
-            NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
+            NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt;,
+            NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
         ) -&gt; R,
         R,
         A: Allocator,
@@ -3679,29 +3679,29 @@
         result(parent_node, left_node)
     }
 
-    <span class="doccomment">/// Merges the parent&#39;s key-value pair and both adjacent child nodes into
+    <span class="doccomment">/// Merges the parent's key-value pair and both adjacent child nodes into
     /// the left child node and returns the shrunk parent node.
     ///
     /// Panics unless we `.can_merge()`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>merge_tracking_parent&lt;A: Allocator&gt;(
         <span class="self">self</span>,
         alloc: <span class="kw-2">&amp;</span>A,
-    ) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Internal&gt; {
+    ) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Internal&gt; {
         <span class="self">self</span>.do_merge(|parent, _child| parent, alloc)
     }
 
-    <span class="doccomment">/// Merges the parent&#39;s key-value pair and both adjacent child nodes into
+    <span class="doccomment">/// Merges the parent's key-value pair and both adjacent child nodes into
     /// the left child node and returns that child node.
     ///
     /// Panics unless we `.can_merge()`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>merge_tracking_child&lt;A: Allocator&gt;(
         <span class="self">self</span>,
         alloc: <span class="kw-2">&amp;</span>A,
-    ) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
+    ) -&gt; NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt; {
         <span class="self">self</span>.do_merge(|_parent, child| child, alloc)
     }
 
-    <span class="doccomment">/// Merges the parent&#39;s key-value pair and both adjacent child nodes into
+    <span class="doccomment">/// Merges the parent's key-value pair and both adjacent child nodes into
     /// the left child node and returns the edge handle in that child node
     /// where the tracked child edge ended up,
     ///
@@ -3710,7 +3710,7 @@
         <span class="self">self</span>,
         track_edge_idx: LeftOrRight&lt;usize&gt;,
         alloc: <span class="kw-2">&amp;</span>A,
-    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::Edge&gt; {
+    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::Edge&gt; {
         <span class="kw">let </span>old_left_len = <span class="self">self</span>.left_child.len();
         <span class="kw">let </span>right_len = <span class="self">self</span>.right_child.len();
         <span class="macro">assert!</span>(<span class="kw">match </span>track_edge_idx {
@@ -3732,7 +3732,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>steal_left(
         <span class="kw-2">mut </span><span class="self">self</span>,
         track_right_edge_idx: usize,
-    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::Edge&gt; {
+    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::Edge&gt; {
         <span class="self">self</span>.bulk_steal_left(<span class="number">1</span>);
         <span class="kw">unsafe </span>{ Handle::new_edge(<span class="self">self</span>.right_child, <span class="number">1 </span>+ track_right_edge_idx) }
     }
@@ -3740,11 +3740,11 @@
     <span class="doccomment">/// Removes a key-value pair from the right child and places it in the key-value storage
     /// of the parent, while pushing the old parent key-value pair onto the left child.
     /// Returns a handle to the edge in the left child specified by `track_left_edge_idx`,
-    /// which didn&#39;t move.
+    /// which didn't move.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>steal_right(
         <span class="kw-2">mut </span><span class="self">self</span>,
         track_left_edge_idx: usize,
-    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::Edge&gt; {
+    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::Edge&gt; {
         <span class="self">self</span>.bulk_steal_right(<span class="number">1</span>);
         <span class="kw">unsafe </span>{ Handle::new_edge(<span class="self">self</span>.left_child, track_left_edge_idx) }
     }
@@ -3788,7 +3788,7 @@
                 <span class="kw">let </span>v = left_node.val_area_mut(new_left_len).assume_init_read();
                 <span class="kw">let </span>(k, v) = <span class="self">self</span>.parent.replace_kv(k, v);
 
-                <span class="comment">// Move parent&#39;s key-value pair to the right child.
+                <span class="comment">// Move parent's key-value pair to the right child.
                 </span>right_node.key_area_mut(count - <span class="number">1</span>).write(k);
                 right_node.val_area_mut(count - <span class="number">1</span>).write(v);
             }
@@ -3840,7 +3840,7 @@
                 <span class="kw">let </span>v = right_node.val_area_mut(count - <span class="number">1</span>).assume_init_read();
                 <span class="kw">let </span>(k, v) = <span class="self">self</span>.parent.replace_kv(k, v);
 
-                <span class="comment">// Move parent&#39;s key-value pair to the left child.
+                <span class="comment">// Move parent's key-value pair to the left child.
                 </span>left_node.key_area_mut(old_left_len).write(k);
                 left_node.val_area_mut(old_left_len).write(v);
 
@@ -3930,11 +3930,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V, Type&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;, Type&gt; {
-    <span class="doccomment">/// Unsafely asserts to the compiler the static information that the handle&#39;s node is a `Leaf`.
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V, Type&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;, Type&gt; {
+    <span class="doccomment">/// Unsafely asserts to the compiler the static information that the handle's node is a `Leaf`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>cast_to_leaf_unchecked(
         <span class="self">self</span>,
-    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt;, Type&gt; {
+    ) -&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt;, Type&gt; {
         <span class="kw">let </span>node = <span class="kw">unsafe </span>{ <span class="self">self</span>.node.cast_to_leaf_unchecked() };
         Handle {
             node,
@@ -3944,12 +3944,12 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::Edge&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::Edge&gt; {
     <span class="doccomment">/// Move the suffix after `self` from one node to another one. `right` must be empty.
     /// The first edge of `right` remains unchanged.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>move_suffix(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        right: <span class="kw-2">&amp;mut </span>NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
+        right: <span class="kw-2">&amp;mut </span>NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
     ) {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>new_left_len = <span class="self">self</span>.idx;
@@ -3996,17 +3996,17 @@
 }
 
 <span class="doccomment">/// Result of insertion, when a node needed to expand beyond its capacity.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>SplitResult&lt;<span class="lifetime">&#39;a</span>, K, V, NodeType&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>SplitResult&lt;<span class="lifetime">'a</span>, K, V, NodeType&gt; {
     <span class="comment">// Altered node in existing tree with elements and edges that belong to the left of `kv`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) left: NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, NodeType&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) left: NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, NodeType&gt;,
     <span class="comment">// Some key and value that existed before and were split off, to be inserted elsewhere.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) kv: (K, V),
     <span class="comment">// Owned, unattached, new node with elements and edges that belong to the right of `kv`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) right: NodeRef&lt;marker::Owned, K, V, NodeType&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; SplitResult&lt;<span class="lifetime">&#39;a</span>, K, V, marker::Leaf&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>forget_node_type(<span class="self">self</span>) -&gt; SplitResult&lt;<span class="lifetime">&#39;a</span>, K, V, marker::LeafOrInternal&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; SplitResult&lt;<span class="lifetime">'a</span>, K, V, marker::Leaf&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>forget_node_type(<span class="self">self</span>) -&gt; SplitResult&lt;<span class="lifetime">'a</span>, K, V, marker::LeafOrInternal&gt; {
         SplitResult {
             left: <span class="self">self</span>.left.forget_type(),
             kv: <span class="self">self</span>.kv,
@@ -4015,8 +4015,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; SplitResult&lt;<span class="lifetime">&#39;a</span>, K, V, marker::Internal&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>forget_node_type(<span class="self">self</span>) -&gt; SplitResult&lt;<span class="lifetime">&#39;a</span>, K, V, marker::LeafOrInternal&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; SplitResult&lt;<span class="lifetime">'a</span>, K, V, marker::Internal&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>forget_node_type(<span class="self">self</span>) -&gt; SplitResult&lt;<span class="lifetime">'a</span>, K, V, marker::LeafOrInternal&gt; {
         SplitResult {
             left: <span class="self">self</span>.left.forget_type(),
             kv: <span class="self">self</span>.kv,
@@ -4035,9 +4035,9 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Owned {}
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Dying {}
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>DormantMut {}
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Immut&lt;<span class="lifetime">&#39;a</span>&gt;(PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>()&gt;);
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Mut&lt;<span class="lifetime">&#39;a</span>&gt;(PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>()&gt;);
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ValMut&lt;<span class="lifetime">&#39;a</span>&gt;(PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>()&gt;);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Immut&lt;<span class="lifetime">'a</span>&gt;(PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>()&gt;);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Mut&lt;<span class="lifetime">'a</span>&gt;(PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>()&gt;);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ValMut&lt;<span class="lifetime">'a</span>&gt;(PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>()&gt;);
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Raw;
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>BorrowType {
@@ -4047,17 +4047,17 @@
         </span><span class="kw">const </span>TRAVERSAL_PERMIT: bool = <span class="bool-val">true</span>;
     }
     <span class="kw">impl </span>BorrowType <span class="kw">for </span>Owned {
-        <span class="doccomment">/// Reject traversal, because it isn&#39;t needed. Instead traversal
+        <span class="doccomment">/// Reject traversal, because it isn't needed. Instead traversal
         /// happens using the result of `borrow_mut`.
         /// By disabling traversal, and only creating new references to roots,
         /// we know that every reference of the `Owned` type is to a root node.
         </span><span class="kw">const </span>TRAVERSAL_PERMIT: bool = <span class="bool-val">false</span>;
     }
     <span class="kw">impl </span>BorrowType <span class="kw">for </span>Dying {}
-    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; BorrowType <span class="kw">for </span>Immut&lt;<span class="lifetime">&#39;a</span>&gt; {}
+    <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; BorrowType <span class="kw">for </span>Immut&lt;<span class="lifetime">'a</span>&gt; {}
     <span class="kw">impl </span>BorrowType <span class="kw">for </span>Raw {}
-    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; BorrowType <span class="kw">for </span>Mut&lt;<span class="lifetime">&#39;a</span>&gt; {}
-    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; BorrowType <span class="kw">for </span>ValMut&lt;<span class="lifetime">&#39;a</span>&gt; {}
+    <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; BorrowType <span class="kw">for </span>Mut&lt;<span class="lifetime">'a</span>&gt; {}
+    <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; BorrowType <span class="kw">for </span>ValMut&lt;<span class="lifetime">'a</span>&gt; {}
     <span class="kw">impl </span>BorrowType <span class="kw">for </span>DormantMut {}
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>KV {}

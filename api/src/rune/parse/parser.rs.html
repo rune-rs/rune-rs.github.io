@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/parse/parser.rs`."><title>parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/parse/parser.rs`."><title>parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -393,20 +393,20 @@
 /// use rune::SourceId;
 /// use rune::parse::Parser;
 ///
-/// let mut parser = Parser::new(&quot;fn foo() {}&quot;, SourceId::empty(), false);
+/// let mut parser = Parser::new("fn foo() {}", SourceId::empty(), false);
 /// let ast = parser.parse::&lt;ast::ItemFn&gt;()?;
 /// # Ok::&lt;_, rune::support::Error&gt;(())
 /// ```
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; {
-    peeker: Peeker&lt;<span class="lifetime">&#39;a</span>&gt;,
+</span><span class="kw">pub struct </span>Parser&lt;<span class="lifetime">'a</span>&gt; {
+    peeker: Peeker&lt;<span class="lifetime">'a</span>&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Parser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Parser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Construct a new parser around the given source.
     ///
     /// `shebang` indicates if the parser should try and parse a shebang or not.
-    </span><span class="kw">pub fn </span>new(source: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, source_id: SourceId, shebang: bool) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, source_id: SourceId, shebang: bool) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::with_source(
             Source {
                 inner: SourceInner::Lexer(Lexer::new(source, source_id, shebang)),
@@ -417,7 +417,7 @@
 
     <span class="doccomment">/// Construct a parser from a token stream. The second argument `span` is
     /// the span to use if the stream is empty.
-    </span><span class="kw">pub fn </span>from_token_stream(token_stream: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TokenStream, span: Span) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>from_token_stream(token_stream: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>TokenStream, span: Span) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::with_source(
             Source {
                 inner: SourceInner::TokenStream(token_stream.iter()),
@@ -481,7 +481,7 @@
     }
 
     <span class="doccomment">/// Construct a new parser with a source.
-    </span><span class="kw">fn </span>with_source(source: Source&lt;<span class="lifetime">&#39;a</span>&gt;, span: Span) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">fn </span>with_source(source: Source&lt;<span class="lifetime">'a</span>&gt;, span: Span) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>default_span = source.span().unwrap_or(span);
 
         <span class="self">Self </span>{
@@ -531,7 +531,7 @@
     }
 
     <span class="doccomment">/// Access the interior peeker of the parser.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>peeker(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Peeker&lt;<span class="lifetime">&#39;a</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>peeker(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Peeker&lt;<span class="lifetime">'a</span>&gt; {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.peeker
     }
 
@@ -593,9 +593,9 @@
 
 <span class="doccomment">/// Construct used to peek a parser.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Peeker&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub struct </span>Peeker&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The source being processed.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) source: Source&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) source: Source&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// The buffer of tokens seen.
     </span>buf: VecDeque&lt;Token&gt;,
     <span class="comment">// NB: parse errors encountered during peeking.
@@ -606,7 +606,7 @@
     </span>default_span: Span,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Peeker&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Peeker&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Peek the token kind at the given position.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>nth(<span class="kw-2">&amp;mut </span><span class="self">self</span>, n: usize) -&gt; Kind {
         <span class="comment">// Error tripped already, this peeker returns nothing but errors from
@@ -717,11 +717,11 @@
 }
 
 <span class="doccomment">/// A source adapter.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Source&lt;<span class="lifetime">&#39;a</span>&gt; {
-    inner: SourceInner&lt;<span class="lifetime">&#39;a</span>&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Source&lt;<span class="lifetime">'a</span>&gt; {
+    inner: SourceInner&lt;<span class="lifetime">'a</span>&gt;,
 }
 
-<span class="kw">impl </span>Source&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Source&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Get the span of the source.
     </span><span class="kw">fn </span>span(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Span&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.inner {
@@ -739,15 +739,15 @@
     }
 }
 
-<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Source&lt;<span class="lifetime">&#39;_</span>&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Source&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         fmt::Debug::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.inner, f)
     }
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">enum </span>SourceInner&lt;<span class="lifetime">&#39;a</span>&gt; {
-    Lexer(Lexer&lt;<span class="lifetime">&#39;a</span>&gt;),
-    TokenStream(TokenStreamIter&lt;<span class="lifetime">&#39;a</span>&gt;),
+</span><span class="kw">enum </span>SourceInner&lt;<span class="lifetime">'a</span>&gt; {
+    Lexer(Lexer&lt;<span class="lifetime">'a</span>&gt;),
+    TokenStream(TokenStreamIter&lt;<span class="lifetime">'a</span>&gt;),
 }
 </code></pre></div></section></main></body></html>

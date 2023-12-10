@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pulldown-cmark-0.9.3/src/parse.rs`."><title>parse.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pulldown_cmark" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pulldown-cmark-0.9.3/src/parse.rs`."><title>parse.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pulldown_cmark" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1928,7 +1928,7 @@
 </pre></div><pre class="rust"><code><span class="comment">// Copyright 2017 Google Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the &quot;Software&quot;), to deal
+// of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
@@ -1937,7 +1937,7 @@
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -1963,7 +1963,7 @@
 <span class="kw">use crate</span>::{Alignment, CodeBlockKind, Event, HeadingLevel, LinkType, Options, Tag};
 
 <span class="comment">// Allowing arbitrary depth nested parentheses inside link destinations
-// can create denial of service vulnerabilities if we&#39;re not careful.
+// can create denial of service vulnerabilities if we're not careful.
 // The simplest countermeasure is to limit their depth, which is
 // explicitly allowed by the spec as long as the limit is at least 3:
 // https://spec.commonmark.org/0.29/#link-destination
@@ -2029,7 +2029,7 @@
     </span>Root,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ItemBody {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ItemBody {
     <span class="kw">fn </span>is_inline(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="macro">matches!</span>(
             <span class="kw-2">*</span><span class="self">self</span>,
@@ -2044,26 +2044,26 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Default <span class="kw">for </span>ItemBody {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Default <span class="kw">for </span>ItemBody {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         ItemBody::Root
     }
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>BrokenLink&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub struct </span>BrokenLink&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub </span>span: std::ops::Range&lt;usize&gt;,
     <span class="kw">pub </span>link_type: LinkType,
-    <span class="kw">pub </span>reference: CowStr&lt;<span class="lifetime">&#39;a</span>&gt;,
+    <span class="kw">pub </span>reference: CowStr&lt;<span class="lifetime">'a</span>&gt;,
 }
 
 <span class="doccomment">/// Markdown event iterator.
-</span><span class="kw">pub struct </span>Parser&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;callback</span>&gt; {
-    text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input </span>str,
+</span><span class="kw">pub struct </span>Parser&lt;<span class="lifetime">'input</span>, <span class="lifetime">'callback</span>&gt; {
+    text: <span class="kw-2">&amp;</span><span class="lifetime">'input </span>str,
     options: Options,
     tree: Tree&lt;Item&gt;,
-    allocs: Allocations&lt;<span class="lifetime">&#39;input</span>&gt;,
-    broken_link_callback: BrokenLinkCallback&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;callback</span>&gt;,
+    allocs: Allocations&lt;<span class="lifetime">'input</span>&gt;,
+    broken_link_callback: BrokenLinkCallback&lt;<span class="lifetime">'input</span>, <span class="lifetime">'callback</span>&gt;,
     html_scan_guard: HtmlScanGuard,
 
     <span class="comment">// used by inline passes. store them here for reuse
@@ -2071,28 +2071,28 @@
     link_stack: LinkStack,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;callback</span>&gt; std::fmt::Debug <span class="kw">for </span>Parser&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;callback</span>&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+<span class="kw">impl</span>&lt;<span class="lifetime">'input</span>, <span class="lifetime">'callback</span>&gt; std::fmt::Debug <span class="kw">for </span>Parser&lt;<span class="lifetime">'input</span>, <span class="lifetime">'callback</span>&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
         <span class="comment">// Only print the fileds that have public types.
-        </span>f.debug_struct(<span class="string">&quot;Parser&quot;</span>)
-            .field(<span class="string">&quot;text&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.text)
-            .field(<span class="string">&quot;options&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.options)
+        </span>f.debug_struct(<span class="string">"Parser"</span>)
+            .field(<span class="string">"text"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.text)
+            .field(<span class="string">"options"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.options)
             .field(
-                <span class="string">&quot;broken_link_callback&quot;</span>,
+                <span class="string">"broken_link_callback"</span>,
                 <span class="kw-2">&amp;</span><span class="self">self</span>.broken_link_callback.as_ref().map(|<span class="kw">_</span>| ..),
             )
             .finish()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;callback</span>&gt; Parser&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;callback</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'input</span>, <span class="lifetime">'callback</span>&gt; Parser&lt;<span class="lifetime">'input</span>, <span class="lifetime">'callback</span>&gt; {
     <span class="doccomment">/// Creates a new event iterator for a markdown string without any options enabled.
-    </span><span class="kw">pub fn </span>new(text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input </span>str) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(text: <span class="kw-2">&amp;</span><span class="lifetime">'input </span>str) -&gt; <span class="self">Self </span>{
         Parser::new_ext(text, Options::empty())
     }
 
     <span class="doccomment">/// Creates a new event iterator for a markdown string with given options.
-    </span><span class="kw">pub fn </span>new_ext(text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input </span>str, options: Options) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new_ext(text: <span class="kw-2">&amp;</span><span class="lifetime">'input </span>str, options: Options) -&gt; <span class="self">Self </span>{
         Parser::new_with_broken_link_callback(text, options, <span class="prelude-val">None</span>)
     }
 
@@ -2102,9 +2102,9 @@
     /// and the returned pair will be used as the link name and title if it is not
     /// `None`.
     </span><span class="kw">pub fn </span>new_with_broken_link_callback(
-        text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input </span>str,
+        text: <span class="kw-2">&amp;</span><span class="lifetime">'input </span>str,
         options: Options,
-        broken_link_callback: BrokenLinkCallback&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;callback</span>&gt;,
+        broken_link_callback: BrokenLinkCallback&lt;<span class="lifetime">'input</span>, <span class="lifetime">'callback</span>&gt;,
     ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>(<span class="kw-2">mut </span>tree, allocs) = run_first_pass(text, options);
         tree.reset();
@@ -2134,7 +2134,7 @@
     /// When the parser encounters any item indicating potential inline markup, all
     /// inline markup passes are run on the remainder of the chain.
     ///
-    /// Note: there&#39;s some potential for optimization here, but that&#39;s future work.
+    /// Note: there's some potential for optimization here, but that's future work.
     </span><span class="kw">fn </span>handle_inline(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.handle_inline_pass1();
         <span class="self">self</span>.handle_emphasis();
@@ -2170,7 +2170,7 @@
                             end: ix - <span class="number">1</span>,
                             body: ItemBody::Text,
                         });
-                        <span class="kw">let </span>link_ix = <span class="self">self</span>.allocs.allocate_link(link_type, uri, <span class="string">&quot;&quot;</span>.into());
+                        <span class="kw">let </span>link_ix = <span class="self">self</span>.allocs.allocate_link(link_type, uri, <span class="string">""</span>.into());
                         <span class="self">self</span>.tree[cur_ix].item.body = ItemBody::Link(link_ix);
                         <span class="self">self</span>.tree[cur_ix].item.end = ix;
                         <span class="self">self</span>.tree[cur_ix].next = node;
@@ -2192,7 +2192,7 @@
                             <span class="kw">let </span>node = scan_nodes_to_ix(<span class="kw-2">&amp;</span><span class="self">self</span>.tree, next, ix);
                             <span class="self">self</span>.tree[cur_ix].item.body = <span class="kw">if </span>!span.is_empty() {
                                 <span class="kw">let </span>converted_string =
-                                    String::from_utf8(span).expect(<span class="string">&quot;invalid utf8&quot;</span>);
+                                    String::from_utf8(span).expect(<span class="string">"invalid utf8"</span>);
                                 ItemBody::OwnedHtml(
                                     <span class="self">self</span>.allocs.allocate_cow(converted_string.into()),
                                 )
@@ -2232,7 +2232,7 @@
                             <span class="self">self</span>.tree[cur_ix].item.body = ItemBody::Text;
                         }
                     } <span class="kw">else </span>{
-                        <span class="comment">// we haven&#39;t previously scanned all codeblock delimiters,
+                        <span class="comment">// we haven't previously scanned all codeblock delimiters,
                         // so walk the AST
                         </span><span class="kw">let </span><span class="kw-2">mut </span>scan = <span class="kw">if </span>search_count &gt; <span class="number">0 </span>{
                             <span class="self">self</span>.tree[cur_ix].next
@@ -2319,7 +2319,7 @@
                                 </span>RefScan::LinkLabel(<span class="kw">_</span>, end_ix) =&gt; {
                                     <span class="comment">// Toggle reference viability of the last closing bracket,
                                     // so that we can skip it on future iterations in case
-                                    // it fails in this one. In particular, we won&#39;t call
+                                    // it fails in this one. In particular, we won't call
                                     // the broken link callback twice on one reference.
                                     </span><span class="kw">let </span>reference_close_node = <span class="kw">if let </span><span class="prelude-val">Some</span>(node) =
                                         scan_nodes_to_ix(<span class="kw-2">&amp;</span><span class="self">self</span>.tree, next, end_ix - <span class="number">1</span>)
@@ -2336,7 +2336,7 @@
                                 }
                                 <span class="comment">// [reference][]
                                 </span>RefScan::Collapsed(next_node) =&gt; {
-                                    <span class="comment">// This reference has already been tried, and it&#39;s not
+                                    <span class="comment">// This reference has already been tried, and it's not
                                     // valid. Skip it.
                                     </span><span class="kw">if </span>!could_be_ref {
                                         <span class="kw">continue</span>;
@@ -2358,7 +2358,7 @@
                             // below. Disambiguate!
 
                             // (label, source_ix end)
-                            </span><span class="kw">let </span>label: <span class="prelude-ty">Option</span>&lt;(ReferenceLabel&lt;<span class="lifetime">&#39;input</span>&gt;, usize)&gt; = <span class="kw">match </span>scan_result {
+                            </span><span class="kw">let </span>label: <span class="prelude-ty">Option</span>&lt;(ReferenceLabel&lt;<span class="lifetime">'input</span>&gt;, usize)&gt; = <span class="kw">match </span>scan_result {
                                 RefScan::LinkLabel(l, end_ix) =&gt; {
                                     <span class="prelude-val">Some</span>((ReferenceLabel::Link(l), end_ix))
                                 }
@@ -2376,7 +2376,7 @@
                                 }
                             };
 
-                            <span class="comment">// see if it&#39;s a footnote reference
+                            <span class="comment">// see if it's a footnote reference
                             </span><span class="kw">if let </span><span class="prelude-val">Some</span>((ReferenceLabel::Footnote(l), end)) = label {
                                 <span class="self">self</span>.tree[tos.node].next = node_after_link;
                                 <span class="self">self</span>.tree[tos.node].child = <span class="prelude-val">None</span>;
@@ -2398,7 +2398,7 @@
                                             .title
                                             .as_ref()
                                             .cloned()
-                                            .unwrap_or_else(|| <span class="string">&quot;&quot;</span>.into());
+                                            .unwrap_or_else(|| <span class="string">""</span>.into());
                                         <span class="kw">let </span>url = matching_def.dest.clone();
                                         (link_type, url, title)
                                     })
@@ -2500,7 +2500,7 @@
                                 </span>} <span class="kw">else </span>{
                                     <span class="number">1
                                 </span>};
-                                <span class="kw">let </span>ty = <span class="kw">if </span>c == <span class="string">b&#39;~&#39; </span>{
+                                <span class="kw">let </span>ty = <span class="kw">if </span>c == <span class="string">b'~' </span>{
                                     ItemBody::Strikethrough
                                 } <span class="kw">else if </span>inc == <span class="number">2 </span>{
                                     ItemBody::Strong
@@ -2559,24 +2559,24 @@
                 }
                 ItemBody::MaybeSmartQuote(c, can_open, can_close) =&gt; {
                     <span class="self">self</span>.tree[cur_ix].item.body = <span class="kw">match </span>c {
-                        <span class="string">b&#39;\&#39;&#39; </span>=&gt; {
+                        <span class="string">b'\'' </span>=&gt; {
                             <span class="kw">if let </span>(<span class="prelude-val">Some</span>(open_ix), <span class="bool-val">true</span>) = (single_quote_open, can_close) {
-                                <span class="self">self</span>.tree[open_ix].item.body = ItemBody::SynthesizeChar(<span class="string">&#39;‘&#39;</span>);
+                                <span class="self">self</span>.tree[open_ix].item.body = ItemBody::SynthesizeChar(<span class="string">'‘'</span>);
                                 single_quote_open = <span class="prelude-val">None</span>;
                             } <span class="kw">else if </span>can_open {
                                 single_quote_open = <span class="prelude-val">Some</span>(cur_ix);
                             }
-                            ItemBody::SynthesizeChar(<span class="string">&#39;’&#39;</span>)
+                            ItemBody::SynthesizeChar(<span class="string">'’'</span>)
                         }
                         <span class="kw">_ </span><span class="comment">/* double quote */ </span>=&gt; {
                             <span class="kw">if </span>can_close &amp;&amp; double_quote_open {
                                 double_quote_open = <span class="bool-val">false</span>;
-                                ItemBody::SynthesizeChar(<span class="string">&#39;”&#39;</span>)
+                                ItemBody::SynthesizeChar(<span class="string">'”'</span>)
                             } <span class="kw">else </span>{
                                 <span class="kw">if </span>can_open &amp;&amp; !double_quote_open {
                                     double_quote_open = <span class="bool-val">true</span>;
                                 }
-                                ItemBody::SynthesizeChar(<span class="string">&#39;“&#39;</span>)
+                                ItemBody::SynthesizeChar(<span class="string">'“'</span>)
                             }
                         }
                     };
@@ -2595,11 +2595,11 @@
     <span class="doccomment">/// Returns next byte index, url and title.
     </span><span class="kw">fn </span>scan_inline_link(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        underlying: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input </span>str,
+        underlying: <span class="kw-2">&amp;</span><span class="lifetime">'input </span>str,
         <span class="kw-2">mut </span>ix: usize,
         node: <span class="prelude-ty">Option</span>&lt;TreeIndex&gt;,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, CowStr&lt;<span class="lifetime">&#39;input</span>&gt;, CowStr&lt;<span class="lifetime">&#39;input</span>&gt;)&gt; {
-        <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>underlying.as_bytes()[ix..], <span class="string">b&#39;(&#39;</span>) == <span class="number">0 </span>{
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, CowStr&lt;<span class="lifetime">'input</span>&gt;, CowStr&lt;<span class="lifetime">'input</span>&gt;)&gt; {
+        <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>underlying.as_bytes()[ix..], <span class="string">b'('</span>) == <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
         ix += <span class="number">1</span>;
@@ -2616,9 +2616,9 @@
             ix += scan_while(<span class="kw-2">&amp;</span>underlying.as_bytes()[ix..], is_ascii_whitespace);
             t
         } <span class="kw">else </span>{
-            <span class="string">&quot;&quot;</span>.into()
+            <span class="string">""</span>.into()
         };
-        <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>underlying.as_bytes()[ix..], <span class="string">b&#39;)&#39;</span>) == <span class="number">0 </span>{
+        <span class="kw">if </span>scan_ch(<span class="kw-2">&amp;</span>underlying.as_bytes()[ix..], <span class="string">b')'</span>) == <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
         ix += <span class="number">1</span>;
@@ -2629,16 +2629,16 @@
     <span class="comment">// returns (bytes scanned, title cow)
     </span><span class="kw">fn </span>scan_link_title(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;input </span>str,
+        text: <span class="kw-2">&amp;</span><span class="lifetime">'input </span>str,
         start_ix: usize,
         node: <span class="prelude-ty">Option</span>&lt;TreeIndex&gt;,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, CowStr&lt;<span class="lifetime">&#39;input</span>&gt;)&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, CowStr&lt;<span class="lifetime">'input</span>&gt;)&gt; {
         <span class="kw">let </span>bytes = text.as_bytes();
         <span class="kw">let </span>open = <span class="kw">match </span>bytes.get(start_ix) {
-            <span class="prelude-val">Some</span>(b @ <span class="string">b&#39;\&#39;&#39;</span>) | <span class="prelude-val">Some</span>(b @ <span class="string">b&#39;\&quot;&#39;</span>) | <span class="prelude-val">Some</span>(b @ <span class="string">b&#39;(&#39;</span>) =&gt; <span class="kw-2">*</span>b,
+            <span class="prelude-val">Some</span>(b @ <span class="string">b'\''</span>) | <span class="prelude-val">Some</span>(b @ <span class="string">b'\"'</span>) | <span class="prelude-val">Some</span>(b @ <span class="string">b'('</span>) =&gt; <span class="kw-2">*</span>b,
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
         };
-        <span class="kw">let </span>close = <span class="kw">if </span>open == <span class="string">b&#39;(&#39; </span>{ <span class="string">b&#39;)&#39; </span>} <span class="kw">else </span>{ open };
+        <span class="kw">let </span>close = <span class="kw">if </span>open == <span class="string">b'(' </span>{ <span class="string">b')' </span>} <span class="kw">else </span>{ open };
 
         <span class="kw">let </span><span class="kw-2">mut </span>title = String::new();
         <span class="kw">let </span><span class="kw-2">mut </span>mark = start_ix + <span class="number">1</span>;
@@ -2661,18 +2661,18 @@
                 <span class="kw">return </span><span class="prelude-val">None</span>;
             }
 
-            <span class="kw">if </span>c == <span class="string">b&#39;\n&#39; </span>|| c == <span class="string">b&#39;\r&#39; </span>{
+            <span class="kw">if </span>c == <span class="string">b'\n' </span>|| c == <span class="string">b'\r' </span>{
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(node_ix) = scan_nodes_to_ix(<span class="kw-2">&amp;</span><span class="self">self</span>.tree, node, i + <span class="number">1</span>) {
                     <span class="kw">if </span><span class="self">self</span>.tree[node_ix].item.start &gt; i {
                         title.push_str(<span class="kw-2">&amp;</span>text[mark..i]);
-                        title.push(<span class="string">&#39;\n&#39;</span>);
+                        title.push(<span class="string">'\n'</span>);
                         i = <span class="self">self</span>.tree[node_ix].item.start;
                         mark = i;
                         <span class="kw">continue</span>;
                     }
                 }
             }
-            <span class="kw">if </span>c == <span class="string">b&#39;&amp;&#39; </span>{
+            <span class="kw">if </span>c == <span class="string">b'&amp;' </span>{
                 <span class="kw">if let </span>(n, <span class="prelude-val">Some</span>(value)) = scan_entity(<span class="kw-2">&amp;</span>bytes[i..]) {
                     title.push_str(<span class="kw-2">&amp;</span>text[mark..i]);
                     title.push_str(<span class="kw-2">&amp;</span>value);
@@ -2681,7 +2681,7 @@
                     <span class="kw">continue</span>;
                 }
             }
-            <span class="kw">if </span>c == <span class="string">b&#39;\\&#39; </span>&amp;&amp; i + <span class="number">1 </span>&lt; bytes.len() &amp;&amp; is_ascii_punctuation(bytes[i + <span class="number">1</span>]) {
+            <span class="kw">if </span>c == <span class="string">b'\\' </span>&amp;&amp; i + <span class="number">1 </span>&lt; bytes.len() &amp;&amp; is_ascii_punctuation(bytes[i + <span class="number">1</span>]) {
                 title.push_str(<span class="kw-2">&amp;</span>text[mark..i]);
                 i += <span class="number">1</span>;
                 mark = i;
@@ -2704,9 +2704,9 @@
         <span class="kw">let </span><span class="kw-2">mut </span>buf: <span class="prelude-ty">Option</span>&lt;String&gt; = <span class="prelude-val">None</span>;
 
         <span class="comment">// detect all-space sequences, since they are kept as-is as of commonmark 0.29
-        </span><span class="kw">if </span>!bytes[span_start..span_end].iter().all(|<span class="kw-2">&amp;</span>b| b == <span class="string">b&#39; &#39;</span>) {
-            <span class="kw">let </span>opening = <span class="macro">matches!</span>(bytes[span_start], <span class="string">b&#39; &#39; </span>| <span class="string">b&#39;\r&#39; </span>| <span class="string">b&#39;\n&#39;</span>);
-            <span class="kw">let </span>closing = <span class="macro">matches!</span>(bytes[span_end - <span class="number">1</span>], <span class="string">b&#39; &#39; </span>| <span class="string">b&#39;\r&#39; </span>| <span class="string">b&#39;\n&#39;</span>);
+        </span><span class="kw">if </span>!bytes[span_start..span_end].iter().all(|<span class="kw-2">&amp;</span>b| b == <span class="string">b' '</span>) {
+            <span class="kw">let </span>opening = <span class="macro">matches!</span>(bytes[span_start], <span class="string">b' ' </span>| <span class="string">b'\r' </span>| <span class="string">b'\n'</span>);
+            <span class="kw">let </span>closing = <span class="macro">matches!</span>(bytes[span_end - <span class="number">1</span>], <span class="string">b' ' </span>| <span class="string">b'\r' </span>| <span class="string">b'\n'</span>);
             <span class="kw">let </span>drop_enclosing_whitespace = opening &amp;&amp; closing;
 
             <span class="kw">if </span>drop_enclosing_whitespace {
@@ -2734,16 +2734,16 @@
 
                     <span class="kw">let </span>end = bytes[<span class="self">self</span>.tree[ix].item.start..]
                         .iter()
-                        .position(|<span class="kw-2">&amp;</span>b| b == <span class="string">b&#39;\r&#39; </span>|| b == <span class="string">b&#39;\n&#39;</span>)
+                        .position(|<span class="kw-2">&amp;</span>b| b == <span class="string">b'\r' </span>|| b == <span class="string">b'\n'</span>)
                         .unwrap()
                         + <span class="self">self</span>.tree[ix].item.start;
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>buf) = buf {
                         buf.push_str(<span class="kw-2">&amp;</span><span class="self">self</span>.text[<span class="self">self</span>.tree[ix].item.start..end]);
-                        buf.push(<span class="string">&#39; &#39;</span>);
+                        buf.push(<span class="string">' '</span>);
                     } <span class="kw">else </span>{
                         <span class="kw">let </span><span class="kw-2">mut </span>new_buf = String::with_capacity(span_end - span_start);
                         new_buf.push_str(<span class="kw-2">&amp;</span><span class="self">self</span>.text[span_start..end]);
-                        new_buf.push(<span class="string">&#39; &#39;</span>);
+                        new_buf.push(<span class="string">' '</span>);
                         buf = <span class="prelude-val">Some</span>(new_buf);
                     }
                 } <span class="kw">else if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>buf) = buf {
@@ -2781,12 +2781,12 @@
     /// represented as a subslice of the input string.
     </span><span class="kw">fn </span>scan_inline_html(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bytes: <span class="kw-2">&amp;</span>[u8], ix: usize) -&gt; <span class="prelude-ty">Option</span>&lt;(Vec&lt;u8&gt;, usize)&gt; {
         <span class="kw">let </span>c = <span class="kw-2">*</span>bytes.get(ix)<span class="question-mark">?</span>;
-        <span class="kw">if </span>c == <span class="string">b&#39;!&#39; </span>{
+        <span class="kw">if </span>c == <span class="string">b'!' </span>{
             <span class="prelude-val">Some</span>((
                 <span class="macro">vec!</span>[],
                 scan_inline_html_comment(bytes, ix + <span class="number">1</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.html_scan_guard)<span class="question-mark">?</span>,
             ))
-        } <span class="kw">else if </span>c == <span class="string">b&#39;?&#39; </span>{
+        } <span class="kw">else if </span>c == <span class="string">b'?' </span>{
             <span class="prelude-val">Some</span>((
                 <span class="macro">vec!</span>[],
                 scan_inline_html_processing(bytes, ix + <span class="number">1</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.html_scan_guard)<span class="question-mark">?</span>,
@@ -2808,7 +2808,7 @@
     <span class="doccomment">/// Consumes the event iterator and produces an iterator that produces
     /// `(Event, Range)` pairs, where the `Range` value maps to the corresponding
     /// range in the markdown source.
-    </span><span class="kw">pub fn </span>into_offset_iter(<span class="self">self</span>) -&gt; OffsetIter&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;callback</span>&gt; {
+    </span><span class="kw">pub fn </span>into_offset_iter(<span class="self">self</span>) -&gt; OffsetIter&lt;<span class="lifetime">'input</span>, <span class="lifetime">'callback</span>&gt; {
         OffsetIter { inner: <span class="self">self </span>}
     }
 }
@@ -2838,7 +2838,7 @@
     i
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Tree&lt;Item&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Tree&lt;Item&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_text(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start: usize, end: usize) {
         <span class="kw">if </span>end &gt; start {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(ix) = <span class="self">self</span>.cur() {
@@ -2860,7 +2860,7 @@
 </span><span class="kw">struct </span>InlineEl {
     start: TreeIndex, <span class="comment">// offset of tree node
     </span>count: usize,
-    c: u8,      <span class="comment">// b&#39;*&#39; or b&#39;_&#39;
+    c: u8,      <span class="comment">// b'*' or b'_'
     </span>both: bool, <span class="comment">// can both open and close
 </span>}
 
@@ -2894,13 +2894,13 @@
     }
 
     <span class="kw">fn </span>get_lowerbound(<span class="kw-2">&amp;</span><span class="self">self</span>, c: u8, count: usize, both: bool) -&gt; usize {
-        <span class="kw">if </span>c == <span class="string">b&#39;_&#39; </span>{
+        <span class="kw">if </span>c == <span class="string">b'_' </span>{
             <span class="kw">if </span>both {
                 <span class="self">self</span>.lower_bounds[InlineStack::UNDERSCORE_BOTH]
             } <span class="kw">else </span>{
                 <span class="self">self</span>.lower_bounds[InlineStack::UNDERSCORE_NOT_BOTH]
             }
-        } <span class="kw">else if </span>c == <span class="string">b&#39;*&#39; </span>{
+        } <span class="kw">else if </span>c == <span class="string">b'*' </span>{
             <span class="kw">let </span>mod3_lower = <span class="self">self</span>.lower_bounds[InlineStack::ASTERISK_BASE + count % <span class="number">3</span>];
             <span class="kw">if </span>both {
                 mod3_lower
@@ -2916,13 +2916,13 @@
     }
 
     <span class="kw">fn </span>set_lowerbound(<span class="kw-2">&amp;mut </span><span class="self">self</span>, c: u8, count: usize, both: bool, new_bound: usize) {
-        <span class="kw">if </span>c == <span class="string">b&#39;_&#39; </span>{
+        <span class="kw">if </span>c == <span class="string">b'_' </span>{
             <span class="kw">if </span>both {
                 <span class="self">self</span>.lower_bounds[InlineStack::UNDERSCORE_BOTH] = new_bound;
             } <span class="kw">else </span>{
                 <span class="self">self</span>.lower_bounds[InlineStack::UNDERSCORE_NOT_BOTH] = new_bound;
             }
-        } <span class="kw">else if </span>c == <span class="string">b&#39;*&#39; </span>{
+        } <span class="kw">else if </span>c == <span class="string">b'*' </span>{
             <span class="self">self</span>.lower_bounds[InlineStack::ASTERISK_BASE + count % <span class="number">3</span>] = new_bound;
             <span class="kw">if </span>!both {
                 <span class="self">self</span>.lower_bounds[InlineStack::ASTERISK_NOT_BOTH] = new_bound;
@@ -2969,9 +2969,9 @@
 }
 
 <span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">enum </span>RefScan&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">enum </span>RefScan&lt;<span class="lifetime">'a</span>&gt; {
     <span class="comment">// label, source ix of label end
-    </span>LinkLabel(CowStr&lt;<span class="lifetime">&#39;a</span>&gt;, usize),
+    </span>LinkLabel(CowStr&lt;<span class="lifetime">'a</span>&gt;, usize),
     <span class="comment">// contains next node index
     </span>Collapsed(<span class="prelude-ty">Option</span>&lt;TreeIndex&gt;),
     Failed,
@@ -2996,13 +2996,13 @@
 
 <span class="doccomment">/// Scans an inline link label, which cannot be interrupted.
 /// Returns number of bytes (including brackets) and label on success.
-</span><span class="kw">fn </span>scan_link_label&lt;<span class="lifetime">&#39;text</span>, <span class="lifetime">&#39;tree</span>&gt;(
-    tree: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tree </span>Tree&lt;Item&gt;,
-    text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;text </span>str,
+</span><span class="kw">fn </span>scan_link_label&lt;<span class="lifetime">'text</span>, <span class="lifetime">'tree</span>&gt;(
+    tree: <span class="kw-2">&amp;</span><span class="lifetime">'tree </span>Tree&lt;Item&gt;,
+    text: <span class="kw-2">&amp;</span><span class="lifetime">'text </span>str,
     allow_footnote_refs: bool,
-) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, ReferenceLabel&lt;<span class="lifetime">&#39;text</span>&gt;)&gt; {
+) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, ReferenceLabel&lt;<span class="lifetime">'text</span>&gt;)&gt; {
     <span class="kw">let </span>bytes = <span class="kw-2">&amp;</span>text.as_bytes();
-    <span class="kw">if </span>bytes.len() &lt; <span class="number">2 </span>|| bytes[<span class="number">0</span>] != <span class="string">b&#39;[&#39; </span>{
+    <span class="kw">if </span>bytes.len() &lt; <span class="number">2 </span>|| bytes[<span class="number">0</span>] != <span class="string">b'[' </span>{
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
     <span class="kw">let </span>linebreak_handler = |bytes: <span class="kw-2">&amp;</span>[u8]| {
@@ -3010,7 +3010,7 @@
         <span class="kw">let _ </span>= scan_containers(tree, <span class="kw-2">&amp;mut </span>line_start);
         <span class="prelude-val">Some</span>(line_start.bytes_scanned())
     };
-    <span class="kw">let </span>pair = <span class="kw">if </span>allow_footnote_refs &amp;&amp; <span class="string">b&#39;^&#39; </span>== bytes[<span class="number">1</span>] {
+    <span class="kw">let </span>pair = <span class="kw">if </span>allow_footnote_refs &amp;&amp; <span class="string">b'^' </span>== bytes[<span class="number">1</span>] {
         <span class="kw">let </span>(byte_index, cow) = scan_link_label_rest(<span class="kw-2">&amp;</span>text[<span class="number">2</span>..], <span class="kw-2">&amp;</span>linebreak_handler)<span class="question-mark">?</span>;
         (byte_index + <span class="number">2</span>, ReferenceLabel::Footnote(cow))
     } <span class="kw">else </span>{
@@ -3020,12 +3020,12 @@
     <span class="prelude-val">Some</span>(pair)
 }
 
-<span class="kw">fn </span>scan_reference&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt;(
-    tree: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Tree&lt;Item&gt;,
-    text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>str,
+<span class="kw">fn </span>scan_reference&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt;(
+    tree: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Tree&lt;Item&gt;,
+    text: <span class="kw-2">&amp;</span><span class="lifetime">'b </span>str,
     cur: <span class="prelude-ty">Option</span>&lt;TreeIndex&gt;,
     allow_footnote_refs: bool,
-) -&gt; RefScan&lt;<span class="lifetime">&#39;b</span>&gt; {
+) -&gt; RefScan&lt;<span class="lifetime">'b</span>&gt; {
     <span class="kw">let </span>cur_ix = <span class="kw">match </span>cur {
         <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>RefScan::Failed,
         <span class="prelude-val">Some</span>(cur_ix) =&gt; cur_ix,
@@ -3033,7 +3033,7 @@
     <span class="kw">let </span>start = tree[cur_ix].item.start;
     <span class="kw">let </span>tail = <span class="kw-2">&amp;</span>text.as_bytes()[start..];
 
-    <span class="kw">if </span>tail.starts_with(<span class="string">b&quot;[]&quot;</span>) {
+    <span class="kw">if </span>tail.starts_with(<span class="string">b"[]"</span>) {
         <span class="comment">// TODO: this unwrap is sus and should be looked at closer
         </span><span class="kw">let </span>closing_node = tree[cur_ix].next.unwrap();
         RefScan::Collapsed(tree[closing_node].next)
@@ -3093,9 +3093,9 @@
 
 <span class="doccomment">/// Contains the destination URL, title and source span of a reference definition.
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>LinkDef&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>dest: CowStr&lt;<span class="lifetime">&#39;a</span>&gt;,
-    <span class="kw">pub </span>title: <span class="prelude-ty">Option</span>&lt;CowStr&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub struct </span>LinkDef&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>dest: CowStr&lt;<span class="lifetime">'a</span>&gt;,
+    <span class="kw">pub </span>title: <span class="prelude-ty">Option</span>&lt;CowStr&lt;<span class="lifetime">'a</span>&gt;&gt;,
     <span class="kw">pub </span>span: Range&lt;usize&gt;,
 }
 
@@ -3159,41 +3159,41 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>HeadingIndex(NonZeroUsize);
 
 <span class="attr">#[derive(Clone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Allocations&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>refdefs: RefDefs&lt;<span class="lifetime">&#39;a</span>&gt;,
-    links: Vec&lt;(LinkType, CowStr&lt;<span class="lifetime">&#39;a</span>&gt;, CowStr&lt;<span class="lifetime">&#39;a</span>&gt;)&gt;,
-    cows: Vec&lt;CowStr&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Allocations&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>refdefs: RefDefs&lt;<span class="lifetime">'a</span>&gt;,
+    links: Vec&lt;(LinkType, CowStr&lt;<span class="lifetime">'a</span>&gt;, CowStr&lt;<span class="lifetime">'a</span>&gt;)&gt;,
+    cows: Vec&lt;CowStr&lt;<span class="lifetime">'a</span>&gt;&gt;,
     alignments: Vec&lt;Vec&lt;Alignment&gt;&gt;,
-    headings: Vec&lt;HeadingAttributes&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+    headings: Vec&lt;HeadingAttributes&lt;<span class="lifetime">'a</span>&gt;&gt;,
 }
 
 <span class="doccomment">/// Used by the heading attributes extension.
 </span><span class="attr">#[derive(Clone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>HeadingAttributes&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>id: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
-    <span class="kw">pub </span>classes: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>HeadingAttributes&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>id: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
+    <span class="kw">pub </span>classes: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
 }
 
 <span class="doccomment">/// Keeps track of the reference definitions defined in the document.
 </span><span class="attr">#[derive(Clone, Default, Debug)]
-</span><span class="kw">pub struct </span>RefDefs&lt;<span class="lifetime">&#39;input</span>&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) HashMap&lt;LinkLabel&lt;<span class="lifetime">&#39;input</span>&gt;, LinkDef&lt;<span class="lifetime">&#39;input</span>&gt;&gt;);
+</span><span class="kw">pub struct </span>RefDefs&lt;<span class="lifetime">'input</span>&gt;(<span class="kw">pub</span>(<span class="kw">crate</span>) HashMap&lt;LinkLabel&lt;<span class="lifetime">'input</span>&gt;, LinkDef&lt;<span class="lifetime">'input</span>&gt;&gt;);
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;b</span>, <span class="lifetime">&#39;s</span>&gt; RefDefs&lt;<span class="lifetime">&#39;input</span>&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'input</span>, <span class="lifetime">'b</span>, <span class="lifetime">'s</span>&gt; RefDefs&lt;<span class="lifetime">'input</span>&gt;
 <span class="kw">where
-    </span><span class="lifetime">&#39;s</span>: <span class="lifetime">&#39;b</span>,
+    </span><span class="lifetime">'s</span>: <span class="lifetime">'b</span>,
 {
     <span class="doccomment">/// Performs a lookup on reference label using unicode case folding.
-    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="lifetime">&#39;s </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>str) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>LinkDef&lt;<span class="lifetime">&#39;input</span>&gt;&gt; {
+    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="lifetime">'s </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">'b </span>str) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'b </span>LinkDef&lt;<span class="lifetime">'input</span>&gt;&gt; {
         <span class="self">self</span>.<span class="number">0</span>.get(<span class="kw-2">&amp;</span>UniCase::new(key.into()))
     }
 
-    <span class="doccomment">/// Provides an iterator over all the document&#39;s reference definitions.
-    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="lifetime">&#39;s </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;s </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;s </span>LinkDef&lt;<span class="lifetime">&#39;input</span>&gt;)&gt; {
+    <span class="doccomment">/// Provides an iterator over all the document's reference definitions.
+    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="lifetime">'s </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">'s </span>str, <span class="kw-2">&amp;</span><span class="lifetime">'s </span>LinkDef&lt;<span class="lifetime">'input</span>&gt;)&gt; {
         <span class="self">self</span>.<span class="number">0</span>.iter().map(|(k, v)| (k.as_ref(), v))
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Allocations&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Allocations&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             refdefs: RefDefs::default(),
@@ -3204,13 +3204,13 @@
         }
     }
 
-    <span class="kw">pub fn </span>allocate_cow(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cow: CowStr&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; CowIndex {
+    <span class="kw">pub fn </span>allocate_cow(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cow: CowStr&lt;<span class="lifetime">'a</span>&gt;) -&gt; CowIndex {
         <span class="kw">let </span>ix = <span class="self">self</span>.cows.len();
         <span class="self">self</span>.cows.push(cow);
         CowIndex(ix)
     }
 
-    <span class="kw">pub fn </span>allocate_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: LinkType, url: CowStr&lt;<span class="lifetime">&#39;a</span>&gt;, title: CowStr&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; LinkIndex {
+    <span class="kw">pub fn </span>allocate_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: LinkType, url: CowStr&lt;<span class="lifetime">'a</span>&gt;, title: CowStr&lt;<span class="lifetime">'a</span>&gt;) -&gt; LinkIndex {
         <span class="kw">let </span>ix = <span class="self">self</span>.links.len();
         <span class="self">self</span>.links.push((ty, url, title));
         LinkIndex(ix)
@@ -3222,33 +3222,33 @@
         AlignmentIndex(ix)
     }
 
-    <span class="kw">pub fn </span>allocate_heading(<span class="kw-2">&amp;mut </span><span class="self">self</span>, attrs: HeadingAttributes&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; HeadingIndex {
+    <span class="kw">pub fn </span>allocate_heading(<span class="kw-2">&amp;mut </span><span class="self">self</span>, attrs: HeadingAttributes&lt;<span class="lifetime">'a</span>&gt;) -&gt; HeadingIndex {
         <span class="kw">let </span>ix = <span class="self">self</span>.headings.len();
         <span class="self">self</span>.headings.push(attrs);
-        <span class="comment">// This won&#39;t panic. `self.headings.len()` can&#39;t be `usize::MAX` since
+        <span class="comment">// This won't panic. `self.headings.len()` can't be `usize::MAX` since
         // such a long Vec cannot fit in memory.
-        </span><span class="kw">let </span>ix_nonzero = NonZeroUsize::new(ix.wrapping_add(<span class="number">1</span>)).expect(<span class="string">&quot;too many headings&quot;</span>);
+        </span><span class="kw">let </span>ix_nonzero = NonZeroUsize::new(ix.wrapping_add(<span class="number">1</span>)).expect(<span class="string">"too many headings"</span>);
         HeadingIndex(ix_nonzero)
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Index&lt;CowIndex&gt; <span class="kw">for </span>Allocations&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">type </span>Output = CowStr&lt;<span class="lifetime">&#39;a</span>&gt;;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Index&lt;CowIndex&gt; <span class="kw">for </span>Allocations&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Output = CowStr&lt;<span class="lifetime">'a</span>&gt;;
 
     <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, ix: CowIndex) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
         <span class="self">self</span>.cows.index(ix.<span class="number">0</span>)
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Index&lt;LinkIndex&gt; <span class="kw">for </span>Allocations&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">type </span>Output = (LinkType, CowStr&lt;<span class="lifetime">&#39;a</span>&gt;, CowStr&lt;<span class="lifetime">&#39;a</span>&gt;);
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Index&lt;LinkIndex&gt; <span class="kw">for </span>Allocations&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Output = (LinkType, CowStr&lt;<span class="lifetime">'a</span>&gt;, CowStr&lt;<span class="lifetime">'a</span>&gt;);
 
     <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, ix: LinkIndex) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
         <span class="self">self</span>.links.index(ix.<span class="number">0</span>)
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Index&lt;AlignmentIndex&gt; <span class="kw">for </span>Allocations&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Index&lt;AlignmentIndex&gt; <span class="kw">for </span>Allocations&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">type </span>Output = Vec&lt;Alignment&gt;;
 
     <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, ix: AlignmentIndex) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
@@ -3256,8 +3256,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Index&lt;HeadingIndex&gt; <span class="kw">for </span>Allocations&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">type </span>Output = HeadingAttributes&lt;<span class="lifetime">&#39;a</span>&gt;;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Index&lt;HeadingIndex&gt; <span class="kw">for </span>Allocations&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Output = HeadingAttributes&lt;<span class="lifetime">'a</span>&gt;;
 
     <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, ix: HeadingIndex) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
         <span class="self">self</span>.headings.index(ix.<span class="number">0</span>.get() - <span class="number">1</span>)
@@ -3276,8 +3276,8 @@
     <span class="kw">pub </span>declaration: usize,
 }
 
-<span class="kw">pub type </span>BrokenLinkCallback&lt;<span class="lifetime">&#39;input</span>, <span class="lifetime">&#39;borrow</span>&gt; =
-    <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;borrow </span><span class="kw-2">mut </span><span class="kw">dyn </span>FnMut(BrokenLink&lt;<span class="lifetime">&#39;input</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;(CowStr&lt;<span class="lifetime">&#39;input</span>&gt;, CowStr&lt;<span class="lifetime">&#39;input</span>&gt;)&gt;&gt;;
+<span class="kw">pub type </span>BrokenLinkCallback&lt;<span class="lifetime">'input</span>, <span class="lifetime">'borrow</span>&gt; =
+    <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'borrow </span><span class="kw-2">mut </span><span class="kw">dyn </span>FnMut(BrokenLink&lt;<span class="lifetime">'input</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;(CowStr&lt;<span class="lifetime">'input</span>&gt;, CowStr&lt;<span class="lifetime">'input</span>&gt;)&gt;&gt;;
 
 <span class="doccomment">/// Markdown event and source range iterator.
 ///
@@ -3287,19 +3287,19 @@
 /// Constructed from a `Parser` using its
 /// [`into_offset_iter`](struct.Parser.html#method.into_offset_iter) method.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>OffsetIter&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
-    inner: Parser&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt;,
+</span><span class="kw">pub struct </span>OffsetIter&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
+    inner: Parser&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; OffsetIter&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; OffsetIter&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
     <span class="doccomment">/// Returns a reference to the internal reference definition tracker.
     </span><span class="kw">pub fn </span>reference_definitions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RefDefs {
         <span class="self">self</span>.inner.reference_definitions()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; Iterator <span class="kw">for </span>OffsetIter&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
-    <span class="kw">type </span>Item = (Event&lt;<span class="lifetime">&#39;a</span>&gt;, Range&lt;usize&gt;);
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; Iterator <span class="kw">for </span>OffsetIter&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
+    <span class="kw">type </span>Item = (Event&lt;<span class="lifetime">'a</span>&gt;, Range&lt;usize&gt;);
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner.tree.cur() {
@@ -3331,7 +3331,7 @@
     }
 }
 
-<span class="kw">fn </span>item_to_tag&lt;<span class="lifetime">&#39;a</span>&gt;(item: <span class="kw-2">&amp;</span>Item, allocs: <span class="kw-2">&amp;</span>Allocations&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; Tag&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">fn </span>item_to_tag&lt;<span class="lifetime">'a</span>&gt;(item: <span class="kw-2">&amp;</span>Item, allocs: <span class="kw-2">&amp;</span>Allocations&lt;<span class="lifetime">'a</span>&gt;) -&gt; Tag&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">match </span>item.body {
         ItemBody::Paragraph =&gt; Tag::Paragraph,
         ItemBody::Emphasis =&gt; Tag::Emphasis,
@@ -3356,7 +3356,7 @@
         ItemBody::IndentCodeBlock =&gt; Tag::CodeBlock(CodeBlockKind::Indented),
         ItemBody::BlockQuote =&gt; Tag::BlockQuote,
         ItemBody::List(<span class="kw">_</span>, c, listitem_start) =&gt; {
-            <span class="kw">if </span>c == <span class="string">b&#39;.&#39; </span>|| c == <span class="string">b&#39;)&#39; </span>{
+            <span class="kw">if </span>c == <span class="string">b'.' </span>|| c == <span class="string">b')' </span>{
                 Tag::List(<span class="prelude-val">Some</span>(listitem_start))
             } <span class="kw">else </span>{
                 Tag::List(<span class="prelude-val">None</span>)
@@ -3368,11 +3368,11 @@
         ItemBody::TableRow =&gt; Tag::TableRow,
         ItemBody::Table(alignment_ix) =&gt; Tag::Table(allocs[alignment_ix].clone()),
         ItemBody::FootnoteDefinition(cow_ix) =&gt; Tag::FootnoteDefinition(allocs[cow_ix].clone()),
-        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected item body {:?}&quot;</span>, item.body),
+        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"unexpected item body {:?}"</span>, item.body),
     }
 }
 
-<span class="kw">fn </span>item_to_event&lt;<span class="lifetime">&#39;a</span>&gt;(item: Item, text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, allocs: <span class="kw-2">&amp;</span>Allocations&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; Event&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">fn </span>item_to_event&lt;<span class="lifetime">'a</span>&gt;(item: Item, text: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, allocs: <span class="kw-2">&amp;</span>Allocations&lt;<span class="lifetime">'a</span>&gt;) -&gt; Event&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">let </span>tag = <span class="kw">match </span>item.body {
         ItemBody::Text =&gt; <span class="kw">return </span>Event::Text(text[item.start..item.end].into()),
         ItemBody::Code(cow_ix) =&gt; <span class="kw">return </span>Event::Code(allocs[cow_ix].clone()),
@@ -3411,7 +3411,7 @@
         ItemBody::IndentCodeBlock =&gt; Tag::CodeBlock(CodeBlockKind::Indented),
         ItemBody::BlockQuote =&gt; Tag::BlockQuote,
         ItemBody::List(<span class="kw">_</span>, c, listitem_start) =&gt; {
-            <span class="kw">if </span>c == <span class="string">b&#39;.&#39; </span>|| c == <span class="string">b&#39;)&#39; </span>{
+            <span class="kw">if </span>c == <span class="string">b'.' </span>|| c == <span class="string">b')' </span>{
                 Tag::List(<span class="prelude-val">Some</span>(listitem_start))
             } <span class="kw">else </span>{
                 Tag::List(<span class="prelude-val">None</span>)
@@ -3423,16 +3423,16 @@
         ItemBody::TableRow =&gt; Tag::TableRow,
         ItemBody::Table(alignment_ix) =&gt; Tag::Table(allocs[alignment_ix].clone()),
         ItemBody::FootnoteDefinition(cow_ix) =&gt; Tag::FootnoteDefinition(allocs[cow_ix].clone()),
-        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected item body {:?}&quot;</span>, item.body),
+        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"unexpected item body {:?}"</span>, item.body),
     };
 
     Event::Start(tag)
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; Iterator <span class="kw">for </span>Parser&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
-    <span class="kw">type </span>Item = Event&lt;<span class="lifetime">&#39;a</span>&gt;;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; Iterator <span class="kw">for </span>Parser&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
+    <span class="kw">type </span>Item = Event&lt;<span class="lifetime">'a</span>&gt;;
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Event&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Event&lt;<span class="lifetime">'a</span>&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.tree.cur() {
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">let </span>ix = <span class="self">self</span>.tree.pop()<span class="question-mark">?</span>;
@@ -3459,7 +3459,7 @@
     }
 }
 
-<span class="kw">impl </span>FusedIterator <span class="kw">for </span>Parser&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {}
+<span class="kw">impl </span>FusedIterator <span class="kw">for </span>Parser&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {}
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
@@ -3468,7 +3468,7 @@
 
     <span class="comment">// TODO: move these tests to tests/html.rs?
 
-    </span><span class="kw">fn </span>parser_with_extensions(text: <span class="kw-2">&amp;</span>str) -&gt; Parser&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;static</span>&gt; {
+    </span><span class="kw">fn </span>parser_with_extensions(text: <span class="kw-2">&amp;</span>str) -&gt; Parser&lt;<span class="lifetime">'_</span>, <span class="lifetime">'static</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>opts = Options::empty();
         opts.insert(Options::ENABLE_TABLES);
         opts.insert(Options::ENABLE_FOOTNOTES);
@@ -3479,14 +3479,14 @@
     }
 
     <span class="attr">#[test]
-    #[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+    #[cfg(target_pointer_width = <span class="string">"64"</span>)]
     </span><span class="kw">fn </span>node_size() {
         <span class="kw">let </span>node_size = std::mem::size_of::&lt;Node&lt;Item&gt;&gt;();
         <span class="macro">assert_eq!</span>(<span class="number">48</span>, node_size);
     }
 
     <span class="attr">#[test]
-    #[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+    #[cfg(target_pointer_width = <span class="string">"64"</span>)]
     </span><span class="kw">fn </span>body_size() {
         <span class="kw">let </span>body_size = std::mem::size_of::&lt;ItemBody&gt;();
         <span class="macro">assert_eq!</span>(<span class="number">16</span>, body_size);
@@ -3495,58 +3495,58 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>single_open_fish_bracket() {
         <span class="comment">// dont crash
-        </span><span class="macro">assert_eq!</span>(<span class="number">3</span>, Parser::new(<span class="string">&quot;&lt;&quot;</span>).count());
+        </span><span class="macro">assert_eq!</span>(<span class="number">3</span>, Parser::new(<span class="string">"&lt;"</span>).count());
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>lone_hashtag() {
         <span class="comment">// dont crash
-        </span><span class="macro">assert_eq!</span>(<span class="number">2</span>, Parser::new(<span class="string">&quot;#&quot;</span>).count());
+        </span><span class="macro">assert_eq!</span>(<span class="number">2</span>, Parser::new(<span class="string">"#"</span>).count());
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>lots_of_backslashes() {
         <span class="comment">// dont crash
-        </span>Parser::new(<span class="string">&quot;\\\\\r\r&quot;</span>).count();
-        Parser::new(<span class="string">&quot;\\\r\r\\.\\\\\r\r\\.\\&quot;</span>).count();
+        </span>Parser::new(<span class="string">"\\\\\r\r"</span>).count();
+        Parser::new(<span class="string">"\\\r\r\\.\\\\\r\r\\.\\"</span>).count();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>issue_320() {
         <span class="comment">// dont crash
-        </span>parser_with_extensions(<span class="string">&quot;:\r\t&gt; |\r:\r\t&gt; |\r&quot;</span>).count();
+        </span>parser_with_extensions(<span class="string">":\r\t&gt; |\r:\r\t&gt; |\r"</span>).count();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>issue_319() {
         <span class="comment">// dont crash
-        </span>parser_with_extensions(<span class="string">&quot;|\r-]([^|\r-]([^&quot;</span>).count();
-        parser_with_extensions(<span class="string">&quot;|\r\r=][^|\r\r=][^car&quot;</span>).count();
+        </span>parser_with_extensions(<span class="string">"|\r-]([^|\r-]([^"</span>).count();
+        parser_with_extensions(<span class="string">"|\r\r=][^|\r\r=][^car"</span>).count();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>issue_303() {
         <span class="comment">// dont crash
-        </span>parser_with_extensions(<span class="string">&quot;[^\r\ra]&quot;</span>).count();
-        parser_with_extensions(<span class="string">&quot;\r\r]Z[^\x00\r\r]Z[^\x00&quot;</span>).count();
+        </span>parser_with_extensions(<span class="string">"[^\r\ra]"</span>).count();
+        parser_with_extensions(<span class="string">"\r\r]Z[^\x00\r\r]Z[^\x00"</span>).count();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>issue_313() {
         <span class="comment">// dont crash
-        </span>parser_with_extensions(<span class="string">&quot;*]0[^\r\r*]0[^&quot;</span>).count();
-        parser_with_extensions(<span class="string">&quot;[^\r&gt; `][^\r&gt; `][^\r&gt; `][&quot;</span>).count();
+        </span>parser_with_extensions(<span class="string">"*]0[^\r\r*]0[^"</span>).count();
+        parser_with_extensions(<span class="string">"[^\r&gt; `][^\r&gt; `][^\r&gt; `]["</span>).count();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>issue_311() {
         <span class="comment">// dont crash
-        </span>parser_with_extensions(<span class="string">&quot;\\\u{0d}-\u{09}\\\u{0d}-\u{09}&quot;</span>).count();
+        </span>parser_with_extensions(<span class="string">"\\\u{0d}-\u{09}\\\u{0d}-\u{09}"</span>).count();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>issue_283() {
-        <span class="kw">let </span>input = std::str::from_utf8(<span class="string">b&quot;\xf0\x9b\xb2\x9f&lt;td:^\xf0\x9b\xb2\x9f&quot;</span>).unwrap();
+        <span class="kw">let </span>input = std::str::from_utf8(<span class="string">b"\xf0\x9b\xb2\x9f&lt;td:^\xf0\x9b\xb2\x9f"</span>).unwrap();
         <span class="comment">// dont crash
         </span>parser_with_extensions(input).count();
     }
@@ -3554,30 +3554,30 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>issue_289() {
         <span class="comment">// dont crash
-        </span>parser_with_extensions(<span class="string">&quot;&gt; - \\\n&gt; - &quot;</span>).count();
-        parser_with_extensions(<span class="string">&quot;- \n\n&quot;</span>).count();
+        </span>parser_with_extensions(<span class="string">"&gt; - \\\n&gt; - "</span>).count();
+        parser_with_extensions(<span class="string">"- \n\n"</span>).count();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>issue_306() {
         <span class="comment">// dont crash
-        </span>parser_with_extensions(<span class="string">&quot;*\r_&lt;__*\r_&lt;__*\r_&lt;__*\r_&lt;__&quot;</span>).count();
+        </span>parser_with_extensions(<span class="string">"*\r_&lt;__*\r_&lt;__*\r_&lt;__*\r_&lt;__"</span>).count();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>issue_305() {
         <span class="comment">// dont crash
-        </span>parser_with_extensions(<span class="string">&quot;_6**6*_*&quot;</span>).count();
+        </span>parser_with_extensions(<span class="string">"_6**6*_*"</span>).count();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>another_emphasis_panic() {
-        parser_with_extensions(<span class="string">&quot;*__#_#__*&quot;</span>).count();
+        parser_with_extensions(<span class="string">"*__#_#__*"</span>).count();
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>offset_iter() {
-        <span class="kw">let </span>event_offsets: Vec&lt;<span class="kw">_</span>&gt; = Parser::new(<span class="string">&quot;*hello* world&quot;</span>)
+        <span class="kw">let </span>event_offsets: Vec&lt;<span class="kw">_</span>&gt; = Parser::new(<span class="string">"*hello* world"</span>)
             .into_offset_iter()
             .map(|(_ev, range)| range)
             .collect();
@@ -3588,7 +3588,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>reference_link_offsets() {
         <span class="kw">let </span>range =
-            Parser::new(<span class="string">&quot;# H1\n[testing][Some reference]\n\n[Some reference]: https://github.com&quot;</span>)
+            Parser::new(<span class="string">"# H1\n[testing][Some reference]\n\n[Some reference]: https://github.com"</span>)
                 .into_offset_iter()
                 .filter_map(|(ev, range)| <span class="kw">match </span>ev {
                     Event::Start(Tag::Link(LinkType::Reference, ..), ..) =&gt; <span class="prelude-val">Some</span>(range),
@@ -3601,7 +3601,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>footnote_offsets() {
-        <span class="kw">let </span>range = parser_with_extensions(<span class="string">&quot;Testing this[^1] out.\n\n[^1]: Footnote.&quot;</span>)
+        <span class="kw">let </span>range = parser_with_extensions(<span class="string">"Testing this[^1] out.\n\n[^1]: Footnote."</span>)
             .into_offset_iter()
             .filter_map(|(ev, range)| <span class="kw">match </span>ev {
                 Event::FootnoteReference(..) =&gt; <span class="prelude-val">Some</span>(range),
@@ -3614,7 +3614,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>table_offset() {
-        <span class="kw">let </span>markdown = <span class="string">&quot;a\n\nTesting|This|Outtt\n--|:--:|--:\nSome Data|Other data|asdf&quot;</span>;
+        <span class="kw">let </span>markdown = <span class="string">"a\n\nTesting|This|Outtt\n--|:--:|--:\nSome Data|Other data|asdf"</span>;
         <span class="kw">let </span>event_offset = parser_with_extensions(markdown)
             .into_offset_iter()
             .map(|(_ev, range)| range)
@@ -3626,7 +3626,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>table_cell_span() {
-        <span class="kw">let </span>markdown = <span class="string">&quot;a|b|c\n--|--|--\na|  |c&quot;</span>;
+        <span class="kw">let </span>markdown = <span class="string">"a|b|c\n--|--|--\na|  |c"</span>;
         <span class="kw">let </span>event_offset = parser_with_extensions(markdown)
             .into_offset_iter()
             .filter_map(|(ev, span)| <span class="kw">match </span>ev {
@@ -3635,7 +3635,7 @@
             })
             .nth(<span class="number">4</span>)
             .unwrap();
-        <span class="kw">let </span>expected_offset_start = <span class="string">&quot;a|b|c\n--|--|--\na|&quot;</span>.len();
+        <span class="kw">let </span>expected_offset_start = <span class="string">"a|b|c\n--|--|--\na|"</span>.len();
         <span class="macro">assert_eq!</span>(
             expected_offset_start..(expected_offset_start + <span class="number">2</span>),
             event_offset
@@ -3644,7 +3644,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>offset_iter_issue_378() {
-        <span class="kw">let </span>event_offsets: Vec&lt;<span class="kw">_</span>&gt; = Parser::new(<span class="string">&quot;a [b](c) d&quot;</span>)
+        <span class="kw">let </span>event_offsets: Vec&lt;<span class="kw">_</span>&gt; = Parser::new(<span class="string">"a [b](c) d"</span>)
             .into_offset_iter()
             .map(|(_ev, range)| range)
             .collect();
@@ -3654,7 +3654,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>offset_iter_issue_404() {
-        <span class="kw">let </span>event_offsets: Vec&lt;<span class="kw">_</span>&gt; = Parser::new(<span class="string">&quot;###\n&quot;</span>)
+        <span class="kw">let </span>event_offsets: Vec&lt;<span class="kw">_</span>&gt; = Parser::new(<span class="string">"###\n"</span>)
             .into_offset_iter()
             .map(|(_ev, range)| range)
             .collect();
@@ -3665,8 +3665,8 @@
     <span class="comment">// FIXME: add this one regression suite
     </span><span class="attr">#[test]
     </span><span class="kw">fn </span>link_def_at_eof() {
-        <span class="kw">let </span>test_str = <span class="string">&quot;[My site][world]\n\n[world]: https://vincentprouillet.com&quot;</span>;
-        <span class="kw">let </span>expected = <span class="string">&quot;&lt;p&gt;&lt;a href=\&quot;https://vincentprouillet.com\&quot;&gt;My site&lt;/a&gt;&lt;/p&gt;\n&quot;</span>;
+        <span class="kw">let </span>test_str = <span class="string">"[My site][world]\n\n[world]: https://vincentprouillet.com"</span>;
+        <span class="kw">let </span>expected = <span class="string">"&lt;p&gt;&lt;a href=\"https://vincentprouillet.com\"&gt;My site&lt;/a&gt;&lt;/p&gt;\n"</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
         <span class="kw">crate</span>::html::push_html(<span class="kw-2">&amp;mut </span>buf, Parser::new(test_str));
@@ -3675,8 +3675,8 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>no_footnote_refs_without_option() {
-        <span class="kw">let </span>test_str = <span class="string">&quot;a [^a]\n\n[^a]: yolo&quot;</span>;
-        <span class="kw">let </span>expected = <span class="string">&quot;&lt;p&gt;a &lt;a href=\&quot;yolo\&quot;&gt;^a&lt;/a&gt;&lt;/p&gt;\n&quot;</span>;
+        <span class="kw">let </span>test_str = <span class="string">"a [^a]\n\n[^a]: yolo"</span>;
+        <span class="kw">let </span>expected = <span class="string">"&lt;p&gt;a &lt;a href=\"yolo\"&gt;^a&lt;/a&gt;&lt;/p&gt;\n"</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
         <span class="kw">crate</span>::html::push_html(<span class="kw-2">&amp;mut </span>buf, Parser::new(test_str));
@@ -3685,8 +3685,8 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>ref_def_at_eof() {
-        <span class="kw">let </span>test_str = <span class="string">&quot;[test]:\\&quot;</span>;
-        <span class="kw">let </span>expected = <span class="string">&quot;&quot;</span>;
+        <span class="kw">let </span>test_str = <span class="string">"[test]:\\"</span>;
+        <span class="kw">let </span>expected = <span class="string">""</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
         <span class="kw">crate</span>::html::push_html(<span class="kw-2">&amp;mut </span>buf, Parser::new(test_str));
@@ -3695,8 +3695,8 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>ref_def_cr_lf() {
-        <span class="kw">let </span>test_str = <span class="string">&quot;[a]: /u\r\n\n[a]&quot;</span>;
-        <span class="kw">let </span>expected = <span class="string">&quot;&lt;p&gt;&lt;a href=\&quot;/u\&quot;&gt;a&lt;/a&gt;&lt;/p&gt;\n&quot;</span>;
+        <span class="kw">let </span>test_str = <span class="string">"[a]: /u\r\n\n[a]"</span>;
+        <span class="kw">let </span>expected = <span class="string">"&lt;p&gt;&lt;a href=\"/u\"&gt;a&lt;/a&gt;&lt;/p&gt;\n"</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
         <span class="kw">crate</span>::html::push_html(<span class="kw-2">&amp;mut </span>buf, Parser::new(test_str));
@@ -3705,8 +3705,8 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>no_dest_refdef() {
-        <span class="kw">let </span>test_str = <span class="string">&quot;[a]:&quot;</span>;
-        <span class="kw">let </span>expected = <span class="string">&quot;&lt;p&gt;[a]:&lt;/p&gt;\n&quot;</span>;
+        <span class="kw">let </span>test_str = <span class="string">"[a]:"</span>;
+        <span class="kw">let </span>expected = <span class="string">"&lt;p&gt;[a]:&lt;/p&gt;\n"</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
         <span class="kw">crate</span>::html::push_html(<span class="kw-2">&amp;mut </span>buf, Parser::new(test_str));
@@ -3716,9 +3716,9 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>broken_links_called_only_once() {
         <span class="kw">for </span><span class="kw-2">&amp;</span>(markdown, expected) <span class="kw">in </span><span class="kw-2">&amp;</span>[
-            (<span class="string">&quot;See also [`g()`][crate::g].&quot;</span>, <span class="number">1</span>),
-            (<span class="string">&quot;See also [`g()`][crate::g][].&quot;</span>, <span class="number">1</span>),
-            (<span class="string">&quot;[brokenlink1] some other node [brokenlink2]&quot;</span>, <span class="number">2</span>),
+            (<span class="string">"See also [`g()`][crate::g]."</span>, <span class="number">1</span>),
+            (<span class="string">"See also [`g()`][crate::g][]."</span>, <span class="number">1</span>),
+            (<span class="string">"[brokenlink1] some other node [brokenlink2]"</span>, <span class="number">2</span>),
         ] {
             <span class="kw">let </span><span class="kw-2">mut </span>times_called = <span class="number">0</span>;
             <span class="kw">let </span>callback = <span class="kw-2">&amp;mut </span>|_broken_link: BrokenLink| {
@@ -3734,12 +3734,12 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>simple_broken_link_callback() {
-        <span class="kw">let </span>test_str = <span class="string">&quot;This is a link w/o def: [hello][world]&quot;</span>;
+        <span class="kw">let </span>test_str = <span class="string">"This is a link w/o def: [hello][world]"</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>callback = |broken_link: BrokenLink| {
-            <span class="macro">assert_eq!</span>(<span class="string">&quot;world&quot;</span>, broken_link.reference.as_ref());
-            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>test_str[broken_link.span], <span class="string">&quot;[hello][world]&quot;</span>);
-            <span class="kw">let </span>url = <span class="string">&quot;YOLO&quot;</span>.into();
-            <span class="kw">let </span>title = <span class="string">&quot;SWAG&quot;</span>.to_owned().into();
+            <span class="macro">assert_eq!</span>(<span class="string">"world"</span>, broken_link.reference.as_ref());
+            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>test_str[broken_link.span], <span class="string">"[hello][world]"</span>);
+            <span class="kw">let </span>url = <span class="string">"YOLO"</span>.into();
+            <span class="kw">let </span>title = <span class="string">"SWAG"</span>.to_owned().into();
             <span class="prelude-val">Some</span>((url, title))
         };
         <span class="kw">let </span>parser =
@@ -3754,20 +3754,20 @@
         }) {
             link_tag_count += <span class="number">1</span>;
             <span class="macro">assert_eq!</span>(typ, LinkType::ReferenceUnknown);
-            <span class="macro">assert_eq!</span>(url.as_ref(), <span class="string">&quot;YOLO&quot;</span>);
-            <span class="macro">assert_eq!</span>(title.as_ref(), <span class="string">&quot;SWAG&quot;</span>);
+            <span class="macro">assert_eq!</span>(url.as_ref(), <span class="string">"YOLO"</span>);
+            <span class="macro">assert_eq!</span>(title.as_ref(), <span class="string">"SWAG"</span>);
         }
         <span class="macro">assert!</span>(link_tag_count &gt; <span class="number">0</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>code_block_kind_check_fenced() {
-        <span class="kw">let </span>parser = Parser::new(<span class="string">&quot;hello\n```test\ntadam\n```&quot;</span>);
+        <span class="kw">let </span>parser = Parser::new(<span class="string">"hello\n```test\ntadam\n```"</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>found = <span class="number">0</span>;
         <span class="kw">for </span>(ev, _range) <span class="kw">in </span>parser.into_offset_iter() {
             <span class="kw">match </span>ev {
                 Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(syntax))) =&gt; {
-                    <span class="macro">assert_eq!</span>(syntax.as_ref(), <span class="string">&quot;test&quot;</span>);
+                    <span class="macro">assert_eq!</span>(syntax.as_ref(), <span class="string">"test"</span>);
                     found += <span class="number">1</span>;
                 }
                 <span class="kw">_ </span>=&gt; {}
@@ -3778,7 +3778,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>code_block_kind_check_indented() {
-        <span class="kw">let </span>parser = Parser::new(<span class="string">&quot;hello\n\n    ```test\n    tadam\nhello&quot;</span>);
+        <span class="kw">let </span>parser = Parser::new(<span class="string">"hello\n\n    ```test\n    tadam\nhello"</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>found = <span class="number">0</span>;
         <span class="kw">for </span>(ev, _range) <span class="kw">in </span>parser.into_offset_iter() {
             <span class="kw">match </span>ev {
@@ -3793,55 +3793,55 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>ref_defs() {
-        <span class="kw">let </span>input = <span class="string">r###&quot;[a B c]: http://example.com
+        <span class="kw">let </span>input = <span class="string">r###"[a B c]: http://example.com
 [another]: https://google.com
 
 text
 
 [final ONE]: http://wikipedia.org
-&quot;###</span>;
+"###</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new(input);
 
-        <span class="macro">assert!</span>(parser.reference_definitions().get(<span class="string">&quot;a b c&quot;</span>).is_some());
-        <span class="macro">assert!</span>(parser.reference_definitions().get(<span class="string">&quot;nope&quot;</span>).is_none());
+        <span class="macro">assert!</span>(parser.reference_definitions().get(<span class="string">"a b c"</span>).is_some());
+        <span class="macro">assert!</span>(parser.reference_definitions().get(<span class="string">"nope"</span>).is_none());
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(_event) = parser.next() {
             <span class="comment">// testing keys with shorter lifetimes than parser and its input
-            </span><span class="kw">let </span>s = <span class="string">&quot;final one&quot;</span>.to_owned();
+            </span><span class="kw">let </span>s = <span class="string">"final one"</span>.to_owned();
             <span class="kw">let </span>link_def = parser.reference_definitions().get(<span class="kw-2">&amp;</span>s).unwrap();
             <span class="kw">let </span>span = <span class="kw-2">&amp;</span>input[link_def.span.clone()];
-            <span class="macro">assert_eq!</span>(span, <span class="string">&quot;[final ONE]: http://wikipedia.org&quot;</span>);
+            <span class="macro">assert_eq!</span>(span, <span class="string">"[final ONE]: http://wikipedia.org"</span>);
         }
     }
 
     <span class="attr">#[test]
-    </span><span class="kw">fn </span>common_lifetime_patterns_allowed&lt;<span class="lifetime">&#39;b</span>&gt;() {
-        <span class="kw">let </span>temporary_str = String::from(<span class="string">&quot;xyz&quot;</span>);
+    </span><span class="kw">fn </span>common_lifetime_patterns_allowed&lt;<span class="lifetime">'b</span>&gt;() {
+        <span class="kw">let </span>temporary_str = String::from(<span class="string">"xyz"</span>);
 
-        <span class="comment">// NOTE: this is a limitation of Rust, it doesn&#39;t allow putting lifetime parameters on the closure itself.
+        <span class="comment">// NOTE: this is a limitation of Rust, it doesn't allow putting lifetime parameters on the closure itself.
         // Hack it by attaching the lifetime to the test function instead.
-        // TODO: why is the `&#39;b` lifetime required at all? Changing it to `&#39;_` breaks things :(
-        </span><span class="kw">let </span><span class="kw-2">mut </span>closure = |link: BrokenLink&lt;<span class="lifetime">&#39;b</span>&gt;| <span class="prelude-val">Some</span>((<span class="string">&quot;#&quot;</span>.into(), link.reference.into()));
+        // TODO: why is the `'b` lifetime required at all? Changing it to `'_` breaks things :(
+        </span><span class="kw">let </span><span class="kw-2">mut </span>closure = |link: BrokenLink&lt;<span class="lifetime">'b</span>&gt;| <span class="prelude-val">Some</span>((<span class="string">"#"</span>.into(), link.reference.into()));
 
-        <span class="kw">fn </span>function&lt;<span class="lifetime">&#39;a</span>&gt;(link: BrokenLink&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;(CowStr&lt;<span class="lifetime">&#39;a</span>&gt;, CowStr&lt;<span class="lifetime">&#39;a</span>&gt;)&gt; {
-            <span class="prelude-val">Some</span>((<span class="string">&quot;#&quot;</span>.into(), link.reference))
+        <span class="kw">fn </span>function&lt;<span class="lifetime">'a</span>&gt;(link: BrokenLink&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;(CowStr&lt;<span class="lifetime">'a</span>&gt;, CowStr&lt;<span class="lifetime">'a</span>&gt;)&gt; {
+            <span class="prelude-val">Some</span>((<span class="string">"#"</span>.into(), link.reference))
         }
 
         <span class="kw">for _ in </span>Parser::new_with_broken_link_callback(
-            <span class="string">&quot;static lifetime&quot;</span>,
+            <span class="string">"static lifetime"</span>,
             Options::empty(),
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>closure),
         ) {}
-        <span class="comment">/* This fails to compile. Because the closure can&#39;t say `for &lt;&#39;a&gt; fn(BrokenLink&lt;&#39;a&gt;) -&gt;
-         * CowStr&lt;&#39;a&gt;` and has to use the enclosing `&#39;b` lifetime parameter, `temporary_str` lives
-         * shorter than `&#39;b`. I think this is unlikely to occur in real life, and if it does, the
+        <span class="comment">/* This fails to compile. Because the closure can't say `for &lt;'a&gt; fn(BrokenLink&lt;'a&gt;) -&gt;
+         * CowStr&lt;'a&gt;` and has to use the enclosing `'b` lifetime parameter, `temporary_str` lives
+         * shorter than `'b`. I think this is unlikely to occur in real life, and if it does, the
          * fix is simple: move it out to a function that allows annotating the lifetimes.
          */
         //for _ in Parser::new_with_broken_link_callback(&amp;temporary_str, Options::empty(), Some(&amp;mut callback)) {
         //}
 
         </span><span class="kw">for _ in </span>Parser::new_with_broken_link_callback(
-            <span class="string">&quot;static lifetime&quot;</span>,
+            <span class="string">"static lifetime"</span>,
             Options::empty(),
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>function),
         ) {}

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3454,17 +3454,17 @@
     </span>Unsupported(Value),
 }
 
-<span class="kw">enum </span>TargetFallback&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">enum </span>TargetFallback&lt;<span class="lifetime">'a</span>&gt; {
     Value(Value, Value),
-    Field(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Value, Hash, Value),
-    Index(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Value, usize, Value),
+    Field(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value, Hash, Value),
+    Index(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value, usize, Value),
 }
 
-<span class="kw">enum </span>TargetValue&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
+<span class="kw">enum </span>TargetValue&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
     <span class="doccomment">/// Resolved internal target to mutable value.
-    </span>Value(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Value, Value),
+    </span>Value(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Value, Value),
     <span class="doccomment">/// Fallback to a different kind of operation.
-    </span>Fallback(TargetFallback&lt;<span class="lifetime">&#39;b</span>&gt;),
+    </span>Fallback(TargetFallback&lt;<span class="lifetime">'b</span>&gt;),
 }
 
 <span class="macro">macro_rules! </span>target_value {
@@ -3655,15 +3655,15 @@
     /// let vm = Vm::new(context, unit);
     ///
     /// // Looking up an item from the source.
-    /// let dynamic_max = vm.lookup_function([&quot;max&quot;])?;
+    /// let dynamic_max = vm.lookup_function(["max"])?;
     ///
     /// let value: i64 = rune::from_value(dynamic_max.call((10, 20)).into_result()?)?;
     /// assert_eq!(value, 20);
     ///
     /// // Building an item buffer to lookup an `::std` item.
-    /// let mut item = ItemBuf::with_crate(&quot;std&quot;)?;
-    /// item.push(&quot;i64&quot;)?;
-    /// item.push(&quot;max&quot;)?;
+    /// let mut item = ItemBuf::with_crate("std")?;
+    /// item.push("i64")?;
+    /// item.push("max")?;
     ///
     /// let max = vm.lookup_function(&amp;item)?;
     ///
@@ -3697,13 +3697,13 @@
 
     <span class="doccomment">/// Call the function identified by the given name.
     ///
-    /// Computing the function hash from the name can be a bit costly, so it&#39;s
+    /// Computing the function hash from the name can be a bit costly, so it's
     /// worth noting that it can be precalculated:
     ///
     /// ```
     /// use rune::Hash;
     ///
-    /// let name = Hash::type_hash([&quot;main&quot;]);
+    /// let name = Hash::type_hash(["main"]);
     /// ```
     ///
     /// # Examples
@@ -3716,15 +3716,15 @@
     /// let context = Arc::new(context.runtime()?);
     ///
     /// // Normally the unit would be created by compiling some source,
-    /// // and since this one is empty it won&#39;t do anything.
+    /// // and since this one is empty it won't do anything.
     /// let unit = Arc::new(Unit::default());
     ///
     /// let mut vm = rune::Vm::new(context, unit);
     ///
-    /// let output = vm.execute([&quot;main&quot;], (33i64,))?.complete().into_result()?;
+    /// let output = vm.execute(["main"], (33i64,))?.complete().into_result()?;
     /// let output: i64 = rune::from_value(output)?;
     ///
-    /// println!(&quot;output: {}&quot;, output);
+    /// println!("output: {}", output);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     ///
@@ -3739,19 +3739,19 @@
     /// let context = Arc::new(context.runtime()?);
     ///
     /// // Normally the unit would be created by compiling some source,
-    /// // and since this one is empty it won&#39;t do anything.
+    /// // and since this one is empty it won't do anything.
     /// let unit = Arc::new(Unit::default());
     ///
     /// let mut vm = rune::Vm::new(context, unit);
     ///
     /// let mut args = Vec::new();
     /// args.push(rune::to_value(1u32)?);
-    /// args.push(rune::to_value(String::from(&quot;Hello World&quot;))?);
+    /// args.push(rune::to_value(String::from("Hello World"))?);
     ///
-    /// let output = vm.execute([&quot;main&quot;], args)?.complete().into_result()?;
+    /// let output = vm.execute(["main"], args)?.complete().into_result()?;
     /// let output: i64 = rune::from_value(output)?;
     ///
-    /// println!(&quot;output: {}&quot;, output);
+    /// println!("output: {}", output);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>execute&lt;A, N&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: N, args: A) -&gt; <span class="prelude-ty">Result</span>&lt;VmExecution&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, VmError&gt;
@@ -3786,7 +3786,7 @@
 
     <span class="doccomment">/// Call the given function immediately, returning the produced value.
     ///
-    /// This function permits for using references since it doesn&#39;t defer its
+    /// This function permits for using references since it doesn't defer its
     /// execution.
     ///
     /// # Panics
@@ -3827,7 +3827,7 @@
     <span class="doccomment">/// Call the given function immediately asynchronously, returning the
     /// produced value.
     ///
-    /// This function permits for using references since it doesn&#39;t defer its
+    /// This function permits for using references since it doesn't defer its
     /// execution.
     ///
     /// # Panics
@@ -4037,7 +4037,7 @@
         args: usize,
         isolated: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmErrorKind&gt; {
-        <span class="macro">tracing::trace!</span>(<span class="string">&quot;pushing call frame&quot;</span>);
+        <span class="macro">tracing::trace!</span>(<span class="string">"pushing call frame"</span>);
 
         <span class="kw">let </span>stack_bottom = <span class="self">self</span>.stack.swap_stack_bottom(args)<span class="question-mark">?</span>;
         <span class="kw">let </span>ip = replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ip, ip);
@@ -4057,7 +4057,7 @@
     /// [`CallFrame::isolated`].
     </span><span class="attr">#[tracing::instrument(skip(<span class="self">self</span>), fields(call_frames = <span class="self">self</span>.call_frames.len(), stack_bottom = <span class="self">self</span>.stack.stack_bottom(), stack = <span class="self">self</span>.stack.len(), <span class="self">self</span>.ip))]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_call_frame_from_call(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;, VmErrorKind&gt; {
-        <span class="macro">tracing::trace!</span>(<span class="string">&quot;popping call frame from call&quot;</span>);
+        <span class="macro">tracing::trace!</span>(<span class="string">"popping call frame from call"</span>);
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(frame) = <span class="self">self</span>.call_frames.pop() <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
@@ -4071,7 +4071,7 @@
     <span class="doccomment">/// Pop a call frame and return it.
     </span><span class="attr">#[tracing::instrument(skip(<span class="self">self</span>), fields(call_frames = <span class="self">self</span>.call_frames.len(), stack_bottom = <span class="self">self</span>.stack.stack_bottom(), stack = <span class="self">self</span>.stack.len(), <span class="self">self</span>.ip))]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_call_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmErrorKind&gt; {
-        <span class="macro">tracing::trace!</span>(<span class="string">&quot;popping call frame&quot;</span>);
+        <span class="macro">tracing::trace!</span>(<span class="string">"popping call frame"</span>);
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(frame) = <span class="self">self</span>.call_frames.pop() <span class="kw">else </span>{
             <span class="self">self</span>.stack.check_stack_top()<span class="question-mark">?</span>;
@@ -4171,7 +4171,7 @@
     </span><span class="kw">fn </span>try_tuple_like_index_get_mut(
         target: <span class="kw-2">&amp;</span>Value,
         index: usize,
-    ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">&#39;_</span>, Value&gt;&gt;&gt; {
+    ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'_</span>, Value&gt;&gt;&gt; {
         <span class="kw">let </span>value = <span class="kw">match </span>target {
             Value::EmptyTuple =&gt; <span class="prelude-val">None</span>,
             Value::Tuple(tuple) =&gt; {
@@ -4238,10 +4238,10 @@
     }
 
     <span class="doccomment">/// Implementation of getting a mutable string index on an object-like type.
-    </span><span class="kw">fn </span>try_object_like_index_get_mut&lt;<span class="lifetime">&#39;a</span>&gt;(
-        target: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Value,
+    </span><span class="kw">fn </span>try_object_like_index_get_mut&lt;<span class="lifetime">'a</span>&gt;(
+        target: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value,
         field: <span class="kw-2">&amp;</span>str,
-    ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">&#39;a</span>, Value&gt;&gt;&gt; {
+    ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'a</span>, Value&gt;&gt;&gt; {
         <span class="kw">let </span>value = <span class="kw">match </span><span class="kw-2">&amp;</span>target {
             Value::Object(target) =&gt; {
                 <span class="kw">let </span>target = <span class="macro">vm_try!</span>(target.borrow_mut());
@@ -4555,7 +4555,7 @@
     <span class="kw">fn </span>internal_boolean_op(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         bool_op: <span class="kw">impl </span>FnOnce(bool, bool) -&gt; bool,
-        op: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        op: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
         lhs: InstAddress,
         rhs: InstAddress,
     ) -&gt; VmResult&lt;()&gt; {
@@ -4669,7 +4669,7 @@
     <span class="doccomment">/// Execute a fallback operation.
     </span><span class="kw">fn </span>target_fallback_assign(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        fallback: TargetFallback&lt;<span class="lifetime">&#39;_</span>&gt;,
+        fallback: TargetFallback&lt;<span class="lifetime">'_</span>&gt;,
         protocol: Protocol,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span>fallback {
@@ -4898,12 +4898,12 @@
         <span class="self">self</span>.target_fallback_assign(fallback, protocol)
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_await(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;Shared&lt;Future&gt;&gt; {
         <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop()).into_future()
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_select(<span class="kw-2">&amp;mut </span><span class="self">self</span>, len: usize) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Select&gt;&gt; {
         <span class="kw">let </span>futures = futures_util::stream::FuturesUnordered::new();
 
@@ -4925,26 +4925,26 @@
     }
 
     <span class="doccomment">/// Pop a number of values from the stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_popn(<span class="kw-2">&amp;mut </span><span class="self">self</span>, n: usize) -&gt; VmResult&lt;()&gt; {
         <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.popn(n));
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: InstValue) -&gt; VmResult&lt;()&gt; {
         <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(value.into_value()));
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_pop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;()&gt; {
         <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
         VmResult::Ok(())
     }
 
     <span class="doccomment">/// pop-and-jump-if-not instruction.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_pop_and_jump_if_not(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: usize, jump: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">if </span><span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop()).into_bool()) {
             <span class="kw">return </span>VmResult::Ok(());
@@ -4957,7 +4957,7 @@
 
     <span class="doccomment">/// Pop a number of values from the stack, while preserving the top of the
     /// stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_clean(<span class="kw-2">&amp;mut </span><span class="self">self</span>, n: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
         <span class="macro">vm_try!</span>(<span class="self">self</span>.op_popn(n));
@@ -4967,7 +4967,7 @@
 
     <span class="doccomment">/// Copy a value from a position relative to the top of the stack, to the
     /// top of the stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_copy(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at_offset(offset)).clone();
         <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(value));
@@ -4976,14 +4976,14 @@
 
     <span class="doccomment">/// Move a value from a position relative to the top of the stack, to the
     /// top of the stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_move(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at_offset(offset)).clone();
         <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(<span class="macro">vm_try!</span>(value.take())));
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let _ </span>= <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at_offset(offset));
         VmResult::Ok(())
@@ -4991,7 +4991,7 @@
 
     <span class="doccomment">/// Copy a value from a position relative to the top of the stack, to the
     /// top of the stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
         <span class="kw">let </span>stack_value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at_offset_mut(offset));
@@ -5000,21 +5000,21 @@
     }
 
     <span class="doccomment">/// Swap two values on the stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: usize, b: usize) -&gt; VmResult&lt;()&gt; {
         <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.swap(a, b));
         VmResult::Ok(())
     }
 
     <span class="doccomment">/// Perform a jump operation.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_jump(<span class="kw-2">&amp;mut </span><span class="self">self</span>, jump: usize) -&gt; VmResult&lt;()&gt; {
         <span class="self">self</span>.ip = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.translate(jump));
         VmResult::Ok(())
     }
 
     <span class="doccomment">/// Perform a conditional jump operation.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_jump_if(<span class="kw-2">&amp;mut </span><span class="self">self</span>, jump: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">if </span><span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop()).into_bool()) {
             <span class="self">self</span>.ip = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.translate(jump));
@@ -5025,7 +5025,7 @@
 
     <span class="doccomment">/// Perform a conditional jump operation. Pops the stack if the jump is
     /// not performed.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_jump_if_or_pop(<span class="kw-2">&amp;mut </span><span class="self">self</span>, jump: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">if </span><span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.last()).as_bool()) {
             <span class="self">self</span>.ip = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.translate(jump));
@@ -5038,7 +5038,7 @@
 
     <span class="doccomment">/// Perform a conditional jump operation. Pops the stack if the jump is
     /// not performed.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_jump_if_not_or_pop(<span class="kw-2">&amp;mut </span><span class="self">self</span>, jump: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">if </span>!<span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.last()).as_bool()) {
             <span class="self">self</span>.ip = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.translate(jump));
@@ -5050,7 +5050,7 @@
     }
 
     <span class="doccomment">/// Perform a branch-conditional jump operation.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_jump_if_branch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, branch: i64, jump: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(Value::Integer(current)) = <span class="self">self</span>.stack.peek() {
             <span class="kw">if </span><span class="kw-2">*</span>current == branch {
@@ -5063,7 +5063,7 @@
     }
 
     <span class="doccomment">/// Construct a new vec.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_vec(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(Vec::try_from(<span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self
             </span>.stack
@@ -5075,7 +5075,7 @@
     }
 
     <span class="doccomment">/// Construct a new tuple.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_tuple(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop_sequence(count)));
         <span class="macro">vm_try!</span>(<span class="self">self
@@ -5087,7 +5087,7 @@
     }
 
     <span class="doccomment">/// Construct a new tuple with a fixed number of arguments.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_tuple_n(<span class="kw-2">&amp;mut </span><span class="self">self</span>, args: <span class="kw-2">&amp;</span>[InstAddress]) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>tuple = <span class="macro">vec!</span>[Value::EmptyTuple; args.len()];
 
@@ -5105,7 +5105,7 @@
     }
 
     <span class="doccomment">/// Push the tuple that is on top of the stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_push_tuple(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop()).into_tuple());
         <span class="macro">vm_try!</span>(<span class="self">self
@@ -5114,7 +5114,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_not(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -5124,7 +5124,7 @@
             Value::Byte(value) =&gt; Value::from(!value),
             other =&gt; {
                 <span class="kw">let </span>operand = <span class="macro">vm_try!</span>(other.type_info());
-                <span class="kw">return </span>err(VmErrorKind::UnsupportedUnaryOperation { op: <span class="string">&quot;!&quot;</span>, operand });
+                <span class="kw">return </span>err(VmErrorKind::UnsupportedUnaryOperation { op: <span class="string">"!"</span>, operand });
             }
         };
 
@@ -5132,7 +5132,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_neg(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -5141,7 +5141,7 @@
             Value::Integer(value) =&gt; Value::from(-value),
             other =&gt; {
                 <span class="kw">let </span>operand = <span class="macro">vm_try!</span>(other.type_info());
-                <span class="kw">return </span>err(VmErrorKind::UnsupportedUnaryOperation { op: <span class="string">&quot;-&quot;</span>, operand });
+                <span class="kw">return </span>err(VmErrorKind::UnsupportedUnaryOperation { op: <span class="string">"-"</span>, operand });
             }
         };
 
@@ -5149,7 +5149,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_op(<span class="kw-2">&amp;mut </span><span class="self">self</span>, op: InstOp, lhs: InstAddress, rhs: InstAddress) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span>op {
             InstOp::Add =&gt; {
@@ -5304,10 +5304,10 @@
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(Value::from(!test)));
             }
             InstOp::And =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_op(|a, b| a &amp;&amp; b, <span class="string">&quot;&amp;&amp;&quot;</span>, lhs, rhs));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_op(|a, b| a &amp;&amp; b, <span class="string">"&amp;&amp;"</span>, lhs, rhs));
             }
             InstOp::Or =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_op(|a, b| a || b, <span class="string">&quot;||&quot;</span>, lhs, rhs));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_op(|a, b| a || b, <span class="string">"||"</span>, lhs, rhs));
             }
             InstOp::As =&gt; {
                 <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.as_op(lhs, rhs));
@@ -5326,7 +5326,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, target: InstTarget, op: InstAssignOp) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span>op {
             InstAssignOp::Add =&gt; {
@@ -5425,16 +5425,16 @@
     }
 
     <span class="doccomment">/// Perform an index set operation.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_index_set(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>index = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
         <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
-        <span class="lifetime">&#39;out</span>: {
+        <span class="lifetime">'out</span>: {
             <span class="kw">let </span>field = <span class="kw">match </span><span class="kw-2">&amp;</span>index {
                 Value::String(string) =&gt; <span class="macro">vm_try!</span>(string.borrow_ref()),
-                <span class="kw">_ </span>=&gt; <span class="kw">break </span><span class="lifetime">&#39;out</span>,
+                <span class="kw">_ </span>=&gt; <span class="kw">break </span><span class="lifetime">'out</span>,
             };
 
             <span class="kw">let </span>field = field.as_str();
@@ -5562,13 +5562,13 @@
         })
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_return(<span class="kw-2">&amp;mut </span><span class="self">self</span>, address: InstAddress, clean: usize) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmErrorKind&gt; {
         <span class="kw">let </span>return_value = <span class="self">self</span>.stack.address(address)<span class="question-mark">?</span>;
         <span class="self">self</span>.op_return_internal(return_value, clean)
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     #[tracing::instrument(skip(<span class="self">self</span>))]
     </span><span class="kw">fn </span>op_return_unit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmErrorKind&gt; {
         <span class="kw">let </span>exit = <span class="self">self</span>.pop_call_frame()<span class="question-mark">?</span>;
@@ -5576,7 +5576,7 @@
         <span class="prelude-val">Ok</span>(exit)
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_load_instance_fn(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmError&gt; {
         <span class="kw">let </span>instance = <span class="self">self</span>.stack.pop()<span class="question-mark">?</span>;
         <span class="kw">let </span>ty = instance.type_hash()<span class="question-mark">?</span>;
@@ -5586,7 +5586,7 @@
     }
 
     <span class="doccomment">/// Perform an index get operation.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_index_get(<span class="kw-2">&amp;mut </span><span class="self">self</span>, target: InstAddress, index: InstAddress) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>index = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.address(index));
         <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.address_ref(target));
@@ -5635,7 +5635,7 @@
     }
 
     <span class="doccomment">/// Perform an index get operation specialized for tuples.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_tuple_index_get(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -5658,7 +5658,7 @@
     }
 
     <span class="doccomment">/// Perform an index get operation specialized for tuples.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_tuple_index_set(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
@@ -5673,7 +5673,7 @@
     }
 
     <span class="doccomment">/// Perform an index get operation specialized for tuples.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_tuple_index_get_at(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, index: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at_offset(offset));
 
@@ -5697,7 +5697,7 @@
         </span>VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_eq_bool(<span class="kw-2">&amp;mut </span><span class="self">self</span>, boolean: bool) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -5710,7 +5710,7 @@
     }
 
     <span class="doccomment">/// Perform a specialized index get operation on an object.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_object_index_get(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string_slot: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -5726,7 +5726,7 @@
     }
 
     <span class="doccomment">/// Perform a specialized index set operation on an object.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_object_index_set(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string_slot: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
@@ -5743,7 +5743,7 @@
     }
 
     <span class="doccomment">/// Perform a specialized index get operation on an object.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_object_index_get_at(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, string_slot: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at_offset(offset)).clone();
 
@@ -5759,7 +5759,7 @@
     }
 
     <span class="doccomment">/// Operation to allocate an object.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_object(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>keys = <span class="macro">vm_try!</span>(<span class="self">self
             </span>.unit
@@ -5781,7 +5781,7 @@
     }
 
     <span class="doccomment">/// Operation to allocate an object.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: InstRange) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="kw">match </span>range {
             InstRange::RangeFrom =&gt; {
@@ -5816,7 +5816,7 @@
     }
 
     <span class="doccomment">/// Operation to allocate an empty struct.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_empty_struct(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
             </span>.unit
@@ -5830,7 +5830,7 @@
     }
 
     <span class="doccomment">/// Operation to allocate an object struct.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_struct(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, slot: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>keys = <span class="macro">vm_try!</span>(<span class="self">self
             </span>.unit
@@ -5859,7 +5859,7 @@
     }
 
     <span class="doccomment">/// Operation to allocate an object.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_unit_variant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
             </span>.unit
@@ -5873,7 +5873,7 @@
     }
 
     <span class="doccomment">/// Operation to allocate an object variant.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_object_variant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, slot: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>keys = <span class="macro">vm_try!</span>(<span class="self">self
             </span>.unit
@@ -5900,7 +5900,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>string = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_string(slot));
         <span class="macro">vm_try!</span>(<span class="self">self
@@ -5911,7 +5911,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>bytes = <span class="macro">vm_try!</span>(alloc::Vec::&lt;u8&gt;::try_from(<span class="macro">vm_try!</span>(<span class="self">self
             </span>.unit
@@ -5923,7 +5923,7 @@
     }
 
     <span class="doccomment">/// Optimize operation to perform string concatenation.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_string_concat(<span class="kw-2">&amp;mut </span><span class="self">self</span>, len: usize, size_hint: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.drain(len)).try_collect::&lt;alloc::Vec&lt;<span class="kw">_</span>&gt;&gt;());
 
@@ -5938,7 +5938,7 @@
     }
 
     <span class="doccomment">/// Push a format specification onto the stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_format(<span class="kw-2">&amp;mut </span><span class="self">self</span>, spec: FormatSpec) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
         <span class="macro">vm_try!</span>(<span class="self">self
@@ -5947,7 +5947,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_is_unit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
         <span class="macro">vm_try!</span>(<span class="self">self
@@ -5957,7 +5957,7 @@
     }
 
     <span class="doccomment">/// Perform the try operation on the given stack location.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_try(<span class="kw-2">&amp;mut </span><span class="self">self</span>, address: InstAddress, clean: usize, preserve: bool) -&gt; VmResult&lt;bool&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.address(address));
 
@@ -5992,7 +5992,7 @@
         }
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_eq_byte(<span class="kw-2">&amp;mut </span><span class="self">self</span>, byte: u8) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -6004,7 +6004,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_eq_character(<span class="kw-2">&amp;mut </span><span class="self">self</span>, character: char) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -6016,7 +6016,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_eq_integer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, integer: i64) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -6030,7 +6030,7 @@
 
     <span class="doccomment">/// Test if the top of stack is equal to the string at the given static
     /// string slot.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_eq_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -6049,7 +6049,7 @@
 
     <span class="doccomment">/// Test if the top of stack is equal to the string at the given static
     /// bytes slot.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_eq_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -6066,7 +6066,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_match_sequence(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: TypeCheck, len: usize, exact: bool) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -6082,7 +6082,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_match_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
         <span class="kw">let </span>is_match = <span class="macro">vm_try!</span>(value.type_hash()) == hash;
@@ -6090,7 +6090,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_match_variant(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         enum_hash: Hash,
@@ -6120,7 +6120,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_match_builtin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, type_check: TypeCheck) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
 
@@ -6163,7 +6163,7 @@
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_match_object(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: usize, exact: bool) -&gt; VmResult&lt;()&gt; {
         <span class="kw">fn </span>test(object: <span class="kw-2">&amp;</span>Object, keys: <span class="kw-2">&amp;</span>[alloc::String], exact: bool) -&gt; bool {
             <span class="kw">if </span>exact {
@@ -6203,7 +6203,7 @@
     }
 
     <span class="doccomment">/// Push the given variant onto the stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_variant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, variant: InstVariant) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span>variant {
             InstVariant::Some =&gt; {
@@ -6233,7 +6233,7 @@
     }
 
     <span class="doccomment">/// Load a function as a value onto the stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_load_fn(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>function = <span class="macro">vm_try!</span>(<span class="self">self</span>.lookup_function_by_hash(hash));
         <span class="macro">vm_try!</span>(<span class="self">self
@@ -6243,7 +6243,7 @@
     }
 
     <span class="doccomment">/// Construct a closure on the top of the stack.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_closure(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, count: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>info = <span class="macro">vm_try!</span>(<span class="self">self
             </span>.unit
@@ -6275,7 +6275,7 @@
     }
 
     <span class="doccomment">/// Implementation of a function call.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, args: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.unit.function(hash) {
             <span class="prelude-val">Some</span>(info) =&gt; <span class="kw">match </span>info {
@@ -6354,13 +6354,13 @@
     }
 
     <span class="doccomment">/// Call a function at the given offset with the given number of arguments.
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_call_offset(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, call: Call, args: usize) -&gt; VmResult&lt;()&gt; {
         <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, args));
         VmResult::Ok(())
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_call_associated(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, args: usize) -&gt; VmResult&lt;()&gt; {
         <span class="comment">// NB: +1 to include the instance itself.
         </span><span class="kw">let </span>args = args + <span class="number">1</span>;
@@ -6390,7 +6390,7 @@
         })
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     #[tracing::instrument(skip(<span class="self">self</span>))]
     </span><span class="kw">fn </span>op_call_fn(<span class="kw-2">&amp;mut </span><span class="self">self</span>, args: usize) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;VmHalt&gt;&gt; {
         <span class="kw">let </span>function = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop());
@@ -6411,7 +6411,7 @@
         VmResult::Ok(<span class="prelude-val">None</span>)
     }
 
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;bench&quot;</span>, inline(never))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_iter_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize, jump: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at_offset_mut(offset));
 
@@ -6452,12 +6452,12 @@
     /// let context = Arc::new(context.runtime()?);
     ///
     /// // Normally the unit would be created by compiling some source,
-    /// // and since this one is empty it&#39;ll just error.
+    /// // and since this one is empty it'll just error.
     /// let unit = Arc::new(Unit::default());
     ///
     /// let mut vm = rune::Vm::new(context, unit);
     ///
-    /// let output = vm.call([&quot;main&quot;], ())?;
+    /// let output = vm.call(["main"], ())?;
     ///
     /// // Call the string_display protocol on `output`. This requires
     /// // access to a virtual machine since it might use functions
@@ -6805,9 +6805,9 @@
 }
 
 <span class="doccomment">/// Clear stack on drop.
-</span><span class="kw">struct </span>ClearStack&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Vm);
+</span><span class="kw">struct </span>ClearStack&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vm);
 
-<span class="kw">impl </span>Drop <span class="kw">for </span>ClearStack&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Drop <span class="kw">for </span>ClearStack&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.<span class="number">0</span>.stack.clear();
     }

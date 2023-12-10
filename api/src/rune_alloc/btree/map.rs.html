@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/btree/map.rs`."><title>map.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/btree/map.rs`."><title>map.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3789,7 +3789,7 @@
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const </span>MIN_LEN: usize = node::MIN_LEN_AFTER_SPLIT;
 
 <span class="comment">// A tree in a `BTreeMap` is a tree in the `node` module with additional invariants:
-// - Keys must appear in ascending order (according to the key&#39;s type).
+// - Keys must appear in ascending order (according to the key's type).
 // - Every non-leaf node contains at least 1 element (has at least 2 children).
 // - Every non-root node contains at least MIN_LEN elements.
 //
@@ -3823,7 +3823,7 @@
 /// to take B * log(n) comparisons, which is generally worse than a BST. In practice,
 /// however, performance is excellent.
 ///
-/// It is a logic error for a key to be modified in such a way that the key&#39;s ordering relative to
+/// It is a logic error for a key to be modified in such a way that the key's ordering relative to
 /// any other key, as determined by the [`Ord`] trait, changes while it is in the map. This is
 /// normally only possible through [`Cell`], [`RefCell`], global state, I/O, or unsafe code.
 /// The behavior resulting from such a logic error is not specified, but will be encapsulated to the
@@ -3848,35 +3848,35 @@
 /// let mut movie_reviews = BTreeMap::new();
 ///
 /// // review some movies.
-/// movie_reviews.try_insert(&quot;Office Space&quot;, &quot;Deals with real issues in the workplace.&quot;)?;
-/// movie_reviews.try_insert(&quot;Pulp Fiction&quot;, &quot;Masterpiece.&quot;)?;
-/// movie_reviews.try_insert(&quot;The Godfather&quot;, &quot;Very enjoyable.&quot;)?;
-/// movie_reviews.try_insert(&quot;The Blues Brothers&quot;, &quot;Eye lyked it a lot.&quot;)?;
+/// movie_reviews.try_insert("Office Space", "Deals with real issues in the workplace.")?;
+/// movie_reviews.try_insert("Pulp Fiction", "Masterpiece.")?;
+/// movie_reviews.try_insert("The Godfather", "Very enjoyable.")?;
+/// movie_reviews.try_insert("The Blues Brothers", "Eye lyked it a lot.")?;
 ///
 /// // check for a specific one.
-/// if !movie_reviews.contains_key(&quot;Les Misérables&quot;) {
-///     println!(&quot;We&#39;ve got {} reviews, but Les Misérables ain&#39;t one.&quot;,
+/// if !movie_reviews.contains_key("Les Misérables") {
+///     println!("We've got {} reviews, but Les Misérables ain't one.",
 ///              movie_reviews.len());
 /// }
 ///
-/// // oops, this review has a lot of spelling mistakes, let&#39;s delete it.
-/// movie_reviews.remove(&quot;The Blues Brothers&quot;);
+/// // oops, this review has a lot of spelling mistakes, let's delete it.
+/// movie_reviews.remove("The Blues Brothers");
 ///
 /// // look up the values associated with some keys.
-/// let to_find = [&quot;Up!&quot;, &quot;Office Space&quot;];
+/// let to_find = ["Up!", "Office Space"];
 /// for movie in &amp;to_find {
 ///     match movie_reviews.get(movie) {
-///        Some(review) =&gt; println!(&quot;{movie}: {review}&quot;),
-///        None =&gt; println!(&quot;{movie} is unreviewed.&quot;)
+///        Some(review) =&gt; println!("{movie}: {review}"),
+///        None =&gt; println!("{movie} is unreviewed.")
 ///     }
 /// }
 ///
 /// // Look up the value for a key (will panic if the key is not found).
-/// println!(&quot;Movie review: {}&quot;, movie_reviews[&quot;Office Space&quot;]);
+/// println!("Movie review: {}", movie_reviews["Office Space"]);
 ///
 /// // iterate over everything.
 /// for (movie, review) in &amp;movie_reviews {
-///     println!(&quot;{movie}: \&quot;{review}\&quot;&quot;);
+///     println!("{movie}: \"{review}\"");
 /// }
 /// # Ok::&lt;_, rune::alloc::Error&gt;(())
 /// ```
@@ -3887,10 +3887,10 @@
 /// use rune::alloc::BTreeMap;
 ///
 /// let solar_distance = BTreeMap::try_from([
-///     (&quot;Mercury&quot;, 0.4),
-///     (&quot;Venus&quot;, 0.7),
-///     (&quot;Earth&quot;, 1.0),
-///     (&quot;Mars&quot;, 1.5),
+///     ("Mercury", 0.4),
+///     ("Venus", 0.7),
+///     ("Earth", 1.0),
+///     ("Mars", 1.5),
 /// ])?;
 /// # Ok::&lt;_, rune::alloc::Error&gt;(())
 /// ```
@@ -3908,24 +3908,24 @@
 /// let mut player_stats = BTreeMap::new();
 ///
 /// fn random_stat_buff() -&gt; u8 {
-///     // could actually return some random value here - let&#39;s just return
+///     // could actually return some random value here - let's just return
 ///     // some fixed value for now
 ///     42
 /// }
 ///
-/// // insert a key only if it doesn&#39;t already exist
-/// player_stats.entry(&quot;health&quot;).or_try_insert(100)?;
+/// // insert a key only if it doesn't already exist
+/// player_stats.entry("health").or_try_insert(100)?;
 ///
 /// // insert a key using a function that provides a new value only if it
-/// // doesn&#39;t already exist
-/// player_stats.entry(&quot;defence&quot;).or_try_insert_with(random_stat_buff)?;
+/// // doesn't already exist
+/// player_stats.entry("defence").or_try_insert_with(random_stat_buff)?;
 ///
 /// // update a key, guarding against the key possibly not being set
-/// let stat = player_stats.entry(&quot;attack&quot;).or_try_insert(100)?;
+/// let stat = player_stats.entry("attack").or_try_insert(100)?;
 /// *stat += random_stat_buff();
 ///
 /// // modify an entry before an insert with in-place mutation
-/// player_stats.entry(&quot;mana&quot;).and_modify(|mana| *mana += 200).or_try_insert(100)?;
+/// player_stats.entry("mana").and_modify(|mana| *mana += 200).or_try_insert(100)?;
 /// # Ok::&lt;_, rune::alloc::Error&gt;(())
 /// ```
 </span><span class="kw">pub struct </span>BTreeMap&lt;K, V, A: Allocator = Global&gt; {
@@ -3951,7 +3951,7 @@
     }
 }
 
-<span class="comment">// FIXME: This implementation is &quot;wrong&quot;, but changing it would be a breaking change.
+<span class="comment">// FIXME: This implementation is "wrong", but changing it would be a breaking change.
 // (The bounds of the automatic `UnwindSafe` implementation have been like this since Rust 1.50.)
 // Maybe we can fix it nonetheless with a crater run, or if the `UnwindSafe`
 // traits are deprecated, or disarmed (no longer causing hard errors) in the future.
@@ -3965,13 +3965,13 @@
 
 <span class="kw">impl</span>&lt;K: TryClone, V: TryClone, A: Allocator + Clone&gt; TryClone <span class="kw">for </span>BTreeMap&lt;K, V, A&gt; {
     <span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BTreeMap&lt;K, V, A&gt;, Error&gt; {
-        <span class="kw">fn </span>clone_subtree&lt;<span class="lifetime">&#39;a</span>, K: TryClone, V: TryClone, A: Allocator + Clone&gt;(
-            node: NodeRef&lt;marker::Immut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
+        <span class="kw">fn </span>clone_subtree&lt;<span class="lifetime">'a</span>, K: TryClone, V: TryClone, A: Allocator + Clone&gt;(
+            node: NodeRef&lt;marker::Immut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
             alloc: <span class="kw-2">&amp;</span>A,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;BTreeMap&lt;K, V, A&gt;, Error&gt;
         <span class="kw">where
-            </span>K: <span class="lifetime">&#39;a</span>,
-            V: <span class="lifetime">&#39;a</span>,
+            </span>K: <span class="lifetime">'a</span>,
+            V: <span class="lifetime">'a</span>,
         {
             <span class="kw">match </span>node.force() {
                 Leaf(leaf) =&gt; {
@@ -4016,7 +4016,7 @@
                             <span class="kw">let </span>v = (<span class="kw-2">*</span>v).try_clone()<span class="question-mark">?</span>;
                             <span class="kw">let </span>subtree = clone_subtree(in_edge.descend(), alloc)<span class="question-mark">?</span>;
 
-                            <span class="comment">// We can&#39;t destructure subtree directly
+                            <span class="comment">// We can't destructure subtree directly
                             // because BTreeMap implements Drop
                             </span><span class="kw">let </span>(subroot, sublength) = <span class="kw">unsafe </span>{
                                 <span class="kw">let </span>subtree = ManuallyDrop::new(subtree);
@@ -4153,10 +4153,10 @@
 }
 
 <span class="doccomment">/// A raw iterator over a map where the caller is responsible for ensuring that
-/// it doesn&#39;t outlive the data it&#39;s iterating over.
+/// it doesn't outlive the data it's iterating over.
 ///
 /// See [BTreeMap::iter_raw].
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
 </span><span class="kw">pub struct </span>IterRaw&lt;K, V&gt; {
     range: LazyLeafRange&lt;marker::Raw, K, V&gt;,
     length: usize,
@@ -4217,25 +4217,25 @@
 /// documentation for more.
 ///
 /// [`iter`]: BTreeMap::iter
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
-</span><span class="kw">pub struct </span>Iter&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; {
-    range: LazyLeafRange&lt;marker::Immut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V&gt;,
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
+</span><span class="kw">pub struct </span>Iter&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; {
+    range: LazyLeafRange&lt;marker::Immut&lt;<span class="lifetime">'a</span>&gt;, K, V&gt;,
     length: usize,
 }
 
-<span class="kw">impl</span>&lt;K: fmt::Debug, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl</span>&lt;K: fmt::Debug, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>Iter&lt;<span class="lifetime">'_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_list().entries(<span class="self">self</span>.clone()).finish()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; Default <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; Default <span class="kw">for </span>Iter&lt;<span class="lifetime">'a</span>, K, V&gt; {
     <span class="doccomment">/// Creates an empty `btree_map::Iter`.
     ///
     /// ```
     /// use rune::alloc::btree_map;
     ///
-    /// let iter: btree_map::Iter&lt;&#39;_, u8, u8&gt; = Default::default();
+    /// let iter: btree_map::Iter&lt;'_, u8, u8&gt; = Default::default();
     /// assert_eq!(iter.len(), 0);
     /// ```
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
@@ -4252,16 +4252,16 @@
 /// documentation for more.
 ///
 /// [`iter_mut`]: BTreeMap::iter_mut
-</span><span class="kw">pub struct </span>IterMut&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; {
-    range: LazyLeafRange&lt;marker::ValMut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V&gt;,
+</span><span class="kw">pub struct </span>IterMut&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; {
+    range: LazyLeafRange&lt;marker::ValMut&lt;<span class="lifetime">'a</span>&gt;, K, V&gt;,
     length: usize,
 
     <span class="comment">// Be invariant in `K` and `V`
-    </span>_marker: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>(K, V)&gt;,
+    </span>_marker: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>(K, V)&gt;,
 }
 
-<span class="kw">impl</span>&lt;K: fmt::Debug, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>IterMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl</span>&lt;K: fmt::Debug, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>IterMut&lt;<span class="lifetime">'_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span>range = Iter {
             range: <span class="self">self</span>.range.reborrow(),
             length: <span class="self">self</span>.length,
@@ -4270,13 +4270,13 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; Default <span class="kw">for </span>IterMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; Default <span class="kw">for </span>IterMut&lt;<span class="lifetime">'a</span>, K, V&gt; {
     <span class="doccomment">/// Creates an empty `btree_map::IterMut`.
     ///
     /// ```
     /// use rune::alloc::btree_map;
     ///
-    /// let iter: btree_map::IterMut&lt;&#39;_, u8, u8&gt; = Default::default();
+    /// let iter: btree_map::IterMut&lt;'_, u8, u8&gt; = Default::default();
     /// assert_eq!(iter.len(), 0);
     /// ```
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
@@ -4297,14 +4297,14 @@
 </span><span class="kw">pub struct </span>IntoIter&lt;K, V, A: Allocator = Global&gt; {
     range: LazyLeafRange&lt;marker::Dying, K, V&gt;,
     length: usize,
-    <span class="doccomment">/// The BTreeMap will outlive this IntoIter so we don&#39;t care about drop order for `alloc`.
+    <span class="doccomment">/// The BTreeMap will outlive this IntoIter so we don't care about drop order for `alloc`.
     </span>alloc: A,
 }
 
 <span class="kw">impl</span>&lt;K, V, A: Allocator&gt; IntoIter&lt;K, V, A&gt; {
     <span class="doccomment">/// Returns an iterator of references over the remaining items.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">'_</span>, K, V&gt; {
         Iter {
             range: <span class="self">self</span>.range.reborrow(),
             length: <span class="self">self</span>.length,
@@ -4313,7 +4313,7 @@
 }
 
 <span class="kw">impl</span>&lt;K: Debug, V: Debug, A: Allocator&gt; Debug <span class="kw">for </span>IntoIter&lt;K, V, A&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_list().entries(<span class="self">self</span>.iter()).finish()
     }
 }
@@ -4345,13 +4345,13 @@
 /// documentation for more.
 ///
 /// [`keys`]: BTreeMap::keys
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
-</span><span class="kw">pub struct </span>Keys&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    inner: Iter&lt;<span class="lifetime">&#39;a</span>, K, V&gt;,
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
+</span><span class="kw">pub struct </span>Keys&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    inner: Iter&lt;<span class="lifetime">'a</span>, K, V&gt;,
 }
 
-<span class="kw">impl</span>&lt;K: fmt::Debug, V&gt; fmt::Debug <span class="kw">for </span>Keys&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl</span>&lt;K: fmt::Debug, V&gt; fmt::Debug <span class="kw">for </span>Keys&lt;<span class="lifetime">'_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_list().entries(<span class="self">self</span>.clone()).finish()
     }
 }
@@ -4362,13 +4362,13 @@
 /// documentation for more.
 ///
 /// [`values`]: BTreeMap::values
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
-</span><span class="kw">pub struct </span>Values&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    inner: Iter&lt;<span class="lifetime">&#39;a</span>, K, V&gt;,
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
+</span><span class="kw">pub struct </span>Values&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    inner: Iter&lt;<span class="lifetime">'a</span>, K, V&gt;,
 }
 
-<span class="kw">impl</span>&lt;K, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>Values&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl</span>&lt;K, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>Values&lt;<span class="lifetime">'_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_list().entries(<span class="self">self</span>.clone()).finish()
     }
 }
@@ -4379,13 +4379,13 @@
 /// documentation for more.
 ///
 /// [`values_mut`]: BTreeMap::values_mut
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
-</span><span class="kw">pub struct </span>ValuesMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    inner: IterMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt;,
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
+</span><span class="kw">pub struct </span>ValuesMut&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    inner: IterMut&lt;<span class="lifetime">'a</span>, K, V&gt;,
 }
 
-<span class="kw">impl</span>&lt;K, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>ValuesMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl</span>&lt;K, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>ValuesMut&lt;<span class="lifetime">'_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_list()
             .entries(<span class="self">self</span>.inner.iter().map(|(<span class="kw">_</span>, val)| val))
             .finish()
@@ -4398,13 +4398,13 @@
 /// its documentation for more.
 ///
 /// [`into_keys`]: BTreeMap::into_keys
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
 </span><span class="kw">pub struct </span>IntoKeys&lt;K, V, A: Allocator = Global&gt; {
     inner: IntoIter&lt;K, V, A&gt;,
 }
 
 <span class="kw">impl</span>&lt;K: fmt::Debug, V, A: Allocator&gt; fmt::Debug <span class="kw">for </span>IntoKeys&lt;K, V, A&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_list()
             .entries(<span class="self">self</span>.inner.iter().map(|(key, <span class="kw">_</span>)| key))
             .finish()
@@ -4417,13 +4417,13 @@
 /// its documentation for more.
 ///
 /// [`into_values`]: BTreeMap::into_values
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
 </span><span class="kw">pub struct </span>IntoValues&lt;K, V, A: Allocator = Global&gt; {
     inner: IntoIter&lt;K, V, A&gt;,
 }
 
 <span class="kw">impl</span>&lt;K, V: fmt::Debug, A: Allocator&gt; fmt::Debug <span class="kw">for </span>IntoValues&lt;K, V, A&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_list()
             .entries(<span class="self">self</span>.inner.iter().map(|(<span class="kw">_</span>, val)| val))
             .finish()
@@ -4436,13 +4436,13 @@
 /// documentation for more.
 ///
 /// [`range`]: BTreeMap::range
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
-</span><span class="kw">pub struct </span>Range&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; {
-    inner: LeafRange&lt;marker::Immut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V&gt;,
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
+</span><span class="kw">pub struct </span>Range&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; {
+    inner: LeafRange&lt;marker::Immut&lt;<span class="lifetime">'a</span>&gt;, K, V&gt;,
 }
 
-<span class="kw">impl</span>&lt;K: fmt::Debug, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl</span>&lt;K: fmt::Debug, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>Range&lt;<span class="lifetime">'_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_list().entries(<span class="self">self</span>.clone()).finish()
     }
 }
@@ -4453,16 +4453,16 @@
 /// documentation for more.
 ///
 /// [`range_mut`]: BTreeMap::range_mut
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
-</span><span class="kw">pub struct </span>RangeMut&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; {
-    inner: LeafRange&lt;marker::ValMut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V&gt;,
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
+</span><span class="kw">pub struct </span>RangeMut&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; {
+    inner: LeafRange&lt;marker::ValMut&lt;<span class="lifetime">'a</span>&gt;, K, V&gt;,
 
     <span class="comment">// Be invariant in `K` and `V`
-    </span>_marker: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>(K, V)&gt;,
+    </span>_marker: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>(K, V)&gt;,
 }
 
-<span class="kw">impl</span>&lt;K: fmt::Debug, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>RangeMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl</span>&lt;K: fmt::Debug, V: fmt::Debug&gt; fmt::Debug <span class="kw">for </span>RangeMut&lt;<span class="lifetime">'_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span>range = Range {
             inner: <span class="self">self</span>.inner.reborrow(),
         };
@@ -4485,7 +4485,7 @@
     /// let mut map = BTreeMap::new();
     ///
     /// // entries can now be inserted into the empty map
-    /// map.try_insert(1, &quot;a&quot;)?;
+    /// map.try_insert(1, "a")?;
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="attr">#[must_use]
@@ -4521,7 +4521,7 @@
     /// let mut map = BTreeMap::new_in(Global);
     ///
     /// // entries can now be inserted into the empty map
-    /// map.try_insert(1, &quot;a&quot;)?;
+    /// map.try_insert(1, "a")?;
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>new_in(alloc: A) -&gt; BTreeMap&lt;K, V, A&gt; {
@@ -4545,7 +4545,7 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(1, &quot;a&quot;)?;
+    /// a.try_insert(1, "a")?;
     /// a.clear();
     /// assert!(a.is_empty());
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
@@ -4558,7 +4558,7 @@
 <span class="kw">impl</span>&lt;K, V, A: Allocator&gt; BTreeMap&lt;K, V, A&gt; {
     <span class="doccomment">/// Returns a reference to the value corresponding to the key.
     ///
-    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// The key may be any borrowed form of the map's key type, but the ordering
     /// on the borrowed form *must* match the ordering on the key type.
     ///
     /// # Examples
@@ -4569,8 +4569,8 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(1, &quot;a&quot;)?;
-    /// assert_eq!(map.get(&amp;1), Some(&amp;&quot;a&quot;));
+    /// map.try_insert(1, "a")?;
+    /// assert_eq!(map.get(&amp;1), Some(&amp;"a"));
     /// assert_eq!(map.get(&amp;2), None);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
@@ -4603,7 +4603,7 @@
 
     <span class="doccomment">/// Returns the key-value pair corresponding to the supplied key.
     ///
-    /// The supplied key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// The supplied key may be any borrowed form of the map's key type, but the ordering
     /// on the borrowed form *must* match the ordering on the key type.
     ///
     /// # Examples
@@ -4612,8 +4612,8 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(1, &quot;a&quot;)?;
-    /// assert_eq!(map.get_key_value(&amp;1), Some((&amp;1, &amp;&quot;a&quot;)));
+    /// map.try_insert(1, "a")?;
+    /// assert_eq!(map.get_key_value(&amp;1), Some((&amp;1, &amp;"a")));
     /// assert_eq!(map.get_key_value(&amp;2), None);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
@@ -4641,9 +4641,9 @@
     ///
     /// let mut map = BTreeMap::new();
     /// assert_eq!(map.first_key_value(), None);
-    /// map.try_insert(1, &quot;b&quot;)?;
-    /// map.try_insert(2, &quot;a&quot;)?;
-    /// assert_eq!(map.first_key_value(), Some((&amp;1, &amp;&quot;b&quot;)));
+    /// map.try_insert(1, "b")?;
+    /// map.try_insert(2, "a")?;
+    /// assert_eq!(map.first_key_value(), Some((&amp;1, &amp;"b")));
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>first_key_value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;</span>V)&gt; {
@@ -4664,20 +4664,20 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(1, &quot;a&quot;)?;
-    /// map.try_insert(2, &quot;b&quot;)?;
+    /// map.try_insert(1, "a")?;
+    /// map.try_insert(2, "b")?;
     ///
     /// if let Some(mut entry) = map.first_entry() {
     ///     if *entry.key() &gt; 0 {
-    ///         entry.insert(&quot;first&quot;);
+    ///         entry.insert("first");
     ///     }
     /// }
     ///
-    /// assert_eq!(*map.get(&amp;1).unwrap(), &quot;first&quot;);
-    /// assert_eq!(*map.get(&amp;2).unwrap(), &quot;b&quot;);
+    /// assert_eq!(*map.get(&amp;1).unwrap(), "first");
+    /// assert_eq!(*map.get(&amp;2).unwrap(), "b");
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>first_entry(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;OccupiedEntry&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt;&gt; {
+    </span><span class="kw">pub fn </span>first_entry(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;OccupiedEntry&lt;<span class="lifetime">'_</span>, K, V, A&gt;&gt; {
         <span class="kw">let </span>(map, dormant_map) = DormantMutRef::new(<span class="self">self</span>);
         <span class="kw">let </span>root_node = map.root.as_mut()<span class="question-mark">?</span>.borrow_mut();
         <span class="kw">let </span>kv = root_node.first_leaf_edge().right_kv().ok()<span class="question-mark">?</span>;
@@ -4700,8 +4700,8 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(1, &quot;a&quot;)?;
-    /// map.try_insert(2, &quot;b&quot;)?;
+    /// map.try_insert(1, "a")?;
+    /// map.try_insert(2, "b")?;
     /// while let Some((key, _val)) = map.pop_first() {
     ///     assert!(map.iter().all(|(k, _v)| *k &gt; key));
     /// }
@@ -4723,9 +4723,9 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(1, &quot;b&quot;)?;
-    /// map.try_insert(2, &quot;a&quot;)?;
-    /// assert_eq!(map.last_key_value(), Some((&amp;2, &amp;&quot;a&quot;)));
+    /// map.try_insert(1, "b")?;
+    /// map.try_insert(2, "a")?;
+    /// assert_eq!(map.last_key_value(), Some((&amp;2, &amp;"a")));
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>last_key_value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;</span>V)&gt; {
@@ -4746,20 +4746,20 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(1, &quot;a&quot;)?;
-    /// map.try_insert(2, &quot;b&quot;)?;
+    /// map.try_insert(1, "a")?;
+    /// map.try_insert(2, "b")?;
     ///
     /// if let Some(mut entry) = map.last_entry() {
     ///     if *entry.key() &gt; 0 {
-    ///         entry.insert(&quot;last&quot;);
+    ///         entry.insert("last");
     ///     }
     /// }
     ///
-    /// assert_eq!(*map.get(&amp;1).unwrap(), &quot;a&quot;);
-    /// assert_eq!(*map.get(&amp;2).unwrap(), &quot;last&quot;);
+    /// assert_eq!(*map.get(&amp;1).unwrap(), "a");
+    /// assert_eq!(*map.get(&amp;2).unwrap(), "last");
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>last_entry(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;OccupiedEntry&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt;&gt; {
+    </span><span class="kw">pub fn </span>last_entry(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;OccupiedEntry&lt;<span class="lifetime">'_</span>, K, V, A&gt;&gt; {
         <span class="kw">let </span>(map, dormant_map) = DormantMutRef::new(<span class="self">self</span>);
         <span class="kw">let </span>root_node = map.root.as_mut()<span class="question-mark">?</span>.borrow_mut();
         <span class="kw">let </span>kv = root_node.last_leaf_edge().left_kv().ok()<span class="question-mark">?</span>;
@@ -4782,8 +4782,8 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(1, &quot;a&quot;)?;
-    /// map.try_insert(2, &quot;b&quot;)?;
+    /// map.try_insert(1, "a")?;
+    /// map.try_insert(2, "b")?;
     ///
     /// while let Some((key, _val)) = map.pop_last() {
     ///     assert!(map.iter().all(|(k, _v)| *k &lt; key));
@@ -4798,7 +4798,7 @@
 
     <span class="doccomment">/// Returns `true` if the map contains a value for the specified key.
     ///
-    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// The key may be any borrowed form of the map's key type, but the ordering
     /// on the borrowed form *must* match the ordering on the key type.
     ///
     /// # Examples
@@ -4809,7 +4809,7 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(1, &quot;a&quot;)?;
+    /// map.try_insert(1, "a")?;
     ///
     /// assert_eq!(map.contains_key(&amp;1), true);
     /// assert_eq!(map.contains_key(&amp;2), false);
@@ -4838,7 +4838,7 @@
 
     <span class="doccomment">/// Returns a mutable reference to the value corresponding to the key.
     ///
-    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// The key may be any borrowed form of the map's key type, but the ordering
     /// on the borrowed form *must* match the ordering on the key type.
     ///
     /// # Examples
@@ -4850,16 +4850,16 @@
     ///
     /// let mut map = BTreeMap::new();
     ///
-    /// map.try_insert(1, &quot;a&quot;)?;
+    /// map.try_insert(1, "a")?;
     ///
     /// if let Some(x) = map.get_mut(&amp;1) {
-    ///     *x = &quot;b&quot;;
+    ///     *x = "b";
     /// }
     ///
-    /// assert_eq!(map[&amp;1], &quot;b&quot;);
+    /// assert_eq!(map[&amp;1], "b");
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="comment">// See `get` for implementation notes, this is basically a copy-paste with mut&#39;s added
+    </span><span class="comment">// See `get` for implementation notes, this is basically a copy-paste with mut's added
     </span><span class="kw">pub fn </span>get_mut&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>V&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt; + Ord,
@@ -4910,12 +4910,12 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// assert_eq!(map.try_insert(37, &quot;a&quot;)?, None);
+    /// assert_eq!(map.try_insert(37, "a")?, None);
     /// assert_eq!(map.is_empty(), false);
     ///
-    /// map.try_insert(37, &quot;b&quot;)?;
-    /// assert_eq!(map.try_insert(37, &quot;c&quot;)?, Some(&quot;b&quot;));
-    /// assert_eq!(map[&amp;37], &quot;c&quot;);
+    /// map.try_insert(37, "b")?;
+    /// assert_eq!(map.try_insert(37, "c")?, Some("b"));
+    /// assert_eq!(map[&amp;37], "c");
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>try_insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: K, value: V) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;V&gt;, AllocError&gt;
@@ -4954,12 +4954,12 @@
     /// use rune::alloc::error::CustomError;
     ///
     /// let mut map = BTreeMap::new();
-    /// assert_eq!(map.try_insert_or(37, &quot;a&quot;).unwrap(), &amp;&quot;a&quot;);
+    /// assert_eq!(map.try_insert_or(37, "a").unwrap(), &amp;"a");
     ///
-    /// if let CustomError::Custom(err) = map.try_insert_or(37, &quot;b&quot;).unwrap_err() {
+    /// if let CustomError::Custom(err) = map.try_insert_or(37, "b").unwrap_err() {
     ///     assert_eq!(err.entry.key(), &amp;37);
-    ///     assert_eq!(err.entry.get(), &amp;&quot;a&quot;);
-    ///     assert_eq!(err.value, &quot;b&quot;);
+    ///     assert_eq!(err.entry.get(), &amp;"a");
+    ///     assert_eq!(err.value, "b");
     /// }
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
@@ -4967,7 +4967,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         key: K,
         value: V,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>V, CustomError&lt;OccupiedError&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt;&gt;&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>V, CustomError&lt;OccupiedError&lt;<span class="lifetime">'_</span>, K, V, A&gt;&gt;&gt;
     <span class="kw">where
         </span>K: Ord,
     {
@@ -4982,7 +4982,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         key: K,
         value: V,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>V, OccupiedError&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt;&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>V, OccupiedError&lt;<span class="lifetime">'_</span>, K, V, A&gt;&gt;
     <span class="kw">where
         </span>K: Ord,
     {
@@ -4992,7 +4992,7 @@
     <span class="doccomment">/// Removes a key from the map, returning the value at the key if the key
     /// was previously in the map.
     ///
-    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// The key may be any borrowed form of the map's key type, but the ordering
     /// on the borrowed form *must* match the ordering on the key type.
     ///
     /// # Examples
@@ -5003,8 +5003,8 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(1, &quot;a&quot;)?;
-    /// assert_eq!(map.remove(&amp;1), Some(&quot;a&quot;));
+    /// map.try_insert(1, "a")?;
+    /// assert_eq!(map.remove(&amp;1), Some("a"));
     /// assert_eq!(map.remove(&amp;1), None);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
@@ -5019,7 +5019,7 @@
     <span class="doccomment">/// Removes a key from the map, returning the stored key and value if the key
     /// was previously in the map.
     ///
-    /// The key may be any borrowed form of the map&#39;s key type, but the ordering
+    /// The key may be any borrowed form of the map's key type, but the ordering
     /// on the borrowed form *must* match the ordering on the key type.
     ///
     /// # Examples
@@ -5030,8 +5030,8 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(1, &quot;a&quot;)?;
-    /// assert_eq!(map.remove_entry(&amp;1), Some((1, &quot;a&quot;)));
+    /// map.try_insert(1, "a")?;
+    /// assert_eq!(map.remove_entry(&amp;1), Some((1, "a")));
     /// assert_eq!(map.remove_entry(&amp;1), None);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
@@ -5110,25 +5110,25 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(1, &quot;a&quot;)?;
-    /// a.try_insert(2, &quot;b&quot;)?;
-    /// a.try_insert(3, &quot;c&quot;)?; // Note: Key (3) also present in b.
+    /// a.try_insert(1, "a")?;
+    /// a.try_insert(2, "b")?;
+    /// a.try_insert(3, "c")?; // Note: Key (3) also present in b.
     ///
     /// let mut b = BTreeMap::new();
-    /// b.try_insert(3, &quot;d&quot;)?; // Note: Key (3) also present in a.
-    /// b.try_insert(4, &quot;e&quot;)?;
-    /// b.try_insert(5, &quot;f&quot;)?;
+    /// b.try_insert(3, "d")?; // Note: Key (3) also present in a.
+    /// b.try_insert(4, "e")?;
+    /// b.try_insert(5, "f")?;
     ///
     /// a.try_append(&amp;mut b);
     ///
     /// assert_eq!(a.len(), 5);
     /// assert_eq!(b.len(), 0);
     ///
-    /// assert_eq!(a[&amp;1], &quot;a&quot;);
-    /// assert_eq!(a[&amp;2], &quot;b&quot;);
-    /// assert_eq!(a[&amp;3], &quot;d&quot;); // Note: &quot;c&quot; has been overwritten.
-    /// assert_eq!(a[&amp;4], &quot;e&quot;);
-    /// assert_eq!(a[&amp;5], &quot;f&quot;);
+    /// assert_eq!(a[&amp;1], "a");
+    /// assert_eq!(a[&amp;2], "b");
+    /// assert_eq!(a[&amp;3], "d"); // Note: "c" has been overwritten.
+    /// assert_eq!(a[&amp;4], "e");
+    /// assert_eq!(a[&amp;5], "f");
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>try_append(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), AllocError&gt;
@@ -5186,18 +5186,18 @@
     /// use core::ops::Bound::Included;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(3, &quot;a&quot;)?;
-    /// map.try_insert(5, &quot;b&quot;)?;
-    /// map.try_insert(8, &quot;c&quot;)?;
+    /// map.try_insert(3, "a")?;
+    /// map.try_insert(5, "b")?;
+    /// map.try_insert(8, "c")?;
     ///
     /// for (&amp;key, &amp;value) in map.range((Included(&amp;4), Included(&amp;8))) {
-    ///     println!(&quot;{key}: {value}&quot;);
+    ///     println!("{key}: {value}");
     /// }
     ///
-    /// assert_eq!(Some((&amp;5, &amp;&quot;b&quot;)), map.range(4..).next());
+    /// assert_eq!(Some((&amp;5, &amp;"b")), map.range(4..).next());
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>range&lt;Q: <span class="question-mark">?</span>Sized, R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; Range&lt;<span class="lifetime">&#39;_</span>, K, V&gt;
+    </span><span class="kw">pub fn </span>range&lt;Q: <span class="question-mark">?</span>Sized, R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; Range&lt;<span class="lifetime">'_</span>, K, V&gt;
     <span class="kw">where
         </span>Q: Ord,
         K: Borrow&lt;Q&gt; + Ord,
@@ -5211,7 +5211,7 @@
         cx: <span class="kw-2">&amp;mut </span>C,
         range: R,
         cmp: CmpFn&lt;C, Q, E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Range&lt;<span class="lifetime">&#39;_</span>, K, V&gt;, E&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Range&lt;<span class="lifetime">'_</span>, K, V&gt;, E&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt;,
         R: RangeBounds&lt;Q&gt;,
@@ -5247,18 +5247,18 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map: BTreeMap&lt;&amp;str, i32&gt; =
-    ///     [(&quot;Alice&quot;, 0), (&quot;Bob&quot;, 0), (&quot;Carol&quot;, 0), (&quot;Cheryl&quot;, 0)].try_into()?;
+    ///     [("Alice", 0), ("Bob", 0), ("Carol", 0), ("Cheryl", 0)].try_into()?;
     ///
-    /// for (_, balance) in map.range_mut(&quot;B&quot;..&quot;Cheryl&quot;) {
+    /// for (_, balance) in map.range_mut("B".."Cheryl") {
     ///     *balance += 100;
     /// }
     ///
     /// for (name, balance) in &amp;map {
-    ///     println!(&quot;{name} =&gt; {balance}&quot;);
+    ///     println!("{name} =&gt; {balance}");
     /// }
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>range_mut&lt;Q: <span class="question-mark">?</span>Sized, R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: R) -&gt; RangeMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt;
+    </span><span class="kw">pub fn </span>range_mut&lt;Q: <span class="question-mark">?</span>Sized, R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: R) -&gt; RangeMut&lt;<span class="lifetime">'_</span>, K, V&gt;
     <span class="kw">where
         </span>Q: Ord,
         K: Borrow&lt;Q&gt; + Ord,
@@ -5272,7 +5272,7 @@
         cx: <span class="kw-2">&amp;mut </span>C,
         range: R,
         cmp: CmpFn&lt;C, Q, E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;RangeMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt;, E&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;RangeMut&lt;<span class="lifetime">'_</span>, K, V&gt;, E&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt;,
         R: RangeBounds&lt;Q&gt;,
@@ -5290,7 +5290,7 @@
         })
     }
 
-    <span class="doccomment">/// Gets the given key&#39;s corresponding entry in the map for in-place
+    <span class="doccomment">/// Gets the given key's corresponding entry in the map for in-place
     /// manipulation.
     ///
     /// # Examples
@@ -5303,16 +5303,16 @@
     /// let mut count: BTreeMap&lt;&amp;str, usize&gt; = BTreeMap::new();
     ///
     /// // count the number of occurrences of letters in the vec
-    /// for x in [&quot;a&quot;, &quot;b&quot;, &quot;a&quot;, &quot;c&quot;, &quot;a&quot;, &quot;b&quot;] {
+    /// for x in ["a", "b", "a", "c", "a", "b"] {
     ///     count.entry(x).and_modify(|curr| *curr += 1).or_try_insert(1)?;
     /// }
     ///
-    /// assert_eq!(count[&quot;a&quot;], 3);
-    /// assert_eq!(count[&quot;b&quot;], 2);
-    /// assert_eq!(count[&quot;c&quot;], 1);
+    /// assert_eq!(count["a"], 3);
+    /// assert_eq!(count["b"], 2);
+    /// assert_eq!(count["c"], 1);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>entry(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: K) -&gt; Entry&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt;
+    </span><span class="kw">pub fn </span>entry(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: K) -&gt; Entry&lt;<span class="lifetime">'_</span>, K, V, A&gt;
     <span class="kw">where
         </span>K: Ord,
     {
@@ -5324,7 +5324,7 @@
         cx: <span class="kw-2">&amp;mut </span>C,
         key: K,
         cmp: CmpFn&lt;C, K, E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Entry&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt;, E&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Entry&lt;<span class="lifetime">'_</span>, K, V, A&gt;, E&gt; {
         <span class="kw">let </span>(map, dormant_map) = DormantMutRef::new(<span class="self">self</span>);
 
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>map.root {
@@ -5365,23 +5365,23 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(1, &quot;a&quot;)?;
-    /// a.try_insert(2, &quot;b&quot;)?;
-    /// a.try_insert(3, &quot;c&quot;)?;
-    /// a.try_insert(17, &quot;d&quot;)?;
-    /// a.try_insert(41, &quot;e&quot;)?;
+    /// a.try_insert(1, "a")?;
+    /// a.try_insert(2, "b")?;
+    /// a.try_insert(3, "c")?;
+    /// a.try_insert(17, "d")?;
+    /// a.try_insert(41, "e")?;
     ///
     /// let b = a.try_split_off(&amp;3)?;
     ///
     /// assert_eq!(a.len(), 2);
     /// assert_eq!(b.len(), 3);
     ///
-    /// assert_eq!(a[&amp;1], &quot;a&quot;);
-    /// assert_eq!(a[&amp;2], &quot;b&quot;);
+    /// assert_eq!(a[&amp;1], "a");
+    /// assert_eq!(a[&amp;2], "b");
     ///
-    /// assert_eq!(b[&amp;3], &quot;c&quot;);
-    /// assert_eq!(b[&amp;17], &quot;d&quot;);
-    /// assert_eq!(b[&amp;41], &quot;e&quot;);
+    /// assert_eq!(b[&amp;3], "c");
+    /// assert_eq!(b[&amp;17], "d");
+    /// assert_eq!(b[&amp;41], "e");
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>try_split_off&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt;
@@ -5466,7 +5466,7 @@
     /// assert_eq!(odds.keys().copied().try_collect::&lt;Vec&lt;_&gt;&gt;()?, [1, 3, 5, 7]);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>extract_if&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pred: F) -&gt; ExtractIf&lt;<span class="lifetime">&#39;_</span>, K, V, F, A&gt;
+    </span><span class="kw">pub fn </span>extract_if&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pred: F) -&gt; ExtractIf&lt;<span class="lifetime">'_</span>, K, V, F, A&gt;
     <span class="kw">where
         </span>F: FnMut(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;mut </span>V) -&gt; bool,
     {
@@ -5474,7 +5474,7 @@
         ExtractIf { pred, inner, alloc }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>extract_if_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (ExtractIfInner&lt;<span class="lifetime">&#39;_</span>, K, V&gt;, <span class="kw-2">&amp;</span>A) {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>extract_if_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; (ExtractIfInner&lt;<span class="lifetime">'_</span>, K, V&gt;, <span class="kw-2">&amp;</span>A) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(root) = <span class="self">self</span>.root.as_mut() {
             <span class="kw">let </span>(root, dormant_root) = DormantMutRef::new(root);
             <span class="kw">let </span>front = root.borrow_mut().first_leaf_edge();
@@ -5508,8 +5508,8 @@
     /// use rune::alloc::prelude::*;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(2, &quot;b&quot;)?;
-    /// a.try_insert(1, &quot;a&quot;)?;
+    /// a.try_insert(2, "b")?;
+    /// a.try_insert(1, "a")?;
     ///
     /// let keys: Vec&lt;i32&gt; = a.into_keys().try_collect()?;
     /// assert_eq!(keys, [1, 2]);
@@ -5533,11 +5533,11 @@
     /// use rune::alloc::prelude::*;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(1, &quot;hello&quot;);
-    /// a.try_insert(2, &quot;goodbye&quot;);
+    /// a.try_insert(1, "hello");
+    /// a.try_insert(2, "goodbye");
     ///
     /// let values: Vec&lt;&amp;str&gt; = a.into_values().try_collect()?;
-    /// assert_eq!(values, [&quot;hello&quot;, &quot;goodbye&quot;]);
+    /// assert_eq!(values, ["hello", "goodbye"]);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="attr">#[inline]
@@ -5548,19 +5548,19 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V, A: Allocator&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BTreeMap&lt;K, V, A&gt; {
-    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V);
-    <span class="kw">type </span>IntoIter = Iter&lt;<span class="lifetime">&#39;a</span>, K, V&gt;;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V, A: Allocator&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span>BTreeMap&lt;K, V, A&gt; {
+    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V);
+    <span class="kw">type </span>IntoIter = Iter&lt;<span class="lifetime">'a</span>, K, V&gt;;
 
-    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">'a</span>, K, V&gt; {
         <span class="self">self</span>.iter()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V);
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; Iterator <span class="kw">for </span>Iter&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V);
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt; {
         <span class="kw">if </span><span class="self">self</span>.length == <span class="number">0 </span>{
             <span class="prelude-val">None
         </span>} <span class="kw">else </span>{
@@ -5573,29 +5573,29 @@
         (<span class="self">self</span>.length, <span class="prelude-val">Some</span>(<span class="self">self</span>.length))
     }
 
-    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt; {
+    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt; {
         <span class="self">self</span>.next_back()
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt;
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt;
     <span class="kw">where
-        </span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V): Ord,
+        </span>(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V): Ord,
     {
         <span class="self">self</span>.next()
     }
 
-    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt;
+    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt;
     <span class="kw">where
-        </span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V): Ord,
+        </span>(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V): Ord,
     {
         <span class="self">self</span>.next_back()
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {}
+<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">'_</span>, K, V&gt; {}
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; DoubleEndedIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; DoubleEndedIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt; {
         <span class="kw">if </span><span class="self">self</span>.length == <span class="number">0 </span>{
             <span class="prelude-val">None
         </span>} <span class="kw">else </span>{
@@ -5605,13 +5605,13 @@
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; ExactSizeIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; ExactSizeIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.length
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>Iter&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         Iter {
             range: <span class="self">self</span>.range.clone(),
@@ -5620,19 +5620,19 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V, A: Allocator&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>BTreeMap&lt;K, V, A&gt; {
-    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V);
-    <span class="kw">type </span>IntoIter = IterMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt;;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V, A: Allocator&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>BTreeMap&lt;K, V, A&gt; {
+    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V);
+    <span class="kw">type </span>IntoIter = IterMut&lt;<span class="lifetime">'a</span>, K, V&gt;;
 
-    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; IterMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; IterMut&lt;<span class="lifetime">'a</span>, K, V&gt; {
         <span class="self">self</span>.iter_mut()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Iterator <span class="kw">for </span>IterMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V);
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; Iterator <span class="kw">for </span>IterMut&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V);
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V)&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V)&gt; {
         <span class="kw">if </span><span class="self">self</span>.length == <span class="number">0 </span>{
             <span class="prelude-val">None
         </span>} <span class="kw">else </span>{
@@ -5645,27 +5645,27 @@
         (<span class="self">self</span>.length, <span class="prelude-val">Some</span>(<span class="self">self</span>.length))
     }
 
-    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V)&gt; {
+    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V)&gt; {
         <span class="self">self</span>.next_back()
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V)&gt;
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V)&gt;
     <span class="kw">where
-        </span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V): Ord,
+        </span>(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V): Ord,
     {
         <span class="self">self</span>.next()
     }
 
-    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V)&gt;
+    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V)&gt;
     <span class="kw">where
-        </span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V): Ord,
+        </span>(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V): Ord,
     {
         <span class="self">self</span>.next_back()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>IterMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V)&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>IterMut&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V)&gt; {
         <span class="kw">if </span><span class="self">self</span>.length == <span class="number">0 </span>{
             <span class="prelude-val">None
         </span>} <span class="kw">else </span>{
@@ -5675,18 +5675,18 @@
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; ExactSizeIterator <span class="kw">for </span>IterMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; ExactSizeIterator <span class="kw">for </span>IterMut&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.length
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>IterMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {}
+<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>IterMut&lt;<span class="lifetime">'_</span>, K, V&gt; {}
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; IterMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; IterMut&lt;<span class="lifetime">'a</span>, K, V&gt; {
     <span class="doccomment">/// Returns an iterator of references over the remaining items.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">'_</span>, K, V&gt; {
         Iter {
             range: <span class="self">self</span>.range.reborrow(),
             length: <span class="self">self</span>.length,
@@ -5720,12 +5720,12 @@
 
 <span class="kw">impl</span>&lt;K, V, A: Allocator&gt; Drop <span class="kw">for </span>IntoIter&lt;K, V, A&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">struct </span>DropGuard&lt;<span class="lifetime">&#39;a</span>, K, V, A: Allocator&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>IntoIter&lt;K, V, A&gt;);
+        <span class="kw">struct </span>DropGuard&lt;<span class="lifetime">'a</span>, K, V, A: Allocator&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>IntoIter&lt;K, V, A&gt;);
 
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V, A: Allocator&gt; Drop <span class="kw">for </span>DropGuard&lt;<span class="lifetime">&#39;a</span>, K, V, A&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V, A: Allocator&gt; Drop <span class="kw">for </span>DropGuard&lt;<span class="lifetime">'a</span>, K, V, A&gt; {
             <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
                 <span class="comment">// Continue the same loop we perform below. This only runs when unwinding, so we
-                // don&#39;t have to care about panics this time (they&#39;ll abort).
+                // don't have to care about panics this time (they'll abort).
                 </span><span class="kw">while let </span><span class="prelude-val">Some</span>(kv) = <span class="self">self</span>.<span class="number">0</span>.dying_next() {
                     <span class="comment">// SAFETY: we consume the dying handle immediately.
                     </span><span class="kw">unsafe </span>{ kv.drop_key_val() };
@@ -5735,7 +5735,7 @@
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>(kv) = <span class="self">self</span>.dying_next() {
             <span class="kw">let </span>guard = DropGuard(<span class="self">self</span>);
-            <span class="comment">// SAFETY: we don&#39;t touch the tree before consuming the dying handle.
+            <span class="comment">// SAFETY: we don't touch the tree before consuming the dying handle.
             </span><span class="kw">unsafe </span>{ kv.drop_key_val() };
             mem::forget(guard);
         }
@@ -5801,10 +5801,10 @@
 
 <span class="kw">impl</span>&lt;K, V, A: Allocator&gt; FusedIterator <span class="kw">for </span>IntoIter&lt;K, V, A&gt; {}
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Iterator <span class="kw">for </span>Keys&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; Iterator <span class="kw">for </span>Keys&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>K;
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K&gt; {
         <span class="self">self</span>.inner.next().map(|(k, <span class="kw">_</span>)| k)
     }
 
@@ -5812,40 +5812,40 @@
         <span class="self">self</span>.inner.size_hint()
     }
 
-    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K&gt; {
+    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K&gt; {
         <span class="self">self</span>.next_back()
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K&gt;
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K&gt;
     <span class="kw">where
-        </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K: Ord,
+        </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span>K: Ord,
     {
         <span class="self">self</span>.next()
     }
 
-    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K&gt;
+    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K&gt;
     <span class="kw">where
-        </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K: Ord,
+        </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span>K: Ord,
     {
         <span class="self">self</span>.next_back()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>Keys&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>Keys&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K&gt; {
         <span class="self">self</span>.inner.next_back().map(|(k, <span class="kw">_</span>)| k)
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; ExactSizeIterator <span class="kw">for </span>Keys&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; ExactSizeIterator <span class="kw">for </span>Keys&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.inner.len()
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>Keys&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {}
+<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>Keys&lt;<span class="lifetime">'_</span>, K, V&gt; {}
 
-<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>Keys&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>Keys&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         Keys {
             inner: <span class="self">self</span>.inner.clone(),
@@ -5853,13 +5853,13 @@
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; Default <span class="kw">for </span>Keys&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; Default <span class="kw">for </span>Keys&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="doccomment">/// Creates an empty `btree_map::Keys`.
     ///
     /// ```
     /// use rune::alloc::btree_map;
     ///
-    /// let iter: btree_map::Keys&lt;&#39;_, u8, u8&gt; = Default::default();
+    /// let iter: btree_map::Keys&lt;'_, u8, u8&gt; = Default::default();
     /// assert_eq!(iter.len(), 0);
     /// ```
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
@@ -5869,10 +5869,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Iterator <span class="kw">for </span>Values&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; Iterator <span class="kw">for </span>Values&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V;
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>V&gt; {
         <span class="self">self</span>.inner.next().map(|(<span class="kw">_</span>, v)| v)
     }
 
@@ -5880,26 +5880,26 @@
         <span class="self">self</span>.inner.size_hint()
     }
 
-    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V&gt; {
+    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>V&gt; {
         <span class="self">self</span>.next_back()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>Values&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>Values&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>V&gt; {
         <span class="self">self</span>.inner.next_back().map(|(<span class="kw">_</span>, v)| v)
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; ExactSizeIterator <span class="kw">for </span>Values&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; ExactSizeIterator <span class="kw">for </span>Values&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.inner.len()
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>Values&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {}
+<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>Values&lt;<span class="lifetime">'_</span>, K, V&gt; {}
 
-<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>Values&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>Values&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         Values {
             inner: <span class="self">self</span>.inner.clone(),
@@ -5907,13 +5907,13 @@
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; Default <span class="kw">for </span>Values&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; Default <span class="kw">for </span>Values&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="doccomment">/// Creates an empty `btree_map::Values`.
     ///
     /// ```
     /// use rune::alloc::btree_map;
     ///
-    /// let iter: btree_map::Values&lt;&#39;_, u8, u8&gt; = Default::default();
+    /// let iter: btree_map::Values&lt;'_, u8, u8&gt; = Default::default();
     /// assert_eq!(iter.len(), 0);
     /// ```
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
@@ -5924,45 +5924,45 @@
 }
 
 <span class="doccomment">/// An iterator produced by calling `extract_if` on BTreeMap.
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
-</span><span class="kw">pub struct </span>ExtractIf&lt;<span class="lifetime">&#39;a</span>, K, V, F, A: Allocator = Global&gt;
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
+</span><span class="kw">pub struct </span>ExtractIf&lt;<span class="lifetime">'a</span>, K, V, F, A: Allocator = Global&gt;
 <span class="kw">where
-    </span>F: <span class="lifetime">&#39;a </span>+ FnMut(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;mut </span>V) -&gt; bool,
+    </span>F: <span class="lifetime">'a </span>+ FnMut(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;mut </span>V) -&gt; bool,
 {
     pred: F,
-    inner: ExtractIfInner&lt;<span class="lifetime">&#39;a</span>, K, V&gt;,
-    <span class="doccomment">/// The BTreeMap will outlive this IntoIter so we don&#39;t care about drop order for `alloc`.
-    </span>alloc: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A,
+    inner: ExtractIfInner&lt;<span class="lifetime">'a</span>, K, V&gt;,
+    <span class="doccomment">/// The BTreeMap will outlive this IntoIter so we don't care about drop order for `alloc`.
+    </span>alloc: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A,
 }
 
 <span class="doccomment">/// Most of the implementation of ExtractIf are generic over the type
 /// of the predicate, thus also serving for BTreeSet::ExtractIf.
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>ExtractIfInner&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>ExtractIfInner&lt;<span class="lifetime">'a</span>, K, V&gt; {
     <span class="doccomment">/// Reference to the length field in the borrowed map, updated live.
-    </span>length: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>usize,
+    </span>length: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>usize,
     <span class="doccomment">/// Buried reference to the root field in the borrowed map.
     /// Wrapped in `Option` to allow drop handler to `take` it.
-    </span>dormant_root: <span class="prelude-ty">Option</span>&lt;DormantMutRef&lt;<span class="lifetime">&#39;a</span>, Root&lt;K, V&gt;&gt;&gt;,
+    </span>dormant_root: <span class="prelude-ty">Option</span>&lt;DormantMutRef&lt;<span class="lifetime">'a</span>, Root&lt;K, V&gt;&gt;&gt;,
     <span class="doccomment">/// Contains a leaf edge preceding the next element to be returned, or the last leaf edge.
     /// Empty if the map has no root, if iteration went beyond the last leaf edge,
     /// or if a panic occurred in the predicate.
-    </span>cur_leaf_edge: <span class="prelude-ty">Option</span>&lt;Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::Leaf&gt;, marker::Edge&gt;&gt;,
+    </span>cur_leaf_edge: <span class="prelude-ty">Option</span>&lt;Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::Leaf&gt;, marker::Edge&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;K, V, F&gt; fmt::Debug <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">&#39;_</span>, K, V, F&gt;
+<span class="kw">impl</span>&lt;K, V, F&gt; fmt::Debug <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">'_</span>, K, V, F&gt;
 <span class="kw">where
     </span>K: fmt::Debug,
     V: fmt::Debug,
     F: FnMut(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;mut </span>V) -&gt; bool,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;ExtractIf&quot;</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"ExtractIf"</span>)
             .field(<span class="kw-2">&amp;</span><span class="self">self</span>.inner.peek())
             .finish()
     }
 }
 
-<span class="kw">impl</span>&lt;K, V, F, A: Allocator&gt; Iterator <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">&#39;_</span>, K, V, F, A&gt;
+<span class="kw">impl</span>&lt;K, V, F, A: Allocator&gt; Iterator <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">'_</span>, K, V, F, A&gt;
 <span class="kw">where
     </span>F: FnMut(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;mut </span>V) -&gt; bool,
 {
@@ -5977,7 +5977,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; ExtractIfInner&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; ExtractIfInner&lt;<span class="lifetime">'a</span>, K, V&gt; {
     <span class="doccomment">/// Allow Debug implementations to predict the next element.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>peek(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;</span>V)&gt; {
         <span class="kw">let </span>edge = <span class="self">self</span>.cur_leaf_edge.as_ref()<span class="question-mark">?</span>;
@@ -6021,41 +6021,41 @@
     }
 }
 
-<span class="kw">impl</span>&lt;K, V, F&gt; FusedIterator <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">&#39;_</span>, K, V, F&gt; <span class="kw">where </span>F: FnMut(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;mut </span>V) -&gt; bool {}
+<span class="kw">impl</span>&lt;K, V, F&gt; FusedIterator <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">'_</span>, K, V, F&gt; <span class="kw">where </span>F: FnMut(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;mut </span>V) -&gt; bool {}
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Iterator <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V);
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; Iterator <span class="kw">for </span>Range&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V);
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt; {
         <span class="self">self</span>.inner.next_checked()
     }
 
-    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt; {
+    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt; {
         <span class="self">self</span>.next_back()
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt;
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt;
     <span class="kw">where
-        </span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V): Ord,
+        </span>(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V): Ord,
     {
         <span class="self">self</span>.next()
     }
 
-    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt;
+    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt;
     <span class="kw">where
-        </span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V): Ord,
+        </span>(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V): Ord,
     {
         <span class="self">self</span>.next_back()
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; Default <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; Default <span class="kw">for </span>Range&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="doccomment">/// Creates an empty [`Range`].
     ///
     /// ```
     /// use rune::alloc::btree_map;
     ///
-    /// let iter: btree_map::Range&lt;&#39;_, u8, u8&gt; = Default::default();
+    /// let iter: btree_map::Range&lt;'_, u8, u8&gt; = Default::default();
     /// assert_eq!(iter.count(), 0);
     /// ```
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
@@ -6065,10 +6065,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Iterator <span class="kw">for </span>ValuesMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; Iterator <span class="kw">for </span>ValuesMut&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V;
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V&gt; {
         <span class="self">self</span>.inner.next().map(|(<span class="kw">_</span>, v)| v)
     }
 
@@ -6076,24 +6076,24 @@
         <span class="self">self</span>.inner.size_hint()
     }
 
-    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V&gt; {
+    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V&gt; {
         <span class="self">self</span>.next_back()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>ValuesMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>ValuesMut&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V&gt; {
         <span class="self">self</span>.inner.next_back().map(|(<span class="kw">_</span>, v)| v)
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; ExactSizeIterator <span class="kw">for </span>ValuesMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; ExactSizeIterator <span class="kw">for </span>ValuesMut&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.inner.len()
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>ValuesMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {}
+<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>ValuesMut&lt;<span class="lifetime">'_</span>, K, V&gt; {}
 
 <span class="kw">impl</span>&lt;K, V, A: Allocator&gt; Iterator <span class="kw">for </span>IntoKeys&lt;K, V, A&gt; {
     <span class="kw">type </span>Item = K;
@@ -6207,15 +6207,15 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>Range&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt; {
         <span class="self">self</span>.inner.next_back_checked()
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {}
+<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>Range&lt;<span class="lifetime">'_</span>, K, V&gt; {}
 
-<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>Range&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         Range {
             inner: <span class="self">self</span>.inner.clone(),
@@ -6223,39 +6223,39 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Iterator <span class="kw">for </span>RangeMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V);
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; Iterator <span class="kw">for </span>RangeMut&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V);
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V)&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V)&gt; {
         <span class="self">self</span>.inner.next_checked()
     }
 
-    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V)&gt; {
+    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V)&gt; {
         <span class="self">self</span>.next_back()
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V)&gt;
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V)&gt;
     <span class="kw">where
-        </span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V): Ord,
+        </span>(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V): Ord,
     {
         <span class="self">self</span>.next()
     }
 
-    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V)&gt;
+    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V)&gt;
     <span class="kw">where
-        </span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V): Ord,
+        </span>(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V): Ord,
     {
         <span class="self">self</span>.next_back()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>RangeMut&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
-    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>V)&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; DoubleEndedIterator <span class="kw">for </span>RangeMut&lt;<span class="lifetime">'a</span>, K, V&gt; {
+    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>V)&gt; {
         <span class="self">self</span>.inner.next_back_checked()
     }
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>RangeMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {}
+<span class="kw">impl</span>&lt;K, V&gt; FusedIterator <span class="kw">for </span>RangeMut&lt;<span class="lifetime">'_</span>, K, V&gt; {}
 
 <span class="kw">impl</span>&lt;K: Ord, V, A: Allocator + Clone&gt; TryExtend&lt;(K, V)&gt; <span class="kw">for </span>BTreeMap&lt;K, V, A&gt; {
     <span class="attr">#[inline]
@@ -6276,19 +6276,19 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: Ord + Copy, V: Copy, A: Allocator + Clone&gt; TryExtend&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: Ord + Copy, V: Copy, A: Allocator + Clone&gt; TryExtend&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt;
     <span class="kw">for </span>BTreeMap&lt;K, V, A&gt;
 {
-    <span class="kw">fn </span>try_extend&lt;I: IntoIterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    <span class="kw">fn </span>try_extend&lt;I: IntoIterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="self">self</span>.try_extend(iter.into_iter().map(|(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>value)| (key, value)))
     }
 }
 
 <span class="attr">#[cfg(test)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: Ord + Copy, V: Copy, A: Allocator + Clone&gt; Extend&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt;
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: Ord + Copy, V: Copy, A: Allocator + Clone&gt; Extend&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt;
     <span class="kw">for </span>BTreeMap&lt;K, V, A&gt;
 {
-    <span class="kw">fn </span>extend&lt;I: IntoIterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) {
+    <span class="kw">fn </span>extend&lt;I: IntoIterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) {
         <span class="self">self</span>.try_extend(iter).abort();
     }
 }
@@ -6332,7 +6332,7 @@
 }
 
 <span class="kw">impl</span>&lt;K: Debug, V: Debug, A: Allocator&gt; Debug <span class="kw">for </span>BTreeMap&lt;K, V, A&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_map().entries(<span class="self">self</span>.iter()).finish()
     }
 }
@@ -6351,7 +6351,7 @@
     /// Panics if the key is not present in the `BTreeMap`.
     </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="kw-2">&amp;</span>V {
-        <span class="self">self</span>.get(key).expect(<span class="string">&quot;no entry found for key&quot;</span>)
+        <span class="self">self</span>.get(key).expect(<span class="string">"no entry found for key"</span>)
     }
 }
 
@@ -6366,19 +6366,19 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::new();
-    /// map.try_insert(3, &quot;c&quot;)?;
-    /// map.try_insert(2, &quot;b&quot;)?;
-    /// map.try_insert(1, &quot;a&quot;)?;
+    /// map.try_insert(3, "c")?;
+    /// map.try_insert(2, "b")?;
+    /// map.try_insert(1, "a")?;
     ///
     /// for (key, value) in map.iter() {
-    ///     println!(&quot;{key}: {value}&quot;);
+    ///     println!("{key}: {value}");
     /// }
     ///
     /// let (first_key, first_value) = map.iter().next().unwrap();
-    /// assert_eq!((*first_key, *first_value), (1, &quot;a&quot;));
+    /// assert_eq!((*first_key, *first_value), (1, "a"));
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">'_</span>, K, V&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(root) = <span class="kw-2">&amp;</span><span class="self">self</span>.root {
             <span class="kw">let </span>full_range = root.reborrow().full_range();
 
@@ -6398,7 +6398,7 @@
     ///
     /// # Safety
     ///
-    /// Caller must ensure that the returned iterator doesn&#39;t outlive `self`.
+    /// Caller must ensure that the returned iterator doesn't outlive `self`.
     </span><span class="kw">pub unsafe fn </span>iter_raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; IterRaw&lt;K, V&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(root) = <span class="kw-2">&amp;</span><span class="self">self</span>.root {
             <span class="kw">let </span>full_range = root.raw().full_range();
@@ -6425,20 +6425,20 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut map = BTreeMap::try_from([
-    ///    (&quot;a&quot;, 1),
-    ///    (&quot;b&quot;, 2),
-    ///    (&quot;c&quot;, 3),
+    ///    ("a", 1),
+    ///    ("b", 2),
+    ///    ("c", 3),
     /// ])?;
     ///
-    /// // add 10 to the value if the key isn&#39;t &quot;a&quot;
+    /// // add 10 to the value if the key isn't "a"
     /// for (key, value) in map.iter_mut() {
-    ///     if key != &amp;&quot;a&quot; {
+    ///     if key != &amp;"a" {
     ///         *value += 10;
     ///     }
     /// }
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>iter_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; IterMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    </span><span class="kw">pub fn </span>iter_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; IterMut&lt;<span class="lifetime">'_</span>, K, V&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(root) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.root {
             <span class="kw">let </span>full_range = root.borrow_valmut().full_range();
 
@@ -6466,14 +6466,14 @@
     /// use rune::alloc::BTreeMap;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(2, &quot;b&quot;)?;
-    /// a.try_insert(1, &quot;a&quot;)?;
+    /// a.try_insert(2, "b")?;
+    /// a.try_insert(1, "a")?;
     ///
     /// let keys: Vec&lt;_&gt; = a.keys().cloned().collect();
     /// assert_eq!(keys, [1, 2]);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>keys(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Keys&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    </span><span class="kw">pub fn </span>keys(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Keys&lt;<span class="lifetime">'_</span>, K, V&gt; {
         Keys { inner: <span class="self">self</span>.iter() }
     }
 
@@ -6488,14 +6488,14 @@
     /// use rune::alloc::prelude::*;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(1, &quot;hello&quot;)?;
-    /// a.try_insert(2, &quot;goodbye&quot;)?;
+    /// a.try_insert(1, "hello")?;
+    /// a.try_insert(2, "goodbye")?;
     ///
     /// let values: Vec&lt;&amp;str&gt; = a.values().copied().try_collect()?;
-    /// assert_eq!(values, [&quot;hello&quot;, &quot;goodbye&quot;]);
+    /// assert_eq!(values, ["hello", "goodbye"]);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>values(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Values&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    </span><span class="kw">pub fn </span>values(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Values&lt;<span class="lifetime">'_</span>, K, V&gt; {
         Values { inner: <span class="self">self</span>.iter() }
     }
 
@@ -6510,11 +6510,11 @@
     /// use rune::alloc::prelude::*;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(1, String::try_from(&quot;hello&quot;)?)?;
-    /// a.try_insert(2, String::try_from(&quot;goodbye&quot;)?)?;
+    /// a.try_insert(1, String::try_from("hello")?)?;
+    /// a.try_insert(2, String::try_from("goodbye")?)?;
     ///
     /// for value in a.values_mut() {
-    ///     value.try_push_str(&quot;!&quot;)?;
+    ///     value.try_push_str("!")?;
     /// }
     ///
     /// let mut values = Vec::new();
@@ -6523,11 +6523,11 @@
     ///     values.try_push(value.try_clone()?)?;
     /// }
     ///
-    /// assert_eq!(values, [String::try_from(&quot;hello!&quot;)?,
-    ///                     String::try_from(&quot;goodbye!&quot;)?]);
+    /// assert_eq!(values, [String::try_from("hello!")?,
+    ///                     String::try_from("goodbye!")?]);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>values_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ValuesMut&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    </span><span class="kw">pub fn </span>values_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ValuesMut&lt;<span class="lifetime">'_</span>, K, V&gt; {
         ValuesMut {
             inner: <span class="self">self</span>.iter_mut(),
         }
@@ -6544,7 +6544,7 @@
     ///
     /// let mut a = BTreeMap::new();
     /// assert_eq!(a.len(), 0);
-    /// a.try_insert(1, &quot;a&quot;)?;
+    /// a.try_insert(1, "a")?;
     /// assert_eq!(a.len(), 1);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
@@ -6564,7 +6564,7 @@
     ///
     /// let mut a = BTreeMap::new();
     /// assert!(a.is_empty());
-    /// a.try_insert(1, &quot;a&quot;)?;
+    /// a.try_insert(1, "a")?;
     /// assert!(!a.is_empty());
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
@@ -6576,7 +6576,7 @@
     <span class="doccomment">/// Returns a [`Cursor`] pointing at the first element that is above the
     /// given bound.
     ///
-    /// If no such element exists then a cursor pointing at the &quot;ghost&quot;
+    /// If no such element exists then a cursor pointing at the "ghost"
     /// non-element is returned.
     ///
     /// Passing [`Bound::Unbounded`] will return a cursor pointing at the first
@@ -6591,15 +6591,15 @@
     /// use std::ops::Bound;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(1, &quot;a&quot;)?;
-    /// a.try_insert(2, &quot;b&quot;)?;
-    /// a.try_insert(3, &quot;c&quot;)?;
-    /// a.try_insert(4, &quot;c&quot;)?;
+    /// a.try_insert(1, "a")?;
+    /// a.try_insert(2, "b")?;
+    /// a.try_insert(3, "c")?;
+    /// a.try_insert(4, "c")?;
     /// let cursor = a.lower_bound(Bound::Excluded(&amp;2));
     /// assert_eq!(cursor.key(), Some(&amp;3));
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>lower_bound&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, K, V&gt;
+    </span><span class="kw">pub fn </span>lower_bound&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; Cursor&lt;<span class="lifetime">'_</span>, K, V&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt; + Ord,
         Q: Ord,
@@ -6612,7 +6612,7 @@
         cx: <span class="kw-2">&amp;mut </span>C,
         bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;,
         cmp: CmpFn&lt;C, Q, E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor&lt;<span class="lifetime">&#39;_</span>, K, V&gt;, E&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor&lt;<span class="lifetime">'_</span>, K, V&gt;, E&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt;,
     {
@@ -6634,7 +6634,7 @@
     <span class="doccomment">/// Returns a [`CursorMut`] pointing at the first element that is above the
     /// given bound.
     ///
-    /// If no such element exists then a cursor pointing at the &quot;ghost&quot;
+    /// If no such element exists then a cursor pointing at the "ghost"
     /// non-element is returned.
     ///
     /// Passing [`Bound::Unbounded`] will return a cursor pointing at the first
@@ -6649,15 +6649,15 @@
     /// use std::ops::Bound;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(1, &quot;a&quot;)?;
-    /// a.try_insert(2, &quot;b&quot;)?;
-    /// a.try_insert(3, &quot;c&quot;)?;
-    /// a.try_insert(4, &quot;c&quot;)?;
+    /// a.try_insert(1, "a")?;
+    /// a.try_insert(2, "b")?;
+    /// a.try_insert(3, "c")?;
+    /// a.try_insert(4, "c")?;
     /// let cursor = a.lower_bound_mut(Bound::Excluded(&amp;2));
     /// assert_eq!(cursor.key(), Some(&amp;3));
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>lower_bound_mut&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt;
+    </span><span class="kw">pub fn </span>lower_bound_mut&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">'_</span>, K, V, A&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt; + Ord,
         Q: Ord,
@@ -6670,7 +6670,7 @@
         cx: <span class="kw-2">&amp;mut </span>C,
         bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;,
         cmp: CmpFn&lt;C, Q, E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;CursorMut&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt;, E&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;CursorMut&lt;<span class="lifetime">'_</span>, K, V, A&gt;, E&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt;,
     {
@@ -6698,7 +6698,7 @@
     <span class="doccomment">/// Returns a [`Cursor`] pointing at the last element that is below the
     /// given bound.
     ///
-    /// If no such element exists then a cursor pointing at the &quot;ghost&quot;
+    /// If no such element exists then a cursor pointing at the "ghost"
     /// non-element is returned.
     ///
     /// Passing [`Bound::Unbounded`] will return a cursor pointing at the last
@@ -6713,15 +6713,15 @@
     /// use std::ops::Bound;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(1, &quot;a&quot;)?;
-    /// a.try_insert(2, &quot;b&quot;)?;
-    /// a.try_insert(3, &quot;c&quot;)?;
-    /// a.try_insert(4, &quot;c&quot;)?;
+    /// a.try_insert(1, "a")?;
+    /// a.try_insert(2, "b")?;
+    /// a.try_insert(3, "c")?;
+    /// a.try_insert(4, "c")?;
     /// let cursor = a.upper_bound(Bound::Excluded(&amp;3));
     /// assert_eq!(cursor.key(), Some(&amp;2));
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>upper_bound&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, K, V&gt;
+    </span><span class="kw">pub fn </span>upper_bound&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; Cursor&lt;<span class="lifetime">'_</span>, K, V&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt; + Ord,
         Q: Ord,
@@ -6734,7 +6734,7 @@
         cx: <span class="kw-2">&amp;mut </span>C,
         bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;,
         cmp: CmpFn&lt;C, Q, E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor&lt;<span class="lifetime">&#39;_</span>, K, V&gt;, E&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Cursor&lt;<span class="lifetime">'_</span>, K, V&gt;, E&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt;,
     {
@@ -6756,7 +6756,7 @@
     <span class="doccomment">/// Returns a [`CursorMut`] pointing at the last element that is below the
     /// given bound.
     ///
-    /// If no such element exists then a cursor pointing at the &quot;ghost&quot;
+    /// If no such element exists then a cursor pointing at the "ghost"
     /// non-element is returned.
     ///
     /// Passing [`Bound::Unbounded`] will return a cursor pointing at the last
@@ -6771,15 +6771,15 @@
     /// use std::ops::Bound;
     ///
     /// let mut a = BTreeMap::new();
-    /// a.try_insert(1, &quot;a&quot;)?;
-    /// a.try_insert(2, &quot;b&quot;)?;
-    /// a.try_insert(3, &quot;c&quot;)?;
-    /// a.try_insert(4, &quot;c&quot;)?;
+    /// a.try_insert(1, "a")?;
+    /// a.try_insert(2, "b")?;
+    /// a.try_insert(3, "c")?;
+    /// a.try_insert(4, "c")?;
     /// let cursor = a.upper_bound_mut(Bound::Excluded(&amp;3));
     /// assert_eq!(cursor.key(), Some(&amp;2));
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>upper_bound_mut&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt;
+    </span><span class="kw">pub fn </span>upper_bound_mut&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">'_</span>, K, V, A&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt;,
         Q: Ord,
@@ -6792,7 +6792,7 @@
         cx: <span class="kw-2">&amp;mut </span>C,
         bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;,
         cmp: CmpFn&lt;C, Q, E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;CursorMut&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt;, E&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;CursorMut&lt;<span class="lifetime">'_</span>, K, V, A&gt;, E&gt;
     <span class="kw">where
         </span>K: Borrow&lt;Q&gt;,
     {
@@ -6823,25 +6823,25 @@
 /// A `Cursor` is like an iterator, except that it can freely seek back-and-forth.
 ///
 /// Cursors always point to an element in the tree, and index in a logically circular way.
-/// To accommodate this, there is a &quot;ghost&quot; non-element that yields `None` between the last and
+/// To accommodate this, there is a "ghost" non-element that yields `None` between the last and
 /// first elements of the tree.
 ///
 /// A `Cursor` is created with the [`BTreeMap::lower_bound`] and [`BTreeMap::upper_bound`] methods.
-</span><span class="kw">pub struct </span>Cursor&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>&gt; {
-    current: <span class="prelude-ty">Option</span>&lt;Handle&lt;NodeRef&lt;marker::Immut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::KV&gt;&gt;,
-    root: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>node::Root&lt;K, V&gt;&gt;,
+</span><span class="kw">pub struct </span>Cursor&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>&gt; {
+    current: <span class="prelude-ty">Option</span>&lt;Handle&lt;NodeRef&lt;marker::Immut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::KV&gt;&gt;,
+    root: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>node::Root&lt;K, V&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>Cursor&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;K, V&gt; Clone <span class="kw">for </span>Cursor&lt;<span class="lifetime">'_</span>, K, V&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>Cursor { current, root } = <span class="kw-2">*</span><span class="self">self</span>;
         Cursor { current, root }
     }
 }
 
-<span class="kw">impl</span>&lt;K: Debug, V: Debug&gt; Debug <span class="kw">for </span>Cursor&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;Cursor&quot;</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.key_value()).finish()
+<span class="kw">impl</span>&lt;K: Debug, V: Debug&gt; Debug <span class="kw">for </span>Cursor&lt;<span class="lifetime">'_</span>, K, V&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"Cursor"</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.key_value()).finish()
     }
 }
 
@@ -6853,30 +6853,30 @@
 /// cursors cannot yield multiple elements at once.
 ///
 /// Cursors always point to an element in the tree, and index in a logically circular way.
-/// To accommodate this, there is a &quot;ghost&quot; non-element that yields `None` between the last and
+/// To accommodate this, there is a "ghost" non-element that yields `None` between the last and
 /// first elements of the tree.
 ///
 /// A `Cursor` is created with the [`BTreeMap::lower_bound_mut`] and [`BTreeMap::upper_bound_mut`]
 /// methods.
-</span><span class="kw">pub struct </span>CursorMut&lt;<span class="lifetime">&#39;a</span>, K: <span class="lifetime">&#39;a</span>, V: <span class="lifetime">&#39;a</span>, A = Global&gt; {
-    current: <span class="prelude-ty">Option</span>&lt;Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">&#39;a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::KV&gt;&gt;,
-    root: DormantMutRef&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Option</span>&lt;node::Root&lt;K, V&gt;&gt;&gt;,
-    length: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>usize,
-    alloc: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>A,
+</span><span class="kw">pub struct </span>CursorMut&lt;<span class="lifetime">'a</span>, K: <span class="lifetime">'a</span>, V: <span class="lifetime">'a</span>, A = Global&gt; {
+    current: <span class="prelude-ty">Option</span>&lt;Handle&lt;NodeRef&lt;marker::Mut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;, marker::KV&gt;&gt;,
+    root: DormantMutRef&lt;<span class="lifetime">'a</span>, <span class="prelude-ty">Option</span>&lt;node::Root&lt;K, V&gt;&gt;&gt;,
+    length: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>usize,
+    alloc: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>A,
 }
 
-<span class="kw">impl</span>&lt;K: Debug, V: Debug, A&gt; Debug <span class="kw">for </span>CursorMut&lt;<span class="lifetime">&#39;_</span>, K, V, A&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;CursorMut&quot;</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.key_value()).finish()
+<span class="kw">impl</span>&lt;K: Debug, V: Debug, A&gt; Debug <span class="kw">for </span>CursorMut&lt;<span class="lifetime">'_</span>, K, V, A&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"CursorMut"</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.key_value()).finish()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, K, V&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V&gt; Cursor&lt;<span class="lifetime">'a</span>, K, V&gt; {
     <span class="doccomment">/// Moves the cursor to the next element of the `BTreeMap`.
     ///
-    /// If the cursor is pointing to the &quot;ghost&quot; non-element then this will move it to
+    /// If the cursor is pointing to the "ghost" non-element then this will move it to
     /// the first element of the `BTreeMap`. If it is pointing to the last
-    /// element of the `BTreeMap` then this will move it to the &quot;ghost&quot; non-element.
+    /// element of the `BTreeMap` then this will move it to the "ghost" non-element.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>move_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">match </span><span class="self">self</span>.current.take() {
             <span class="prelude-val">None </span>=&gt; {
@@ -6896,9 +6896,9 @@
 
     <span class="doccomment">/// Moves the cursor to the previous element of the `BTreeMap`.
     ///
-    /// If the cursor is pointing to the &quot;ghost&quot; non-element then this will move it to
+    /// If the cursor is pointing to the "ghost" non-element then this will move it to
     /// the last element of the `BTreeMap`. If it is pointing to the first
-    /// element of the `BTreeMap` then this will move it to the &quot;ghost&quot; non-element.
+    /// element of the `BTreeMap` then this will move it to the "ghost" non-element.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>move_prev(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">match </span><span class="self">self</span>.current.take() {
             <span class="prelude-val">None </span>=&gt; {
@@ -6919,36 +6919,36 @@
     <span class="doccomment">/// Returns a reference to the key of the element that the cursor is
     /// currently pointing to.
     ///
-    /// This returns `None` if the cursor is currently pointing to the &quot;ghost&quot;
+    /// This returns `None` if the cursor is currently pointing to the "ghost"
     /// non-element.
-    </span><span class="kw">pub fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K&gt; {
+    </span><span class="kw">pub fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K&gt; {
         <span class="self">self</span>.current.as_ref().map(|current| current.into_kv().<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Returns a reference to the value of the element that the cursor is
     /// currently pointing to.
     ///
-    /// This returns `None` if the cursor is currently pointing to the &quot;ghost&quot;
+    /// This returns `None` if the cursor is currently pointing to the "ghost"
     /// non-element.
-    </span><span class="kw">pub fn </span>value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V&gt; {
+    </span><span class="kw">pub fn </span>value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>V&gt; {
         <span class="self">self</span>.current.as_ref().map(|current| current.into_kv().<span class="number">1</span>)
     }
 
     <span class="doccomment">/// Returns a reference to the key and value of the element that the cursor
     /// is currently pointing to.
     ///
-    /// This returns `None` if the cursor is currently pointing to the &quot;ghost&quot;
+    /// This returns `None` if the cursor is currently pointing to the "ghost"
     /// non-element.
-    </span><span class="kw">pub fn </span>key_value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt; {
+    </span><span class="kw">pub fn </span>key_value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt; {
         <span class="self">self</span>.current.as_ref().map(|current| current.into_kv())
     }
 
     <span class="doccomment">/// Returns a reference to the next element.
     ///
-    /// If the cursor is pointing to the &quot;ghost&quot; non-element then this returns
+    /// If the cursor is pointing to the "ghost" non-element then this returns
     /// the first element of the `BTreeMap`. If it is pointing to the last
     /// element of the `BTreeMap` then this returns `None`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>peek_next(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>peek_next(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>next = <span class="self">self</span>.clone();
         next.move_next();
         next.current.as_ref().map(|current| current.into_kv())
@@ -6956,22 +6956,22 @@
 
     <span class="doccomment">/// Returns a reference to the previous element.
     ///
-    /// If the cursor is pointing to the &quot;ghost&quot; non-element then this returns
+    /// If the cursor is pointing to the "ghost" non-element then this returns
     /// the last element of the `BTreeMap`. If it is pointing to the first
     /// element of the `BTreeMap` then this returns `None`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>peek_prev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>V)&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>peek_prev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>K, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>V)&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>prev = <span class="self">self</span>.clone();
         prev.move_prev();
         prev.current.as_ref().map(|current| current.into_kv())
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K, V, A&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, K, V, A&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K, V, A&gt; CursorMut&lt;<span class="lifetime">'a</span>, K, V, A&gt; {
     <span class="doccomment">/// Moves the cursor to the next element of the `BTreeMap`.
     ///
-    /// If the cursor is pointing to the &quot;ghost&quot; non-element then this will move it to
+    /// If the cursor is pointing to the "ghost" non-element then this will move it to
     /// the first element of the `BTreeMap`. If it is pointing to the last
-    /// element of the `BTreeMap` then this will move it to the &quot;ghost&quot; non-element.
+    /// element of the `BTreeMap` then this will move it to the "ghost" non-element.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>move_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">match </span><span class="self">self</span>.current.take() {
             <span class="prelude-val">None </span>=&gt; {
@@ -6992,9 +6992,9 @@
 
     <span class="doccomment">/// Moves the cursor to the previous element of the `BTreeMap`.
     ///
-    /// If the cursor is pointing to the &quot;ghost&quot; non-element then this will move it to
+    /// If the cursor is pointing to the "ghost" non-element then this will move it to
     /// the last element of the `BTreeMap`. If it is pointing to the first
-    /// element of the `BTreeMap` then this will move it to the &quot;ghost&quot; non-element.
+    /// element of the `BTreeMap` then this will move it to the "ghost" non-element.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>move_prev(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">match </span><span class="self">self</span>.current.take() {
             <span class="prelude-val">None </span>=&gt; {
@@ -7016,7 +7016,7 @@
     <span class="doccomment">/// Returns a reference to the key of the element that the cursor is
     /// currently pointing to.
     ///
-    /// This returns `None` if the cursor is currently pointing to the &quot;ghost&quot;
+    /// This returns `None` if the cursor is currently pointing to the "ghost"
     /// non-element.
     </span><span class="kw">pub fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>K&gt; {
         <span class="self">self</span>.current
@@ -7027,7 +7027,7 @@
     <span class="doccomment">/// Returns a reference to the value of the element that the cursor is
     /// currently pointing to.
     ///
-    /// This returns `None` if the cursor is currently pointing to the &quot;ghost&quot;
+    /// This returns `None` if the cursor is currently pointing to the "ghost"
     /// non-element.
     </span><span class="kw">pub fn </span>value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>V&gt; {
         <span class="self">self</span>.current
@@ -7038,7 +7038,7 @@
     <span class="doccomment">/// Returns a reference to the key and value of the element that the cursor
     /// is currently pointing to.
     ///
-    /// This returns `None` if the cursor is currently pointing to the &quot;ghost&quot;
+    /// This returns `None` if the cursor is currently pointing to the "ghost"
     /// non-element.
     </span><span class="kw">pub fn </span>key_value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;</span>V)&gt; {
         <span class="self">self</span>.current
@@ -7049,7 +7049,7 @@
     <span class="doccomment">/// Returns a mutable reference to the value of the element that the cursor
     /// is currently pointing to.
     ///
-    /// This returns `None` if the cursor is currently pointing to the &quot;ghost&quot;
+    /// This returns `None` if the cursor is currently pointing to the "ghost"
     /// non-element.
     </span><span class="kw">pub fn </span>value_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>V&gt; {
         <span class="self">self</span>.current.as_mut().map(|current| current.kv_mut().<span class="number">1</span>)
@@ -7058,7 +7058,7 @@
     <span class="doccomment">/// Returns a reference to the key and mutable reference to the value of the
     /// element that the cursor is currently pointing to.
     ///
-    /// This returns `None` if the cursor is currently pointing to the &quot;ghost&quot;
+    /// This returns `None` if the cursor is currently pointing to the "ghost"
     /// non-element.
     </span><span class="kw">pub fn </span>key_value_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;mut </span>V)&gt; {
         <span class="self">self</span>.current.as_mut().map(|current| {
@@ -7071,7 +7071,7 @@
     /// currently pointing to.
     ///
     /// This returns `None` if the cursor is currently pointing to the
-    /// &quot;ghost&quot; non-element.
+    /// "ghost" non-element.
     ///
     /// # Safety
     ///
@@ -7087,7 +7087,7 @@
 
     <span class="doccomment">/// Returns a reference to the key and value of the next element.
     ///
-    /// If the cursor is pointing to the &quot;ghost&quot; non-element then this returns
+    /// If the cursor is pointing to the "ghost" non-element then this returns
     /// the first element of the `BTreeMap`. If it is pointing to the last
     /// element of the `BTreeMap` then this returns `None`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>peek_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;mut </span>V)&gt; {
@@ -7102,7 +7102,7 @@
                     .ok()<span class="question-mark">?
                     </span>.into_kv_valmut()
             }
-            <span class="comment">// SAFETY: We&#39;re not using this to mutate the tree.
+            <span class="comment">// SAFETY: We're not using this to mutate the tree.
             </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>current) =&gt; <span class="kw">unsafe </span>{ current.reborrow_mut() }
                 .next_leaf_edge()
                 .next_kv()
@@ -7114,7 +7114,7 @@
 
     <span class="doccomment">/// Returns a reference to the key and value of the previous element.
     ///
-    /// If the cursor is pointing to the &quot;ghost&quot; non-element then this returns
+    /// If the cursor is pointing to the "ghost" non-element then this returns
     /// the last element of the `BTreeMap`. If it is pointing to the first
     /// element of the `BTreeMap` then this returns `None`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>peek_prev(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;mut </span>V)&gt; {
@@ -7130,7 +7130,7 @@
                     </span>.into_kv_valmut()
             }
             <span class="prelude-val">Some</span>(current) =&gt; {
-                <span class="comment">// SAFETY: We&#39;re not using this to mutate the tree.
+                <span class="comment">// SAFETY: We're not using this to mutate the tree.
                 </span><span class="kw">unsafe </span>{ current.reborrow_mut() }
                     .next_back_leaf_edge()
                     .next_back_kv()
@@ -7146,7 +7146,7 @@
     /// The lifetime of the returned `Cursor` is bound to that of the
     /// `CursorMut`, which means it cannot outlive the `CursorMut` and that the
     /// `CursorMut` is frozen for the lifetime of the `Cursor`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_cursor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, K, V&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_cursor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">'_</span>, K, V&gt; {
         Cursor {
             <span class="comment">// SAFETY: The tree is immutable while the cursor exists.
             </span>root: <span class="kw">unsafe </span>{ <span class="self">self</span>.root.reborrow_shared().as_ref() },
@@ -7156,10 +7156,10 @@
 }
 
 <span class="comment">// Now the tree editing operations
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, K: Ord, V, A: Allocator&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, K, V, A&gt; {
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, K: Ord, V, A: Allocator&gt; CursorMut&lt;<span class="lifetime">'a</span>, K, V, A&gt; {
     <span class="doccomment">/// Inserts a new element into the `BTreeMap` after the current one.
     ///
-    /// If the cursor is pointing at the &quot;ghost&quot; non-element then the new element is
+    /// If the cursor is pointing at the "ghost" non-element then the new element is
     /// inserted at the front of the `BTreeMap`.
     ///
     /// # Safety
@@ -7195,7 +7195,7 @@
         <span class="kw">let </span>handle = edge.insert_recursing(key, value, <span class="self">self</span>.alloc, |ins| {
             drop(ins.left);
             <span class="comment">// SAFETY: The handle to the newly inserted value is always on a
-            // leaf node, so adding a new root node doesn&#39;t invalidate it.
+            // leaf node, so adding a new root node doesn't invalidate it.
             </span><span class="kw">let </span>root = <span class="kw">unsafe </span>{ <span class="self">self</span>.root.reborrow().as_mut().unwrap() };
             root.push_internal_level(<span class="self">self</span>.alloc)<span class="question-mark">?
                 </span>.push(ins.kv.<span class="number">0</span>, ins.kv.<span class="number">1</span>, ins.right);
@@ -7208,7 +7208,7 @@
 
     <span class="doccomment">/// Inserts a new element into the `BTreeMap` before the current one.
     ///
-    /// If the cursor is pointing at the &quot;ghost&quot; non-element then the new element is
+    /// If the cursor is pointing at the "ghost" non-element then the new element is
     /// inserted at the end of the `BTreeMap`.
     ///
     /// # Safety
@@ -7244,7 +7244,7 @@
         <span class="kw">let </span>handle = edge.insert_recursing(key, value, <span class="self">self</span>.alloc, |ins| {
             drop(ins.left);
             <span class="comment">// SAFETY: The handle to the newly inserted value is always on a
-            // leaf node, so adding a new root node doesn&#39;t invalidate it.
+            // leaf node, so adding a new root node doesn't invalidate it.
             </span><span class="kw">let </span>root = <span class="kw">unsafe </span>{ <span class="self">self</span>.root.reborrow().as_mut().unwrap() };
             root.push_internal_level(<span class="self">self</span>.alloc)<span class="question-mark">?
                 </span>.push(ins.kv.<span class="number">0</span>, ins.kv.<span class="number">1</span>, ins.right);
@@ -7257,7 +7257,7 @@
 
     <span class="doccomment">/// Inserts a new element into the `BTreeMap` after the current one.
     ///
-    /// If the cursor is pointing at the &quot;ghost&quot; non-element then the new element is
+    /// If the cursor is pointing at the "ghost" non-element then the new element is
     /// inserted at the front of the `BTreeMap`.
     ///
     /// # Panics
@@ -7270,12 +7270,12 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_insert_after(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: K, value: V) -&gt; <span class="prelude-ty">Result</span>&lt;(), AllocError&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.key() {
             <span class="kw">if </span><span class="kw-2">&amp;</span>key &lt;= current {
-                <span class="macro">panic!</span>(<span class="string">&quot;key must be ordered above the current element&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"key must be ordered above the current element"</span>);
             }
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>((next, <span class="kw">_</span>)) = <span class="self">self</span>.peek_next() {
             <span class="kw">if </span><span class="kw-2">&amp;</span>key &gt;= next {
-                <span class="macro">panic!</span>(<span class="string">&quot;key must be ordered below the next element&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"key must be ordered below the next element"</span>);
             }
         }
         <span class="kw">unsafe </span>{
@@ -7291,7 +7291,7 @@
 
     <span class="doccomment">/// Inserts a new element into the `BTreeMap` before the current one.
     ///
-    /// If the cursor is pointing at the &quot;ghost&quot; non-element then the new element is
+    /// If the cursor is pointing at the "ghost" non-element then the new element is
     /// inserted at the end of the `BTreeMap`.
     ///
     /// # Panics
@@ -7304,12 +7304,12 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_insert_before(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: K, value: V) -&gt; <span class="prelude-ty">Result</span>&lt;(), AllocError&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.key() {
             <span class="kw">if </span><span class="kw-2">&amp;</span>key &gt;= current {
-                <span class="macro">panic!</span>(<span class="string">&quot;key must be ordered below the current element&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"key must be ordered below the current element"</span>);
             }
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>((prev, <span class="kw">_</span>)) = <span class="self">self</span>.peek_prev() {
             <span class="kw">if </span><span class="kw-2">&amp;</span>key &lt;= prev {
-                <span class="macro">panic!</span>(<span class="string">&quot;key must be ordered above the previous element&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"key must be ordered above the previous element"</span>);
             }
         }
         <span class="kw">unsafe </span>{
@@ -7328,7 +7328,7 @@
     /// The element that was removed is returned, and the cursor is
     /// moved to point to the next element in the `BTreeMap`.
     ///
-    /// If the cursor is currently pointing to the &quot;ghost&quot; non-element then no element
+    /// If the cursor is currently pointing to the "ghost" non-element then no element
     /// is removed and `None` is returned. The cursor is not moved in this case.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove_current(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(K, V)&gt; {
         <span class="kw">let </span>current = <span class="self">self</span>.current.take()<span class="question-mark">?</span>;
@@ -7350,7 +7350,7 @@
     /// The element that was removed is returned, and the cursor is
     /// moved to point to the previous element in the `BTreeMap`.
     ///
-    /// If the cursor is currently pointing to the &quot;ghost&quot; non-element then no element
+    /// If the cursor is currently pointing to the "ghost" non-element then no element
     /// is removed and `None` is returned. The cursor is not moved in this case.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove_current_and_move_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(K, V)&gt; {
         <span class="kw">let </span>current = <span class="self">self</span>.current.take()<span class="question-mark">?</span>;

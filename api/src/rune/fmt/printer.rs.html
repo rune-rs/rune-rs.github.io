@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/fmt/printer.rs`."><title>printer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/fmt/printer.rs`."><title>printer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2060,13 +2060,13 @@
 
 <span class="kw">type </span><span class="prelude-ty">Result</span>&lt;T&gt; = core::result::Result&lt;T, FormattingError&gt;;
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Printer&lt;<span class="lifetime">&#39;a</span>&gt; {
-    writer: SpanInjectionWriter&lt;<span class="lifetime">&#39;a</span>&gt;,
-    source: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Printer&lt;<span class="lifetime">'a</span>&gt; {
+    writer: SpanInjectionWriter&lt;<span class="lifetime">'a</span>&gt;,
+    source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Printer&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new(source: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Printer&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new(source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>writer = SpanInjectionWriter::new(IndentedWriter::new()<span class="question-mark">?</span>, source)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ writer, source })
     }
@@ -2086,7 +2086,7 @@
             }
 
             <span class="kw">if </span>!take(<span class="kw-2">&amp;mut </span>head) {
-                out.try_resize(out.len().saturating_add(lines), <span class="string">b&#39;\n&#39;</span>)<span class="question-mark">?</span>;
+                out.try_resize(out.len().saturating_add(lines), <span class="string">b'\n'</span>)<span class="question-mark">?</span>;
             }
 
             out.try_extend(line)<span class="question-mark">?</span>;
@@ -2094,13 +2094,13 @@
         }
 
         <span class="kw">if </span>lines &gt; <span class="number">0 </span>{
-            out.try_push(<span class="string">b&#39;\n&#39;</span>)<span class="question-mark">?</span>;
+            out.try_push(<span class="string">b'\n'</span>)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(out)
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>resolve(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt; {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>resolve(<span class="kw-2">&amp;</span><span class="self">self</span>, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt; {
         <span class="kw">let </span><span class="prelude-val">Some</span>(s) = <span class="self">self</span>.source.get(span.range()) <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(FormattingError::BadRange(span.range(), <span class="self">self</span>.source.len()));
         };
@@ -2241,7 +2241,7 @@
                 <span class="self">self</span>.writer.write_spanned_raw(semi.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
             }
             ast::ItemModBody::InlineBody(body) =&gt; {
-                <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.writer.write_spanned_raw(body.open.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.writer.indent();
 
@@ -2278,7 +2278,7 @@
         <span class="self">self</span>.writer.write_spanned_raw(impl_.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_path(path)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(open.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.writer.indent();
@@ -2344,7 +2344,7 @@
                     .write_spanned_raw(tuple.close.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
             }
             ast::Fields::Named(body) =&gt; {
-                <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.writer.write_spanned_raw(body.open.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
                 <span class="self">self</span>.writer.indent();
@@ -2353,7 +2353,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                         <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
-                        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;,\n&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.writer.write_unspanned(<span class="string">",\n"</span>)<span class="question-mark">?</span>;
                     }
                 }
                 <span class="self">self</span>.writer.dedent();
@@ -2441,7 +2441,7 @@
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                             <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                         } <span class="kw">else </span>{
-                            <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.writer.write_unspanned(<span class="string">", "</span>)<span class="question-mark">?</span>;
                         }
                     }
                 }
@@ -2450,7 +2450,7 @@
                     .write_spanned_raw(body.close.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
             }
             ast::Fields::Named(sbody) =&gt; {
-                <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.writer
                     .write_spanned_raw(sbody.open.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
@@ -2460,7 +2460,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                         <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
-                        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;,\n&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.writer.write_unspanned(<span class="string">",\n"</span>)<span class="question-mark">?</span>;
                     }
                 }
                 <span class="self">self</span>.writer.dedent();
@@ -2705,7 +2705,7 @@
         macrocall: <span class="kw-2">&amp;</span>ast::MacroCall,
         semi: <span class="prelude-ty">Option</span>&lt;ast::SemiColon&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="comment">// Note: We don&#39;t visit the stream, as emitting it truthfully is quite hard and we can&#39;t format it. Instead we just resolve everything between the open/close.
+        <span class="comment">// Note: We don't visit the stream, as emitting it truthfully is quite hard and we can't format it. Instead we just resolve everything between the open/close.
         </span><span class="kw">let </span>ast::MacroCall {
             id: <span class="kw">_</span>,
             attributes,
@@ -2721,7 +2721,7 @@
         <span class="kw">if let </span>ast::PathSegment::Ident(ident) = first {
             <span class="kw">if let </span>ast::LitSource::BuiltIn(ast::BuiltIn::Template) = ident.source {
                 <span class="kw">let </span>important_token = <span class="self">self</span>.resolve(Span::new(open.span.end, close.span.start))<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">&quot;{}&quot;</span>, important_token)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">"{}"</span>, important_token)<span class="question-mark">?</span>;
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
         }
@@ -2796,7 +2796,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                         <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
-                        <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">", "</span>)<span class="question-mark">?</span>;
                     }
                 }
             }
@@ -2828,7 +2828,7 @@
             }
             ast::ObjectIdent::Named(named) =&gt; {
                 <span class="self">self</span>.visit_path(named)<span class="question-mark">?</span>;
-                <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
             }
         }
 
@@ -2842,7 +2842,7 @@
             <span class="bool-val">true
         </span>} <span class="kw">else </span>{
             <span class="kw">if </span>has_items {
-                <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">" "</span>)<span class="question-mark">?</span>;
             }
             <span class="bool-val">false
         </span>};
@@ -2855,7 +2855,7 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                     <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;,\n&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.writer.write_unspanned(<span class="string">",\n"</span>)<span class="question-mark">?</span>;
                 }
             } <span class="kw">else </span>{
                 <span class="kw">let </span>is_last = count == idx + <span class="number">1</span>;
@@ -2863,7 +2863,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                         <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
-                        <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">", "</span>)<span class="question-mark">?</span>;
                     }
                 }
             }
@@ -2873,7 +2873,7 @@
             <span class="self">self</span>.writer.dedent();
             <span class="self">self</span>.writer.newline()<span class="question-mark">?</span>;
         } <span class="kw">else if </span>has_items {
-            <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         }
 
         <span class="self">self</span>.writer
@@ -2921,7 +2921,7 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                 <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
             } <span class="kw">else </span>{
-                <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;,\n&quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.writer.write_unspanned(<span class="string">",\n"</span>)<span class="question-mark">?</span>;
             }
         }
         <span class="self">self</span>.writer.dedent();
@@ -2934,7 +2934,7 @@
     <span class="kw">fn </span>visit_select_branch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ast: <span class="kw-2">&amp;</span>ast::ExprSelectBranch) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span>ast {
             ast::ExprSelectBranch::Pat(pat) =&gt; <span class="self">self</span>.visit_select_pattern(pat)<span class="question-mark">?</span>,
-            ast::ExprSelectBranch::Default(_default) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">&quot;default&quot;</span>)<span class="question-mark">?</span>,
+            ast::ExprSelectBranch::Default(_default) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">"default"</span>)<span class="question-mark">?</span>,
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -2950,10 +2950,10 @@
         } = ast;
 
         <span class="self">self</span>.visit_pattern(pat)<span class="question-mark">?</span>;
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(eq.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_expr(expr)<span class="question-mark">?</span>;
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(rocket.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_expr(body)<span class="question-mark">?</span>;
 
@@ -2973,7 +2973,7 @@
         }
 
         <span class="self">self</span>.visit_expr(lhs)<span class="question-mark">?</span>;
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(eq.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_expr(rhs)<span class="question-mark">?</span>;
 
@@ -3033,7 +3033,7 @@
             .write_spanned_raw(yield_token.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = expr {
-            <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.visit_expr(expr)<span class="question-mark">?</span>;
         }
 
@@ -3057,8 +3057,8 @@
         }
 
         <span class="kw">match </span>limits {
-            ast::ExprRangeLimits::HalfOpen(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">&quot;..&quot;</span>)<span class="question-mark">?</span>,
-            ast::ExprRangeLimits::Closed(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">&quot;..=&quot;</span>)<span class="question-mark">?</span>,
+            ast::ExprRangeLimits::HalfOpen(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">".."</span>)<span class="question-mark">?</span>,
+            ast::ExprRangeLimits::Closed(<span class="kw">_</span>) =&gt; <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">"..="</span>)<span class="question-mark">?</span>,
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(to) = to {
@@ -3094,7 +3094,7 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                     <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;,\n&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.writer.write_unspanned(<span class="string">",\n"</span>)<span class="question-mark">?</span>;
                 }
             } <span class="kw">else </span>{
                 <span class="kw">let </span>is_last = idx == count - <span class="number">1</span>;
@@ -3102,7 +3102,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                         <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
-                        <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                        <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">", "</span>)<span class="question-mark">?</span>;
                     }
                 }
             }
@@ -3171,7 +3171,7 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                     <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">", "</span>)<span class="question-mark">?</span>;
                 }
             }
         }
@@ -3218,7 +3218,7 @@
             .write_spanned_raw(continue_token.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = label {
-            <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.writer.write_spanned_raw(label.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
         }
 
@@ -3241,12 +3241,12 @@
             .write_spanned_raw(break_token.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = label {
-            <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.writer.write_spanned_raw(label.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = expr {
-            <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.visit_expr(expr)<span class="question-mark">?</span>;
         }
 
@@ -3268,7 +3268,7 @@
             .write_spanned_raw(return_token.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = expr {
-            <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.visit_expr(expr)<span class="question-mark">?</span>;
         }
 
@@ -3341,7 +3341,7 @@
         <span class="self">self</span>.writer.write_spanned_raw(match_.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_expr(expr)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(open.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.writer.indent();
@@ -3352,10 +3352,10 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                     <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;,\n&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.writer.write_unspanned(<span class="string">",\n"</span>)<span class="question-mark">?</span>;
                 }
             } <span class="kw">else </span>{
-                <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;\n&quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.writer.write_unspanned(<span class="string">"\n"</span>)<span class="question-mark">?</span>;
             }
         }
         <span class="self">self</span>.writer.dedent();
@@ -3376,11 +3376,11 @@
         <span class="self">self</span>.visit_pattern(pat)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>((if_, expr)) = condition {
-            <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.writer.write_spanned_raw(if_.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.visit_expr(expr)<span class="question-mark">?</span>;
         }
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(rocket.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_expr(body)<span class="question-mark">?</span>;
 
@@ -3438,11 +3438,11 @@
 
         <span class="self">self</span>.visit_pattern(binding)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(in_.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.visit_expr(iter)<span class="question-mark">?</span>;
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.visit_block(body)<span class="question-mark">?</span>;
 
@@ -3470,7 +3470,7 @@
         <span class="self">self</span>.writer
             .write_spanned_raw(while_token.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_condition(condition)<span class="question-mark">?</span>;
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_block(body)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
@@ -3556,7 +3556,7 @@
             }
             ast::ObjectIdent::Named(n) =&gt; {
                 <span class="self">self</span>.visit_path(n)<span class="question-mark">?</span>;
-                <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
             }
         }
 
@@ -3583,13 +3583,13 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                     <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">true</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;,\n&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.writer.write_unspanned(<span class="string">",\n"</span>)<span class="question-mark">?</span>;
                 }
             } <span class="kw">else if </span>idx &lt; count - <span class="number">1 </span>{
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                     <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;,\n&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.writer.write_unspanned(<span class="string">",\n"</span>)<span class="question-mark">?</span>;
                 }
             }
         }
@@ -3597,7 +3597,7 @@
         <span class="kw">if </span>multiline {
             <span class="self">self</span>.writer.dedent();
         } <span class="kw">else </span>{
-            <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         }
 
         <span class="self">self</span>.writer.write_spanned_raw(close.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
@@ -3653,7 +3653,7 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                     <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.writer.write_unspanned(<span class="string">", "</span>)<span class="question-mark">?</span>;
                 }
             }
         }
@@ -3724,7 +3724,7 @@
         }
 
         <span class="self">self</span>.visit_pattern(pat)<span class="question-mark">?</span>;
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(eq.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_expr(expr)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
@@ -3746,7 +3746,7 @@
 
         <span class="self">self</span>.writer.write_spanned_raw(if_.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_condition(condition)<span class="question-mark">?</span>;
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_block(block)<span class="question-mark">?</span>;
 
         <span class="kw">for </span>expr_else_if <span class="kw">in </span>expr_else_ifs {
@@ -3768,12 +3768,12 @@
             block,
         } = ast;
 
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(else_.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(if_.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.visit_condition(condition)<span class="question-mark">?</span>;
-        <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_block(block)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
@@ -3782,7 +3782,7 @@
     <span class="kw">fn </span>visit_expr_else(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ast: <span class="kw-2">&amp;</span>ast::ExprElse) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>ast::ExprElse { else_, block } = ast;
 
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(else_.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.visit_block(block)<span class="question-mark">?</span>;
@@ -3892,7 +3892,7 @@
         }
 
         <span class="self">self</span>.visit_pattern(pat)<span class="question-mark">?</span>;
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(eq.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_expr(expr)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(semi.span, <span class="bool-val">false</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
@@ -4004,7 +4004,7 @@
         }
 
         <span class="self">self</span>.visit_expr(lhs.as_ref())<span class="question-mark">?</span>;
-        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot; &quot;</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.writer.write_unspanned(<span class="string">" "</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.writer.write_spanned_raw(op.span(), <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.visit_expr(rhs.as_ref())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
@@ -4037,7 +4037,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(comma) = comma {
                         <span class="self">self</span>.writer.write_spanned_raw(comma.span, <span class="bool-val">false</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else </span>{
-                        <span class="self">self</span>.writer.write_unspanned(<span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.writer.write_unspanned(<span class="string">", "</span>)<span class="question-mark">?</span>;
                     }
                 }
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/boxed.rs`."><title>boxed.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/boxed.rs`."><title>boxed.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1108,7 +1108,7 @@
 <a href="#1108" id="1108">1108</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The `Box&lt;T&gt;` type for heap allocation.
 //!
-//! [`Box&lt;T&gt;`], casually referred to as a &#39;box&#39;, provides the simplest form of
+//! [`Box&lt;T&gt;`], casually referred to as a 'box', provides the simplest form of
 //! heap allocation in Rust. Boxes provide ownership for this allocation, and
 //! drop their contents when they go out of scope. Boxes also ensure that they
 //! never allocate more than `isize::MAX` bytes.
@@ -1147,7 +1147,7 @@
 //! }
 //!
 //! let list: List&lt;i32&gt; = List::Cons(1, Box::try_new(List::Cons(2, Box::try_new(List::Nil)?))?);
-//! println!(&quot;{list:?}&quot;);
+//! println!("{list:?}");
 //! # Ok::&lt;_, rune::alloc::Error&gt;(())
 //! ```
 //!
@@ -1162,8 +1162,8 @@
 //! # }
 //! ```
 //!
-//! It wouldn&#39;t work. This is because the size of a `List` depends on how many
-//! elements are in the list, and so we don&#39;t know how much memory to allocate
+//! It wouldn't work. This is because the size of a `List` depends on how many
+//! elements are in the list, and so we don't know how much memory to allocate
 //! for a `Cons`. By introducing a [`Box&lt;T&gt;`], which has a defined size, we know
 //! how big `Cons` needs to be.
 //!
@@ -1189,7 +1189,7 @@
 //!
 //! So long as `T: Sized`, a `Box&lt;T&gt;` is guaranteed to be represented as a
 //! single pointer and is also ABI-compatible with C pointers (i.e. the C type
-//! `T*`). This means that if you have extern &quot;C&quot; Rust functions that will be
+//! `T*`). This means that if you have extern "C" Rust functions that will be
 //! called from C, you can define those Rust functions using `Box&lt;T&gt;` types, and
 //! use `T*` as corresponding type on the C side. As an example, consider this C
 //! header which declares functions that create and destroy some kind of `Foo`
@@ -1219,12 +1219,12 @@
 //! pub struct Foo;
 //!
 //! #[no_mangle]
-//! pub extern &quot;C&quot; fn foo_new() -&gt; Result&lt;Box&lt;Foo&gt;, AllocError&gt; {
+//! pub extern "C" fn foo_new() -&gt; Result&lt;Box&lt;Foo&gt;, AllocError&gt; {
 //!     Box::try_new(Foo)
 //! }
 //!
 //! #[no_mangle]
-//! pub extern &quot;C&quot; fn foo_delete(_: Option&lt;Box&lt;Foo&gt;&gt;) {}
+//! pub extern "C" fn foo_delete(_: Option&lt;Box&lt;Foo&gt;&gt;) {}
 //! ```
 //!
 //! Even though `Box&lt;T&gt;` has the same representation and C ABI as a C pointer,
@@ -1298,7 +1298,7 @@
 <span class="kw">impl</span>&lt;T&gt; Box&lt;T, Global&gt; {
     <span class="doccomment">/// Allocates memory on the heap and then places `x` into it.
     ///
-    /// This doesn&#39;t actually allocate if `T` is zero-sized.
+    /// This doesn't actually allocate if `T` is zero-sized.
     ///
     /// # Examples
     ///
@@ -1358,9 +1358,9 @@
     /// assert_eq!(limit::get(), usize::MAX);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
     </span><span class="kw">pub fn </span>from_std(b: ::rust_alloc::boxed::Box&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
-        <span class="comment">// SAFETY: We&#39;ve ensured that standard allocations only happen in an
+        <span class="comment">// SAFETY: We've ensured that standard allocations only happen in an
         // allocator which is compatible with our `Global`.
         </span><span class="kw">unsafe </span>{
             <span class="comment">// NB: Layout::for_value will return the size of the pointed to
@@ -1377,7 +1377,7 @@
     <span class="doccomment">/// Allocates memory in the given allocator then places `x` into it,
     /// returning an error if the allocation fails
     ///
-    /// This doesn&#39;t actually allocate if `T` is zero-sized.
+    /// This doesn't actually allocate if `T` is zero-sized.
     ///
     /// # Examples
     ///
@@ -1458,13 +1458,13 @@
 }
 
 <span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized, A: Allocator&gt; Box&lt;T, A&gt; {
-    <span class="doccomment">/// Consumes and leaks the `Box`, returning a mutable reference, `&amp;&#39;a mut
-    /// T`. Note that the type `T` must outlive the chosen lifetime `&#39;a`. If the
+    <span class="doccomment">/// Consumes and leaks the `Box`, returning a mutable reference, `&amp;'a mut
+    /// T`. Note that the type `T` must outlive the chosen lifetime `'a`. If the
     /// type has only static references, or none at all, then this may be chosen
-    /// to be `&#39;static`.
+    /// to be `'static`.
     ///
     /// This function is mainly useful for data that lives for the remainder of
-    /// the program&#39;s life. Dropping the returned reference will cause a memory
+    /// the program's life. Dropping the returned reference will cause a memory
     /// leak. If this is not acceptable, the reference should first be wrapped
     /// with the [`Box::from_raw_in`] function producing a `Box`. This `Box` can
     /// then be dropped which will properly destroy `T` and release the
@@ -1484,7 +1484,7 @@
     /// use rune::alloc::Box;
     ///
     /// let x = Box::try_new(41)?;
-    /// let static_ref: &amp;&#39;static mut usize = Box::leak(x);
+    /// let static_ref: &amp;'static mut usize = Box::leak(x);
     /// *static_ref += 1;
     /// assert_eq!(*static_ref, 42);
     /// # Ok(())
@@ -1508,9 +1508,9 @@
     /// # #[cfg(miri)] fn main() {}
     /// ```
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>leak&lt;<span class="lifetime">&#39;a</span>&gt;(b: <span class="self">Self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T
+    </span><span class="kw">pub fn </span>leak&lt;<span class="lifetime">'a</span>&gt;(b: <span class="self">Self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>T
     <span class="kw">where
-        </span>A: <span class="lifetime">&#39;a</span>,
+        </span>A: <span class="lifetime">'a</span>,
     {
         <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>mem::ManuallyDrop::new(b).ptr.as_ptr() }
     }
@@ -1529,8 +1529,8 @@
     ///
     /// # Notes
     ///
-    /// It&#39;s not recommended that crates add an impl like `From&lt;Box&lt;T&gt;&gt; for Pin&lt;T&gt;`,
-    /// as it&#39;ll introduce an ambiguity when calling `Pin::from`.
+    /// It's not recommended that crates add an impl like `From&lt;Box&lt;T&gt;&gt; for Pin&lt;T&gt;`,
+    /// as it'll introduce an ambiguity when calling `Pin::from`.
     /// A demonstration of such a poor impl is shown below.
     ///
     /// ```compile_fail
@@ -1550,10 +1550,10 @@
     /// ```
     </span><span class="kw">pub fn </span>into_pin(boxed: <span class="self">Self</span>) -&gt; Pin&lt;<span class="self">Self</span>&gt;
     <span class="kw">where
-        </span>A: <span class="lifetime">&#39;static</span>,
+        </span>A: <span class="lifetime">'static</span>,
     {
-        <span class="comment">// It&#39;s not possible to move or replace the insides of a `Pin&lt;Box&lt;T&gt;&gt;`
-        // when `T: !Unpin`, so it&#39;s safe to pin it directly without any
+        <span class="comment">// It's not possible to move or replace the insides of a `Pin&lt;Box&lt;T&gt;&gt;`
+        // when `T: !Unpin`, so it's safe to pin it directly without any
         // additional requirements.
         </span><span class="kw">unsafe </span>{ Pin::new_unchecked(boxed) }
     }
@@ -1641,7 +1641,7 @@
     /// use rune::alloc::{Box, String};
     /// use rune::alloc::alloc::Global;
     ///
-    /// let x = Box::try_new_in(String::try_from(&quot;Hello&quot;)?, Global)?;
+    /// let x = Box::try_new_in(String::try_from("Hello")?, Global)?;
     /// let (ptr, alloc) = Box::into_raw_with_allocator(x);
     /// let x = unsafe { Box::from_raw_in(ptr, alloc) };
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
@@ -1657,7 +1657,7 @@
     /// use rune::alloc::{Box, String};
     /// use rune::alloc::alloc::{Allocator, Global};
     ///
-    /// let x = Box::try_new_in(String::try_from(&quot;Hello&quot;)?, Global)?;
+    /// let x = Box::try_new_in(String::try_from("Hello")?, Global)?;
     ///
     /// let (ptr, alloc) = Box::into_raw_with_allocator(x);
     ///
@@ -1874,7 +1874,7 @@
  *  implementation of `Unpin` (where `T: Unpin`) would be valid/safe, and
  *  could have a method to project a Pin&lt;T&gt; from it.
  */
-</span><span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized, A: Allocator&gt; Unpin <span class="kw">for </span>Box&lt;T, A&gt; <span class="kw">where </span>A: <span class="lifetime">&#39;static </span>{}
+</span><span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized, A: Allocator&gt; Unpin <span class="kw">for </span>Box&lt;T, A&gt; <span class="kw">where </span>A: <span class="lifetime">'static </span>{}
 
 <span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized, A: Allocator&gt; Deref <span class="kw">for </span>Box&lt;T, A&gt; {
     <span class="kw">type </span>Target = T;
@@ -1936,7 +1936,7 @@
     </span>T: fmt::Display,
 {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         (<span class="kw-2">**</span><span class="self">self</span>).fmt(f)
     }
 }
@@ -1946,7 +1946,7 @@
     </span>T: fmt::Debug,
 {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         (<span class="kw-2">**</span><span class="self">self</span>).fmt(f)
     }
 }
@@ -1962,7 +1962,7 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">impl</span>&lt;T&gt; TryFrom&lt;::rust_alloc::boxed::Box&lt;[T]&gt;&gt; <span class="kw">for </span>Box&lt;[T]&gt; {
     <span class="kw">type </span>Error = Error;
 
@@ -2056,8 +2056,8 @@
     /// ```
     /// use rune::alloc::Box;
     ///
-    /// let s: Box&lt;str&gt; = Box::try_from(&quot;Hello World&quot;)?;
-    /// assert_eq!(s.as_ref(), &quot;Hello World&quot;);
+    /// let s: Box&lt;str&gt; = Box::try_from("Hello World")?;
+    /// assert_eq!(s.as_ref(), "Hello World");
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="attr">#[inline]
@@ -2066,7 +2066,7 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">impl </span>TryFrom&lt;::rust_alloc::string::String&gt; <span class="kw">for </span>Box&lt;str&gt; {
     <span class="kw">type </span>Error = Error;
 
@@ -2077,9 +2077,9 @@
     /// ```
     /// use rune::alloc::Box;
     ///
-    /// let s = String::from(&quot;Hello World&quot;);
+    /// let s = String::from("Hello World");
     /// let s: Box&lt;str&gt; = Box::try_from(s)?;
-    /// assert_eq!(s.as_ref(), &quot;Hello World&quot;);
+    /// assert_eq!(s.as_ref(), "Hello World");
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="attr">#[inline]
@@ -2098,8 +2098,8 @@
     /// ```
     /// use rune::alloc::Box;
     ///
-    /// let s: Box&lt;[u8]&gt; = Box::try_from(&amp;b&quot;Hello World&quot;[..])?;
-    /// assert_eq!(s.as_ref(), b&quot;Hello World&quot;);
+    /// let s: Box&lt;[u8]&gt; = Box::try_from(&amp;b"Hello World"[..])?;
+    /// assert_eq!(s.as_ref(), b"Hello World");
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="attr">#[inline]
@@ -2119,10 +2119,10 @@
     /// use std::path::Path;
     /// use rune::alloc::Box;
     ///
-    /// let path = Path::new(&quot;foo/bar&quot;);
+    /// let path = Path::new("foo/bar");
     ///
     /// let s: Box&lt;Path&gt; = Box::try_from(path)?;
-    /// assert_eq!(s.as_ref(), Path::new(&quot;foo/bar&quot;));
+    /// assert_eq!(s.as_ref(), Path::new("foo/bar"));
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="attr">#[inline]
@@ -2144,7 +2144,7 @@
     <span class="comment">// SAFETY: we pass along the prerequisites of these functions to the caller
     // TODO: Use mem::{size_of_val_raw, align_of_val_raw} when they become
     // stable, for now we privately know that this can safely be turned into a
-    // reference since it&#39;s only used while dropping an owned value of type `T`.
+    // reference since it's only used while dropping an owned value of type `T`.
     </span><span class="kw">let </span>(size, align) = (mem::size_of_val(<span class="kw-2">&amp;*</span>t), mem::align_of_val(<span class="kw-2">&amp;*</span>t));
     <span class="comment">// SAFETY: see rationale in `new` for why this is using the unsafe variant
     </span>Layout::from_size_align_unchecked(size, align)
@@ -2162,7 +2162,7 @@
 
 <span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized, A: Allocator&gt; From&lt;Box&lt;T, A&gt;&gt; <span class="kw">for </span>Pin&lt;Box&lt;T, A&gt;&gt;
 <span class="kw">where
-    </span>A: <span class="lifetime">&#39;static</span>,
+    </span>A: <span class="lifetime">'static</span>,
 {
     <span class="doccomment">/// Converts a `Box&lt;T&gt;` into a `Pin&lt;Box&lt;T&gt;&gt;`. If `T` does not implement
     /// [`Unpin`], then `*boxed` will be pinned in memory and unable to be

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syntect-5.1.0/src/parsing/yaml_load.rs`."><title>yaml_load.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syntect" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syntect-5.1.0/src/parsing/yaml_load.rs`."><title>yaml_load.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syntect" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1232,36 +1232,36 @@
 <span class="attr">#[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>ParseSyntaxError {
-    <span class="doccomment">/// Invalid YAML file syntax, or at least something yaml_rust can&#39;t handle
-    </span><span class="attr">#[error(<span class="string">&quot;Invalid YAML file syntax: {0}&quot;</span>)]
+    <span class="doccomment">/// Invalid YAML file syntax, or at least something yaml_rust can't handle
+    </span><span class="attr">#[error(<span class="string">"Invalid YAML file syntax: {0}"</span>)]
     </span>InvalidYaml(<span class="attr">#[from] </span>ScanError),
     <span class="doccomment">/// The file must contain at least one YAML document
-    </span><span class="attr">#[error(<span class="string">&quot;The file must contain at least one YAML document&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"The file must contain at least one YAML document"</span>)]
     </span>EmptyFile,
     <span class="doccomment">/// Some keys are required for something to be a valid `.sublime-syntax`
-    </span><span class="attr">#[error(<span class="string">&quot;Missing mandatory key in YAML file: {0}&quot;</span>)]
-    </span>MissingMandatoryKey(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str),
+    </span><span class="attr">#[error(<span class="string">"Missing mandatory key in YAML file: {0}"</span>)]
+    </span>MissingMandatoryKey(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str),
     <span class="doccomment">/// Invalid regex
-    </span><span class="attr">#[error(<span class="string">&quot;Error while compiling regex &#39;{0}&#39;: {1}&quot;</span>)]
-    </span>RegexCompileError(String, <span class="attr">#[source] </span>Box&lt;<span class="kw">dyn </span>Error + Send + Sync + <span class="lifetime">&#39;static</span>&gt;),
-    <span class="doccomment">/// A scope that syntect&#39;s scope implementation can&#39;t handle
-    </span><span class="attr">#[error(<span class="string">&quot;Invalid scope: {0}&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Error while compiling regex '{0}': {1}"</span>)]
+    </span>RegexCompileError(String, <span class="attr">#[source] </span>Box&lt;<span class="kw">dyn </span>Error + Send + Sync + <span class="lifetime">'static</span>&gt;),
+    <span class="doccomment">/// A scope that syntect's scope implementation can't handle
+    </span><span class="attr">#[error(<span class="string">"Invalid scope: {0}"</span>)]
     </span>InvalidScope(ParseScopeError),
     <span class="doccomment">/// A reference to another file that is invalid
-    </span><span class="attr">#[error(<span class="string">&quot;Invalid file reference&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Invalid file reference"</span>)]
     </span>BadFileRef,
-    <span class="doccomment">/// Syntaxes must have a context named &quot;main&quot;
-    </span><span class="attr">#[error(<span class="string">&quot;Context &#39;main&#39; is missing&quot;</span>)]
+    <span class="doccomment">/// Syntaxes must have a context named "main"
+    </span><span class="attr">#[error(<span class="string">"Context 'main' is missing"</span>)]
     </span>MainMissing,
     <span class="doccomment">/// Some part of the YAML file is the wrong type (e.g a string but should be a list)
-    /// Sorry this doesn&#39;t give you any way to narrow down where this is.
+    /// Sorry this doesn't give you any way to narrow down where this is.
     /// Maybe use Sublime Text to figure it out.
-    </span><span class="attr">#[error(<span class="string">&quot;Type mismatch&quot;</span>)]
+    </span><span class="attr">#[error(<span class="string">"Type mismatch"</span>)]
     </span>TypeMismatch,
 }
 
-<span class="kw">fn </span>get_key&lt;<span class="lifetime">&#39;a</span>, R, F: FnOnce(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Yaml) -&gt; <span class="prelude-ty">Option</span>&lt;R&gt;&gt;(map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Hash,
-                                                    key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+<span class="kw">fn </span>get_key&lt;<span class="lifetime">'a</span>, R, F: FnOnce(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Yaml) -&gt; <span class="prelude-ty">Option</span>&lt;R&gt;&gt;(map: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Hash,
+                                                    key: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
                                                     f: F)
                                                     -&gt; <span class="prelude-ty">Result</span>&lt;R, ParseSyntaxError&gt; {
     map.get(<span class="kw-2">&amp;</span>Yaml::String(key.to_owned()))
@@ -1275,8 +1275,8 @@
         .collect()
 }
 
-<span class="kw">struct </span>ParserState&lt;<span class="lifetime">&#39;a</span>&gt; {
-    scope_repo: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>ScopeRepository,
+<span class="kw">struct </span>ParserState&lt;<span class="lifetime">'a</span>&gt; {
+    scope_repo: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>ScopeRepository,
     variables: HashMap&lt;String, String&gt;,
     variable_regex: Regex,
     backref_regex: Regex,
@@ -1284,22 +1284,22 @@
 }
 
 <span class="comment">// `__start` must not include prototypes from the actual syntax definition,
-// otherwise it&#39;s possible that a prototype makes us pop out of `__start`.
-</span><span class="kw">static </span>START_CONTEXT: <span class="kw-2">&amp;</span>str = <span class="string">&quot;
+// otherwise it's possible that a prototype makes us pop out of `__start`.
+</span><span class="kw">static </span>START_CONTEXT: <span class="kw-2">&amp;</span>str = <span class="string">"
 __start:
     - meta_include_prototype: false
-    - match: &#39;&#39;
+    - match: ''
       push: __main
 __main:
     - include: main
-&quot;</span>;
+"</span>;
 
 <span class="kw">impl </span>SyntaxDefinition {
-    <span class="doccomment">/// In case you want to create your own SyntaxDefinition&#39;s in memory from strings.
+    <span class="doccomment">/// In case you want to create your own SyntaxDefinition's in memory from strings.
     ///
     /// Generally you should use a [`SyntaxSet`].
     ///
-    /// `fallback_name` is an optional name to use when the YAML doesn&#39;t provide a `name` key.
+    /// `fallback_name` is an optional name to use when the YAML doesn't provide a `name` key.
     ///
     /// [`SyntaxSet`]: ../struct.SyntaxSet.html
     </span><span class="kw">pub fn </span>load_from_str(
@@ -1327,26 +1327,26 @@ __main:
         <span class="kw">let </span>h = doc.as_hash().ok_or(ParseSyntaxError::TypeMismatch)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>variables = HashMap::new();
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(map) = get_key(h, <span class="string">&quot;variables&quot;</span>, |x| x.as_hash()) {
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(map) = get_key(h, <span class="string">"variables"</span>, |x| x.as_hash()) {
             <span class="kw">for </span>(key, value) <span class="kw">in </span>map.iter() {
                 <span class="kw">if let </span>(<span class="prelude-val">Some</span>(key_str), <span class="prelude-val">Some</span>(val_str)) = (key.as_str(), value.as_str()) {
                     variables.insert(key_str.to_owned(), val_str.to_owned());
                 }
             }
         }
-        <span class="kw">let </span>contexts_hash = get_key(h, <span class="string">&quot;contexts&quot;</span>, |x| x.as_hash())<span class="question-mark">?</span>;
-        <span class="kw">let </span>top_level_scope = scope_repo.build(get_key(h, <span class="string">&quot;scope&quot;</span>, |x| x.as_str())<span class="question-mark">?</span>)
+        <span class="kw">let </span>contexts_hash = get_key(h, <span class="string">"contexts"</span>, |x| x.as_hash())<span class="question-mark">?</span>;
+        <span class="kw">let </span>top_level_scope = scope_repo.build(get_key(h, <span class="string">"scope"</span>, |x| x.as_str())<span class="question-mark">?</span>)
             .map_err(ParseSyntaxError::InvalidScope)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>state = ParserState {
             scope_repo,
             variables,
-            variable_regex: Regex::new(<span class="string">r&quot;\{\{([A-Za-z0-9_]+)\}\}&quot;</span>.into()),
-            backref_regex: Regex::new(<span class="string">r&quot;\\\d&quot;</span>.into()),
+            variable_regex: Regex::new(<span class="string">r"\{\{([A-Za-z0-9_]+)\}\}"</span>.into()),
+            backref_regex: Regex::new(<span class="string">r"\\\d"</span>.into()),
             lines_include_newline,
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>contexts = SyntaxDefinition::parse_contexts(contexts_hash, <span class="kw-2">&amp;mut </span>state)<span class="question-mark">?</span>;
-        <span class="kw">if </span>!contexts.contains_key(<span class="string">&quot;main&quot;</span>) {
+        <span class="kw">if </span>!contexts.contains_key(<span class="string">"main"</span>) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParseSyntaxError::MainMissing);
         }
 
@@ -1357,21 +1357,21 @@ __main:
         );
 
         <span class="kw">let </span><span class="kw-2">mut </span>file_extensions = Vec::new();
-        <span class="kw">for </span>extension_key <span class="kw">in </span><span class="kw-2">&amp;</span>[<span class="string">&quot;file_extensions&quot;</span>, <span class="string">&quot;hidden_file_extensions&quot;</span>] {
+        <span class="kw">for </span>extension_key <span class="kw">in </span><span class="kw-2">&amp;</span>[<span class="string">"file_extensions"</span>, <span class="string">"hidden_file_extensions"</span>] {
             <span class="kw">if let </span><span class="prelude-val">Ok</span>(v) = get_key(h, extension_key, |x| x.as_vec()) {
                 file_extensions.extend(v.iter().filter_map(|y| y.as_str().map(|s| s.to_owned())))
             }
         }
 
         <span class="kw">let </span>defn = SyntaxDefinition {
-            name: get_key(h, <span class="string">&quot;name&quot;</span>, |x| x.as_str()).unwrap_or_else(|<span class="kw">_</span>| fallback_name.unwrap_or(<span class="string">&quot;Unnamed&quot;</span>)).to_owned(),
+            name: get_key(h, <span class="string">"name"</span>, |x| x.as_str()).unwrap_or_else(|<span class="kw">_</span>| fallback_name.unwrap_or(<span class="string">"Unnamed"</span>)).to_owned(),
             scope: top_level_scope,
             file_extensions,
             <span class="comment">// TODO maybe cache a compiled version of this Regex
-            </span>first_line_match: get_key(h, <span class="string">&quot;first_line_match&quot;</span>, |x| x.as_str())
+            </span>first_line_match: get_key(h, <span class="string">"first_line_match"</span>, |x| x.as_str())
                 .ok()
                 .map(|s| s.to_owned()),
-            hidden: get_key(h, <span class="string">&quot;hidden&quot;</span>, |x| x.as_bool()).unwrap_or(<span class="bool-val">false</span>),
+            hidden: get_key(h, <span class="string">"hidden"</span>, |x| x.as_bool()).unwrap_or(<span class="bool-val">false</span>),
 
             variables: state.variables,
             contexts,
@@ -1380,12 +1380,12 @@ __main:
     }
 
     <span class="kw">fn </span>parse_contexts(map: <span class="kw-2">&amp;</span>Hash,
-                      state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">&#39;_</span>&gt;)
+                      state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">'_</span>&gt;)
                       -&gt; <span class="prelude-ty">Result</span>&lt;HashMap&lt;String, Context&gt;, ParseSyntaxError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>contexts = HashMap::new();
         <span class="kw">for </span>(key, value) <span class="kw">in </span>map.iter() {
             <span class="kw">if let </span>(<span class="prelude-val">Some</span>(name), <span class="prelude-val">Some</span>(val_vec)) = (key.as_str(), value.as_vec()) {
-                <span class="kw">let </span>is_prototype = name == <span class="string">&quot;prototype&quot;</span>;
+                <span class="kw">let </span>is_prototype = name == <span class="string">"prototype"</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>namer = ContextNamer::new(name);
                 SyntaxDefinition::parse_context(val_vec, state, <span class="kw-2">&amp;mut </span>contexts, is_prototype, <span class="kw-2">&amp;mut </span>namer)<span class="question-mark">?</span>;
             }
@@ -1395,8 +1395,8 @@ __main:
     }
 
     <span class="kw">fn </span>parse_context(vec: <span class="kw-2">&amp;</span>[Yaml],
-                     <span class="comment">// TODO: Maybe just pass the scope repo if that&#39;s all that&#39;s needed?
-                     </span>state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">&#39;_</span>&gt;,
+                     <span class="comment">// TODO: Maybe just pass the scope repo if that's all that's needed?
+                     </span>state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">'_</span>&gt;,
                      contexts: <span class="kw-2">&amp;mut </span>HashMap&lt;String, Context&gt;,
                      is_prototype: bool,
                      namer: <span class="kw-2">&amp;mut </span>ContextNamer)
@@ -1408,28 +1408,28 @@ __main:
             <span class="kw">let </span>map = y.as_hash().ok_or(ParseSyntaxError::TypeMismatch)<span class="question-mark">?</span>;
 
             <span class="kw">let </span><span class="kw-2">mut </span>is_special = <span class="bool-val">false</span>;
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = get_key(map, <span class="string">&quot;meta_scope&quot;</span>, |x| x.as_str()) {
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = get_key(map, <span class="string">"meta_scope"</span>, |x| x.as_str()) {
                 context.meta_scope = str_to_scopes(x, state.scope_repo)<span class="question-mark">?</span>;
                 is_special = <span class="bool-val">true</span>;
             }
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = get_key(map, <span class="string">&quot;meta_content_scope&quot;</span>, |x| x.as_str()) {
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = get_key(map, <span class="string">"meta_content_scope"</span>, |x| x.as_str()) {
                 context.meta_content_scope = str_to_scopes(x, state.scope_repo)<span class="question-mark">?</span>;
                 is_special = <span class="bool-val">true</span>;
             }
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = get_key(map, <span class="string">&quot;meta_include_prototype&quot;</span>, |x| x.as_bool()) {
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = get_key(map, <span class="string">"meta_include_prototype"</span>, |x| x.as_bool()) {
                 context.meta_include_prototype = x;
                 is_special = <span class="bool-val">true</span>;
             }
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) = get_key(map, <span class="string">&quot;clear_scopes&quot;</span>, |x| x.as_bool()) {
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) = get_key(map, <span class="string">"clear_scopes"</span>, |x| x.as_bool()) {
                 context.clear_scopes = <span class="prelude-val">Some</span>(ClearAmount::All);
                 is_special = <span class="bool-val">true</span>;
             }
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = get_key(map, <span class="string">&quot;clear_scopes&quot;</span>, |x| x.as_i64()) {
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = get_key(map, <span class="string">"clear_scopes"</span>, |x| x.as_i64()) {
                 context.clear_scopes = <span class="prelude-val">Some</span>(ClearAmount::TopN(x <span class="kw">as </span>usize));
                 is_special = <span class="bool-val">true</span>;
             }
             <span class="kw">if </span>!is_special {
-                <span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = get_key(map, <span class="string">&quot;include&quot;</span>, <span class="prelude-val">Some</span>) {
+                <span class="kw">if let </span><span class="prelude-val">Ok</span>(x) = get_key(map, <span class="string">"include"</span>, <span class="prelude-val">Some</span>) {
                     <span class="kw">let </span>reference = SyntaxDefinition::parse_reference(
                         x, state, contexts, namer, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                     context.patterns.push(Pattern::Include(reference));
@@ -1450,19 +1450,19 @@ __main:
     }
 
     <span class="kw">fn </span>parse_reference(y: <span class="kw-2">&amp;</span>Yaml,
-                       state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">&#39;_</span>&gt;,
+                       state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">'_</span>&gt;,
                        contexts: <span class="kw-2">&amp;mut </span>HashMap&lt;String, Context&gt;,
                        namer: <span class="kw-2">&amp;mut </span>ContextNamer,
                        with_escape: bool)
                        -&gt; <span class="prelude-ty">Result</span>&lt;ContextReference, ParseSyntaxError&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = y.as_str() {
-            <span class="kw">let </span>parts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = s.split(<span class="string">&#39;#&#39;</span>).collect();
+            <span class="kw">let </span>parts: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = s.split(<span class="string">'#'</span>).collect();
             <span class="kw">let </span>sub_context = <span class="kw">if </span>parts.len() &gt; <span class="number">1 </span>{
                 <span class="prelude-val">Some</span>(parts[<span class="number">1</span>].to_owned())
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>};
-            <span class="kw">if </span>parts[<span class="number">0</span>].starts_with(<span class="string">&quot;scope:&quot;</span>) {
+            <span class="kw">if </span>parts[<span class="number">0</span>].starts_with(<span class="string">"scope:"</span>) {
                 <span class="prelude-val">Ok</span>(ContextReference::ByScope {
                     scope: state.scope_repo
                         .build(<span class="kw-2">&amp;</span>parts[<span class="number">0</span>][<span class="number">6</span>..])
@@ -1470,7 +1470,7 @@ __main:
                     sub_context,
                     with_escape,
                 })
-            } <span class="kw">else if </span>parts[<span class="number">0</span>].ends_with(<span class="string">&quot;.sublime-syntax&quot;</span>) {
+            } <span class="kw">else if </span>parts[<span class="number">0</span>].ends_with(<span class="string">".sublime-syntax"</span>) {
                 <span class="kw">let </span>stem = Path::new(parts[<span class="number">0</span>])
                     .file_stem()
                     .and_then(|x| x.to_str())
@@ -1492,51 +1492,51 @@ __main:
     }
 
     <span class="kw">fn </span>parse_match_pattern(map: <span class="kw-2">&amp;</span>Hash,
-                           state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">&#39;_</span>&gt;,
+                           state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">'_</span>&gt;,
                            contexts: <span class="kw-2">&amp;mut </span>HashMap&lt;String, Context&gt;,
                            namer: <span class="kw-2">&amp;mut </span>ContextNamer)
                            -&gt; <span class="prelude-ty">Result</span>&lt;MatchPattern, ParseSyntaxError&gt; {
-        <span class="kw">let </span>raw_regex = get_key(map, <span class="string">&quot;match&quot;</span>, |x| x.as_str())<span class="question-mark">?</span>;
+        <span class="kw">let </span>raw_regex = get_key(map, <span class="string">"match"</span>, |x| x.as_str())<span class="question-mark">?</span>;
         <span class="kw">let </span>regex_str = <span class="self">Self</span>::parse_regex(raw_regex, state)<span class="question-mark">?</span>;
-        <span class="comment">// println!(&quot;{:?}&quot;, regex_str);
+        <span class="comment">// println!("{:?}", regex_str);
 
-        </span><span class="kw">let </span>scope = get_key(map, <span class="string">&quot;scope&quot;</span>, |x| x.as_str())
+        </span><span class="kw">let </span>scope = get_key(map, <span class="string">"scope"</span>, |x| x.as_str())
             .ok()
             .map(|s| str_to_scopes(s, state.scope_repo))
             .unwrap_or_else(|| <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[]))<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>captures = <span class="kw">if let </span><span class="prelude-val">Ok</span>(map) = get_key(map, <span class="string">&quot;captures&quot;</span>, |x| x.as_hash()) {
+        <span class="kw">let </span>captures = <span class="kw">if let </span><span class="prelude-val">Ok</span>(map) = get_key(map, <span class="string">"captures"</span>, |x| x.as_hash()) {
             <span class="prelude-val">Some</span>(<span class="self">Self</span>::parse_captures(map, <span class="kw-2">&amp;</span>regex_str, state)<span class="question-mark">?</span>)
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>has_captures = <span class="bool-val">false</span>;
-        <span class="kw">let </span>operation = <span class="kw">if </span>get_key(map, <span class="string">&quot;pop&quot;</span>, <span class="prelude-val">Some</span>).is_ok() {
+        <span class="kw">let </span>operation = <span class="kw">if </span>get_key(map, <span class="string">"pop"</span>, <span class="prelude-val">Some</span>).is_ok() {
             <span class="comment">// Thanks @wbond for letting me know this is the correct way to check for captures
             </span>has_captures = state.backref_regex.search(<span class="kw-2">&amp;</span>regex_str, <span class="number">0</span>, regex_str.len(), <span class="prelude-val">None</span>);
             MatchOperation::Pop
-        } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(y) = get_key(map, <span class="string">&quot;push&quot;</span>, <span class="prelude-val">Some</span>) {
+        } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(y) = get_key(map, <span class="string">"push"</span>, <span class="prelude-val">Some</span>) {
             MatchOperation::Push(SyntaxDefinition::parse_pushargs(y, state, contexts, namer)<span class="question-mark">?</span>)
-        } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(y) = get_key(map, <span class="string">&quot;set&quot;</span>, <span class="prelude-val">Some</span>) {
+        } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(y) = get_key(map, <span class="string">"set"</span>, <span class="prelude-val">Some</span>) {
             MatchOperation::Set(SyntaxDefinition::parse_pushargs(y, state, contexts, namer)<span class="question-mark">?</span>)
-        } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(y) = get_key(map, <span class="string">&quot;embed&quot;</span>, <span class="prelude-val">Some</span>) {
+        } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(y) = get_key(map, <span class="string">"embed"</span>, <span class="prelude-val">Some</span>) {
             <span class="comment">// Same as push so we translate it to what it would be
             </span><span class="kw">let </span><span class="kw-2">mut </span>embed_escape_context_yaml = <span class="macro">vec!</span>();
             <span class="kw">let </span><span class="kw-2">mut </span>commands = Hash::new();
-            commands.insert(Yaml::String(<span class="string">&quot;meta_include_prototype&quot;</span>.to_string()), Yaml::Boolean(<span class="bool-val">false</span>));
+            commands.insert(Yaml::String(<span class="string">"meta_include_prototype"</span>.to_string()), Yaml::Boolean(<span class="bool-val">false</span>));
             embed_escape_context_yaml.push(Yaml::Hash(commands));
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(s) = get_key(map, <span class="string">&quot;embed_scope&quot;</span>, <span class="prelude-val">Some</span>) {
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(s) = get_key(map, <span class="string">"embed_scope"</span>, <span class="prelude-val">Some</span>) {
                 commands = Hash::new();
-                commands.insert(Yaml::String(<span class="string">&quot;meta_content_scope&quot;</span>.to_string()), s.clone());
+                commands.insert(Yaml::String(<span class="string">"meta_content_scope"</span>.to_string()), s.clone());
                 embed_escape_context_yaml.push(Yaml::Hash(commands));
             }
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(v) = get_key(map, <span class="string">&quot;escape&quot;</span>, <span class="prelude-val">Some</span>) {
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(v) = get_key(map, <span class="string">"escape"</span>, <span class="prelude-val">Some</span>) {
                 <span class="kw">let </span><span class="kw-2">mut </span>match_map = Hash::new();
-                match_map.insert(Yaml::String(<span class="string">&quot;match&quot;</span>.to_string()), v.clone());
-                match_map.insert(Yaml::String(<span class="string">&quot;pop&quot;</span>.to_string()), Yaml::Boolean(<span class="bool-val">true</span>));
-                <span class="kw">if let </span><span class="prelude-val">Ok</span>(y) = get_key(map, <span class="string">&quot;escape_captures&quot;</span>, <span class="prelude-val">Some</span>) {
-                    match_map.insert(Yaml::String(<span class="string">&quot;captures&quot;</span>.to_string()), y.clone());
+                match_map.insert(Yaml::String(<span class="string">"match"</span>.to_string()), v.clone());
+                match_map.insert(Yaml::String(<span class="string">"pop"</span>.to_string()), Yaml::Boolean(<span class="bool-val">true</span>));
+                <span class="kw">if let </span><span class="prelude-val">Ok</span>(y) = get_key(map, <span class="string">"escape_captures"</span>, <span class="prelude-val">Some</span>) {
+                    match_map.insert(Yaml::String(<span class="string">"captures"</span>.to_string()), y.clone());
                 }
                 embed_escape_context_yaml.push(Yaml::Hash(match_map));
                 <span class="kw">let </span>escape_context = SyntaxDefinition::parse_context(
@@ -1549,24 +1549,24 @@ __main:
                 MatchOperation::Push(<span class="macro">vec!</span>[ContextReference::Inline(escape_context),
                                           SyntaxDefinition::parse_reference(y, state, contexts, namer, <span class="bool-val">true</span>)<span class="question-mark">?</span>])
             } <span class="kw">else </span>{
-                <span class="kw">return </span><span class="prelude-val">Err</span>(ParseSyntaxError::MissingMandatoryKey(<span class="string">&quot;escape&quot;</span>));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ParseSyntaxError::MissingMandatoryKey(<span class="string">"escape"</span>));
             }
 
         } <span class="kw">else </span>{
             MatchOperation::None
         };
 
-        <span class="kw">let </span>with_prototype = <span class="kw">if let </span><span class="prelude-val">Ok</span>(v) = get_key(map, <span class="string">&quot;with_prototype&quot;</span>, |x| x.as_vec()) {
-            <span class="comment">// should a with_prototype include the prototype? I don&#39;t think so.
+        <span class="kw">let </span>with_prototype = <span class="kw">if let </span><span class="prelude-val">Ok</span>(v) = get_key(map, <span class="string">"with_prototype"</span>, |x| x.as_vec()) {
+            <span class="comment">// should a with_prototype include the prototype? I don't think so.
             </span><span class="kw">let </span>subname = <span class="self">Self</span>::parse_context(v, state, contexts, <span class="bool-val">true</span>, namer)<span class="question-mark">?</span>;
             <span class="prelude-val">Some</span>(ContextReference::Inline(subname))
-        } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(v) = get_key(map, <span class="string">&quot;escape&quot;</span>, <span class="prelude-val">Some</span>) {
+        } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(v) = get_key(map, <span class="string">"escape"</span>, <span class="prelude-val">Some</span>) {
             <span class="kw">let </span>subname = namer.next();
 
             <span class="kw">let </span><span class="kw-2">mut </span>context = Context::new(<span class="bool-val">false</span>);
             <span class="kw">let </span><span class="kw-2">mut </span>match_map = Hash::new();
-            match_map.insert(Yaml::String(<span class="string">&quot;match&quot;</span>.to_string()), Yaml::String(<span class="macro">format!</span>(<span class="string">&quot;(?={})&quot;</span>, v.as_str().unwrap())));
-            match_map.insert(Yaml::String(<span class="string">&quot;pop&quot;</span>.to_string()), Yaml::Boolean(<span class="bool-val">true</span>));
+            match_map.insert(Yaml::String(<span class="string">"match"</span>.to_string()), Yaml::String(<span class="macro">format!</span>(<span class="string">"(?={})"</span>, v.as_str().unwrap())));
+            match_map.insert(Yaml::String(<span class="string">"pop"</span>.to_string()), Yaml::Boolean(<span class="bool-val">true</span>));
             <span class="kw">let </span>pattern = SyntaxDefinition::parse_match_pattern(<span class="kw-2">&amp;</span>match_map, state, contexts, namer)<span class="question-mark">?</span>;
             <span class="kw">if </span>pattern.has_captures {
                 context.uses_backrefs = <span class="bool-val">true</span>;
@@ -1592,7 +1592,7 @@ __main:
     }
 
     <span class="kw">fn </span>parse_pushargs(y: <span class="kw-2">&amp;</span>Yaml,
-                      state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">&#39;_</span>&gt;,
+                      state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">'_</span>&gt;,
                       contexts: <span class="kw-2">&amp;mut </span>HashMap&lt;String, Context&gt;,
                       namer: <span class="kw-2">&amp;mut </span>ContextNamer)
                       -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ContextReference&gt;, ParseSyntaxError&gt; {
@@ -1610,13 +1610,13 @@ __main:
         }
     }
 
-    <span class="kw">fn </span>parse_regex(raw_regex: <span class="kw-2">&amp;</span>str, state: <span class="kw-2">&amp;</span>ParserState&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;String, ParseSyntaxError&gt; {
+    <span class="kw">fn </span>parse_regex(raw_regex: <span class="kw-2">&amp;</span>str, state: <span class="kw-2">&amp;</span>ParserState&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;String, ParseSyntaxError&gt; {
         <span class="kw">let </span>regex = <span class="self">Self</span>::resolve_variables(raw_regex, state);
         <span class="kw">let </span>regex = replace_posix_char_classes(regex);
         <span class="kw">let </span>regex = <span class="kw">if </span>state.lines_include_newline {
             regex_for_newlines(regex)
         } <span class="kw">else </span>{
-            <span class="comment">// If the passed in strings don&#39;t include newlines (unlike Sublime) we can&#39;t match on
+            <span class="comment">// If the passed in strings don't include newlines (unlike Sublime) we can't match on
             // them using the original regex. So this tries to rewrite the regex in a way that
             // allows matching against lines without newlines (essentially replacing `\n` with `$`).
             </span>regex_for_no_newlines(regex)
@@ -1625,7 +1625,7 @@ __main:
         <span class="prelude-val">Ok</span>(regex)
     }
 
-    <span class="kw">fn </span>resolve_variables(raw_regex: <span class="kw-2">&amp;</span>str, state: <span class="kw-2">&amp;</span>ParserState&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; String {
+    <span class="kw">fn </span>resolve_variables(raw_regex: <span class="kw-2">&amp;</span>str, state: <span class="kw-2">&amp;</span>ParserState&lt;<span class="lifetime">'_</span>&gt;) -&gt; String {
         <span class="kw">let </span><span class="kw-2">mut </span>result = String::new();
         <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>region = Region::new();
@@ -1636,7 +1636,7 @@ __main:
 
             <span class="kw">let </span>var_pos = region.pos(<span class="number">1</span>).unwrap();
             <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span>raw_regex[var_pos.<span class="number">0</span>..var_pos.<span class="number">1</span>];
-            <span class="kw">let </span>var_raw = state.variables.get(var_name).map(String::as_ref).unwrap_or(<span class="string">&quot;&quot;</span>);
+            <span class="kw">let </span>var_raw = state.variables.get(var_name).map(String::as_ref).unwrap_or(<span class="string">""</span>);
             <span class="kw">let </span>var_resolved = <span class="self">Self</span>::resolve_variables(var_raw, state);
             result.push_str(<span class="kw-2">&amp;</span>var_resolved);
 
@@ -1650,7 +1650,7 @@ __main:
 
     <span class="kw">fn </span>try_compile_regex(regex_str: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), ParseSyntaxError&gt; {
         <span class="comment">// Replace backreferences with a placeholder value that will also appear in errors
-        </span><span class="kw">let </span>regex_str = substitute_backrefs_in_regex(regex_str, |i| <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot;&lt;placeholder_{}&gt;&quot;</span>, i)));
+        </span><span class="kw">let </span>regex_str = substitute_backrefs_in_regex(regex_str, |i| <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"&lt;placeholder_{}&gt;"</span>, i)));
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(error) = Regex::try_compile(<span class="kw-2">&amp;</span>regex_str) {
             <span class="prelude-val">Err</span>(ParseSyntaxError::RegexCompileError(regex_str, error))
@@ -1662,7 +1662,7 @@ __main:
     <span class="kw">fn </span>parse_captures(
         map: <span class="kw-2">&amp;</span>Hash,
         regex_str: <span class="kw-2">&amp;</span>str,
-        state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">&#39;_</span>&gt;,
+        state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;CaptureMapping, ParseSyntaxError&gt; {
         <span class="kw">let </span>valid_indexes = get_consuming_capture_indexes(regex_str);
         <span class="kw">let </span><span class="kw-2">mut </span>captures = Vec::new();
@@ -1684,26 +1684,26 @@ __main:
     /// See &lt;https://github.com/trishume/syntect/issues/58&gt; for more.
     </span><span class="kw">fn </span>add_initial_contexts(
         contexts: <span class="kw-2">&amp;mut </span>HashMap&lt;String, Context&gt;,
-        state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">&#39;_</span>&gt;,
+        state: <span class="kw-2">&amp;mut </span>ParserState&lt;<span class="lifetime">'_</span>&gt;,
         top_level_scope: Scope,
     ) {
         <span class="kw">let </span>yaml_docs = YamlLoader::load_from_str(START_CONTEXT).unwrap();
         <span class="kw">let </span>yaml = <span class="kw-2">&amp;</span>yaml_docs[<span class="number">0</span>];
 
-        <span class="kw">let </span>start_yaml : <span class="kw-2">&amp;</span>[Yaml] = yaml[<span class="string">&quot;__start&quot;</span>].as_vec().unwrap();
-        SyntaxDefinition::parse_context(start_yaml, state, contexts, <span class="bool-val">false</span>, <span class="kw-2">&amp;mut </span>ContextNamer::new(<span class="string">&quot;__start&quot;</span>)).unwrap();
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(start) = contexts.get_mut(<span class="string">&quot;__start&quot;</span>) {
+        <span class="kw">let </span>start_yaml : <span class="kw-2">&amp;</span>[Yaml] = yaml[<span class="string">"__start"</span>].as_vec().unwrap();
+        SyntaxDefinition::parse_context(start_yaml, state, contexts, <span class="bool-val">false</span>, <span class="kw-2">&amp;mut </span>ContextNamer::new(<span class="string">"__start"</span>)).unwrap();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(start) = contexts.get_mut(<span class="string">"__start"</span>) {
             start.meta_content_scope = <span class="macro">vec!</span>[top_level_scope];
         }
 
-        <span class="kw">let </span>main_yaml : <span class="kw-2">&amp;</span>[Yaml] = yaml[<span class="string">&quot;__main&quot;</span>].as_vec().unwrap();
-        SyntaxDefinition::parse_context(main_yaml, state, contexts, <span class="bool-val">false</span>, <span class="kw-2">&amp;mut </span>ContextNamer::new(<span class="string">&quot;__main&quot;</span>)).unwrap();
+        <span class="kw">let </span>main_yaml : <span class="kw-2">&amp;</span>[Yaml] = yaml[<span class="string">"__main"</span>].as_vec().unwrap();
+        SyntaxDefinition::parse_context(main_yaml, state, contexts, <span class="bool-val">false</span>, <span class="kw-2">&amp;mut </span>ContextNamer::new(<span class="string">"__main"</span>)).unwrap();
 
-        <span class="kw">let </span>meta_include_prototype = contexts[<span class="string">&quot;main&quot;</span>].meta_include_prototype;
-        <span class="kw">let </span>meta_scope = contexts[<span class="string">&quot;main&quot;</span>].meta_scope.clone();
-        <span class="kw">let </span>meta_content_scope = contexts[<span class="string">&quot;main&quot;</span>].meta_content_scope.clone();
+        <span class="kw">let </span>meta_include_prototype = contexts[<span class="string">"main"</span>].meta_include_prototype;
+        <span class="kw">let </span>meta_scope = contexts[<span class="string">"main"</span>].meta_scope.clone();
+        <span class="kw">let </span>meta_content_scope = contexts[<span class="string">"main"</span>].meta_content_scope.clone();
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(outer_main) = contexts.get_mut(<span class="string">&quot;__main&quot;</span>) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(outer_main) = contexts.get_mut(<span class="string">"__main"</span>) {
             outer_main.meta_include_prototype = meta_include_prototype;
             outer_main.meta_scope = meta_scope;
             outer_main.meta_content_scope = meta_content_scope;
@@ -1712,7 +1712,7 @@ __main:
         <span class="comment">// add the top_level_scope as a meta_content_scope to main so
         // pushes from other syntaxes add the file scope
         // TODO: this order is not quite correct if main also has a meta_scope
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(main) = contexts.get_mut(<span class="string">&quot;main&quot;</span>) {
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(main) = contexts.get_mut(<span class="string">"main"</span>) {
             main.meta_content_scope.insert(<span class="number">0</span>, top_level_scope);
         }
     }
@@ -1733,7 +1733,7 @@ __main:
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; String {
         <span class="kw">let </span>name = <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = <span class="self">self</span>.anonymous_index {
-            <span class="macro">format!</span>(<span class="string">&quot;#anon_{}_{}&quot;</span>, <span class="self">self</span>.name, index)
+            <span class="macro">format!</span>(<span class="string">"#anon_{}_{}"</span>, <span class="self">self</span>.name, index)
         } <span class="kw">else </span>{
             <span class="self">self</span>.name.clone()
         };
@@ -1745,14 +1745,14 @@ __main:
 
 <span class="doccomment">/// In fancy-regex, POSIX character classes only match ASCII characters.
 ///
-/// Sublime&#39;s syntaxes expect them to match Unicode characters as well, so transform them to
+/// Sublime's syntaxes expect them to match Unicode characters as well, so transform them to
 /// corresponding Unicode character classes.
 </span><span class="kw">fn </span>replace_posix_char_classes(regex: String) -&gt; String {
-    regex.replace(<span class="string">&quot;[:alpha:]&quot;</span>, <span class="string">r&quot;\p{L}&quot;</span>)
-        .replace(<span class="string">&quot;[:alnum:]&quot;</span>, <span class="string">r&quot;\p{L}\p{N}&quot;</span>)
-        .replace(<span class="string">&quot;[:lower:]&quot;</span>, <span class="string">r&quot;\p{Ll}&quot;</span>)
-        .replace(<span class="string">&quot;[:upper:]&quot;</span>, <span class="string">r&quot;\p{Lu}&quot;</span>)
-        .replace(<span class="string">&quot;[:digit:]&quot;</span>, <span class="string">r&quot;\p{Nd}&quot;</span>)
+    regex.replace(<span class="string">"[:alpha:]"</span>, <span class="string">r"\p{L}"</span>)
+        .replace(<span class="string">"[:alnum:]"</span>, <span class="string">r"\p{L}\p{N}"</span>)
+        .replace(<span class="string">"[:lower:]"</span>, <span class="string">r"\p{Ll}"</span>)
+        .replace(<span class="string">"[:upper:]"</span>, <span class="string">r"\p{Lu}"</span>)
+        .replace(<span class="string">"[:digit:]"</span>, <span class="string">r"\p{Nd}"</span>)
 }
 
 
@@ -1762,12 +1762,12 @@ __main:
 /// In fancy-regex, `$` means end of text by default, so that would
 /// match *after* `\n`. Using `(?m:$)` instead means it matches end of line.
 ///
-/// Note that we don&#39;t want to add a `(?m)` in the beginning to change the
+/// Note that we don't want to add a `(?m)` in the beginning to change the
 /// whole regex because that would also change the meaning of `^`. In
 /// fancy-regex, that also matches at the end of e.g. `test\n` which is
 /// different from onig. It would also change `.` to match more.
 </span><span class="kw">fn </span>regex_for_newlines(regex: String) -&gt; String {
-    <span class="kw">if </span>!regex.contains(<span class="string">&#39;$&#39;</span>) {
+    <span class="kw">if </span>!regex.contains(<span class="string">'$'</span>) {
         <span class="kw">return </span>regex;
     }
 
@@ -1777,21 +1777,21 @@ __main:
     rewriter.rewrite()
 }
 
-<span class="kw">struct </span>RegexRewriterForNewlines&lt;<span class="lifetime">&#39;a</span>&gt; {
-    parser: Parser&lt;<span class="lifetime">&#39;a</span>&gt;,
+<span class="kw">struct </span>RegexRewriterForNewlines&lt;<span class="lifetime">'a</span>&gt; {
+    parser: Parser&lt;<span class="lifetime">'a</span>&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; RegexRewriterForNewlines&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RegexRewriterForNewlines&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>rewrite(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; String {
         <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::new();
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>(c) = <span class="self">self</span>.parser.peek() {
             <span class="kw">match </span>c {
-                <span class="string">b&#39;$&#39; </span>=&gt; {
+                <span class="string">b'$' </span>=&gt; {
                     <span class="self">self</span>.parser.next();
-                    result.extend_from_slice(<span class="string">br&quot;(?m:$)&quot;</span>);
+                    result.extend_from_slice(<span class="string">br"(?m:$)"</span>);
                 }
-                <span class="string">b&#39;\\&#39; </span>=&gt; {
+                <span class="string">b'\\' </span>=&gt; {
                     <span class="self">self</span>.parser.next();
                     result.push(c);
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(c2) = <span class="self">self</span>.parser.peek() {
@@ -1799,7 +1799,7 @@ __main:
                         result.push(c2);
                     }
                 }
-                <span class="string">b&#39;[&#39; </span>=&gt; {
+                <span class="string">b'[' </span>=&gt; {
                     <span class="kw">let </span>(<span class="kw-2">mut </span>content, <span class="kw">_</span>) = <span class="self">self</span>.parser.parse_character_class();
                     result.append(<span class="kw-2">&amp;mut </span>content);
                 }
@@ -1814,21 +1814,21 @@ __main:
 }
 
 <span class="doccomment">/// Rewrite a regex that matches `\n` to one that matches `$` (end of line) instead.
-/// That allows the regex to be used to match lines that don&#39;t include a trailing newline character.
+/// That allows the regex to be used to match lines that don't include a trailing newline character.
 ///
-/// The reason we&#39;re doing this is because the regexes in the syntax definitions assume that the
+/// The reason we're doing this is because the regexes in the syntax definitions assume that the
 /// lines that are being matched on include a trailing newline.
 ///
-/// Note that the rewrite is just an approximation and there&#39;s a couple of cases it can not handle,
+/// Note that the rewrite is just an approximation and there's a couple of cases it can not handle,
 /// due to `$` being an anchor whereas `\n` matches a character.
 </span><span class="kw">fn </span>regex_for_no_newlines(regex: String) -&gt; String {
-    <span class="kw">if </span>!regex.contains(<span class="string">r&quot;\n&quot;</span>) {
+    <span class="kw">if </span>!regex.contains(<span class="string">r"\n"</span>) {
         <span class="kw">return </span>regex;
     }
 
     <span class="comment">// A special fix to rewrite a pattern from the `Rd` syntax that the RegexRewriter can not
     // handle properly.
-    </span><span class="kw">let </span>regex = regex.replace(<span class="string">&quot;(?:\\n)?&quot;</span>, <span class="string">&quot;(?:$|)&quot;</span>);
+    </span><span class="kw">let </span>regex = regex.replace(<span class="string">"(?:\\n)?"</span>, <span class="string">"(?:$|)"</span>);
 
     <span class="kw">let </span>rewriter = RegexRewriterForNoNewlines {
         parser: Parser::new(regex.as_bytes()),
@@ -1836,24 +1836,24 @@ __main:
     rewriter.rewrite()
 }
 
-<span class="kw">struct </span>RegexRewriterForNoNewlines&lt;<span class="lifetime">&#39;a</span>&gt; {
-    parser: Parser&lt;<span class="lifetime">&#39;a</span>&gt;,
+<span class="kw">struct </span>RegexRewriterForNoNewlines&lt;<span class="lifetime">'a</span>&gt; {
+    parser: Parser&lt;<span class="lifetime">'a</span>&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; RegexRewriterForNoNewlines&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; RegexRewriterForNoNewlines&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>rewrite(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; String {
         <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::new();
         <span class="kw">while let </span><span class="prelude-val">Some</span>(c) = <span class="self">self</span>.parser.peek() {
             <span class="kw">match </span>c {
-                <span class="string">b&#39;\\&#39; </span>=&gt; {
+                <span class="string">b'\\' </span>=&gt; {
                     <span class="self">self</span>.parser.next();
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(c2) = <span class="self">self</span>.parser.peek() {
                         <span class="self">self</span>.parser.next();
                         <span class="comment">// Replacing `\n` with `$` in `\n?` or `\n+` would make parsing later fail
-                        // with &quot;target of repeat operator is invalid&quot;
+                        // with "target of repeat operator is invalid"
                         </span><span class="kw">let </span>c3 = <span class="self">self</span>.parser.peek();
-                        <span class="kw">if </span>c2 == <span class="string">b&#39;n&#39; </span>&amp;&amp; c3 != <span class="prelude-val">Some</span>(<span class="string">b&#39;?&#39;</span>) &amp;&amp; c3 != <span class="prelude-val">Some</span>(<span class="string">b&#39;+&#39;</span>) &amp;&amp; c3 != <span class="prelude-val">Some</span>(<span class="string">b&#39;*&#39;</span>) {
-                            result.extend_from_slice(<span class="string">b&quot;$&quot;</span>);
+                        <span class="kw">if </span>c2 == <span class="string">b'n' </span>&amp;&amp; c3 != <span class="prelude-val">Some</span>(<span class="string">b'?'</span>) &amp;&amp; c3 != <span class="prelude-val">Some</span>(<span class="string">b'+'</span>) &amp;&amp; c3 != <span class="prelude-val">Some</span>(<span class="string">b'*'</span>) {
+                            result.extend_from_slice(<span class="string">b"$"</span>);
                         } <span class="kw">else </span>{
                             result.push(c);
                             result.push(c2);
@@ -1862,12 +1862,12 @@ __main:
                         result.push(c);
                     }
                 }
-                <span class="string">b&#39;[&#39; </span>=&gt; {
+                <span class="string">b'[' </span>=&gt; {
                     <span class="kw">let </span>(<span class="kw-2">mut </span>content, matches_newline) = <span class="self">self</span>.parser.parse_character_class();
-                    <span class="kw">if </span>matches_newline &amp;&amp; <span class="self">self</span>.parser.peek() != <span class="prelude-val">Some</span>(<span class="string">b&#39;?&#39;</span>) {
-                        result.extend_from_slice(<span class="string">b&quot;(?:&quot;</span>);
+                    <span class="kw">if </span>matches_newline &amp;&amp; <span class="self">self</span>.parser.peek() != <span class="prelude-val">Some</span>(<span class="string">b'?'</span>) {
+                        result.extend_from_slice(<span class="string">b"(?:"</span>);
                         result.append(<span class="kw-2">&amp;mut </span>content);
-                        result.extend_from_slice(<span class="string">br&quot;|$)&quot;</span>);
+                        result.extend_from_slice(<span class="string">br"|$)"</span>);
                     } <span class="kw">else </span>{
                         result.append(<span class="kw-2">&amp;mut </span>content);
                     }
@@ -1889,15 +1889,15 @@ __main:
     parser.get_consuming_capture_indexes()
 }
 
-<span class="kw">struct </span>ConsumingCaptureIndexParser&lt;<span class="lifetime">&#39;a</span>&gt; {
-    parser: Parser&lt;<span class="lifetime">&#39;a</span>&gt;,
+<span class="kw">struct </span>ConsumingCaptureIndexParser&lt;<span class="lifetime">'a</span>&gt; {
+    parser: Parser&lt;<span class="lifetime">'a</span>&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ConsumingCaptureIndexParser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ConsumingCaptureIndexParser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Find capture groups which are not inside lookarounds.
     ///
     /// If, in a YAML syntax definition, a scope stack is applied to a capture group inside a
-    /// lookaround, (i.e. &quot;captures:\n x: scope.stack goes.here&quot;, where &quot;x&quot; is the number of a
+    /// lookaround, (i.e. "captures:\n x: scope.stack goes.here", where "x" is the number of a
     /// capture group in a lookahead/behind), those those scopes are not applied, so no need to
     /// even parse them.
     </span><span class="kw">fn </span>get_consuming_capture_indexes(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Vec&lt;usize&gt; {
@@ -1910,19 +1910,19 @@ __main:
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>(c) = <span class="self">self</span>.parser.peek() {
             <span class="kw">match </span>c {
-                <span class="string">b&#39;\\&#39; </span>=&gt; {
+                <span class="string">b'\\' </span>=&gt; {
                     <span class="self">self</span>.parser.next();
                     <span class="self">self</span>.parser.next();
                 }
-                <span class="string">b&#39;[&#39; </span>=&gt; {
+                <span class="string">b'[' </span>=&gt; {
                     <span class="self">self</span>.parser.parse_character_class();
                 }
-                <span class="string">b&#39;(&#39; </span>=&gt; {
+                <span class="string">b'(' </span>=&gt; {
                     <span class="self">self</span>.parser.next();
                     <span class="comment">// add the current lookaround state to the stack so we can just pop at a closing paren
                     </span>stack.push(in_lookaround);
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(c2) = <span class="self">self</span>.parser.peek() {
-                        <span class="kw">if </span>c2 != <span class="string">b&#39;?&#39; </span>{
+                        <span class="kw">if </span>c2 != <span class="string">b'?' </span>{
                             <span class="comment">// simple numbered capture group
                             </span>cap_num += <span class="number">1</span>;
                             <span class="comment">// if we are not currently in a lookaround,
@@ -1934,20 +1934,20 @@ __main:
                             <span class="self">self</span>.parser.next();
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(c3) = <span class="self">self</span>.parser.peek() {
                                 <span class="self">self</span>.parser.next();
-                                <span class="kw">if </span>c3 == <span class="string">b&#39;=&#39; </span>|| c3 == <span class="string">b&#39;!&#39; </span>{
+                                <span class="kw">if </span>c3 == <span class="string">b'=' </span>|| c3 == <span class="string">b'!' </span>{
                                     <span class="comment">// lookahead
                                     </span>in_lookaround = <span class="bool-val">true</span>;
-                                } <span class="kw">else if </span>c3 == <span class="string">b&#39;&lt;&#39; </span>{
+                                } <span class="kw">else if </span>c3 == <span class="string">b'&lt;' </span>{
                                     <span class="kw">if let </span><span class="prelude-val">Some</span>(c4) = <span class="self">self</span>.parser.peek() {
-                                        <span class="kw">if </span>c4 == <span class="string">b&#39;=&#39; </span>|| c4 == <span class="string">b&#39;!&#39; </span>{
+                                        <span class="kw">if </span>c4 == <span class="string">b'=' </span>|| c4 == <span class="string">b'!' </span>{
                                             <span class="self">self</span>.parser.next();
                                             <span class="comment">// lookbehind
                                             </span>in_lookaround = <span class="bool-val">true</span>;
                                         }
                                     }
-                                } <span class="kw">else if </span>c3 == <span class="string">b&#39;P&#39; </span>{
+                                } <span class="kw">else if </span>c3 == <span class="string">b'P' </span>{
                                     <span class="kw">if let </span><span class="prelude-val">Some</span>(c4) = <span class="self">self</span>.parser.peek() {
-                                        <span class="kw">if </span>c4 == <span class="string">b&#39;&lt;&#39; </span>{
+                                        <span class="kw">if </span>c4 == <span class="string">b'&lt;' </span>{
                                             <span class="comment">// named capture group
                                             </span>cap_num += <span class="number">1</span>;
                                             <span class="comment">// if we are not currently in a lookaround,
@@ -1962,7 +1962,7 @@ __main:
                         }
                     }
                 }
-                <span class="string">b&#39;)&#39; </span>=&gt; {
+                <span class="string">b')' </span>=&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = stack.pop() {
                         in_lookaround = value;
                     }
@@ -1977,12 +1977,12 @@ __main:
     }
 }
 
-<span class="kw">struct </span>Parser&lt;<span class="lifetime">&#39;a</span>&gt; {
-    bytes: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8],
+<span class="kw">struct </span>Parser&lt;<span class="lifetime">'a</span>&gt; {
+    bytes: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8],
     index: usize,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Parser&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Parser&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>new(bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; Parser {
         Parser {
             bytes,
@@ -2005,40 +2005,40 @@ __main:
         <span class="kw">let </span><span class="kw-2">mut </span>matches_newline = <span class="bool-val">false</span>;
 
         <span class="self">self</span>.next();
-        content.push(<span class="string">b&#39;[&#39;</span>);
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="string">b&#39;^&#39;</span>) = <span class="self">self</span>.peek() {
+        content.push(<span class="string">b'['</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="string">b'^'</span>) = <span class="self">self</span>.peek() {
             <span class="self">self</span>.next();
-            content.push(<span class="string">b&#39;^&#39;</span>);
+            content.push(<span class="string">b'^'</span>);
             negated = <span class="bool-val">true</span>;
         }
 
-        <span class="comment">// An unescaped `]` is allowed after `[` or `[^` and doesn&#39;t mean the end of the class.
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="string">b&#39;]&#39;</span>) = <span class="self">self</span>.peek() {
+        <span class="comment">// An unescaped `]` is allowed after `[` or `[^` and doesn't mean the end of the class.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="string">b']'</span>) = <span class="self">self</span>.peek() {
             <span class="self">self</span>.next();
-            content.push(<span class="string">b&#39;]&#39;</span>);
+            content.push(<span class="string">b']'</span>);
         }
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>(c) = <span class="self">self</span>.peek() {
             <span class="kw">match </span>c {
-                <span class="string">b&#39;\\&#39; </span>=&gt; {
+                <span class="string">b'\\' </span>=&gt; {
                     <span class="self">self</span>.next();
                     content.push(c);
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(c2) = <span class="self">self</span>.peek() {
                         <span class="self">self</span>.next();
-                        <span class="kw">if </span>c2 == <span class="string">b&#39;n&#39; </span>&amp;&amp; !negated &amp;&amp; nesting == <span class="number">0 </span>{
+                        <span class="kw">if </span>c2 == <span class="string">b'n' </span>&amp;&amp; !negated &amp;&amp; nesting == <span class="number">0 </span>{
                             matches_newline = <span class="bool-val">true</span>;
                         }
                         content.push(c2);
                     }
                 }
-                <span class="string">b&#39;[&#39; </span>=&gt; {
+                <span class="string">b'[' </span>=&gt; {
                     <span class="self">self</span>.next();
-                    content.push(<span class="string">b&#39;[&#39;</span>);
+                    content.push(<span class="string">b'['</span>);
                     nesting += <span class="number">1</span>;
                 }
-                <span class="string">b&#39;]&#39; </span>=&gt; {
+                <span class="string">b']' </span>=&gt; {
                     <span class="self">self</span>.next();
-                    content.push(<span class="string">b&#39;]&#39;</span>);
+                    content.push(<span class="string">b']'</span>);
                     <span class="kw">if </span>nesting == <span class="number">0 </span>{
                         <span class="kw">break</span>;
                     }
@@ -2065,24 +2065,24 @@ __main:
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse() {
         <span class="kw">let </span>defn: SyntaxDefinition =
-            SyntaxDefinition::load_from_str(<span class="string">&quot;name: C\nscope: source.c\ncontexts: {main: []}&quot;</span>,
+            SyntaxDefinition::load_from_str(<span class="string">"name: C\nscope: source.c\ncontexts: {main: []}"</span>,
                                             <span class="bool-val">false</span>, <span class="prelude-val">None</span>)
                 .unwrap();
-        <span class="macro">assert_eq!</span>(defn.name, <span class="string">&quot;C&quot;</span>);
-        <span class="macro">assert_eq!</span>(defn.scope, Scope::new(<span class="string">&quot;source.c&quot;</span>).unwrap());
+        <span class="macro">assert_eq!</span>(defn.name, <span class="string">"C"</span>);
+        <span class="macro">assert_eq!</span>(defn.scope, Scope::new(<span class="string">"source.c"</span>).unwrap());
         <span class="kw">let </span>exts_empty: Vec&lt;String&gt; = Vec::new();
         <span class="macro">assert_eq!</span>(defn.file_extensions, exts_empty);
         <span class="macro">assert!</span>(!defn.hidden);
         <span class="macro">assert!</span>(defn.variables.is_empty());
         <span class="kw">let </span>defn2: SyntaxDefinition =
-            SyntaxDefinition::load_from_str(<span class="string">&quot;
+            SyntaxDefinition::load_from_str(<span class="string">"
         name: C
         scope: source.c
         file_extensions: [c, h]
         hidden_file_extensions: [k, l]
         hidden: true
         variables:
-          ident: &#39;[QY]+&#39;
+          ident: '[QY]+'
         contexts:
           prototype:
             - match: lol
@@ -2093,70 +2093,70 @@ __main:
               captures:
                   1: meta.preprocessor.c++
                   2: keyword.control.include.c++
-              push: [string, &#39;scope:source.c#main&#39;, &#39;CSS.sublime-syntax#rule-list-body&#39;]
+              push: [string, 'scope:source.c#main', 'CSS.sublime-syntax#rule-list-body']
               with_prototype:
                 - match: wow
                   pop: true
-            - match: &#39;\&quot;&#39;
+            - match: '\"'
               push: string
           string:
             - meta_scope: string.quoted.double.c
             - meta_include_prototype: false
             - match: \\\\.
               scope: constant.character.escape.c
-            - match: &#39;\&quot;&#39;
+            - match: '\"'
               pop: true
-        &quot;</span>,
+        "</span>,
                                             <span class="bool-val">false</span>, <span class="prelude-val">None</span>)
                 .unwrap();
-        <span class="macro">assert_eq!</span>(defn2.name, <span class="string">&quot;C&quot;</span>);
-        <span class="kw">let </span>top_level_scope = Scope::new(<span class="string">&quot;source.c&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(defn2.name, <span class="string">"C"</span>);
+        <span class="kw">let </span>top_level_scope = Scope::new(<span class="string">"source.c"</span>).unwrap();
         <span class="macro">assert_eq!</span>(defn2.scope, top_level_scope);
-        <span class="kw">let </span>exts: Vec&lt;String&gt; = <span class="macro">vec!</span>[<span class="string">&quot;c&quot;</span>, <span class="string">&quot;h&quot;</span>, <span class="string">&quot;k&quot;</span>, <span class="string">&quot;l&quot;</span>].into_iter().map(String::from).collect();
+        <span class="kw">let </span>exts: Vec&lt;String&gt; = <span class="macro">vec!</span>[<span class="string">"c"</span>, <span class="string">"h"</span>, <span class="string">"k"</span>, <span class="string">"l"</span>].into_iter().map(String::from).collect();
         <span class="macro">assert_eq!</span>(defn2.file_extensions, exts);
         <span class="macro">assert!</span>(defn2.hidden);
-        <span class="macro">assert_eq!</span>(defn2.variables.get(<span class="string">&quot;ident&quot;</span>).unwrap(), <span class="string">&quot;[QY]+&quot;</span>);
+        <span class="macro">assert_eq!</span>(defn2.variables.get(<span class="string">"ident"</span>).unwrap(), <span class="string">"[QY]+"</span>);
 
         <span class="kw">let </span>n: Vec&lt;Scope&gt; = Vec::new();
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, defn2);
+        <span class="macro">println!</span>(<span class="string">"{:?}"</span>, defn2);
         <span class="comment">// unreachable!();
-        </span><span class="kw">let </span>main = <span class="kw-2">&amp;</span>defn2.contexts[<span class="string">&quot;main&quot;</span>];
+        </span><span class="kw">let </span>main = <span class="kw-2">&amp;</span>defn2.contexts[<span class="string">"main"</span>];
         <span class="macro">assert_eq!</span>(main.meta_content_scope, <span class="macro">vec!</span>[top_level_scope]);
         <span class="macro">assert_eq!</span>(main.meta_scope, n);
         <span class="macro">assert!</span>(main.meta_include_prototype);
 
-        <span class="macro">assert_eq!</span>(defn2.contexts[<span class="string">&quot;__main&quot;</span>].meta_content_scope, n);
-        <span class="macro">assert_eq!</span>(defn2.contexts[<span class="string">&quot;__start&quot;</span>].meta_content_scope, <span class="macro">vec!</span>[top_level_scope]);
+        <span class="macro">assert_eq!</span>(defn2.contexts[<span class="string">"__main"</span>].meta_content_scope, n);
+        <span class="macro">assert_eq!</span>(defn2.contexts[<span class="string">"__start"</span>].meta_content_scope, <span class="macro">vec!</span>[top_level_scope]);
 
-        <span class="macro">assert_eq!</span>(defn2.contexts[<span class="string">&quot;string&quot;</span>].meta_scope,
-                   <span class="macro">vec!</span>[Scope::new(<span class="string">&quot;string.quoted.double.c&quot;</span>).unwrap()]);
+        <span class="macro">assert_eq!</span>(defn2.contexts[<span class="string">"string"</span>].meta_scope,
+                   <span class="macro">vec!</span>[Scope::new(<span class="string">"string.quoted.double.c"</span>).unwrap()]);
         <span class="kw">let </span>first_pattern: <span class="kw-2">&amp;</span>Pattern = <span class="kw-2">&amp;</span>main.patterns[<span class="number">0</span>];
         <span class="kw">match </span><span class="kw-2">*</span>first_pattern {
             Pattern::Match(<span class="kw-2">ref </span>match_pat) =&gt; {
-                <span class="kw">let </span>m: <span class="kw-2">&amp;</span>CaptureMapping = match_pat.captures.as_ref().expect(<span class="string">&quot;test failed&quot;</span>);
-                <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>m[<span class="number">0</span>], <span class="kw-2">&amp;</span>(<span class="number">1</span>,<span class="macro">vec!</span>[Scope::new(<span class="string">&quot;meta.preprocessor.c++&quot;</span>).unwrap()]));
+                <span class="kw">let </span>m: <span class="kw-2">&amp;</span>CaptureMapping = match_pat.captures.as_ref().expect(<span class="string">"test failed"</span>);
+                <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>m[<span class="number">0</span>], <span class="kw-2">&amp;</span>(<span class="number">1</span>,<span class="macro">vec!</span>[Scope::new(<span class="string">"meta.preprocessor.c++"</span>).unwrap()]));
                 <span class="kw">use </span><span class="kw">crate</span>::parsing::syntax_definition::ContextReference::<span class="kw-2">*</span>;
 
                 <span class="comment">// this is sadly necessary because Context is not Eq because of the Regex
                 </span><span class="kw">let </span>expected = MatchOperation::Push(<span class="macro">vec!</span>[
-                    Named(<span class="string">&quot;string&quot;</span>.to_owned()),
+                    Named(<span class="string">"string"</span>.to_owned()),
                     ByScope {
-                        scope: Scope::new(<span class="string">&quot;source.c&quot;</span>).unwrap(),
-                        sub_context: <span class="prelude-val">Some</span>(<span class="string">&quot;main&quot;</span>.to_owned()),
+                        scope: Scope::new(<span class="string">"source.c"</span>).unwrap(),
+                        sub_context: <span class="prelude-val">Some</span>(<span class="string">"main"</span>.to_owned()),
                         with_escape: <span class="bool-val">false</span>,
                     },
                     File {
-                        name: <span class="string">&quot;CSS&quot;</span>.to_owned(),
-                        sub_context: <span class="prelude-val">Some</span>(<span class="string">&quot;rule-list-body&quot;</span>.to_owned()),
+                        name: <span class="string">"CSS"</span>.to_owned(),
+                        sub_context: <span class="prelude-val">Some</span>(<span class="string">"rule-list-body"</span>.to_owned()),
                         with_escape: <span class="bool-val">false</span>,
                     },
                 ]);
-                <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, match_pat.operation),
-                           <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, expected));
+                <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, match_pat.operation),
+                           <span class="macro">format!</span>(<span class="string">"{:?}"</span>, expected));
 
                 <span class="macro">assert_eq!</span>(match_pat.scope,
-                           <span class="macro">vec!</span>[Scope::new(<span class="string">&quot;keyword.control.c&quot;</span>).unwrap(),
-                                Scope::new(<span class="string">&quot;keyword.looping.c&quot;</span>).unwrap()]);
+                           <span class="macro">vec!</span>[Scope::new(<span class="string">"keyword.control.c"</span>).unwrap(),
+                                Scope::new(<span class="string">"keyword.looping.c"</span>).unwrap()]);
 
                 <span class="macro">assert!</span>(match_pat.with_prototype.is_some());
             }
@@ -2166,46 +2166,46 @@ __main:
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_embed_as_with_prototypes() {
-        <span class="kw">let </span>old_def = SyntaxDefinition::load_from_str(<span class="string">r#&quot;
+        <span class="kw">let </span>old_def = SyntaxDefinition::load_from_str(<span class="string">r#"
         name: C
         scope: source.c
         file_extensions: [c, h]
         variables:
-          ident: &#39;[QY]+&#39;
+          ident: '[QY]+'
         contexts:
           main:
-            - match: &#39;(&gt;)\s*&#39;
+            - match: '(&gt;)\s*'
               captures:
                 1: meta.tag.style.begin.html punctuation.definition.tag.end.html
               push:
-                - [{ meta_include_prototype: false }, { meta_content_scope: &#39;source.css.embedded.html&#39; }, { match: &#39;(?i)(?=&lt;/style)&#39;, pop: true }]
+                - [{ meta_include_prototype: false }, { meta_content_scope: 'source.css.embedded.html' }, { match: '(?i)(?=&lt;/style)', pop: true }]
                 - scope:source.css
               with_prototype:
                 - match: (?=(?i)(?=&lt;/style))
                   pop: true
-        &quot;#</span>,<span class="bool-val">false</span>, <span class="prelude-val">None</span>).unwrap();
+        "#</span>,<span class="bool-val">false</span>, <span class="prelude-val">None</span>).unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>def_with_embed = SyntaxDefinition::load_from_str(<span class="string">r#&quot;
+        <span class="kw">let </span><span class="kw-2">mut </span>def_with_embed = SyntaxDefinition::load_from_str(<span class="string">r#"
         name: C
         scope: source.c
         file_extensions: [c, h]
         variables:
-          ident: &#39;[QY]+&#39;
+          ident: '[QY]+'
         contexts:
           main:
-            - match: &#39;(&gt;)\s*&#39;
+            - match: '(&gt;)\s*'
               captures:
                 1: meta.tag.style.begin.html punctuation.definition.tag.end.html
               embed: scope:source.css
               embed_scope: source.css.embedded.html
               escape: (?i)(?=&lt;/style)
-        &quot;#</span>,<span class="bool-val">false</span>, <span class="prelude-val">None</span>).unwrap();
+        "#</span>,<span class="bool-val">false</span>, <span class="prelude-val">None</span>).unwrap();
 
         <span class="comment">// We will soon do an `assert_eq!()`. But there is one difference we must expect, namely
         // that for `def_with_embed`, the value of `ContextReference::ByScope::with_escape` will be
         // `true`, whereas for `old_def` it will be `false`. So manually adjust `with_escape` to
         // `false` so that `assert_eq!()` will work.
-        </span><span class="kw">let </span>def_with_embed_context = def_with_embed.contexts.get_mut(<span class="string">&quot;main&quot;</span>).unwrap();
+        </span><span class="kw">let </span>def_with_embed_context = def_with_embed.contexts.get_mut(<span class="string">"main"</span>).unwrap();
         <span class="kw">if let </span>Pattern::Match(<span class="kw-2">ref mut </span>match_pattern) = def_with_embed_context.patterns[<span class="number">0</span>] {
             <span class="kw">if let </span>MatchOperation::Push(<span class="kw-2">ref mut </span>context_references) = match_pattern.operation {
                 <span class="kw">if let </span>ContextReference::ByScope {
@@ -2218,91 +2218,91 @@ __main:
             }
         }
 
-        <span class="macro">assert_eq!</span>(old_def.contexts[<span class="string">&quot;main&quot;</span>], def_with_embed.contexts[<span class="string">&quot;main&quot;</span>]);
+        <span class="macro">assert_eq!</span>(old_def.contexts[<span class="string">"main"</span>], def_with_embed.contexts[<span class="string">"main"</span>]);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>errors_on_embed_without_escape() {
-        <span class="kw">let </span>def = SyntaxDefinition::load_from_str(<span class="string">r#&quot;
+        <span class="kw">let </span>def = SyntaxDefinition::load_from_str(<span class="string">r#"
         name: C
         scope: source.c
         file_extensions: [c, h]
         variables:
-          ident: &#39;[QY]+&#39;
+          ident: '[QY]+'
         contexts:
           main:
-            - match: &#39;(&gt;)\s*&#39;
+            - match: '(&gt;)\s*'
               captures:
                 1: meta.tag.style.begin.html punctuation.definition.tag.end.html
               embed: scope:source.css
               embed_scope: source.css.embedded.html
-        &quot;#</span>,<span class="bool-val">false</span>, <span class="prelude-val">None</span>);
+        "#</span>,<span class="bool-val">false</span>, <span class="prelude-val">None</span>);
         <span class="macro">assert!</span>(def.is_err());
         <span class="kw">match </span>def.unwrap_err() {
-            ParseSyntaxError::MissingMandatoryKey(key) =&gt; <span class="macro">assert_eq!</span>(key, <span class="string">&quot;escape&quot;</span>),
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Got unexpected ParseSyntaxError&quot;</span>),
+            ParseSyntaxError::MissingMandatoryKey(key) =&gt; <span class="macro">assert_eq!</span>(key, <span class="string">"escape"</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">"Got unexpected ParseSyntaxError"</span>),
         }
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>errors_on_regex_compile_error() {
-        <span class="kw">let </span>def = SyntaxDefinition::load_from_str(<span class="string">r#&quot;
+        <span class="kw">let </span>def = SyntaxDefinition::load_from_str(<span class="string">r#"
         name: C
         scope: source.c
         file_extensions: [test]
         contexts:
           main:
-            - match: &#39;[a&#39;
+            - match: '[a'
               scope: keyword.name
-        &quot;#</span>,<span class="bool-val">false</span>, <span class="prelude-val">None</span>);
+        "#</span>,<span class="bool-val">false</span>, <span class="prelude-val">None</span>);
         <span class="macro">assert!</span>(def.is_err());
         <span class="kw">match </span>def.unwrap_err() {
-            ParseSyntaxError::RegexCompileError(<span class="kw-2">ref </span>regex, <span class="kw">_</span>) =&gt; <span class="macro">assert_eq!</span>(<span class="string">&quot;[a&quot;</span>, regex),
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Got unexpected ParseSyntaxError&quot;</span>),
+            ParseSyntaxError::RegexCompileError(<span class="kw-2">ref </span>regex, <span class="kw">_</span>) =&gt; <span class="macro">assert_eq!</span>(<span class="string">"[a"</span>, regex),
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">"Got unexpected ParseSyntaxError"</span>),
         }
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_ugly_yaml() {
         <span class="kw">let </span>defn: SyntaxDefinition =
-            SyntaxDefinition::load_from_str(<span class="string">&quot;
+            SyntaxDefinition::load_from_str(<span class="string">"
         name: LaTeX
         scope: text.tex.latex
         contexts:
           main:
-            - match: &#39;((\\\\)(?:framebox|makebox))\\b&#39;
+            - match: '((\\\\)(?:framebox|makebox))\\b'
               captures:
                 1: support.function.box.latex
                 2: punctuation.definition.backslash.latex
               push:
-                - [{meta_scope: meta.function.box.latex}, {match: &#39;&#39;, pop: true}]
+                - [{meta_scope: meta.function.box.latex}, {match: '', pop: true}]
                 - argument
                 - optional-arguments
           argument:
-            - match: &#39;\\{&#39;
+            - match: '\\{'
               scope: punctuation.definition.group.brace.begin.latex
-            - match: &#39;(?=\\S)&#39;
+            - match: '(?=\\S)'
               pop: true
           optional-arguments:
-            - match: &#39;(?=\\S)&#39;
+            - match: '(?=\\S)'
               pop: true
-        &quot;</span>,
+        "</span>,
                                             <span class="bool-val">false</span>, <span class="prelude-val">None</span>)
                 .unwrap();
-        <span class="macro">assert_eq!</span>(defn.name, <span class="string">&quot;LaTeX&quot;</span>);
-        <span class="kw">let </span>top_level_scope = Scope::new(<span class="string">&quot;text.tex.latex&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(defn.name, <span class="string">"LaTeX"</span>);
+        <span class="kw">let </span>top_level_scope = Scope::new(<span class="string">"text.tex.latex"</span>).unwrap();
         <span class="macro">assert_eq!</span>(defn.scope, top_level_scope);
 
-        <span class="kw">let </span>first_pattern: <span class="kw-2">&amp;</span>Pattern = <span class="kw-2">&amp;</span>defn.contexts[<span class="string">&quot;main&quot;</span>].patterns[<span class="number">0</span>];
+        <span class="kw">let </span>first_pattern: <span class="kw-2">&amp;</span>Pattern = <span class="kw-2">&amp;</span>defn.contexts[<span class="string">"main"</span>].patterns[<span class="number">0</span>];
         <span class="kw">match </span><span class="kw-2">*</span>first_pattern {
             Pattern::Match(<span class="kw-2">ref </span>match_pat) =&gt; {
-                <span class="kw">let </span>m: <span class="kw-2">&amp;</span>CaptureMapping = match_pat.captures.as_ref().expect(<span class="string">&quot;test failed&quot;</span>);
-                <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>m[<span class="number">0</span>], <span class="kw-2">&amp;</span>(<span class="number">1</span>,<span class="macro">vec!</span>[Scope::new(<span class="string">&quot;support.function.box.latex&quot;</span>).unwrap()]));
+                <span class="kw">let </span>m: <span class="kw-2">&amp;</span>CaptureMapping = match_pat.captures.as_ref().expect(<span class="string">"test failed"</span>);
+                <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>m[<span class="number">0</span>], <span class="kw-2">&amp;</span>(<span class="number">1</span>,<span class="macro">vec!</span>[Scope::new(<span class="string">"support.function.box.latex"</span>).unwrap()]));
 
                 <span class="comment">//use parsing::syntax_definition::ContextReference::*;
                 // TODO: check the first pushed reference is Inline(...) and has a meta_scope of meta.function.box.latex
-                // TODO: check the second pushed reference is Named(&quot;argument&quot;.to_owned())
-                // TODO: check the third pushed reference is Named(&quot;optional-arguments&quot;.to_owned())
+                // TODO: check the second pushed reference is Named("argument".to_owned())
+                // TODO: check the third pushed reference is Named("optional-arguments".to_owned())
 
                 </span><span class="macro">assert!</span>(match_pat.with_prototype.is_none());
             }
@@ -2313,7 +2313,7 @@ __main:
     <span class="attr">#[test]
     </span><span class="kw">fn </span>names_anonymous_contexts() {
         <span class="kw">let </span>def = SyntaxDefinition::load_from_str(
-            <span class="string">r#&quot;
+            <span class="string">r#"
             scope: source.c
             contexts:
               main:
@@ -2331,28 +2331,28 @@ __main:
                   push:
                     - meta_scope: anonymous_y
                 - match: z
-                  escape: &#39;test&#39;
-            &quot;#</span>,
+                  escape: 'test'
+            "#</span>,
             <span class="bool-val">false</span>,
             <span class="prelude-val">None
         </span>).unwrap();
 
-        <span class="macro">assert_eq!</span>(def.contexts[<span class="string">&quot;a&quot;</span>].meta_scope, <span class="macro">vec!</span>[Scope::new(<span class="string">&quot;a&quot;</span>).unwrap()]);
-        <span class="macro">assert_eq!</span>(def.contexts[<span class="string">&quot;#anon_a_0&quot;</span>].meta_scope, <span class="macro">vec!</span>[Scope::new(<span class="string">&quot;anonymous_x&quot;</span>).unwrap()]);
-        <span class="macro">assert_eq!</span>(def.contexts[<span class="string">&quot;#anon_a_1&quot;</span>].meta_scope, <span class="macro">vec!</span>[Scope::new(<span class="string">&quot;anonymous_x_2&quot;</span>).unwrap()]);
-        <span class="macro">assert_eq!</span>(def.contexts[<span class="string">&quot;#anon_a_2&quot;</span>].meta_scope, <span class="macro">vec!</span>[Scope::new(<span class="string">&quot;anonymous_y&quot;</span>).unwrap()]);
-        <span class="macro">assert_eq!</span>(def.contexts[<span class="string">&quot;#anon_a_3&quot;</span>].patterns.len(), <span class="number">1</span>); <span class="comment">// escape
+        <span class="macro">assert_eq!</span>(def.contexts[<span class="string">"a"</span>].meta_scope, <span class="macro">vec!</span>[Scope::new(<span class="string">"a"</span>).unwrap()]);
+        <span class="macro">assert_eq!</span>(def.contexts[<span class="string">"#anon_a_0"</span>].meta_scope, <span class="macro">vec!</span>[Scope::new(<span class="string">"anonymous_x"</span>).unwrap()]);
+        <span class="macro">assert_eq!</span>(def.contexts[<span class="string">"#anon_a_1"</span>].meta_scope, <span class="macro">vec!</span>[Scope::new(<span class="string">"anonymous_x_2"</span>).unwrap()]);
+        <span class="macro">assert_eq!</span>(def.contexts[<span class="string">"#anon_a_2"</span>].meta_scope, <span class="macro">vec!</span>[Scope::new(<span class="string">"anonymous_y"</span>).unwrap()]);
+        <span class="macro">assert_eq!</span>(def.contexts[<span class="string">"#anon_a_3"</span>].patterns.len(), <span class="number">1</span>); <span class="comment">// escape
     </span>}
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_use_fallback_name() {
-        <span class="kw">let </span>def = SyntaxDefinition::load_from_str(<span class="string">r#&quot;
+        <span class="kw">let </span>def = SyntaxDefinition::load_from_str(<span class="string">r#"
         scope: source.c
         contexts:
           main:
-            - match: &#39;&#39;
-        &quot;#</span>,<span class="bool-val">false</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;C&quot;</span>));
-        <span class="macro">assert_eq!</span>(def.unwrap().name, <span class="string">&quot;C&quot;</span>);
+            - match: ''
+        "#</span>,<span class="bool-val">false</span>, <span class="prelude-val">Some</span>(<span class="string">"C"</span>));
+        <span class="macro">assert_eq!</span>(def.unwrap().name, <span class="string">"C"</span>);
     }
 
     <span class="attr">#[test]
@@ -2361,22 +2361,22 @@ __main:
             regex_for_newlines(s.to_string())
         }
 
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;a&quot;</span>), <span class="string">r&quot;a&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;\b&quot;</span>), <span class="string">r&quot;\b&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;(a)&quot;</span>), <span class="string">r&quot;(a)&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[a]&quot;</span>), <span class="string">r&quot;[a]&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[^a]&quot;</span>), <span class="string">r&quot;[^a]&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[]a]&quot;</span>), <span class="string">r&quot;[]a]&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[[a]]&quot;</span>), <span class="string">r&quot;[[a]]&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"a"</span>), <span class="string">r"a"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"\b"</span>), <span class="string">r"\b"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"(a)"</span>), <span class="string">r"(a)"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[a]"</span>), <span class="string">r"[a]"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[^a]"</span>), <span class="string">r"[^a]"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[]a]"</span>), <span class="string">r"[]a]"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[[a]]"</span>), <span class="string">r"[[a]]"</span>);
 
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;^&quot;</span>), <span class="string">r&quot;^&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;$&quot;</span>), <span class="string">r&quot;(?m:$)&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;^ab$&quot;</span>), <span class="string">r&quot;^ab(?m:$)&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;\^ab\$&quot;</span>), <span class="string">r&quot;\^ab\$&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;(//).*$&quot;</span>), <span class="string">r&quot;(//).*(?m:$)&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"^"</span>), <span class="string">r"^"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"$"</span>), <span class="string">r"(?m:$)"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"^ab$"</span>), <span class="string">r"^ab(?m:$)"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"\^ab\$"</span>), <span class="string">r"\^ab\$"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"(//).*$"</span>), <span class="string">r"(//).*(?m:$)"</span>);
 
-        <span class="comment">// Do not rewrite this `$` because it&#39;s in a char class and doesn&#39;t mean end of line
-        </span><span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[a$]&quot;</span>), <span class="string">r&quot;[a$]&quot;</span>);
+        <span class="comment">// Do not rewrite this `$` because it's in a char class and doesn't mean end of line
+        </span><span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[a$]"</span>), <span class="string">r"[a$]"</span>);
     }
 
     <span class="attr">#[test]
@@ -2385,58 +2385,58 @@ __main:
             regex_for_no_newlines(s.to_string())
         }
 
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;a&quot;</span>), <span class="string">r&quot;a&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;\b&quot;</span>), <span class="string">r&quot;\b&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;(a)&quot;</span>), <span class="string">r&quot;(a)&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[a]&quot;</span>), <span class="string">r&quot;[a]&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[^a]&quot;</span>), <span class="string">r&quot;[^a]&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[]a]&quot;</span>), <span class="string">r&quot;[]a]&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[[a]]&quot;</span>), <span class="string">r&quot;[[a]]&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"a"</span>), <span class="string">r"a"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"\b"</span>), <span class="string">r"\b"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"(a)"</span>), <span class="string">r"(a)"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[a]"</span>), <span class="string">r"[a]"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[^a]"</span>), <span class="string">r"[^a]"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[]a]"</span>), <span class="string">r"[]a]"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[[a]]"</span>), <span class="string">r"[[a]]"</span>);
 
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;\n&quot;</span>), <span class="string">r&quot;$&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;\[\n&quot;</span>), <span class="string">r&quot;\[$&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;a\n?&quot;</span>), <span class="string">r&quot;a\n?&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;a\n+&quot;</span>), <span class="string">r&quot;a\n+&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;a\n*&quot;</span>), <span class="string">r&quot;a\n*&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[abc\n]&quot;</span>), <span class="string">r&quot;(?:[abc\n]|$)&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[^\n]&quot;</span>), <span class="string">r&quot;[^\n]&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[^]\n]&quot;</span>), <span class="string">r&quot;[^]\n]&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[\n]?&quot;</span>), <span class="string">r&quot;[\n]?&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"\n"</span>), <span class="string">r"$"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"\[\n"</span>), <span class="string">r"\[$"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"a\n?"</span>), <span class="string">r"a\n?"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"a\n+"</span>), <span class="string">r"a\n+"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"a\n*"</span>), <span class="string">r"a\n*"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[abc\n]"</span>), <span class="string">r"(?:[abc\n]|$)"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[^\n]"</span>), <span class="string">r"[^\n]"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[^]\n]"</span>), <span class="string">r"[^]\n]"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[\n]?"</span>), <span class="string">r"[\n]?"</span>);
         <span class="comment">// Removing the `\n` might result in an empty character class, so we should leave it.
-        </span><span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[\n]&quot;</span>), <span class="string">r&quot;(?:[\n]|$)&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[]\n]&quot;</span>), <span class="string">r&quot;(?:[]\n]|$)&quot;</span>);
-        <span class="comment">// In order to properly understand nesting, we&#39;d have to have a full parser, so ignore it.
-        </span><span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;[[a]&amp;&amp;[\n]]&quot;</span>), <span class="string">r&quot;[[a]&amp;&amp;[\n]]&quot;</span>);
+        </span><span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[\n]"</span>), <span class="string">r"(?:[\n]|$)"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[]\n]"</span>), <span class="string">r"(?:[]\n]|$)"</span>);
+        <span class="comment">// In order to properly understand nesting, we'd have to have a full parser, so ignore it.
+        </span><span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"[[a]&amp;&amp;[\n]]"</span>), <span class="string">r"[[a]&amp;&amp;[\n]]"</span>);
 
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;ab(?:\n)?&quot;</span>), <span class="string">r&quot;ab(?:$|)&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;(?&lt;!\n)ab&quot;</span>), <span class="string">r&quot;(?&lt;!$)ab&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r&quot;(?&lt;=\n)ab&quot;</span>), <span class="string">r&quot;(?&lt;=$)ab&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"ab(?:\n)?"</span>), <span class="string">r"ab(?:$|)"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"(?&lt;!\n)ab"</span>), <span class="string">r"(?&lt;!$)ab"</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>rewrite(<span class="string">r"(?&lt;=\n)ab"</span>), <span class="string">r"(?&lt;=$)ab"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_get_valid_captures_from_regex() {
-        <span class="kw">let </span>regex = <span class="string">&quot;hello(test)(?=(world))(foo(?P&lt;named&gt;bar))&quot;</span>;
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, regex);
+        <span class="kw">let </span>regex = <span class="string">"hello(test)(?=(world))(foo(?P&lt;named&gt;bar))"</span>;
+        <span class="macro">println!</span>(<span class="string">"{:?}"</span>, regex);
         <span class="kw">let </span>valid_indexes = get_consuming_capture_indexes(regex);
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, valid_indexes);
+        <span class="macro">println!</span>(<span class="string">"{:?}"</span>, valid_indexes);
         <span class="macro">assert_eq!</span>(valid_indexes, [<span class="number">0</span>, <span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>]);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_get_valid_captures_from_regex2() {
-        <span class="kw">let </span>regex = <span class="string">&quot;hello(test)[(?=tricked](foo(bar))&quot;</span>;
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, regex);
+        <span class="kw">let </span>regex = <span class="string">"hello(test)[(?=tricked](foo(bar))"</span>;
+        <span class="macro">println!</span>(<span class="string">"{:?}"</span>, regex);
         <span class="kw">let </span>valid_indexes = get_consuming_capture_indexes(regex);
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, valid_indexes);
+        <span class="macro">println!</span>(<span class="string">"{:?}"</span>, valid_indexes);
         <span class="macro">assert_eq!</span>(valid_indexes, [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_get_valid_captures_from_nested_regex() {
-        <span class="kw">let </span>regex = <span class="string">&quot;hello(test)(?=(world(?!(te(?&lt;=(st))))))(foo(bar))&quot;</span>;
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, regex);
+        <span class="kw">let </span>regex = <span class="string">"hello(test)(?=(world(?!(te(?&lt;=(st))))))(foo(bar))"</span>;
+        <span class="macro">println!</span>(<span class="string">"{:?}"</span>, regex);
         <span class="kw">let </span>valid_indexes = get_consuming_capture_indexes(regex);
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, valid_indexes);
+        <span class="macro">println!</span>(<span class="string">"{:?}"</span>, valid_indexes);
         <span class="macro">assert_eq!</span>(valid_indexes, [<span class="number">0</span>, <span class="number">1</span>, <span class="number">5</span>, <span class="number">6</span>]);
     }
 }

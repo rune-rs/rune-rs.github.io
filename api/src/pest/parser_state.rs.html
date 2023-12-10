@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pest-2.7.5/src/parser_state.rs`."><title>parser_state.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pest" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../pest/index.html"><img src="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg" alt="pest"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pest-2.7.5/src/parser_state.rs`."><title>parser_state.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pest" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../pest/index.html"><img src="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg" alt="pest"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1341,8 +1341,8 @@
     /// attempts to match its inner expression.
     /// If the inner expression succeeds, parsing continues,
     /// but at the same position as the predicate —
-    /// &amp;foo ~ bar is thus a kind of &quot;AND&quot; statement:
-    /// &quot;the input string must match foo AND bar&quot;.
+    /// &amp;foo ~ bar is thus a kind of "AND" statement:
+    /// "the input string must match foo AND bar".
     /// If the inner expression fails,
     /// the whole expression fails too.
     </span>Positive,
@@ -1351,8 +1351,8 @@
     /// If the inner expression fails, the predicate succeeds
     /// and parsing continues at the same position as the predicate.
     /// If the inner expression succeeds, the predicate fails —
-    /// !foo ~ bar is thus a kind of &quot;NOT&quot; statement:
-    /// &quot;the input string must match bar but NOT foo&quot;.
+    /// !foo ~ bar is thus a kind of "NOT" statement:
+    /// "the input string must match bar but NOT foo".
     </span>Negative,
     <span class="doccomment">/// No lookahead (i.e. it will consume input).
     </span><span class="prelude-val">None</span>,
@@ -1364,7 +1364,7 @@
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>Atomicity {
     <span class="doccomment">/// prevents implicit whitespace: inside an atomic rule,
-    /// the tilde ~ means &quot;immediately followed by&quot;,
+    /// the tilde ~ means "immediately followed by",
     /// and repetition operators (asterisk * and plus sign +)
     /// have no implicit separation. In addition, all other rules
     /// called from an atomic rule are also treated as atomic.
@@ -1435,15 +1435,15 @@
 ///
 /// [`Parser`]: trait.Parser.html
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ParserState&lt;<span class="lifetime">&#39;i</span>, R: RuleType&gt; {
-    position: Position&lt;<span class="lifetime">&#39;i</span>&gt;,
-    queue: Vec&lt;QueueableToken&lt;<span class="lifetime">&#39;i</span>, R&gt;&gt;,
+</span><span class="kw">pub struct </span>ParserState&lt;<span class="lifetime">'i</span>, R: RuleType&gt; {
+    position: Position&lt;<span class="lifetime">'i</span>&gt;,
+    queue: Vec&lt;QueueableToken&lt;<span class="lifetime">'i</span>, R&gt;&gt;,
     lookahead: Lookahead,
     pos_attempts: Vec&lt;R&gt;,
     neg_attempts: Vec&lt;R&gt;,
     attempt_pos: usize,
     atomicity: Atomicity,
-    stack: Stack&lt;Span&lt;<span class="lifetime">&#39;i</span>&gt;&gt;,
+    stack: Stack&lt;Span&lt;<span class="lifetime">'i</span>&gt;&gt;,
     call_tracker: CallLimitTracker,
 }
 
@@ -1453,13 +1453,13 @@
 ///
 /// ```
 /// # use pest;
-/// let input = &quot;&quot;;
+/// let input = "";
 /// pest::state::&lt;(), _&gt;(input, |s| Ok(s)).unwrap();
 /// ```
 </span><span class="attr">#[allow(clippy::perf)]
-</span><span class="kw">pub fn </span>state&lt;<span class="lifetime">&#39;i</span>, R: RuleType, F&gt;(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;i </span>str, f: F) -&gt; <span class="prelude-ty">Result</span>&lt;pairs::Pairs&lt;<span class="lifetime">&#39;i</span>, R&gt;, Error&lt;R&gt;&gt;
+</span><span class="kw">pub fn </span>state&lt;<span class="lifetime">'i</span>, R: RuleType, F&gt;(input: <span class="kw-2">&amp;</span><span class="lifetime">'i </span>str, f: F) -&gt; <span class="prelude-ty">Result</span>&lt;pairs::Pairs&lt;<span class="lifetime">'i</span>, R&gt;, Error&lt;R&gt;&gt;
 <span class="kw">where
-    </span>F: FnOnce(Box&lt;ParserState&lt;<span class="lifetime">&#39;i</span>, R&gt;&gt;) -&gt; ParseResult&lt;Box&lt;ParserState&lt;<span class="lifetime">&#39;i</span>, R&gt;&gt;&gt;,
+    </span>F: FnOnce(Box&lt;ParserState&lt;<span class="lifetime">'i</span>, R&gt;&gt;) -&gt; ParseResult&lt;Box&lt;ParserState&lt;<span class="lifetime">'i</span>, R&gt;&gt;&gt;,
 {
     <span class="kw">let </span>state = ParserState::new(input);
 
@@ -1471,7 +1471,7 @@
         <span class="prelude-val">Err</span>(<span class="kw-2">mut </span>state) =&gt; {
             <span class="kw">let </span>variant = <span class="kw">if </span>state.reached_call_limit() {
                 ErrorVariant::CustomError {
-                    message: <span class="string">&quot;call limit reached&quot;</span>.to_owned(),
+                    message: <span class="string">"call limit reached"</span>.to_owned(),
                 }
             } <span class="kw">else </span>{
                 state.pos_attempts.sort();
@@ -1493,7 +1493,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;i</span>, R: RuleType&gt; ParserState&lt;<span class="lifetime">&#39;i</span>, R&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'i</span>, R: RuleType&gt; ParserState&lt;<span class="lifetime">'i</span>, R&gt; {
     <span class="doccomment">/// Allocates a fresh `ParserState` object to the heap and returns the owned `Box`. This `Box`
     /// will be passed from closure to closure based on the needs of the specified `Parser`.
     ///
@@ -1501,10 +1501,10 @@
     ///
     /// ```
     /// # use pest;
-    /// let input = &quot;&quot;;
+    /// let input = "";
     /// let state: Box&lt;pest::ParserState&lt;&amp;str&gt;&gt; = pest::ParserState::new(input);
     /// ```
-    </span><span class="kw">pub fn </span>new(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;i </span>str) -&gt; Box&lt;<span class="self">Self</span>&gt; {
+    </span><span class="kw">pub fn </span>new(input: <span class="kw-2">&amp;</span><span class="lifetime">'i </span>str) -&gt; Box&lt;<span class="self">Self</span>&gt; {
         Box::new(ParserState {
             position: Position::from_start(input),
             queue: <span class="macro">vec!</span>[],
@@ -1530,12 +1530,12 @@
     ///     ab
     /// }
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let position = state.position();
     /// assert_eq!(position.pos(), 0);
     /// ```
-    </span><span class="kw">pub fn </span>position(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Position&lt;<span class="lifetime">&#39;i</span>&gt; {
+    </span><span class="kw">pub fn </span>position(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Position&lt;<span class="lifetime">'i</span>&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.position
     }
 
@@ -1552,8 +1552,8 @@
     ///     ab
     /// }
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let atomicity = state.atomicity();
     /// assert_eq!(atomicity, Atomicity::NonAtomic);
     /// ```
@@ -1588,7 +1588,7 @@
     ///     a
     /// }
     ///
-    /// let input = &quot;a&quot;;
+    /// let input = "a";
     /// let pairs: Vec&lt;_&gt; = pest::state(input, |state| {
     ///     state.rule(Rule::a, |s| Ok(s))
     /// }).unwrap().collect();
@@ -1612,7 +1612,7 @@
         };
 
         <span class="kw">if </span><span class="self">self</span>.lookahead == Lookahead::None &amp;&amp; <span class="self">self</span>.atomicity != Atomicity::Atomic {
-            <span class="comment">// Pair&#39;s position will only be known after running the closure.
+            <span class="comment">// Pair's position will only be known after running the closure.
             </span><span class="self">self</span>.queue.push(QueueableToken::Start {
                 end_token_index: <span class="number">0</span>,
                 input_pos: actual_pos,
@@ -1638,7 +1638,7 @@
                 <span class="kw">if </span>new_state.lookahead == Lookahead::None
                     &amp;&amp; new_state.atomicity != Atomicity::Atomic
                 {
-                    <span class="comment">// Storing the pair&#39;s index in the first token that was added before the closure was
+                    <span class="comment">// Storing the pair's index in the first token that was added before the closure was
                     // run.
                     </span><span class="kw">let </span>new_index = new_state.queue.len();
                     <span class="kw">match </span>new_state.queue[index] {
@@ -1701,22 +1701,22 @@
     ///         character(state)
     ///             .and_then(|state| character(state))
     ///             .and_then(|state| character(state))
-    ///             .and_then(|state| state.tag_node(std::borrow::Cow::Borrowed(&quot;c&quot;)))
+    ///             .and_then(|state| state.tag_node(std::borrow::Cow::Borrowed("c")))
     ///             .and_then(|state| character(state))
     ///     })
     /// }
     /// fn character(state: Box&lt;ParserState&lt;Rule&gt;&gt;) -&gt; ParseResult&lt;Box&lt;ParserState&lt;Rule&gt;&gt;&gt; {
-    ///     state.rule(Rule::character, |state| state.match_range(&#39;a&#39;..&#39;z&#39;))
+    ///     state.rule(Rule::character, |state| state.match_range('a'..'z'))
     /// }
     ///
-    /// let input = &quot;abcd&quot;;
+    /// let input = "abcd";
     /// let pairs = state(input, mark_c).unwrap();
     /// // find all node tag as `c`
-    /// let find: Vec&lt;Pair&lt;Rule&gt;&gt; = pairs.filter(|s| s.as_node_tag() == Some(&quot;c&quot;)).collect();
-    /// assert_eq!(find[0].as_str(), &quot;c&quot;)
+    /// let find: Vec&lt;Pair&lt;Rule&gt;&gt; = pairs.filter(|s| s.as_node_tag() == Some("c")).collect();
+    /// assert_eq!(find[0].as_str(), "c")
     /// ```
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>tag_node(<span class="kw-2">mut </span><span class="self">self</span>: Box&lt;<span class="self">Self</span>&gt;, tag: Cow&lt;<span class="lifetime">&#39;i</span>, str&gt;) -&gt; ParseResult&lt;Box&lt;<span class="self">Self</span>&gt;&gt; {
+    </span><span class="kw">pub fn </span>tag_node(<span class="kw-2">mut </span><span class="self">self</span>: Box&lt;<span class="self">Self</span>&gt;, tag: Cow&lt;<span class="lifetime">'i</span>, str&gt;) -&gt; ParseResult&lt;Box&lt;<span class="self">Self</span>&gt;&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(QueueableToken::End { tag: old, .. }) = <span class="self">self</span>.queue.last_mut() {
             <span class="kw-2">*</span>old = <span class="prelude-val">Some</span>(tag)
         }
@@ -1743,7 +1743,7 @@
             <span class="kw">return</span>;
         }
 
-        <span class="comment">// If nested rules made no progress, there is no use to report them; it&#39;s only useful to
+        <span class="comment">// If nested rules made no progress, there is no use to report them; it's only useful to
         // track the current rule, the exception being when only one attempt has been made during
         // the children rules.
         </span><span class="kw">let </span>curr_attempts = <span class="self">self</span>.attempts_at(pos);
@@ -1792,11 +1792,11 @@
     ///     a
     /// }
     ///
-    /// let input = &quot;a&quot;;
+    /// let input = "a";
     /// let pairs: Vec&lt;_&gt; = pest::state(input, |state| {
     ///     state.sequence(|s| {
     ///         s.rule(Rule::a, |s| Ok(s)).and_then(|s| {
-    ///             s.match_string(&quot;b&quot;)
+    ///             s.match_string("b")
     ///         })
     ///     }).or_else(|s| {
     ///         Ok(s)
@@ -1840,17 +1840,17 @@
     ///     ab
     /// }
     ///
-    /// let input = &quot;aab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "aab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let mut result = state.repeat(|s| {
-    ///     s.match_string(&quot;a&quot;)
+    ///     s.match_string("a")
     /// });
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 2);
     ///
     /// state = pest::ParserState::new(input);
     /// result = state.repeat(|s| {
-    ///     s.match_string(&quot;b&quot;)
+    ///     s.match_string("b")
     /// });
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 0);
@@ -1884,16 +1884,16 @@
     ///     ab
     /// }
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let result = state.optional(|s| {
-    ///     s.match_string(&quot;ab&quot;)
+    ///     s.match_string("ab")
     /// });
     /// assert!(result.is_ok());
     ///
     /// state = pest::ParserState::new(input);
     /// let result = state.optional(|s| {
-    ///     s.match_string(&quot;ac&quot;)
+    ///     s.match_string("ac")
     /// });
     /// assert!(result.is_ok());
     /// ```
@@ -1920,14 +1920,14 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let result = state.match_char_by(|c| c.is_ascii());
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 1);
     ///
-    /// let input = &quot;❤&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "❤";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let result = state.match_char_by(|c| c.is_ascii());
     /// assert!(result.is_err());
     /// assert_eq!(result.unwrap_err().position().pos(), 0);
@@ -1955,14 +1955,14 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
-    /// let mut result = state.match_string(&quot;ab&quot;);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let mut result = state.match_string("ab");
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 2);
     ///
     /// state = pest::ParserState::new(input);
-    /// result = state.match_string(&quot;ac&quot;);
+    /// result = state.match_string("ac");
     /// assert!(result.is_err());
     /// assert_eq!(result.unwrap_err().position().pos(), 0);
     /// ```
@@ -1986,14 +1986,14 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
-    /// let mut result = state.match_insensitive(&quot;AB&quot;);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let mut result = state.match_insensitive("AB");
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 2);
     ///
     /// state = pest::ParserState::new(input);
-    /// result = state.match_insensitive(&quot;AC&quot;);
+    /// result = state.match_insensitive("AC");
     /// assert!(result.is_err());
     /// assert_eq!(result.unwrap_err().position().pos(), 0);
     /// ```
@@ -2020,14 +2020,14 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
-    /// let mut result = state.match_range(&#39;a&#39;..&#39;z&#39;);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let mut result = state.match_range('a'..'z');
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 1);
     ///
     /// state = pest::ParserState::new(input);
-    /// result = state.match_range(&#39;A&#39;..&#39;Z&#39;);
+    /// result = state.match_range('A'..'Z');
     /// assert!(result.is_err());
     /// assert_eq!(result.unwrap_err().position().pos(), 0);
     /// ```
@@ -2051,8 +2051,8 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let mut result = state.skip(1);
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 1);
@@ -2082,9 +2082,9 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;abcd&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
-    /// let mut result = state.skip_until(&amp;[&quot;c&quot;, &quot;d&quot;]);
+    /// let input = "abcd";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let mut result = state.skip_until(&amp;["c", "d"]);
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 2);
     /// ```
@@ -2105,13 +2105,13 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let mut result = state.start_of_input();
     /// assert!(result.is_ok());
     ///
     /// state = pest::ParserState::new(input);
-    /// state = state.match_string(&quot;ab&quot;).unwrap();
+    /// state = state.match_string("ab").unwrap();
     /// result = state.start_of_input();
     /// assert!(result.is_err());
     /// ```
@@ -2135,13 +2135,13 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let mut result = state.end_of_input();
     /// assert!(result.is_err());
     ///
     /// state = pest::ParserState::new(input);
-    /// state = state.match_string(&quot;ab&quot;).unwrap();
+    /// state = state.match_string("ab").unwrap();
     /// result = state.end_of_input();
     /// assert!(result.is_ok());
     /// ```
@@ -2169,7 +2169,7 @@
     ///     a
     /// }
     ///
-    /// let input = &quot;a&quot;;
+    /// let input = "a";
     /// let pairs: Vec&lt;_&gt; = pest::state(input, |state| {
     ///     state.lookahead(true, |state| {
     ///         state.rule(Rule::a, |s| Ok(s))
@@ -2237,7 +2237,7 @@
     ///     a
     /// }
     ///
-    /// let input = &quot;a&quot;;
+    /// let input = "a";
     /// let pairs: Vec&lt;_&gt; = pest::state(input, |state| {
     ///     state.atomic(Atomicity::Atomic, |s| {
     ///         s.rule(Rule::a, |s| Ok(s))
@@ -2289,9 +2289,9 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
-    /// let mut result = state.stack_push(|state| state.match_string(&quot;a&quot;));
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let mut result = state.stack_push(|state| state.match_string("a"));
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 1);
     /// ```
@@ -2326,9 +2326,9 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;aa&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
-    /// let mut result = state.stack_push(|state| state.match_string(&quot;a&quot;)).and_then(
+    /// let input = "aa";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let mut result = state.stack_push(|state| state.match_string("a")).and_then(
     ///     |state| state.stack_peek()
     /// );
     /// assert!(result.is_ok());
@@ -2339,7 +2339,7 @@
         <span class="kw">let </span>string = <span class="self">self
             </span>.stack
             .peek()
-            .expect(<span class="string">&quot;peek was called on empty stack&quot;</span>)
+            .expect(<span class="string">"peek was called on empty stack"</span>)
             .as_str();
         <span class="self">self</span>.match_string(string)
     }
@@ -2355,9 +2355,9 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;aa&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
-    /// let mut result = state.stack_push(|state| state.match_string(&quot;a&quot;)).and_then(
+    /// let input = "aa";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let mut result = state.stack_push(|state| state.match_string("a")).and_then(
     ///     |state| state.stack_pop()
     /// );
     /// assert!(result.is_ok());
@@ -2368,7 +2368,7 @@
         <span class="kw">let </span>string = <span class="self">self
             </span>.stack
             .pop()
-            .expect(<span class="string">&quot;pop was called on empty stack&quot;</span>)
+            .expect(<span class="string">"pop was called on empty stack"</span>)
             .as_str();
         <span class="self">self</span>.match_string(string)
     }
@@ -2383,16 +2383,16 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;abcd cd cb&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "abcd cd cb";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let mut result = state
-    ///     .stack_push(|state| state.match_string(&quot;a&quot;))
-    ///     .and_then(|state| state.stack_push(|state| state.match_string(&quot;b&quot;)))
-    ///     .and_then(|state| state.stack_push(|state| state.match_string(&quot;c&quot;)))
-    ///     .and_then(|state| state.stack_push(|state| state.match_string(&quot;d&quot;)))
-    ///     .and_then(|state| state.match_string(&quot; &quot;))
+    ///     .stack_push(|state| state.match_string("a"))
+    ///     .and_then(|state| state.stack_push(|state| state.match_string("b")))
+    ///     .and_then(|state| state.stack_push(|state| state.match_string("c")))
+    ///     .and_then(|state| state.stack_push(|state| state.match_string("d")))
+    ///     .and_then(|state| state.match_string(" "))
     ///     .and_then(|state| state.stack_match_peek_slice(2, None, MatchDir::BottomToTop))
-    ///     .and_then(|state| state.match_string(&quot; &quot;))
+    ///     .and_then(|state| state.match_string(" "))
     ///     .and_then(|state| state.stack_match_peek_slice(1, Some(-1), MatchDir::TopToBottom));
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 10);
@@ -2416,7 +2416,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>position = <span class="self">self</span>.position;
         <span class="kw">let </span>result = {
             <span class="kw">let </span><span class="kw-2">mut </span>iter_b2t = <span class="self">self</span>.stack[range].iter();
-            <span class="kw">let </span>matcher = |span: <span class="kw-2">&amp;</span>Span&lt;<span class="lifetime">&#39;_</span>&gt;| position.match_string(span.as_str());
+            <span class="kw">let </span>matcher = |span: <span class="kw-2">&amp;</span>Span&lt;<span class="lifetime">'_</span>&gt;| position.match_string(span.as_str());
             <span class="kw">match </span>match_dir {
                 MatchDir::BottomToTop =&gt; iter_b2t.all(matcher),
                 MatchDir::TopToBottom =&gt; iter_b2t.rev().all(matcher),
@@ -2440,11 +2440,11 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;abba&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "abba";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let mut result = state
-    ///     .stack_push(|state| state.match_string(&quot;a&quot;))
-    ///     .and_then(|state| { state.stack_push(|state| state.match_string(&quot;b&quot;)) })
+    ///     .stack_push(|state| state.match_string("a"))
+    ///     .and_then(|state| { state.stack_push(|state| state.match_string("b")) })
     ///     .and_then(|state| state.stack_match_peek());
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 4);
@@ -2464,10 +2464,10 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;aaaa&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
-    /// let mut result = state.stack_push(|state| state.match_string(&quot;a&quot;)).and_then(|state| {
-    ///     state.stack_push(|state| state.match_string(&quot;a&quot;))
+    /// let input = "aaaa";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let mut result = state.stack_push(|state| state.match_string("a")).and_then(|state| {
+    ///     state.stack_push(|state| state.match_string("a"))
     /// }).and_then(|state| state.stack_match_peek());
     /// assert!(result.is_ok());
     /// assert_eq!(result.unwrap().position().pos(), 4);
@@ -2502,9 +2502,9 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;aa&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
-    /// let mut result = state.stack_push(|state| state.match_string(&quot;a&quot;)).and_then(
+    /// let input = "aa";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let mut result = state.stack_push(|state| state.match_string("a")).and_then(
     ///     |state| state.stack_drop()
     /// );
     /// assert!(result.is_ok());
@@ -2529,15 +2529,15 @@
     /// # #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     /// enum Rule {}
     ///
-    /// let input = &quot;ab&quot;;
-    /// let mut state: Box&lt;pest::ParserState&lt;&#39;_, Rule&gt;&gt; = pest::ParserState::new(input);
+    /// let input = "ab";
+    /// let mut state: Box&lt;pest::ParserState&lt;'_, Rule&gt;&gt; = pest::ParserState::new(input);
     /// let mut result = state.restore_on_err(|state| state.stack_push(|state|
-    ///     state.match_string(&quot;a&quot;)).and_then(|state| state.match_string(&quot;a&quot;))
+    ///     state.match_string("a")).and_then(|state| state.match_string("a"))
     /// );
     ///
     /// assert!(result.is_err());
     ///
-    /// // Since the the rule doesn&#39;t match, the &quot;a&quot; pushed to the stack will be removed.
+    /// // Since the the rule doesn't match, the "a" pushed to the stack will be removed.
     /// let catch_panic = std::panic::catch_unwind(|| result.unwrap_err().stack_pop());
     /// assert!(catch_panic.is_err());
     /// ```

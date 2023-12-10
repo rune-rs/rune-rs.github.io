@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/parse/lexer.rs`."><title>lexer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/parse/lexer.rs`."><title>lexer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1713,11 +1713,11 @@
 
 <span class="doccomment">/// Lexer for the rune language.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Lexer&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">pub struct </span>Lexer&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// The source identifier of the lexed data.
     </span>source_id: SourceId,
     <span class="doccomment">/// Source iterator.
-    </span>iter: SourceIter&lt;<span class="lifetime">&#39;a</span>&gt;,
+    </span>iter: SourceIter&lt;<span class="lifetime">'a</span>&gt;,
     <span class="doccomment">/// Current lexer mode.
     </span>modes: LexerModes,
     <span class="doccomment">/// Buffered tokens.
@@ -1726,9 +1726,9 @@
     </span>shebang: bool,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Lexer&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Lexer&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Construct a new lexer over the given source.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(source: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, source_id: SourceId, shebang: bool) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, source_id: SourceId, shebang: bool) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             iter: SourceIter::new(source),
             source_id,
@@ -1746,7 +1746,7 @@
     <span class="doccomment">/// Denote whether the next sequence of characters begin a doc comment.
     ///
     /// The lexer should have just identified a regular comment (`//_`, `/*_`, where _ is the
-    /// cursor&#39;s current position).
+    /// cursor's current position).
     ///
     /// Returns a tuple (doc, inner), referring to if a doc comment was found and if the ! character
     /// was used to denote an inner comment.
@@ -1754,13 +1754,13 @@
         <span class="kw">match </span><span class="self">self</span>.iter.peek() {
             <span class="prelude-val">Some</span>(c) <span class="kw">if </span>c == ch =&gt; {
                 <span class="comment">// The character following this must not be another of the provided character.
-                // If it is, it&#39;s probably a separator, not a doc comment.
+                // If it is, it's probably a separator, not a doc comment.
                 </span><span class="kw">match </span><span class="self">self</span>.iter.peek2() {
                     <span class="prelude-val">Some</span>(c) <span class="kw">if </span>c == ch =&gt; (<span class="bool-val">false</span>, <span class="bool-val">false</span>),
                     <span class="kw">_ </span>=&gt; (<span class="bool-val">true</span>, <span class="bool-val">false</span>),
                 }
             }
-            <span class="prelude-val">Some</span>(<span class="string">&#39;!&#39;</span>) =&gt; (<span class="bool-val">true</span>, <span class="bool-val">true</span>),
+            <span class="prelude-val">Some</span>(<span class="string">'!'</span>) =&gt; (<span class="bool-val">true</span>, <span class="bool-val">true</span>),
             <span class="kw">_ </span>=&gt; (<span class="bool-val">false</span>, <span class="bool-val">false</span>),
         }
     }
@@ -1783,7 +1783,7 @@
         }
 
         <span class="self">self</span>.buffer.try_push_back(ast::Token {
-            kind: <span class="macro">K!</span>[<span class="string">&#39;[&#39;</span>],
+            kind: <span class="macro">K!</span>[<span class="string">'['</span>],
             span,
         })<span class="question-mark">?</span>;
 
@@ -1805,7 +1805,7 @@
         })<span class="question-mark">?</span>;
 
         <span class="self">self</span>.buffer.try_push_back(ast::Token {
-            kind: <span class="macro">K!</span>[<span class="string">&#39;]&#39;</span>],
+            kind: <span class="macro">K!</span>[<span class="string">']'</span>],
             span,
         })<span class="question-mark">?</span>;
 
@@ -1817,7 +1817,7 @@
             .try_push_back(ast::Token { kind: <span class="macro">K!</span>[#], span })<span class="question-mark">?</span>;
 
         <span class="self">self</span>.buffer.try_push_back(ast::Token {
-            kind: <span class="macro">K!</span>[<span class="string">&#39;[&#39;</span>],
+            kind: <span class="macro">K!</span>[<span class="string">'['</span>],
             span,
         })<span class="question-mark">?</span>;
 
@@ -1827,7 +1827,7 @@
         })<span class="question-mark">?</span>;
 
         <span class="self">self</span>.buffer.try_push_back(ast::Token {
-            kind: <span class="macro">K!</span>[<span class="string">&#39;(&#39;</span>],
+            kind: <span class="macro">K!</span>[<span class="string">'('</span>],
             span,
         })<span class="question-mark">?</span>;
 
@@ -1837,12 +1837,12 @@
         })<span class="question-mark">?</span>;
 
         <span class="self">self</span>.buffer.try_push_back(ast::Token {
-            kind: <span class="macro">K!</span>[<span class="string">&#39;)&#39;</span>],
+            kind: <span class="macro">K!</span>[<span class="string">')'</span>],
             span,
         })<span class="question-mark">?</span>;
 
         <span class="self">self</span>.buffer.try_push_back(ast::Token {
-            kind: <span class="macro">K!</span>[<span class="string">&#39;]&#39;</span>],
+            kind: <span class="macro">K!</span>[<span class="string">']'</span>],
             span,
         })<span class="question-mark">?</span>;
 
@@ -1851,7 +1851,7 @@
 
     <span class="kw">fn </span>next_ident(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start: usize) -&gt; compile::Result&lt;<span class="prelude-ty">Option</span>&lt;ast::Token&gt;&gt; {
         <span class="kw">while let </span><span class="prelude-val">Some</span>(c) = <span class="self">self</span>.iter.peek() {
-            <span class="kw">if </span>!<span class="macro">matches!</span>(c, <span class="string">&#39;a&#39;</span>..=<span class="string">&#39;z&#39; </span>| <span class="string">&#39;A&#39;</span>..=<span class="string">&#39;Z&#39; </span>| <span class="string">&#39;_&#39; </span>| <span class="string">&#39;0&#39;</span>..=<span class="string">&#39;9&#39;</span>) {
+            <span class="kw">if </span>!<span class="macro">matches!</span>(c, <span class="string">'a'</span>..=<span class="string">'z' </span>| <span class="string">'A'</span>..=<span class="string">'Z' </span>| <span class="string">'_' </span>| <span class="string">'0'</span>..=<span class="string">'9'</span>) {
                 <span class="kw">break</span>;
             }
 
@@ -1859,7 +1859,7 @@
         }
 
         <span class="kw">match </span><span class="self">self</span>.iter.source_from(start) {
-            (<span class="string">&quot;_&quot;</span>, span) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::Token {
+            (<span class="string">"_"</span>, span) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::Token {
                 span,
                 kind: ast::Kind::Underscore,
             })),
@@ -1877,13 +1877,13 @@
         c: char,
         start: usize,
     ) -&gt; compile::Result&lt;<span class="prelude-ty">Option</span>&lt;ast::Token&gt;&gt; {
-        <span class="kw">let </span>(base, number_start) = <span class="lifetime">&#39;ok</span>: {
-            <span class="kw">if let </span>(<span class="string">&#39;0&#39;</span>, <span class="prelude-val">Some</span>(m)) = (c, <span class="self">self</span>.iter.peek()) {
+        <span class="kw">let </span>(base, number_start) = <span class="lifetime">'ok</span>: {
+            <span class="kw">if let </span>(<span class="string">'0'</span>, <span class="prelude-val">Some</span>(m)) = (c, <span class="self">self</span>.iter.peek()) {
                 <span class="kw">let </span>number = <span class="kw">match </span>m {
-                    <span class="string">&#39;x&#39; </span>=&gt; ast::NumberBase::Hex,
-                    <span class="string">&#39;b&#39; </span>=&gt; ast::NumberBase::Binary,
-                    <span class="string">&#39;o&#39; </span>=&gt; ast::NumberBase::Octal,
-                    <span class="kw">_ </span>=&gt; <span class="kw">break </span><span class="lifetime">&#39;ok </span>(ast::NumberBase::Decimal, start),
+                    <span class="string">'x' </span>=&gt; ast::NumberBase::Hex,
+                    <span class="string">'b' </span>=&gt; ast::NumberBase::Binary,
+                    <span class="string">'o' </span>=&gt; ast::NumberBase::Octal,
+                    <span class="kw">_ </span>=&gt; <span class="kw">break </span><span class="lifetime">'ok </span>(ast::NumberBase::Decimal, start),
                 };
 
                 <span class="self">self</span>.iter.next();
@@ -1901,18 +1901,18 @@
         <span class="kw">while let </span><span class="prelude-val">Some</span>(c) = <span class="self">self</span>.iter.peek() {
             <span class="kw">match </span>c {
                 <span class="comment">// NB: We need to avoid exponent check for hex number bases,
-                // since &#39;e&#39; is a legal hex literal.
-                </span><span class="string">&#39;e&#39; </span><span class="kw">if </span>!has_exponent &amp;&amp; !<span class="macro">matches!</span>(base, ast::NumberBase::Hex) =&gt; {
+                // since 'e' is a legal hex literal.
+                </span><span class="string">'e' </span><span class="kw">if </span>!has_exponent &amp;&amp; !<span class="macro">matches!</span>(base, ast::NumberBase::Hex) =&gt; {
                     <span class="self">self</span>.iter.next();
                     has_exponent = <span class="bool-val">true</span>;
                     is_fractional = <span class="bool-val">true</span>;
 
                     <span class="comment">// Negative exponent.
-                    </span><span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.iter.peek(), <span class="prelude-val">Some</span>(<span class="string">&#39;-&#39;</span>)) {
+                    </span><span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.iter.peek(), <span class="prelude-val">Some</span>(<span class="string">'-'</span>)) {
                         <span class="self">self</span>.iter.next();
                     }
                 }
-                <span class="string">&#39;.&#39; </span><span class="kw">if </span>!is_fractional =&gt; {
+                <span class="string">'.' </span><span class="kw">if </span>!is_fractional =&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(p2) = <span class="self">self</span>.iter.peek2() {
                         <span class="comment">// NB: only skip if the next peek matches:
                         // * the beginning of an ident.
@@ -1923,7 +1923,7 @@
                         // But we must treat these cases differently since field
                         // accesses might be instance fn calls, and range
                         // expressions should work.
-                        </span><span class="kw">if </span><span class="macro">matches!</span>(p2, <span class="string">&#39;a&#39;</span>..=<span class="string">&#39;z&#39; </span>| <span class="string">&#39;A&#39;</span>..=<span class="string">&#39;Z&#39; </span>| <span class="string">&#39;_&#39; </span>| <span class="string">&#39;.&#39;</span>) {
+                        </span><span class="kw">if </span><span class="macro">matches!</span>(p2, <span class="string">'a'</span>..=<span class="string">'z' </span>| <span class="string">'A'</span>..=<span class="string">'Z' </span>| <span class="string">'_' </span>| <span class="string">'.'</span>) {
                             <span class="kw">break</span>;
                         }
                     }
@@ -1934,12 +1934,12 @@
                 <span class="comment">// NB: Allows for underscores to pass through number literals,
                 // so that they can be used to break up large numbers in a
                 // natural manner.
-                </span><span class="string">&#39;_&#39; </span>=&gt; {
+                </span><span class="string">'_' </span>=&gt; {
                     <span class="self">self</span>.iter.next();
                 }
                 c <span class="kw">if </span>c.is_alphanumeric() =&gt; {
                     <span class="kw">if </span>split.is_none()
-                        &amp;&amp; <span class="macro">matches!</span>((c, base), (<span class="string">&#39;u&#39; </span>| <span class="string">&#39;i&#39;</span>, <span class="kw">_</span>) | (<span class="string">&#39;f&#39;</span>, ast::NumberBase::Decimal))
+                        &amp;&amp; <span class="macro">matches!</span>((c, base), (<span class="string">'u' </span>| <span class="string">'i'</span>, <span class="kw">_</span>) | (<span class="string">'f'</span>, ast::NumberBase::Decimal))
                     {
                         split = <span class="prelude-val">Some</span>(<span class="self">self</span>.iter.pos());
                     }
@@ -1971,7 +1971,7 @@
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>((s, c)) = <span class="self">self</span>.iter.peek_with_pos() {
             <span class="kw">match </span>c {
-                <span class="string">&#39;\\&#39; </span>=&gt; {
+                <span class="string">'\\' </span>=&gt; {
                     <span class="self">self</span>.iter.next();
 
                     <span class="kw">if </span><span class="self">self</span>.iter.next().is_none() {
@@ -1984,13 +1984,13 @@
                     is_label = <span class="bool-val">false</span>;
                     count += <span class="number">1</span>;
                 }
-                <span class="string">&#39;\&#39;&#39; </span>=&gt; {
+                <span class="string">'\'' </span>=&gt; {
                     is_label = <span class="bool-val">false</span>;
                     <span class="self">self</span>.iter.next();
                     <span class="kw">break</span>;
                 }
                 <span class="comment">// components of labels.
-                </span><span class="string">&#39;0&#39;</span>..=<span class="string">&#39;9&#39; </span>| <span class="string">&#39;a&#39;</span>..=<span class="string">&#39;z&#39; </span>=&gt; {
+                </span><span class="string">'0'</span>..=<span class="string">'9' </span>| <span class="string">'a'</span>..=<span class="string">'z' </span>=&gt; {
                     <span class="self">self</span>.iter.next();
                     count += <span class="number">1</span>;
                 }
@@ -2046,7 +2046,7 @@
             };
 
             <span class="kw">match </span>c {
-                <span class="string">&#39;\\&#39; </span>=&gt; {
+                <span class="string">'\\' </span>=&gt; {
                     <span class="kw">if </span><span class="self">self</span>.iter.next().is_none() {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                             <span class="self">self</span>.iter.span_to_pos(s),
@@ -2054,7 +2054,7 @@
                         ));
                     }
                 }
-                <span class="string">&#39;\&#39;&#39; </span>=&gt; {
+                <span class="string">'\'' </span>=&gt; {
                     <span class="kw">break</span>;
                 }
                 c <span class="kw">if </span>c.is_control() =&gt; {
@@ -2092,8 +2092,8 @@
             };
 
             <span class="kw">match </span>c {
-                <span class="string">&#39;&quot;&#39; </span>=&gt; <span class="kw">break</span>,
-                <span class="string">&#39;\\&#39; </span>=&gt; {
+                <span class="string">'"' </span>=&gt; <span class="kw">break</span>,
+                <span class="string">'\\' </span>=&gt; {
                     <span class="kw">if </span><span class="self">self</span>.iter.next().is_none() {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                             <span class="self">self</span>.iter.span_to_pos(s),
@@ -2119,7 +2119,7 @@
 
     <span class="doccomment">/// Consume the entire line.
     </span><span class="kw">fn </span>consume_line(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">while </span>!<span class="macro">matches!</span>(<span class="self">self</span>.iter.next(), <span class="prelude-val">Some</span>(<span class="string">&#39;\n&#39;</span>) | <span class="prelude-val">None</span>) {}
+        <span class="kw">while </span>!<span class="macro">matches!</span>(<span class="self">self</span>.iter.next(), <span class="prelude-val">Some</span>(<span class="string">'\n'</span>) | <span class="prelude-val">None</span>) {}
     }
 
     <span class="doccomment">/// Consume whitespace.
@@ -2133,7 +2133,7 @@
         }
     }
 
-    <span class="doccomment">/// Consume a multiline comment and indicate if it&#39;s terminated correctly.
+    <span class="doccomment">/// Consume a multiline comment and indicate if it's terminated correctly.
     </span><span class="kw">fn </span>consume_multiline_comment(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.iter.next();
         <span class="self">self</span>.iter.next();
@@ -2143,7 +2143,7 @@
         <span class="kw">while let </span><span class="prelude-val">Some</span>(a) = cur {
             cur = <span class="self">self</span>.iter.next();
 
-            <span class="kw">if </span><span class="macro">matches!</span>((a, cur), (<span class="string">&#39;*&#39;</span>, <span class="prelude-val">Some</span>(<span class="string">&#39;/&#39;</span>))) {
+            <span class="kw">if </span><span class="macro">matches!</span>((a, cur), (<span class="string">'*'</span>, <span class="prelude-val">Some</span>(<span class="string">'/'</span>))) {
                 <span class="kw">return </span><span class="bool-val">true</span>;
             }
         }
@@ -2157,7 +2157,7 @@
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>((s, c)) = <span class="self">self</span>.iter.peek_with_pos() {
             <span class="kw">match </span>c {
-                <span class="string">&#39;$&#39; </span>=&gt; {
+                <span class="string">'$' </span>=&gt; {
                     <span class="kw">let </span>expressions = <span class="self">self</span>.modes.expression_count(<span class="kw-2">&amp;</span><span class="self">self</span>.iter, start)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>span = <span class="self">self</span>.iter.span_to_pos(start);
@@ -2167,7 +2167,7 @@
                     <span class="self">self</span>.iter.next();
 
                     <span class="kw">match </span><span class="self">self</span>.iter.next_with_pos() {
-                        <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">&#39;{&#39;</span>)) =&gt; (),
+                        <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="string">'{'</span>)) =&gt; (),
                         <span class="prelude-val">Some</span>((start, c)) =&gt; {
                             <span class="kw">let </span>span = <span class="self">self</span>.iter.span_to_pos(start);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::UnexpectedChar { c }));
@@ -2208,7 +2208,7 @@
                     <span class="self">self</span>.modes.push(LexerMode::Default(<span class="number">1</span>))<span class="question-mark">?</span>;
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
-                <span class="string">&#39;\\&#39; </span>=&gt; {
+                <span class="string">'\\' </span>=&gt; {
                     <span class="self">self</span>.iter.next();
 
                     <span class="kw">if </span><span class="self">self</span>.iter.next().is_none() {
@@ -2220,7 +2220,7 @@
 
                     escaped = <span class="bool-val">true</span>;
                 }
-                <span class="string">&#39;`&#39; </span>=&gt; {
+                <span class="string">'`' </span>=&gt; {
                     <span class="kw">let </span>span = <span class="self">self</span>.iter.span_to_pos(start);
                     <span class="kw">let </span>had_string = start != <span class="self">self</span>.iter.pos();
                     <span class="kw">let </span>start = <span class="self">self</span>.iter.pos();
@@ -2249,7 +2249,7 @@
                     }
 
                     <span class="self">self</span>.buffer.try_push_back(ast::Token {
-                        kind: <span class="macro">K!</span>[<span class="string">&#39;)&#39;</span>],
+                        kind: <span class="macro">K!</span>[<span class="string">')'</span>],
                         span: <span class="self">self</span>.iter.span_to_pos(start),
                     })<span class="question-mark">?</span>;
 
@@ -2279,7 +2279,7 @@
     <span class="doccomment">/// Consume the next token from the lexer.
     </span><span class="attr">#[allow(clippy::should_implement_trait)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; compile::Result&lt;<span class="prelude-ty">Option</span>&lt;ast::Token&gt;&gt; {
-        <span class="lifetime">&#39;outer</span>: <span class="kw">loop </span>{
+        <span class="lifetime">'outer</span>: <span class="kw">loop </span>{
             <span class="kw">if let </span><span class="prelude-val">Some</span>(token) = <span class="self">self</span>.buffer.pop_front() {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(token));
             }
@@ -2308,7 +2308,7 @@
             </span><span class="kw">if </span><span class="self">self</span>.shebang {
                 <span class="self">self</span>.shebang = <span class="bool-val">false</span>;
 
-                <span class="kw">if </span><span class="macro">matches!</span>((c, <span class="self">self</span>.iter.peek()), (<span class="string">&#39;#&#39;</span>, <span class="prelude-val">Some</span>(<span class="string">&#39;!&#39;</span>))) {
+                <span class="kw">if </span><span class="macro">matches!</span>((c, <span class="self">self</span>.iter.peek()), (<span class="string">'#'</span>, <span class="prelude-val">Some</span>(<span class="string">'!'</span>))) {
                     <span class="self">self</span>.consume_line();
 
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ast::Token {
@@ -2327,59 +2327,59 @@
                 }));
             }
 
-            <span class="comment">// This loop is useful, at least until it&#39;s rewritten.
+            <span class="comment">// This loop is useful, at least until it's rewritten.
             </span><span class="attr">#[allow(clippy::never_loop)]
             </span><span class="kw">let </span>kind = <span class="kw">loop </span>{
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(c2) = <span class="self">self</span>.iter.peek() {
                     <span class="kw">match </span>(c, c2) {
-                        (<span class="string">&#39;+&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'+'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::PlusEq;
                         }
-                        (<span class="string">&#39;-&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'-'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::DashEq;
                         }
-                        (<span class="string">&#39;*&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'*'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::StarEq;
                         }
-                        (<span class="string">&#39;/&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'/'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::SlashEq;
                         }
-                        (<span class="string">&#39;%&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'%'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::PercEq;
                         }
-                        (<span class="string">&#39;&amp;&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'&amp;'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::AmpEq;
                         }
-                        (<span class="string">&#39;^&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'^'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::CaretEq;
                         }
-                        (<span class="string">&#39;|&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'|'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::PipeEq;
                         }
-                        (<span class="string">&#39;/&#39;</span>, <span class="string">&#39;/&#39;</span>) =&gt; {
+                        (<span class="string">'/'</span>, <span class="string">'/'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
-                            <span class="kw">let </span>(doc, inner) = <span class="self">self</span>.check_doc_comment(<span class="string">&#39;/&#39;</span>);
+                            <span class="kw">let </span>(doc, inner) = <span class="self">self</span>.check_doc_comment(<span class="string">'/'</span>);
                             <span class="self">self</span>.consume_line();
                             <span class="kw">if </span>doc {
                                 <span class="comment">// docstring span drops the first 3 characters (/// or //!)
                                 </span><span class="kw">let </span>span = <span class="self">self</span>.iter.span_to_pos(start);
                                 <span class="self">self</span>.emit_doc_attribute(inner, span, span.trim_start(<span class="number">3</span>))<span class="question-mark">?</span>;
-                                <span class="kw">continue </span><span class="lifetime">&#39;outer</span>;
+                                <span class="kw">continue </span><span class="lifetime">'outer</span>;
                             } <span class="kw">else </span>{
                                 <span class="kw">break </span>ast::Kind::Comment;
                             }
                         }
-                        (<span class="string">&#39;/&#39;</span>, <span class="string">&#39;*&#39;</span>) =&gt; {
+                        (<span class="string">'/'</span>, <span class="string">'*'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
-                            <span class="kw">let </span>(doc, inner) = <span class="self">self</span>.check_doc_comment(<span class="string">&#39;*&#39;</span>);
+                            <span class="kw">let </span>(doc, inner) = <span class="self">self</span>.check_doc_comment(<span class="string">'*'</span>);
                             <span class="kw">let </span>term = <span class="self">self</span>.consume_multiline_comment();
                             <span class="kw">if </span>!term {
                                 <span class="kw">break </span>ast::Kind::MultilineComment(<span class="bool-val">false</span>);
@@ -2394,83 +2394,83 @@
                                     span,
                                     span.trim_start(<span class="number">3</span>).trim_end(<span class="number">2</span>),
                                 )<span class="question-mark">?</span>;
-                                <span class="kw">continue </span><span class="lifetime">&#39;outer</span>;
+                                <span class="kw">continue </span><span class="lifetime">'outer</span>;
                             } <span class="kw">else </span>{
                                 <span class="kw">break </span>ast::Kind::MultilineComment(<span class="bool-val">true</span>);
                             }
                         }
-                        (<span class="string">&#39;:&#39;</span>, <span class="string">&#39;:&#39;</span>) =&gt; {
+                        (<span class="string">':'</span>, <span class="string">':'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::ColonColon;
                         }
-                        (<span class="string">&#39;&lt;&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'&lt;'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::LtEq;
                         }
-                        (<span class="string">&#39;&gt;&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'&gt;'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::GtEq;
                         }
-                        (<span class="string">&#39;=&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'='</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::EqEq;
                         }
-                        (<span class="string">&#39;!&#39;</span>, <span class="string">&#39;=&#39;</span>) =&gt; {
+                        (<span class="string">'!'</span>, <span class="string">'='</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::BangEq;
                         }
-                        (<span class="string">&#39;&amp;&#39;</span>, <span class="string">&#39;&amp;&#39;</span>) =&gt; {
+                        (<span class="string">'&amp;'</span>, <span class="string">'&amp;'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::AmpAmp;
                         }
-                        (<span class="string">&#39;|&#39;</span>, <span class="string">&#39;|&#39;</span>) =&gt; {
+                        (<span class="string">'|'</span>, <span class="string">'|'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::PipePipe;
                         }
-                        (<span class="string">&#39;&lt;&#39;</span>, <span class="string">&#39;&lt;&#39;</span>) =&gt; {
+                        (<span class="string">'&lt;'</span>, <span class="string">'&lt;'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
 
-                            <span class="kw">break if </span><span class="macro">matches!</span>(<span class="self">self</span>.iter.peek(), <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>)) {
+                            <span class="kw">break if </span><span class="macro">matches!</span>(<span class="self">self</span>.iter.peek(), <span class="prelude-val">Some</span>(<span class="string">'='</span>)) {
                                 <span class="self">self</span>.iter.next();
                                 ast::Kind::LtLtEq
                             } <span class="kw">else </span>{
                                 ast::Kind::LtLt
                             };
                         }
-                        (<span class="string">&#39;&gt;&#39;</span>, <span class="string">&#39;&gt;&#39;</span>) =&gt; {
+                        (<span class="string">'&gt;'</span>, <span class="string">'&gt;'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
 
-                            <span class="kw">break if </span><span class="macro">matches!</span>(<span class="self">self</span>.iter.peek(), <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>)) {
+                            <span class="kw">break if </span><span class="macro">matches!</span>(<span class="self">self</span>.iter.peek(), <span class="prelude-val">Some</span>(<span class="string">'='</span>)) {
                                 <span class="self">self</span>.iter.next();
                                 ast::Kind::GtGtEq
                             } <span class="kw">else </span>{
                                 ast::Kind::GtGt
                             };
                         }
-                        (<span class="string">&#39;.&#39;</span>, <span class="string">&#39;.&#39;</span>) =&gt; {
+                        (<span class="string">'.'</span>, <span class="string">'.'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
 
-                            <span class="kw">break if </span><span class="macro">matches!</span>(<span class="self">self</span>.iter.peek(), <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>)) {
+                            <span class="kw">break if </span><span class="macro">matches!</span>(<span class="self">self</span>.iter.peek(), <span class="prelude-val">Some</span>(<span class="string">'='</span>)) {
                                 <span class="self">self</span>.iter.next();
                                 ast::Kind::DotDotEq
                             } <span class="kw">else </span>{
                                 ast::Kind::DotDot
                             };
                         }
-                        (<span class="string">&#39;=&#39;</span>, <span class="string">&#39;&gt;&#39;</span>) =&gt; {
+                        (<span class="string">'='</span>, <span class="string">'&gt;'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::Rocket;
                         }
-                        (<span class="string">&#39;-&#39;</span>, <span class="string">&#39;&gt;&#39;</span>) =&gt; {
+                        (<span class="string">'-'</span>, <span class="string">'&gt;'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">break </span>ast::Kind::Arrow;
                         }
-                        (<span class="string">&#39;b&#39;</span>, <span class="string">&#39;\&#39;&#39;</span>) =&gt; {
+                        (<span class="string">'b'</span>, <span class="string">'\''</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="self">self</span>.iter.next();
                             <span class="kw">return </span><span class="self">self</span>.next_lit_byte(start);
                         }
-                        (<span class="string">&#39;b&#39;</span>, <span class="string">&#39;&quot;&#39;</span>) =&gt; {
+                        (<span class="string">'b'</span>, <span class="string">'"'</span>) =&gt; {
                             <span class="self">self</span>.iter.next();
                             <span class="kw">return </span><span class="self">self</span>.next_str(
                                 start,
@@ -2483,16 +2483,16 @@
                 }
 
                 <span class="kw">break match </span>c {
-                    <span class="string">&#39;(&#39; </span>=&gt; ast::Kind::Open(ast::Delimiter::Parenthesis),
-                    <span class="string">&#39;)&#39; </span>=&gt; ast::Kind::Close(ast::Delimiter::Parenthesis),
-                    <span class="string">&#39;{&#39; </span>=&gt; {
+                    <span class="string">'(' </span>=&gt; ast::Kind::Open(ast::Delimiter::Parenthesis),
+                    <span class="string">')' </span>=&gt; ast::Kind::Close(ast::Delimiter::Parenthesis),
+                    <span class="string">'{' </span>=&gt; {
                         <span class="kw">if </span>level &gt; <span class="number">0 </span>{
                             <span class="self">self</span>.modes.push(LexerMode::Default(level + <span class="number">1</span>))<span class="question-mark">?</span>;
                         }
 
                         ast::Kind::Open(ast::Delimiter::Brace)
                     }
-                    <span class="string">&#39;}&#39; </span>=&gt; {
+                    <span class="string">'}' </span>=&gt; {
                         <span class="kw">if </span>level &gt; <span class="number">0 </span>{
                             <span class="self">self</span>.modes.pop(<span class="kw-2">&amp;</span><span class="self">self</span>.iter, LexerMode::Default(level))<span class="question-mark">?</span>;
 
@@ -2500,49 +2500,49 @@
                             </span><span class="kw">if </span>level == <span class="number">1 </span>{
                                 <span class="kw">let </span>expressions = <span class="self">self</span>.modes.expression_count(<span class="kw-2">&amp;</span><span class="self">self</span>.iter, start)<span class="question-mark">?</span>;
                                 <span class="kw-2">*</span>expressions += <span class="number">1</span>;
-                                <span class="kw">continue </span><span class="lifetime">&#39;outer</span>;
+                                <span class="kw">continue </span><span class="lifetime">'outer</span>;
                             }
                         }
 
                         ast::Kind::Close(ast::Delimiter::Brace)
                     }
-                    <span class="string">&#39;[&#39; </span>=&gt; ast::Kind::Open(ast::Delimiter::Bracket),
-                    <span class="string">&#39;]&#39; </span>=&gt; ast::Kind::Close(ast::Delimiter::Bracket),
-                    <span class="string">&#39;,&#39; </span>=&gt; ast::Kind::Comma,
-                    <span class="string">&#39;:&#39; </span>=&gt; ast::Kind::Colon,
-                    <span class="string">&#39;#&#39; </span>=&gt; ast::Kind::Pound,
-                    <span class="string">&#39;.&#39; </span>=&gt; ast::Kind::Dot,
-                    <span class="string">&#39;;&#39; </span>=&gt; ast::Kind::SemiColon,
-                    <span class="string">&#39;=&#39; </span>=&gt; ast::Kind::Eq,
-                    <span class="string">&#39;+&#39; </span>=&gt; ast::Kind::Plus,
-                    <span class="string">&#39;-&#39; </span>=&gt; ast::Kind::Dash,
-                    <span class="string">&#39;/&#39; </span>=&gt; ast::Kind::Div,
-                    <span class="string">&#39;*&#39; </span>=&gt; ast::Kind::Star,
-                    <span class="string">&#39;&amp;&#39; </span>=&gt; ast::Kind::Amp,
-                    <span class="string">&#39;&gt;&#39; </span>=&gt; ast::Kind::Gt,
-                    <span class="string">&#39;&lt;&#39; </span>=&gt; ast::Kind::Lt,
-                    <span class="string">&#39;!&#39; </span>=&gt; ast::Kind::Bang,
-                    <span class="string">&#39;?&#39; </span>=&gt; ast::Kind::QuestionMark,
-                    <span class="string">&#39;|&#39; </span>=&gt; ast::Kind::Pipe,
-                    <span class="string">&#39;%&#39; </span>=&gt; ast::Kind::Perc,
-                    <span class="string">&#39;^&#39; </span>=&gt; ast::Kind::Caret,
-                    <span class="string">&#39;@&#39; </span>=&gt; ast::Kind::At,
-                    <span class="string">&#39;$&#39; </span>=&gt; ast::Kind::Dollar,
-                    <span class="string">&#39;~&#39; </span>=&gt; ast::Kind::Tilde,
-                    <span class="string">&#39;_&#39; </span>| <span class="string">&#39;a&#39;</span>..=<span class="string">&#39;z&#39; </span>| <span class="string">&#39;A&#39;</span>..=<span class="string">&#39;Z&#39; </span>=&gt; {
+                    <span class="string">'[' </span>=&gt; ast::Kind::Open(ast::Delimiter::Bracket),
+                    <span class="string">']' </span>=&gt; ast::Kind::Close(ast::Delimiter::Bracket),
+                    <span class="string">',' </span>=&gt; ast::Kind::Comma,
+                    <span class="string">':' </span>=&gt; ast::Kind::Colon,
+                    <span class="string">'#' </span>=&gt; ast::Kind::Pound,
+                    <span class="string">'.' </span>=&gt; ast::Kind::Dot,
+                    <span class="string">';' </span>=&gt; ast::Kind::SemiColon,
+                    <span class="string">'=' </span>=&gt; ast::Kind::Eq,
+                    <span class="string">'+' </span>=&gt; ast::Kind::Plus,
+                    <span class="string">'-' </span>=&gt; ast::Kind::Dash,
+                    <span class="string">'/' </span>=&gt; ast::Kind::Div,
+                    <span class="string">'*' </span>=&gt; ast::Kind::Star,
+                    <span class="string">'&amp;' </span>=&gt; ast::Kind::Amp,
+                    <span class="string">'&gt;' </span>=&gt; ast::Kind::Gt,
+                    <span class="string">'&lt;' </span>=&gt; ast::Kind::Lt,
+                    <span class="string">'!' </span>=&gt; ast::Kind::Bang,
+                    <span class="string">'?' </span>=&gt; ast::Kind::QuestionMark,
+                    <span class="string">'|' </span>=&gt; ast::Kind::Pipe,
+                    <span class="string">'%' </span>=&gt; ast::Kind::Perc,
+                    <span class="string">'^' </span>=&gt; ast::Kind::Caret,
+                    <span class="string">'@' </span>=&gt; ast::Kind::At,
+                    <span class="string">'$' </span>=&gt; ast::Kind::Dollar,
+                    <span class="string">'~' </span>=&gt; ast::Kind::Tilde,
+                    <span class="string">'_' </span>| <span class="string">'a'</span>..=<span class="string">'z' </span>| <span class="string">'A'</span>..=<span class="string">'Z' </span>=&gt; {
                         <span class="kw">return </span><span class="self">self</span>.next_ident(start);
                     }
-                    <span class="string">&#39;0&#39;</span>..=<span class="string">&#39;9&#39; </span>=&gt; {
+                    <span class="string">'0'</span>..=<span class="string">'9' </span>=&gt; {
                         <span class="kw">return </span><span class="self">self</span>.next_number_literal(c, start);
                     }
-                    <span class="string">&#39;&quot;&#39; </span>=&gt; {
+                    <span class="string">'"' </span>=&gt; {
                         <span class="kw">return </span><span class="self">self</span>.next_str(
                             start,
                             || ErrorKind::UnterminatedStrLit,
                             ast::Kind::Str,
                         );
                     }
-                    <span class="string">&#39;`&#39; </span>=&gt; {
+                    <span class="string">'`' </span>=&gt; {
                         <span class="kw">let </span>span = <span class="self">self</span>.iter.span_to_pos(start);
 
                         <span class="self">self</span>.buffer.try_push_back(ast::Token {
@@ -2561,14 +2561,14 @@
                             .try_push_back(ast::Token { kind: <span class="macro">K!</span>[!], span })<span class="question-mark">?</span>;
 
                         <span class="self">self</span>.buffer.try_push_back(ast::Token {
-                            kind: <span class="macro">K!</span>[<span class="string">&#39;(&#39;</span>],
+                            kind: <span class="macro">K!</span>[<span class="string">'('</span>],
                             span,
                         })<span class="question-mark">?</span>;
 
                         <span class="self">self</span>.modes.push(LexerMode::Template(<span class="number">0</span>))<span class="question-mark">?</span>;
-                        <span class="kw">continue </span><span class="lifetime">&#39;outer</span>;
+                        <span class="kw">continue </span><span class="lifetime">'outer</span>;
                     }
-                    <span class="string">&#39;\&#39;&#39; </span>=&gt; {
+                    <span class="string">'\'' </span>=&gt; {
                         <span class="kw">return </span><span class="self">self</span>.next_char_or_label(start);
                     }
                     <span class="kw">_ </span>=&gt; {
@@ -2587,13 +2587,13 @@
 }
 
 <span class="attr">#[derive(Debug, Clone)]
-</span><span class="kw">struct </span>SourceIter&lt;<span class="lifetime">&#39;a</span>&gt; {
-    source: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+</span><span class="kw">struct </span>SourceIter&lt;<span class="lifetime">'a</span>&gt; {
+    source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
     cursor: usize,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; SourceIter&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">fn </span>new(source: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; SourceIter&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">fn </span>new(source: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ source, cursor: <span class="number">0 </span>}
     }
 
@@ -2604,7 +2604,7 @@
     }
 
     <span class="doccomment">/// Get the source from the given start, to the current position.
-    </span><span class="kw">fn </span>source_from(<span class="kw-2">&amp;</span><span class="self">self</span>, start: usize) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, Span) {
+    </span><span class="kw">fn </span>source_from(<span class="kw-2">&amp;</span><span class="self">self</span>, start: usize) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Span) {
         <span class="kw">let </span>end = <span class="self">self</span>.pos();
         <span class="kw">let </span>span = Span::new(start, end);
         (<span class="kw-2">&amp;</span><span class="self">self</span>.source[start..end], span)
@@ -2650,7 +2650,7 @@
     }
 }
 
-<span class="kw">impl </span>Iterator <span class="kw">for </span>SourceIter&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Iterator <span class="kw">for </span>SourceIter&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">type </span>Item = char;
 
     <span class="doccomment">/// Consume the next character.
@@ -2661,11 +2661,11 @@
     }
 }
 
-<span class="kw">struct </span>WithCharIndex&lt;<span class="lifetime">&#39;s</span>, <span class="lifetime">&#39;a</span>&gt; {
-    iter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;s </span><span class="kw-2">mut </span>SourceIter&lt;<span class="lifetime">&#39;a</span>&gt;,
+<span class="kw">struct </span>WithCharIndex&lt;<span class="lifetime">'s</span>, <span class="lifetime">'a</span>&gt; {
+    iter: <span class="kw-2">&amp;</span><span class="lifetime">'s </span><span class="kw-2">mut </span>SourceIter&lt;<span class="lifetime">'a</span>&gt;,
 }
 
-<span class="kw">impl </span>Iterator <span class="kw">for </span>WithCharIndex&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Iterator <span class="kw">for </span>WithCharIndex&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
     <span class="kw">type </span>Item = (usize, char);
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
@@ -2691,7 +2691,7 @@
     }
 
     <span class="doccomment">/// Pop the expected lexer mode.
-    </span><span class="kw">fn </span>pop(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: <span class="kw-2">&amp;</span>SourceIter&lt;<span class="lifetime">&#39;_</span>&gt;, expected: LexerMode) -&gt; compile::Result&lt;()&gt; {
+    </span><span class="kw">fn </span>pop(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: <span class="kw-2">&amp;</span>SourceIter&lt;<span class="lifetime">'_</span>&gt;, expected: LexerMode) -&gt; compile::Result&lt;()&gt; {
         <span class="kw">let </span>actual = <span class="self">self</span>.modes.pop().unwrap_or_default();
 
         <span class="kw">if </span>actual != expected {
@@ -2705,11 +2705,11 @@
     }
 
     <span class="doccomment">/// Get the expression count.
-    </span><span class="kw">fn </span>expression_count&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>,
-        iter: <span class="kw-2">&amp;</span>SourceIter&lt;<span class="lifetime">&#39;_</span>&gt;,
+    </span><span class="kw">fn </span>expression_count&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>,
+        iter: <span class="kw-2">&amp;</span>SourceIter&lt;<span class="lifetime">'_</span>&gt;,
         start: usize,
-    ) -&gt; compile::Result&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>usize&gt; {
+    ) -&gt; compile::Result&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>usize&gt; {
         <span class="kw">match </span><span class="self">self</span>.modes.last_mut() {
             <span class="prelude-val">Some</span>(LexerMode::Template(expression)) =&gt; <span class="prelude-val">Ok</span>(expression),
             <span class="kw">_ </span>=&gt; {
@@ -2742,13 +2742,13 @@
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>LexerMode {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
             LexerMode::Default(..) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">&quot;default&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(f, <span class="string">"default"</span>)<span class="question-mark">?</span>;
             }
             LexerMode::Template(..) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">&quot;template&quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(f, <span class="string">"template"</span>)<span class="question-mark">?</span>;
             }
         }
 
@@ -2770,11 +2770,11 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>n = <span class="number">0</span>;
 
                 $(
-                    <span class="kw">match </span>it.next().unwrap().expect(<span class="string">&quot;expected token&quot;</span>) {
+                    <span class="kw">match </span>it.next().unwrap().expect(<span class="string">"expected token"</span>) {
                         <span class="macro-nonterminal">$pat </span>=&gt; (),
                         <span class="attr">#[allow(unreachable_patterns)]
                         </span>other =&gt; {
-                            <span class="macro">panic!</span>(<span class="string">&quot;\nGot bad token #{}.\nExpected: `{}`\nBut got: {:?}&quot;</span>, n, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$pat</span>), other);
+                            <span class="macro">panic!</span>(<span class="string">"\nGot bad token #{}.\nExpected: `{}`\nBut got: {:?}"</span>, n, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$pat</span>), other);
                         }
                     }
 
@@ -2789,7 +2789,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_number_literals() {
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;(10)&quot;</span>,
+            <span class="string">"(10)"</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
                 kind: ast::Kind::Open(ast::Delimiter::Parenthesis),
@@ -2811,7 +2811,7 @@
         };
 
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;(10.)&quot;</span>,
+            <span class="string">"(10.)"</span>,
             <span class="kw">_</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">1</span>, <span class="number">4</span>),
@@ -2830,7 +2830,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_char_literal() {
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;&#39;a&#39;&quot;</span>,
+            <span class="string">"'a'"</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">3</span>),
                 kind: ast::Kind::Char(ast::CopySource::Text(SourceId::EMPTY)),
@@ -2838,7 +2838,7 @@
         };
 
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;&#39;\\u{abcd}&#39;&quot;</span>,
+            <span class="string">"'\\u{abcd}'"</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">10</span>),
                 kind: ast::Kind::Char(ast::CopySource::Text(SourceId::EMPTY)),
@@ -2849,7 +2849,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_label() {
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;&#39;asdf &#39;a&#39; \&quot;foo bar\&quot;&quot;</span>,
+            <span class="string">"'asdf 'a' \"foo bar\""</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">5</span>),
                 kind: ast::Kind::Label(ast::LitSource::Text(SourceId::EMPTY)),
@@ -2876,7 +2876,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_operators() {
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;+ += - -= * *= / /=&quot;</span>,
+            <span class="string">"+ += - -= * *= / /="</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
                 kind: ast::Kind::Plus,
@@ -2943,7 +2943,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_idents() {
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;a.checked_div(10)&quot;</span>,
+            <span class="string">"a.checked_div(10)"</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
                 kind: ast::Kind::Ident(ast::LitSource::Text(SourceId::EMPTY)),
@@ -2980,8 +2980,8 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_doc_strings() {
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;//! inner\n\
-             /// \&quot;quoted\&quot;&quot;</span>,
+            <span class="string">"//! inner\n\
+             /// \"quoted\""</span>,
             ast::Token {
                 kind: <span class="macro">K!</span>[#],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">10</span>)
@@ -2991,7 +2991,7 @@
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">10</span>)
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;[&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">'['</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">10</span>)
             },
             ast::Token {
@@ -3011,7 +3011,7 @@
                 span: <span class="macro">span!</span>(<span class="number">3</span>, <span class="number">10</span>)
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;]&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">']'</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">10</span>)
             },
             ast::Token {
@@ -3019,7 +3019,7 @@
                 span: <span class="macro">span!</span>(<span class="number">10</span>, <span class="number">22</span>)
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;[&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">'['</span>],
                 span: <span class="macro">span!</span>(<span class="number">10</span>, <span class="number">22</span>)
             },
             ast::Token {
@@ -3039,7 +3039,7 @@
                 span: <span class="macro">span!</span>(<span class="number">13</span>, <span class="number">22</span>)
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;]&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">']'</span>],
                 span: <span class="macro">span!</span>(<span class="number">10</span>, <span class="number">22</span>)
             },
         };
@@ -3054,7 +3054,7 @@
             // /**
             //  * docstr
             //  */
-            </span><span class="string">&quot;/*!\n * inner docstr\n */\n/**\n * docstr\n */&quot;</span>,
+            </span><span class="string">"/*!\n * inner docstr\n */\n/**\n * docstr\n */"</span>,
             ast::Token {
                 kind: <span class="macro">K!</span>[#],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">23</span>)
@@ -3064,7 +3064,7 @@
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">23</span>)
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;[&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">'['</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">23</span>)
             },
             ast::Token {
@@ -3084,7 +3084,7 @@
                 span: <span class="macro">span!</span>(<span class="number">3</span>, <span class="number">21</span>)
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;]&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">']'</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">23</span>)
             },
             ast::Token {
@@ -3096,7 +3096,7 @@
                 span: <span class="macro">span!</span>(<span class="number">24</span>, <span class="number">41</span>)
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;[&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">'['</span>],
                 span: <span class="macro">span!</span>(<span class="number">24</span>, <span class="number">41</span>)
             },
             ast::Token {
@@ -3116,7 +3116,7 @@
                 span: <span class="macro">span!</span>(<span class="number">27</span>, <span class="number">39</span>)
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;]&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">']'</span>],
                 span: <span class="macro">span!</span>(<span class="number">24</span>, <span class="number">41</span>)
             },
         };
@@ -3125,11 +3125,11 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_comment_separators() {
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;///////////////////////////////////\n\
+            <span class="string">"///////////////////////////////////\n\
             /*********************************/\n\
             /**********************************\n\
             *                                 *\n\
-            ***********************************/&quot;</span>,
+            ***********************************/"</span>,
             ast::Token {
                 kind: ast::Kind::Comment,
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">36</span>)
@@ -3152,7 +3152,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_template_literals() {
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;`foo ${bar} \\` baz`&quot;</span>,
+            <span class="string">"`foo ${bar} \\` baz`"</span>,
             ast::Token {
                 kind: ast::Kind::Open(ast::Delimiter::Empty),
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
@@ -3162,7 +3162,7 @@
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;[&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">'['</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
@@ -3170,7 +3170,7 @@
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;(&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">'('</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
@@ -3178,11 +3178,11 @@
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;)&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">')'</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;]&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">']'</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
@@ -3194,7 +3194,7 @@
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;(&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">'('</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
@@ -3226,7 +3226,7 @@
                 span: <span class="macro">span!</span>(<span class="number">11</span>, <span class="number">18</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;)&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">')'</span>],
                 span: <span class="macro">span!</span>(<span class="number">18</span>, <span class="number">19</span>),
             },
             ast::Token {
@@ -3239,7 +3239,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_template_literals_multi() {
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;`foo ${bar} ${baz}`&quot;</span>,
+            <span class="string">"`foo ${bar} ${baz}`"</span>,
             ast::Token {
                 kind: ast::Kind::Open(ast::Delimiter::Empty),
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
@@ -3249,7 +3249,7 @@
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;[&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">'['</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
@@ -3257,7 +3257,7 @@
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;(&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">'('</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
@@ -3265,11 +3265,11 @@
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;)&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">')'</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;]&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">']'</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
@@ -3281,7 +3281,7 @@
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;(&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">'('</span>],
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">1</span>),
             },
             ast::Token {
@@ -3321,7 +3321,7 @@
                 span: <span class="macro">span!</span>(<span class="number">14</span>, <span class="number">17</span>),
             },
             ast::Token {
-                kind: <span class="macro">K!</span>[<span class="string">&#39;)&#39;</span>],
+                kind: <span class="macro">K!</span>[<span class="string">')'</span>],
                 span: <span class="macro">span!</span>(<span class="number">18</span>, <span class="number">19</span>),
             },
             ast::Token {
@@ -3334,7 +3334,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_literals() {
         <span class="macro">test_lexer! </span>{
-            <span class="string">r#&quot;b&quot;&quot;&quot;#</span>,
+            <span class="string">r#"b"""#</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">3</span>),
                 kind: ast::Kind::ByteStr(ast::StrSource::Text(ast::StrText {
@@ -3346,7 +3346,7 @@
         };
 
         <span class="macro">test_lexer! </span>{
-            <span class="string">r#&quot;b&quot;hello world&quot;&quot;#</span>,
+            <span class="string">r#"b"hello world""#</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">14</span>),
                 kind: ast::Kind::ByteStr(ast::StrSource::Text(ast::StrText {
@@ -3358,7 +3358,7 @@
         };
 
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;b&#39;\\\\&#39;&#39;&quot;</span>,
+            <span class="string">"b'\\\\''"</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">6</span>),
                 kind: ast::Kind::Byte(ast::CopySource::Text(SourceId::EMPTY)),
@@ -3366,7 +3366,7 @@
         };
 
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;&#39;label &#39;a&#39; b&#39;a&#39;&quot;</span>,
+            <span class="string">"'label 'a' b'a'"</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">6</span>),
                 kind: ast::Kind::Label(ast::LitSource::Text(SourceId::EMPTY)),
@@ -3390,7 +3390,7 @@
         };
 
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;b&#39;a&#39;&quot;</span>,
+            <span class="string">"b'a'"</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">4</span>),
                 kind: ast::Kind::Byte(ast::CopySource::Text(SourceId::EMPTY)),
@@ -3398,7 +3398,7 @@
         };
 
         <span class="macro">test_lexer! </span>{
-            <span class="string">&quot;b&#39;\\n&#39;&quot;</span>,
+            <span class="string">"b'\\n'"</span>,
             ast::Token {
                 span: <span class="macro">span!</span>(<span class="number">0</span>, <span class="number">5</span>),
                 kind: ast::Kind::Byte(ast::CopySource::Text(SourceId::EMPTY)),

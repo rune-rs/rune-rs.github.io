@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/scopes.rs`."><title>scopes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/scopes.rs`."><title>scopes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -356,40 +356,40 @@
 /// declared in its source file.
 </span><span class="attr">#[derive(TryClone, Clone, Copy)]
 #[try_clone(copy)]
-</span><span class="kw">pub struct </span>Var&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub struct </span>Var&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Offset from the current stack frame.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) offset: usize,
     <span class="doccomment">/// The name of the variable.
-    </span>name: hir::Name&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span>name: hir::Name&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Token assocaited with the variable.
-    </span>span: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span><span class="kw">dyn </span>Spanned,
+    </span>span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
     <span class="doccomment">/// Variable has been taken at the given position.
-    </span>moved_at: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span><span class="kw">dyn </span>Spanned&gt;,
+    </span>moved_at: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;hir</span>&gt; fmt::Debug <span class="kw">for </span>Var&lt;<span class="lifetime">&#39;hir</span>&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;Var&quot;</span>)
-            .field(<span class="string">&quot;offset&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.offset)
-            .field(<span class="string">&quot;name&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.name)
-            .field(<span class="string">&quot;span&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.span.span())
-            .field(<span class="string">&quot;moved_at&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.moved_at.map(|s| s.span()))
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; fmt::Debug <span class="kw">for </span>Var&lt;<span class="lifetime">'hir</span>&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"Var"</span>)
+            .field(<span class="string">"offset"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.offset)
+            .field(<span class="string">"name"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.name)
+            .field(<span class="string">"span"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.span.span())
+            .field(<span class="string">"moved_at"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.moved_at.map(|s| s.span()))
             .finish()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;hir</span>&gt; fmt::Display <span class="kw">for </span>Var&lt;<span class="lifetime">&#39;hir</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; fmt::Display <span class="kw">for </span>Var&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="self">self</span>.name.fmt(f)
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;hir</span>&gt; Var&lt;<span class="lifetime">&#39;hir</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Var&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Copy the declared variable.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>copy(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+        cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
         comment: <span class="kw-2">&amp;</span><span class="kw">dyn </span>fmt::Display,
     ) -&gt; compile::Result&lt;()&gt; {
@@ -398,7 +398,7 @@
                 offset: <span class="self">self</span>.offset,
             },
             span,
-            <span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">&quot;var `{}`; {comment}&quot;</span>, <span class="self">self</span>.name),
+            <span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">"var `{}`; {comment}"</span>, <span class="self">self</span>.name),
         )
     }
 
@@ -414,22 +414,22 @@
                 offset: <span class="self">self</span>.offset,
             },
             span,
-            <span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">&quot;var `{}`; {comment}&quot;</span>, <span class="self">self</span>.name),
+            <span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">"var `{}`; {comment}"</span>, <span class="self">self</span>.name),
         )
     }
 }
 
 <span class="attr">#[derive(Debug, TryClone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Layer&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Layer&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Named variables.
-    </span>variables: HashMap&lt;hir::Name&lt;<span class="lifetime">&#39;hir</span>&gt;, Var&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;,
+    </span>variables: HashMap&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;, Var&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     <span class="doccomment">/// The number of variables.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) total: usize,
     <span class="doccomment">/// The number of variables local to this scope.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) local: usize,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;hir</span>&gt; Layer&lt;<span class="lifetime">&#39;hir</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Layer&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Construct a new locals handlers.
     </span><span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -456,12 +456,12 @@
 </span><span class="attr">#[must_use]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ScopeGuard(usize);
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Scopes&lt;<span class="lifetime">&#39;hir</span>&gt; {
-    layers: Vec&lt;Layer&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Scopes&lt;<span class="lifetime">'hir</span>&gt; {
+    layers: Vec&lt;Layer&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     source_id: SourceId,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;hir</span>&gt; Scopes&lt;<span class="lifetime">&#39;hir</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Scopes&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Construct a new collection of scopes.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(source_id: SourceId) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
@@ -474,15 +474,15 @@
     </span><span class="attr">#[tracing::instrument(skip_all, fields(variable, name, source_id))]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        q: <span class="kw-2">&amp;mut </span>Query&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-        name: hir::Name&lt;<span class="lifetime">&#39;hir</span>&gt;,
-        span: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span><span class="kw">dyn </span>Spanned,
-    ) -&gt; compile::Result&lt;Var&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
-        <span class="macro">tracing::trace!</span>(<span class="string">&quot;get&quot;</span>);
+        q: <span class="kw-2">&amp;mut </span>Query&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        name: hir::Name&lt;<span class="lifetime">'hir</span>&gt;,
+        span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
+    ) -&gt; compile::Result&lt;Var&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+        <span class="macro">tracing::trace!</span>(<span class="string">"get"</span>);
 
         <span class="kw">for </span>layer <span class="kw">in </span><span class="self">self</span>.layers.iter().rev() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(var) = layer.variables.get(<span class="kw-2">&amp;</span>name) {
-                <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>var, <span class="string">&quot;getting var&quot;</span>);
+                <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>var, <span class="string">"getting var"</span>);
                 q.visitor
                     .visit_variable_use(<span class="self">self</span>.source_id, var.span, span)
                     .with_span(span)<span class="question-mark">?</span>;
@@ -491,7 +491,7 @@
                     <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                         span,
                         ErrorKind::VariableMoved {
-                            <span class="attr">#[cfg(feature = <span class="string">&quot;emit&quot;</span>)]
+                            <span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
                             </span>moved_at: _moved_at.span(),
                         },
                     ));
@@ -503,7 +503,7 @@
 
         <span class="prelude-val">Err</span>(compile::Error::msg(
             span,
-            <span class="macro">try_format!</span>(<span class="string">&quot;Missing variable `{name}`&quot;</span>),
+            <span class="macro">try_format!</span>(<span class="string">"Missing variable `{name}`"</span>),
         ))
     }
 
@@ -511,15 +511,15 @@
     </span><span class="attr">#[tracing::instrument(skip_all, fields(variable, name, source_id))]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>take(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        q: <span class="kw-2">&amp;mut </span>Query&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-        name: hir::Name&lt;<span class="lifetime">&#39;hir</span>&gt;,
-        span: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span><span class="kw">dyn </span>Spanned,
+        q: <span class="kw-2">&amp;mut </span>Query&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+        name: hir::Name&lt;<span class="lifetime">'hir</span>&gt;,
+        span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
     ) -&gt; compile::Result&lt;<span class="kw-2">&amp;</span>Var&gt; {
-        <span class="macro">tracing::trace!</span>(<span class="string">&quot;take&quot;</span>);
+        <span class="macro">tracing::trace!</span>(<span class="string">"take"</span>);
 
         <span class="kw">for </span>layer <span class="kw">in </span><span class="self">self</span>.layers.iter_mut().rev() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(var) = layer.variables.get_mut(<span class="kw-2">&amp;</span>name) {
-                <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>var, <span class="string">&quot;taking var&quot;</span>);
+                <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>var, <span class="string">"taking var"</span>);
                 q.visitor
                     .visit_variable_use(<span class="self">self</span>.source_id, var.span, span)
                     .with_span(span)<span class="question-mark">?</span>;
@@ -528,7 +528,7 @@
                     <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                         span,
                         ErrorKind::VariableMoved {
-                            <span class="attr">#[cfg(feature = <span class="string">&quot;emit&quot;</span>)]
+                            <span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
                             </span>moved_at: _moved_at.span(),
                         },
                     ));
@@ -541,7 +541,7 @@
 
         <span class="prelude-val">Err</span>(compile::Error::msg(
             span,
-            <span class="macro">try_format!</span>(<span class="string">&quot;Missing variable `{name}` to take&quot;</span>),
+            <span class="macro">try_format!</span>(<span class="string">"Missing variable `{name}` to take"</span>),
         ))
     }
 
@@ -549,11 +549,11 @@
     </span><span class="attr">#[tracing::instrument(skip_all, fields(variable, name))]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>define(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        name: hir::Name&lt;<span class="lifetime">&#39;hir</span>&gt;,
-        span: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span><span class="kw">dyn </span>Spanned,
+        name: hir::Name&lt;<span class="lifetime">'hir</span>&gt;,
+        span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
     ) -&gt; compile::Result&lt;usize&gt; {
         <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = <span class="self">self</span>.layers.last_mut() <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">&quot;Missing head layer&quot;</span>));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">"Missing head layer"</span>));
         };
 
         <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>layer);
@@ -577,7 +577,7 @@
     </span><span class="attr">#[tracing::instrument(skip_all)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>alloc(<span class="kw-2">&amp;mut </span><span class="self">self</span>, span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned) -&gt; compile::Result&lt;usize&gt; {
         <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = <span class="self">self</span>.layers.last_mut() <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">&quot;Missing head layer&quot;</span>));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">"Missing head layer"</span>));
         };
 
         <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>layer);
@@ -592,7 +592,7 @@
     </span><span class="attr">#[tracing::instrument(skip_all, fields(n))]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>free(<span class="kw-2">&amp;mut </span><span class="self">self</span>, span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned, n: usize) -&gt; compile::Result&lt;()&gt; {
         <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = <span class="self">self</span>.layers.last_mut() <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">&quot;Missing head layer&quot;</span>));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">"Missing head layer"</span>));
         };
 
         <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>layer);
@@ -600,13 +600,13 @@
         layer.total = layer
             .total
             .checked_sub(n)
-            .ok_or(<span class="string">&quot;totals out of bounds&quot;</span>)
+            .ok_or(<span class="string">"totals out of bounds"</span>)
             .with_span(span)<span class="question-mark">?</span>;
 
         layer.local = layer
             .local
             .checked_sub(n)
-            .ok_or(<span class="string">&quot;locals out of bounds&quot;</span>)
+            .ok_or(<span class="string">"locals out of bounds"</span>)
             .with_span(span)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
@@ -618,14 +618,14 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expected: ScopeGuard,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
-    ) -&gt; compile::Result&lt;Layer&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+    ) -&gt; compile::Result&lt;Layer&lt;<span class="lifetime">'hir</span>&gt;&gt; {
         <span class="kw">let </span>ScopeGuard(expected) = expected;
 
         <span class="kw">if </span><span class="self">self</span>.layers.len() != expected {
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
                 span,
                 <span class="macro">try_format!</span>(
-                    <span class="string">&quot;Scope guard mismatch, {} (actual) != {} (expected)&quot;</span>,
+                    <span class="string">"Scope guard mismatch, {} (actual) != {} (expected)"</span>,
                     <span class="self">self</span>.layers.len(),
                     expected
                 ),
@@ -633,15 +633,15 @@
         }
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = <span class="self">self</span>.layers.pop() <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">&quot;Missing parent scope&quot;</span>));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">"Missing parent scope"</span>));
         };
 
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>layer, <span class="string">&quot;pop&quot;</span>);
+        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>layer, <span class="string">"pop"</span>);
         <span class="prelude-val">Ok</span>(layer)
     }
 
     <span class="doccomment">/// Pop the last of the scope.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_last(<span class="kw-2">&amp;mut </span><span class="self">self</span>, span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned) -&gt; compile::Result&lt;Layer&lt;<span class="lifetime">&#39;hir</span>&gt;&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_last(<span class="kw-2">&amp;mut </span><span class="self">self</span>, span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned) -&gt; compile::Result&lt;Layer&lt;<span class="lifetime">'hir</span>&gt;&gt; {
         <span class="self">self</span>.pop(ScopeGuard(<span class="number">1</span>), span)
     }
 
@@ -649,7 +649,7 @@
     </span><span class="attr">#[tracing::instrument(skip_all)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>child(<span class="kw-2">&amp;mut </span><span class="self">self</span>, span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned) -&gt; compile::Result&lt;ScopeGuard&gt; {
         <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = <span class="self">self</span>.layers.last() <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">&quot;Missing head layer&quot;</span>));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">"Missing head layer"</span>));
         };
 
         <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>layer);
@@ -659,7 +659,7 @@
     <span class="doccomment">/// Get the total var count of the top scope.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>total(<span class="kw-2">&amp;</span><span class="self">self</span>, span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned) -&gt; compile::Result&lt;usize&gt; {
         <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = <span class="self">self</span>.layers.last() <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">&quot;Missing head layer&quot;</span>));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">"Missing head layer"</span>));
         };
 
         <span class="prelude-val">Ok</span>(layer.total)
@@ -668,14 +668,14 @@
     <span class="doccomment">/// Get the local var count of the top scope.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>local(<span class="kw-2">&amp;</span><span class="self">self</span>, span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned) -&gt; compile::Result&lt;usize&gt; {
         <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = <span class="self">self</span>.layers.last() <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">&quot;Missing head layer&quot;</span>));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">"Missing head layer"</span>));
         };
 
         <span class="prelude-val">Ok</span>(layer.local)
     }
 
     <span class="doccomment">/// Push a scope and return an index.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, layer: Layer&lt;<span class="lifetime">&#39;hir</span>&gt;) -&gt; alloc::Result&lt;ScopeGuard&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, layer: Layer&lt;<span class="lifetime">'hir</span>&gt;) -&gt; alloc::Result&lt;ScopeGuard&gt; {
         <span class="self">self</span>.layers.try_push(layer)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(ScopeGuard(<span class="self">self</span>.layers.len()))
     }

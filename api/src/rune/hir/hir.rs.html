@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/hir.rs`."><title>hir.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/hir.rs`."><title>hir.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -789,7 +789,7 @@
 
 <span class="kw">impl </span>OwnedName {
     <span class="doccomment">/// Get name as reference.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Name&lt;<span class="lifetime">&#39;_</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Name&lt;<span class="lifetime">'_</span>&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             OwnedName::SelfValue =&gt; Name::SelfValue,
             OwnedName::Str(name) =&gt; Name::Str(name),
@@ -799,9 +799,9 @@
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>OwnedName {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
-            OwnedName::SelfValue =&gt; <span class="string">&quot;self&quot;</span>.fmt(f),
+            OwnedName::SelfValue =&gt; <span class="string">"self"</span>.fmt(f),
             OwnedName::Str(name) =&gt; name.fmt(f),
             OwnedName::Id(id) =&gt; id.fmt(f),
         }
@@ -811,16 +811,16 @@
 <span class="doccomment">/// A captured variable.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[try_clone(copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Name&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Name&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Capture of the `self` value.
     </span>SelfValue,
     <span class="doccomment">/// Capture of a named variable.
-    </span>Str(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str),
+    </span>Str(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str),
     <span class="doccomment">/// Anonymous variable.
     </span>Id(usize),
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;hir</span>&gt; Name&lt;<span class="lifetime">&#39;hir</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Name&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Coerce into an owned name.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_owned(<span class="self">self</span>) -&gt; alloc::Result&lt;OwnedName&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
@@ -840,10 +840,10 @@
     }
 }
 
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Name&lt;<span class="lifetime">&#39;_</span>&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Name&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
-            Name::SelfValue =&gt; <span class="string">&quot;self&quot;</span>.fmt(f),
+            Name::SelfValue =&gt; <span class="string">"self"</span>.fmt(f),
             Name::Str(name) =&gt; name.fmt(f),
             Name::Id(id) =&gt; id.fmt(f),
         }
@@ -854,35 +854,35 @@
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Pat&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Pat&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The span of the pattern.
     </span><span class="attr">#[rune(span)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) span: Span,
     <span class="doccomment">/// The kind of the pattern.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: PatKind&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: PatKind&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>PatPathKind&lt;<span class="lifetime">&#39;hir</span>&gt; {
-    Kind(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>PatSequenceKind),
-    Ident(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str),
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>PatPathKind&lt;<span class="lifetime">'hir</span>&gt; {
+    Kind(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>PatSequenceKind),
+    Ident(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str),
 }
 
 <span class="doccomment">/// The kind of a [Pat].
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>PatKind&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>PatKind&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// An ignored binding.
     </span>Ignore,
     <span class="doccomment">/// A path pattern.
-    </span>Path(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>PatPathKind&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Path(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>PatPathKind&lt;<span class="lifetime">'hir</span>&gt;),
     <span class="doccomment">/// A literal pattern. This is represented as an expression.
-    </span>Lit(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Lit(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;),
     <span class="doccomment">/// A tuple pattern.
-    </span>Sequence(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>PatSequence&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Sequence(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>PatSequence&lt;<span class="lifetime">'hir</span>&gt;),
     <span class="doccomment">/// An object pattern.
-    </span>Object(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>PatObject&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Object(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>PatObject&lt;<span class="lifetime">'hir</span>&gt;),
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
@@ -910,33 +910,33 @@
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PatSequence&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PatSequence&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The kind of pattern items.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: PatSequenceKind,
     <span class="doccomment">/// The items in the tuple.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) items: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Pat&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) items: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Pat&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// Object pattern matching.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PatObject&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PatObject&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The kind of pattern items.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: PatSequenceKind,
     <span class="doccomment">/// Bindings associated with the pattern.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) bindings: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Binding&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) bindings: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Binding&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Binding&lt;<span class="lifetime">&#39;hir</span>&gt; {
-    Binding(Span, <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Pat&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Ident(Span, <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str),
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Binding&lt;<span class="lifetime">'hir</span>&gt; {
+    Binding(Span, <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str, <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Pat&lt;<span class="lifetime">'hir</span>&gt;),
+    Ident(Span, <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str),
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;hir</span>&gt; Spanned <span class="kw">for </span>Binding&lt;<span class="lifetime">&#39;hir</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Spanned <span class="kw">for </span>Binding&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="kw">fn </span>span(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Span {
         <span class="kw">match </span><span class="self">self </span>{
             Binding::Binding(span, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="kw-2">*</span>span,
@@ -945,8 +945,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;hir</span>&gt; Binding&lt;<span class="lifetime">&#39;hir</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str {
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Binding&lt;<span class="lifetime">'hir</span>&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Binding(<span class="kw">_</span>, key, <span class="kw">_</span>) =&gt; key,
             <span class="self">Self</span>::Ident(<span class="kw">_</span>, key) =&gt; key,
@@ -958,86 +958,86 @@
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Expr&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Span of the expression.
     </span><span class="attr">#[rune(span)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) span: Span,
     <span class="doccomment">/// The kind of the expression.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: ExprKind&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: ExprKind&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
 <span class="doccomment">/// The kind of a number.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Lit&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Lit&lt;<span class="lifetime">'hir</span>&gt; {
     Bool(bool),
     Integer(i64),
     Float(f64),
     Byte(u8),
     Char(char),
-    Str(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str),
-    ByteStr(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[u8]),
+    Str(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str),
+    ByteStr(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[u8]),
 }
 
 <span class="doccomment">/// The kind of an [Expr].
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExprKind&lt;<span class="lifetime">&#39;hir</span>&gt; {
-    Variable(Name&lt;<span class="lifetime">&#39;hir</span>&gt;),
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExprKind&lt;<span class="lifetime">'hir</span>&gt; {
+    Variable(Name&lt;<span class="lifetime">'hir</span>&gt;),
     Type(Type),
     Fn(Hash),
     Path,
-    Assign(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprAssign&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Loop(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprLoop&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    For(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprFor&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Let(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprLet&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    If(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Conditional&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Match(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprMatch&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Call(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprCall&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    FieldAccess(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprFieldAccess&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Binary(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprBinary&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Unary(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprUnary&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Index(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprIndex&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    AsyncBlock(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprAsyncBlock&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Block(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Block&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Break(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprBreak&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Continue(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprContinue&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Yield(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;),
-    Return(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;),
-    Await(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Try(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Select(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprSelect&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    CallClosure(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprCallClosure&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Lit(Lit&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Object(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprObject&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Tuple(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprSeq&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Vec(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprSeq&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Range(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprRange&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Group(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Template(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>BuiltInTemplate&lt;<span class="lifetime">&#39;hir</span>&gt;),
-    Format(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>BuiltInFormat&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    Assign(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprAssign&lt;<span class="lifetime">'hir</span>&gt;),
+    Loop(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprLoop&lt;<span class="lifetime">'hir</span>&gt;),
+    For(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprFor&lt;<span class="lifetime">'hir</span>&gt;),
+    Let(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprLet&lt;<span class="lifetime">'hir</span>&gt;),
+    If(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Conditional&lt;<span class="lifetime">'hir</span>&gt;),
+    Match(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprMatch&lt;<span class="lifetime">'hir</span>&gt;),
+    Call(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprCall&lt;<span class="lifetime">'hir</span>&gt;),
+    FieldAccess(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprFieldAccess&lt;<span class="lifetime">'hir</span>&gt;),
+    Binary(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprBinary&lt;<span class="lifetime">'hir</span>&gt;),
+    Unary(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprUnary&lt;<span class="lifetime">'hir</span>&gt;),
+    Index(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprIndex&lt;<span class="lifetime">'hir</span>&gt;),
+    AsyncBlock(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprAsyncBlock&lt;<span class="lifetime">'hir</span>&gt;),
+    Block(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Block&lt;<span class="lifetime">'hir</span>&gt;),
+    Break(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprBreak&lt;<span class="lifetime">'hir</span>&gt;),
+    Continue(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprContinue&lt;<span class="lifetime">'hir</span>&gt;),
+    Yield(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;&gt;),
+    Return(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;&gt;),
+    Await(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;),
+    Try(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;),
+    Select(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprSelect&lt;<span class="lifetime">'hir</span>&gt;),
+    CallClosure(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprCallClosure&lt;<span class="lifetime">'hir</span>&gt;),
+    Lit(Lit&lt;<span class="lifetime">'hir</span>&gt;),
+    Object(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprObject&lt;<span class="lifetime">'hir</span>&gt;),
+    Tuple(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprSeq&lt;<span class="lifetime">'hir</span>&gt;),
+    Vec(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprSeq&lt;<span class="lifetime">'hir</span>&gt;),
+    Range(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprRange&lt;<span class="lifetime">'hir</span>&gt;),
+    Group(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;),
+    Template(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>BuiltInTemplate&lt;<span class="lifetime">'hir</span>&gt;),
+    Format(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>BuiltInFormat&lt;<span class="lifetime">'hir</span>&gt;),
     Const(Hash),
 }
 
 <span class="doccomment">/// An internally resolved template.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BuiltInTemplate&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BuiltInTemplate&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The span of the built-in template.
     </span><span class="attr">#[rune(span)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) span: Span,
     <span class="doccomment">/// Indicate if template originated from literal.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) from_literal: bool,
     <span class="doccomment">/// Expressions being concatenated as a template.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) exprs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Expr&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) exprs: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Expr&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// An internal format specification.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BuiltInFormat&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BuiltInFormat&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="attr">#[rune(span)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) span: Span,
     <span class="doccomment">/// The fill character to use.
@@ -1053,64 +1053,64 @@
     <span class="doccomment">/// The format specification type.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) format_type: <span class="prelude-ty">Option</span>&lt;format::Type&gt;,
     <span class="doccomment">/// The value being formatted.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) value: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) value: Expr&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
 <span class="doccomment">/// An assign expression `a = b`.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprAssign&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprAssign&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The expression being assigned to.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) lhs: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) lhs: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The value.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) rhs: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) rhs: Expr&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
 <span class="doccomment">/// A `loop` expression: `loop { ... }`.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprLoop&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprLoop&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// A label.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str&gt;,
     <span class="doccomment">/// A condition to execute the loop, if a condition is necessary.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) condition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Condition&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) condition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Condition&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     <span class="doccomment">/// The body of the loop.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Block&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Block&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Variables that have been defined by the loop header.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A `for` loop over an iterator: `for i in [1, 2, 3] {}`.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprFor&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprFor&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The label of the loop.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str&gt;,
     <span class="doccomment">/// The pattern binding to use.
-    /// Non-trivial pattern bindings will panic if the value doesn&#39;t match.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) binding: Pat&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    /// Non-trivial pattern bindings will panic if the value doesn't match.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) binding: Pat&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Expression producing the iterator.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) iter: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) iter: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The body of the loop.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Block&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Block&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Variables that have been defined by the loop header.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A let expression `let &lt;name&gt; = &lt;expr&gt;`
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprLet&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprLet&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The name of the binding.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pat: Pat&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pat: Pat&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The expression the binding is assigned to.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
 <span class="doccomment">/// A sequence of conditional branches.
@@ -1123,70 +1123,70 @@
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Conditional&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Conditional&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Else if branches.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) branches: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[ConditionalBranch&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) branches: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[ConditionalBranch&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// An else branch of an if expression.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ConditionalBranch&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ConditionalBranch&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Span of the expression.
     </span><span class="attr">#[rune(span)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) span: Span,
     <span class="doccomment">/// The condition for the branch. Empty condition means that this is the
     /// fallback branch.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) condition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Condition&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) condition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Condition&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     <span class="doccomment">/// The body of the else statement.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) block: Block&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) block: Block&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Variables that have been defined by the conditional header.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A match expression.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprMatch&lt;<span class="lifetime">&#39;hir</span>&gt; {
-    <span class="doccomment">/// The expression who&#39;s result we match over.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprMatch&lt;<span class="lifetime">'hir</span>&gt; {
+    <span class="doccomment">/// The expression who's result we match over.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Branches.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) branches: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[ExprMatchBranch&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) branches: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[ExprMatchBranch&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A match branch.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprMatchBranch&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprMatchBranch&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Span of the expression.
     </span><span class="attr">#[rune(span)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) span: Span,
     <span class="doccomment">/// The pattern to match.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pat: Pat&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pat: Pat&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The branch condition.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) condition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) condition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     <span class="doccomment">/// The body of the match.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Variables that have been defined by this match branch, which needs to be
     /// dropped.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Call&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Call&lt;<span class="lifetime">'hir</span>&gt; {
     Var {
         <span class="doccomment">/// The name of the variable being called.
-        </span>name: Name&lt;<span class="lifetime">&#39;hir</span>&gt;,
+        </span>name: Name&lt;<span class="lifetime">'hir</span>&gt;,
     },
     Associated {
         <span class="doccomment">/// The target expression being called.
-        </span>target: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+        </span>target: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;,
         <span class="doccomment">/// Hash of the fn being called.
         </span>hash: Hash,
     },
@@ -1195,7 +1195,7 @@
         </span>hash: Hash,
     },
     <span class="doccomment">/// An expression being called.
-    </span>Expr { expr: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt; },
+    </span>Expr { expr: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt; },
     <span class="doccomment">/// A constant function call.
     </span>ConstFn {
         <span class="doccomment">/// The module the constant function is being called from.
@@ -1211,29 +1211,29 @@
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprCall&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprCall&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The call being performed.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) call: Call&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) call: Call&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The arguments of the function call.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) args: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Expr&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) args: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Expr&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A field access `&lt;expr&gt;.&lt;field&gt;`.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprFieldAccess&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprFieldAccess&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The expr where the field is being accessed.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The field being accessed.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr_field: ExprField&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr_field: ExprField&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
 <span class="doccomment">/// The field being accessed.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExprField&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExprField&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// A tuple index.
     ///
     /// ```text
@@ -1245,139 +1245,139 @@
     /// ```text
     /// field
     /// ```
-    </span>Ident(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str),
+    </span>Ident(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str),
     <span class="doccomment">/// A field identifier immediately followed by generic expressions.
     ///
     /// ```text
     /// field&lt;1, string&gt;
     /// ```
-    </span>IdentGenerics(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str, Hash),
+    </span>IdentGenerics(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str, Hash),
 }
 
 <span class="doccomment">/// A binary expression.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprBinary&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprBinary&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The left-hand side of a binary operation.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) lhs: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) lhs: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The operator.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) op: ast::BinOp,
     <span class="doccomment">/// The right-hand side of a binary operation.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) rhs: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) rhs: Expr&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
 <span class="doccomment">/// A unary expression.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprUnary&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprUnary&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The operation to apply.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) op: ast::UnOp,
     <span class="doccomment">/// The expression of the operation.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
 <span class="doccomment">/// An index get operation `&lt;t&gt;[&lt;index&gt;]`.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprIndex&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprIndex&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The target of the index set.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) target: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) target: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The indexing expression.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) index: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) index: Expr&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
 <span class="doccomment">/// An async block being called.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprAsyncBlock&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprAsyncBlock&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) hash: Hash,
     <span class="kw">pub</span>(<span class="kw">crate</span>) do_move: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprBreak&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprBreak&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Label being continued.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str&gt;,
     <span class="doccomment">/// Value being broken with.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     <span class="doccomment">/// Variables that goes out of scope.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprContinue&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprContinue&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Label being continued.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str&gt;,
     <span class="doccomment">/// Variables that goes out of scope.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A `select` expression that selects over a collection of futures.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprSelect&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprSelect&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The branches of the select.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) branches: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[ExprSelectBranch&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) branches: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[ExprSelectBranch&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A single selection branch.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExprSelectBranch&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExprSelectBranch&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// A patterned branch.
-    </span>Pat(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprSelectPatBranch&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Pat(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprSelectPatBranch&lt;<span class="lifetime">'hir</span>&gt;),
     <span class="doccomment">/// A default branch.
-    </span>Default(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Default(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;),
 }
 
 <span class="doccomment">/// A single selection branch.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprSelectPatBranch&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprSelectPatBranch&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The identifier to bind the result to.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pat: Pat&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pat: Pat&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The expression that should evaluate to a future.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The body of the expression.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Variables that need to be dropped by the end of this block.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// Calling a closure.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprCallClosure&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprCallClosure&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) do_move: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) hash: Hash,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A closure expression.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprClosure&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprClosure&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Arguments to the closure.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) args: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[FnArg&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) args: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[FnArg&lt;<span class="lifetime">'hir</span>&gt;],
     <span class="doccomment">/// The body of the closure.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Captures in the closure.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
@@ -1394,22 +1394,22 @@
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprObject&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprObject&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The kind of an object being created.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: ExprObjectKind,
     <span class="doccomment">/// Assignments in the object.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) assignments: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[FieldAssign&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) assignments: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[FieldAssign&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A single field assignment in an object expression.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>FieldAssign&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>FieldAssign&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The key of the field.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) key: (Span, <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>str),
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) key: (Span, <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str),
     <span class="doccomment">/// The assigned expression of the field.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) assign: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) assign: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The position of the field in its containing type declaration.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) position: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
@@ -1418,82 +1418,82 @@
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprSeq&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprSeq&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Items in the vector.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) items: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Expr&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) items: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Expr&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A range expression such as `a .. b` or `a ..= b`.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExprRange&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExprRange&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// `start..`.
-    </span>RangeFrom { start: Expr&lt;<span class="lifetime">&#39;hir</span>&gt; },
+    </span>RangeFrom { start: Expr&lt;<span class="lifetime">'hir</span>&gt; },
     <span class="doccomment">/// `..`.
     </span>RangeFull,
     <span class="doccomment">/// `start..=end`.
-    </span>RangeInclusive { start: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;, end: Expr&lt;<span class="lifetime">&#39;hir</span>&gt; },
+    </span>RangeInclusive { start: Expr&lt;<span class="lifetime">'hir</span>&gt;, end: Expr&lt;<span class="lifetime">'hir</span>&gt; },
     <span class="doccomment">/// `..=end`.
-    </span>RangeToInclusive { end: Expr&lt;<span class="lifetime">&#39;hir</span>&gt; },
+    </span>RangeToInclusive { end: Expr&lt;<span class="lifetime">'hir</span>&gt; },
     <span class="doccomment">/// `..end`.
-    </span>RangeTo { end: Expr&lt;<span class="lifetime">&#39;hir</span>&gt; },
+    </span>RangeTo { end: Expr&lt;<span class="lifetime">'hir</span>&gt; },
     <span class="doccomment">/// `start..end`.
-    </span>Range { start: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;, end: Expr&lt;<span class="lifetime">&#39;hir</span>&gt; },
+    </span>Range { start: Expr&lt;<span class="lifetime">'hir</span>&gt;, end: Expr&lt;<span class="lifetime">'hir</span>&gt; },
 }
 
 <span class="doccomment">/// The condition in an if statement.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Condition&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Condition&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// A regular expression.
-    </span>Expr(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Expr(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;),
     <span class="doccomment">/// A pattern match.
-    </span>ExprLet(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>ExprLet&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>ExprLet(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>ExprLet&lt;<span class="lifetime">'hir</span>&gt;),
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ItemFn&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ItemFn&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The span of the function.
     </span><span class="attr">#[rune(span)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) span: Span,
     <span class="doccomment">/// The arguments of the function.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) args: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[FnArg&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) args: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[FnArg&lt;<span class="lifetime">'hir</span>&gt;],
     <span class="doccomment">/// The body of the function.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Block&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Block&lt;<span class="lifetime">'hir</span>&gt;,
 }
 
 <span class="doccomment">/// A single argument to a function.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>FnArg&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>FnArg&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The `self` parameter.
     </span>SelfValue(Span),
     <span class="doccomment">/// Function argument is a pattern binding.
-    </span>Pat(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Pat&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Pat(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Pat&lt;<span class="lifetime">'hir</span>&gt;),
 }
 
 <span class="doccomment">/// A block of statements.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Block&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Block&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The span of the block.
     </span><span class="attr">#[rune(span)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) span: Span,
     <span class="doccomment">/// Statements in the block.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) statements: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Stmt&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) statements: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Stmt&lt;<span class="lifetime">'hir</span>&gt;],
     <span class="doccomment">/// Variables that need to be dropped by the end of this block.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
-<span class="kw">impl </span>Block&lt;<span class="lifetime">&#39;_</span>&gt; {
-    <span class="doccomment">/// Test if the block doesn&#39;t produce anything. Which is when the last
+<span class="kw">impl </span>Block&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="doccomment">/// Test if the block doesn't produce anything. Which is when the last
     /// element is either a non-expression or is an expression terminated by a
     /// semi.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>produces_nothing(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
@@ -1503,22 +1503,22 @@
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AsyncBlock&lt;<span class="lifetime">&#39;hir</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) block: Block&lt;<span class="lifetime">&#39;hir</span>&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>[Name&lt;<span class="lifetime">&#39;hir</span>&gt;],
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AsyncBlock&lt;<span class="lifetime">'hir</span>&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) block: Block&lt;<span class="lifetime">'hir</span>&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
 }
 
 <span class="doccomment">/// A statement within a block.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Stmt&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Stmt&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// A local declaration.
-    </span>Local(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Local&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Local(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Local&lt;<span class="lifetime">'hir</span>&gt;),
     <span class="doccomment">/// An expression.
-    </span>Expr(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Expr(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;),
     <span class="doccomment">/// An expression with a trailing semi-colon.
-    </span>Semi(<span class="kw-2">&amp;</span><span class="lifetime">&#39;hir </span>Expr&lt;<span class="lifetime">&#39;hir</span>&gt;),
+    </span>Semi(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;),
     <span class="doccomment">/// An ignored item.
     </span>Item(Span),
 }
@@ -1527,13 +1527,13 @@
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Local&lt;<span class="lifetime">&#39;hir</span>&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Local&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The span of the local declaration.
     </span><span class="attr">#[rune(span)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) span: Span,
     <span class="doccomment">/// The name of the binding.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pat: Pat&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) pat: Pat&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// The expression the binding is assigned to.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">&#39;hir</span>&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: Expr&lt;<span class="lifetime">'hir</span>&gt;,
 }
 </code></pre></div></section></main></body></html>

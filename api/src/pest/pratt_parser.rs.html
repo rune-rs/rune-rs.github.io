@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pest-2.7.5/src/pratt_parser.rs`."><title>pratt_parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pest" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../pest/index.html"><img src="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg" alt="pest"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pest-2.7.5/src/pratt_parser.rs`."><title>pratt_parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pest" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../pest/index.html"><img src="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg" alt="pest"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -497,21 +497,21 @@
 /// The following pest grammar defines a calculator which can be used for Pratt parsing.
 ///
 /// ```pest
-/// WHITESPACE   =  _{ &quot; &quot; | &quot;\t&quot; | NEWLINE }
+/// WHITESPACE   =  _{ " " | "\t" | NEWLINE }
 ///  
 /// program      =   { SOI ~ expr ~ EOI }
 ///   expr       =   { prefix* ~ primary ~ postfix* ~ (infix ~ prefix* ~ primary ~ postfix* )* }
 ///     infix    =  _{ add | sub | mul | div | pow }
-///       add    =   { &quot;+&quot; } // Addition
-///       sub    =   { &quot;-&quot; } // Subtraction
-///       mul    =   { &quot;*&quot; } // Multiplication
-///       div    =   { &quot;/&quot; } // Division
-///       pow    =   { &quot;^&quot; } // Exponentiation
+///       add    =   { "+" } // Addition
+///       sub    =   { "-" } // Subtraction
+///       mul    =   { "*" } // Multiplication
+///       div    =   { "/" } // Division
+///       pow    =   { "^" } // Exponentiation
 ///     prefix   =  _{ neg }
-///       neg    =   { &quot;-&quot; } // Negation
+///       neg    =   { "-" } // Negation
 ///     postfix  =  _{ fac }
-///       fac    =   { &quot;!&quot; } // Factorial
-///     primary  =  _{ int | &quot;(&quot; ~ expr ~ &quot;)&quot; }
+///       fac    =   { "!" } // Factorial
+///     primary  =  _{ int | "(" ~ expr ~ ")" }
 ///       int    =  @{ (ASCII_NONZERO_DIGIT ~ ASCII_DIGIT+ | ASCII_DIGIT) }
 /// ```
 ///
@@ -544,7 +544,7 @@
 ///     pratt
 ///         .map_primary(|primary| match primary.as_rule() {
 ///             Rule::int  =&gt; primary.as_str().parse().unwrap(),
-///             Rule::expr =&gt; parse_expr(primary.into_inner(), pratt), // from &quot;(&quot; ~ expr ~ &quot;)&quot;
+///             Rule::expr =&gt; parse_expr(primary.into_inner(), pratt), // from "(" ~ expr ~ ")"
 ///             _          =&gt; unreachable!(),
 ///         })
 ///         .map_prefix(|op, rhs| match op.as_rule() {
@@ -622,13 +622,13 @@
     </span>}
 
     <span class="doccomment">/// Maps primary expressions with a closure `primary`.
-    </span><span class="kw">pub fn </span>map_primary&lt;<span class="lifetime">&#39;pratt</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, X, T&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;pratt </span><span class="self">self</span>,
+    </span><span class="kw">pub fn </span>map_primary&lt;<span class="lifetime">'pratt</span>, <span class="lifetime">'a</span>, <span class="lifetime">'i</span>, X, T&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'pratt </span><span class="self">self</span>,
         primary: X,
-    ) -&gt; PrattParserMap&lt;<span class="lifetime">&#39;pratt</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, R, X, T&gt;
+    ) -&gt; PrattParserMap&lt;<span class="lifetime">'pratt</span>, <span class="lifetime">'a</span>, <span class="lifetime">'i</span>, R, X, T&gt;
     <span class="kw">where
-        </span>X: FnMut(Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;) -&gt; T,
-        R: <span class="lifetime">&#39;pratt</span>,
+        </span>X: FnMut(Pair&lt;<span class="lifetime">'i</span>, R&gt;) -&gt; T,
+        R: <span class="lifetime">'pratt</span>,
     {
         PrattParserMap {
             pratt: <span class="self">self</span>,
@@ -641,37 +641,37 @@
     }
 }
 
-<span class="kw">type </span>PrefixFn&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, R, T&gt; = Box&lt;<span class="kw">dyn </span>FnMut(Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;, T) -&gt; T + <span class="lifetime">&#39;a</span>&gt;;
-<span class="kw">type </span>PostfixFn&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, R, T&gt; = Box&lt;<span class="kw">dyn </span>FnMut(T, Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;) -&gt; T + <span class="lifetime">&#39;a</span>&gt;;
-<span class="kw">type </span>InfixFn&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, R, T&gt; = Box&lt;<span class="kw">dyn </span>FnMut(T, Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;, T) -&gt; T + <span class="lifetime">&#39;a</span>&gt;;
+<span class="kw">type </span>PrefixFn&lt;<span class="lifetime">'a</span>, <span class="lifetime">'i</span>, R, T&gt; = Box&lt;<span class="kw">dyn </span>FnMut(Pair&lt;<span class="lifetime">'i</span>, R&gt;, T) -&gt; T + <span class="lifetime">'a</span>&gt;;
+<span class="kw">type </span>PostfixFn&lt;<span class="lifetime">'a</span>, <span class="lifetime">'i</span>, R, T&gt; = Box&lt;<span class="kw">dyn </span>FnMut(T, Pair&lt;<span class="lifetime">'i</span>, R&gt;) -&gt; T + <span class="lifetime">'a</span>&gt;;
+<span class="kw">type </span>InfixFn&lt;<span class="lifetime">'a</span>, <span class="lifetime">'i</span>, R, T&gt; = Box&lt;<span class="kw">dyn </span>FnMut(T, Pair&lt;<span class="lifetime">'i</span>, R&gt;, T) -&gt; T + <span class="lifetime">'a</span>&gt;;
 
 <span class="doccomment">/// Product of calling [`map_primary`] on [`PrattParser`], defines how expressions should
 /// be mapped.
 ///
 /// [`map_primary`]: struct.PrattParser.html#method.map_primary
 /// [`PrattParser`]: struct.PrattParser.html
-</span><span class="kw">pub struct </span>PrattParserMap&lt;<span class="lifetime">&#39;pratt</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, R, F, T&gt;
+</span><span class="kw">pub struct </span>PrattParserMap&lt;<span class="lifetime">'pratt</span>, <span class="lifetime">'a</span>, <span class="lifetime">'i</span>, R, F, T&gt;
 <span class="kw">where
     </span>R: RuleType,
-    F: FnMut(Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;) -&gt; T,
+    F: FnMut(Pair&lt;<span class="lifetime">'i</span>, R&gt;) -&gt; T,
 {
-    pratt: <span class="kw-2">&amp;</span><span class="lifetime">&#39;pratt </span>PrattParser&lt;R&gt;,
+    pratt: <span class="kw-2">&amp;</span><span class="lifetime">'pratt </span>PrattParser&lt;R&gt;,
     primary: F,
-    prefix: <span class="prelude-ty">Option</span>&lt;PrefixFn&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, R, T&gt;&gt;,
-    postfix: <span class="prelude-ty">Option</span>&lt;PostfixFn&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, R, T&gt;&gt;,
-    infix: <span class="prelude-ty">Option</span>&lt;InfixFn&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, R, T&gt;&gt;,
+    prefix: <span class="prelude-ty">Option</span>&lt;PrefixFn&lt;<span class="lifetime">'a</span>, <span class="lifetime">'i</span>, R, T&gt;&gt;,
+    postfix: <span class="prelude-ty">Option</span>&lt;PostfixFn&lt;<span class="lifetime">'a</span>, <span class="lifetime">'i</span>, R, T&gt;&gt;,
+    infix: <span class="prelude-ty">Option</span>&lt;InfixFn&lt;<span class="lifetime">'a</span>, <span class="lifetime">'i</span>, R, T&gt;&gt;,
     phantom: PhantomData&lt;T&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;pratt</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, R, F, T&gt; PrattParserMap&lt;<span class="lifetime">&#39;pratt</span>, <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;i</span>, R, F, T&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'pratt</span>, <span class="lifetime">'a</span>, <span class="lifetime">'i</span>, R, F, T&gt; PrattParserMap&lt;<span class="lifetime">'pratt</span>, <span class="lifetime">'a</span>, <span class="lifetime">'i</span>, R, F, T&gt;
 <span class="kw">where
-    </span>R: RuleType + <span class="lifetime">&#39;pratt</span>,
-    F: FnMut(Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;) -&gt; T,
+    </span>R: RuleType + <span class="lifetime">'pratt</span>,
+    F: FnMut(Pair&lt;<span class="lifetime">'i</span>, R&gt;) -&gt; T,
 {
     <span class="doccomment">/// Maps prefix operators with closure `prefix`.
     </span><span class="kw">pub fn </span>map_prefix&lt;X&gt;(<span class="kw-2">mut </span><span class="self">self</span>, prefix: X) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>X: FnMut(Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;, T) -&gt; T + <span class="lifetime">&#39;a</span>,
+        </span>X: FnMut(Pair&lt;<span class="lifetime">'i</span>, R&gt;, T) -&gt; T + <span class="lifetime">'a</span>,
     {
         <span class="self">self</span>.prefix = <span class="prelude-val">Some</span>(Box::new(prefix));
         <span class="self">self
@@ -680,7 +680,7 @@
     <span class="doccomment">/// Maps postfix operators with closure `postfix`.
     </span><span class="kw">pub fn </span>map_postfix&lt;X&gt;(<span class="kw-2">mut </span><span class="self">self</span>, postfix: X) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>X: FnMut(T, Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;) -&gt; T + <span class="lifetime">&#39;a</span>,
+        </span>X: FnMut(T, Pair&lt;<span class="lifetime">'i</span>, R&gt;) -&gt; T + <span class="lifetime">'a</span>,
     {
         <span class="self">self</span>.postfix = <span class="prelude-val">Some</span>(Box::new(postfix));
         <span class="self">self
@@ -689,7 +689,7 @@
     <span class="doccomment">/// Maps infix operators with a closure `infix`.
     </span><span class="kw">pub fn </span>map_infix&lt;X&gt;(<span class="kw-2">mut </span><span class="self">self</span>, infix: X) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>X: FnMut(T, Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;, T) -&gt; T + <span class="lifetime">&#39;a</span>,
+        </span>X: FnMut(T, Pair&lt;<span class="lifetime">'i</span>, R&gt;, T) -&gt; T + <span class="lifetime">'a</span>,
     {
         <span class="self">self</span>.infix = <span class="prelude-val">Some</span>(Box::new(infix));
         <span class="self">self
@@ -703,11 +703,11 @@
     /// [`map_prefix`]: struct.PrattParserMap.html#method.map_prefix
     /// [`map_postfix`]: struct.PrattParserMap.html#method.map_postfix
     /// [`map_infix`]: struct.PrattParserMap.html#method.map_infix
-    </span><span class="kw">pub fn </span>parse&lt;P: Iterator&lt;Item = Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pairs: P) -&gt; T {
+    </span><span class="kw">pub fn </span>parse&lt;P: Iterator&lt;Item = Pair&lt;<span class="lifetime">'i</span>, R&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pairs: P) -&gt; T {
         <span class="self">self</span>.expr(<span class="kw-2">&amp;mut </span>pairs.peekable(), <span class="number">0</span>)
     }
 
-    <span class="kw">fn </span>expr&lt;P: Iterator&lt;Item = Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pairs: <span class="kw-2">&amp;mut </span>Peekable&lt;P&gt;, rbp: Prec) -&gt; T {
+    <span class="kw">fn </span>expr&lt;P: Iterator&lt;Item = Pair&lt;<span class="lifetime">'i</span>, R&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pairs: <span class="kw-2">&amp;mut </span>Peekable&lt;P&gt;, rbp: Prec) -&gt; T {
         <span class="kw">let </span><span class="kw-2">mut </span>lhs = <span class="self">self</span>.nud(pairs);
         <span class="kw">while </span>rbp &lt; <span class="self">self</span>.lbp(pairs) {
             lhs = <span class="self">self</span>.led(pairs, lhs);
@@ -717,28 +717,28 @@
 
     <span class="doccomment">/// Null-Denotation
     ///
-    /// &quot;the action that should happen when the symbol is encountered
+    /// "the action that should happen when the symbol is encountered
     ///  as start of an expression (most notably, prefix operators)
-    </span><span class="kw">fn </span>nud&lt;P: Iterator&lt;Item = Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pairs: <span class="kw-2">&amp;mut </span>Peekable&lt;P&gt;) -&gt; T {
-        <span class="kw">let </span>pair = pairs.next().expect(<span class="string">&quot;Pratt parsing expects non-empty Pairs&quot;</span>);
+    </span><span class="kw">fn </span>nud&lt;P: Iterator&lt;Item = Pair&lt;<span class="lifetime">'i</span>, R&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pairs: <span class="kw-2">&amp;mut </span>Peekable&lt;P&gt;) -&gt; T {
+        <span class="kw">let </span>pair = pairs.next().expect(<span class="string">"Pratt parsing expects non-empty Pairs"</span>);
         <span class="kw">match </span><span class="self">self</span>.pratt.ops.get(<span class="kw-2">&amp;</span>pair.as_rule()) {
             <span class="prelude-val">Some</span>((Affix::Prefix, prec)) =&gt; {
                 <span class="kw">let </span>rhs = <span class="self">self</span>.expr(pairs, <span class="kw-2">*</span>prec - <span class="number">1</span>);
                 <span class="kw">match </span><span class="self">self</span>.prefix.as_mut() {
                     <span class="prelude-val">Some</span>(prefix) =&gt; prefix(pair, rhs),
-                    <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Could not map {}, no `.map_prefix(...)` specified&quot;</span>, pair),
+                    <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Could not map {}, no `.map_prefix(...)` specified"</span>, pair),
                 }
             }
             <span class="prelude-val">None </span>=&gt; (<span class="self">self</span>.primary)(pair),
-            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Expected prefix or primary expression, found {}&quot;</span>, pair),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Expected prefix or primary expression, found {}"</span>, pair),
         }
     }
 
     <span class="doccomment">/// Left-Denotation
     ///
-    /// &quot;the action that should happen when the symbol is encountered
-    /// after the start of an expression (most notably, infix and postfix operators)&quot;
-    </span><span class="kw">fn </span>led&lt;P: Iterator&lt;Item = Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pairs: <span class="kw-2">&amp;mut </span>Peekable&lt;P&gt;, lhs: T) -&gt; T {
+    /// "the action that should happen when the symbol is encountered
+    /// after the start of an expression (most notably, infix and postfix operators)"
+    </span><span class="kw">fn </span>led&lt;P: Iterator&lt;Item = Pair&lt;<span class="lifetime">'i</span>, R&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pairs: <span class="kw-2">&amp;mut </span>Peekable&lt;P&gt;, lhs: T) -&gt; T {
         <span class="kw">let </span>pair = pairs.next().unwrap();
         <span class="kw">match </span><span class="self">self</span>.pratt.ops.get(<span class="kw-2">&amp;</span>pair.as_rule()) {
             <span class="prelude-val">Some</span>((Affix::Infix(assoc), prec)) =&gt; {
@@ -748,25 +748,25 @@
                 };
                 <span class="kw">match </span><span class="self">self</span>.infix.as_mut() {
                     <span class="prelude-val">Some</span>(infix) =&gt; infix(lhs, pair, rhs),
-                    <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Could not map {}, no `.map_infix(...)` specified&quot;</span>, pair),
+                    <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Could not map {}, no `.map_infix(...)` specified"</span>, pair),
                 }
             }
             <span class="prelude-val">Some</span>((Affix::Postfix, <span class="kw">_</span>)) =&gt; <span class="kw">match </span><span class="self">self</span>.postfix.as_mut() {
                 <span class="prelude-val">Some</span>(postfix) =&gt; postfix(lhs, pair),
-                <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Could not map {}, no `.map_postfix(...)` specified&quot;</span>, pair),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Could not map {}, no `.map_postfix(...)` specified"</span>, pair),
             },
-            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Expected postfix or infix expression, found {}&quot;</span>, pair),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Expected postfix or infix expression, found {}"</span>, pair),
         }
     }
 
     <span class="doccomment">/// Left-Binding-Power
     ///
-    /// &quot;describes the symbol&#39;s precedence in infix form (most notably, operator precedence)&quot;
-    </span><span class="kw">fn </span>lbp&lt;P: Iterator&lt;Item = Pair&lt;<span class="lifetime">&#39;i</span>, R&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pairs: <span class="kw-2">&amp;mut </span>Peekable&lt;P&gt;) -&gt; Prec {
+    /// "describes the symbol's precedence in infix form (most notably, operator precedence)"
+    </span><span class="kw">fn </span>lbp&lt;P: Iterator&lt;Item = Pair&lt;<span class="lifetime">'i</span>, R&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pairs: <span class="kw-2">&amp;mut </span>Peekable&lt;P&gt;) -&gt; Prec {
         <span class="kw">match </span>pairs.peek() {
             <span class="prelude-val">Some</span>(pair) =&gt; <span class="kw">match </span><span class="self">self</span>.pratt.ops.get(<span class="kw-2">&amp;</span>pair.as_rule()) {
                 <span class="prelude-val">Some</span>((<span class="kw">_</span>, prec)) =&gt; <span class="kw-2">*</span>prec,
-                <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Expected operator, found {}&quot;</span>, pair),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Expected operator, found {}"</span>, pair),
             },
             <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
         }

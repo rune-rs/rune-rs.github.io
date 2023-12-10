@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syntect-5.1.0/src/highlighting/highlighter.rs`."><title>highlighter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syntect" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syntect-5.1.0/src/highlighting/highlighter.rs`."><title>highlighter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syntect" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -595,8 +595,8 @@
 ///
 /// [`Theme`]: struct.Theme.html
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Highlighter&lt;<span class="lifetime">&#39;a</span>&gt; {
-    theme: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Theme,
+</span><span class="kw">pub struct </span>Highlighter&lt;<span class="lifetime">'a</span>&gt; {
+    theme: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Theme,
     <span class="doccomment">/// Cache of the selectors in the theme that are only one scope
     /// In most themes this is the majority, hence the usefullness
     </span>single_selectors: Vec&lt;(Scope, StyleModifier)&gt;,
@@ -613,7 +613,7 @@
 ///
 /// One reason this is exposed is that since it implements `Clone` you can actually cache these
 /// (probably along with a [`ParseState`]) and only re-start highlighting from the point of a
-/// change. You could also do something fancy like only highlight a bit past the end of a user&#39;s
+/// change. You could also do something fancy like only highlight a bit past the end of a user's
 /// screen and resume highlighting when they scroll down on large files.
 ///
 /// Alternatively you can save space by caching only the `path` field of this struct then re-create
@@ -642,13 +642,13 @@
 /// [`HighlightState`]: struct.HighlightState.html
 /// [`Style`]: struct.Style.html
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>RangedHighlightIterator&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
+</span><span class="kw">pub struct </span>RangedHighlightIterator&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
     index: usize,
     pos: usize,
-    changes: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[(usize, ScopeStackOp)],
-    text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>str,
-    highlighter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Highlighter&lt;<span class="lifetime">&#39;a</span>&gt;,
-    state: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>HighlightState,
+    changes: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[(usize, ScopeStackOp)],
+    text: <span class="kw-2">&amp;</span><span class="lifetime">'b </span>str,
+    highlighter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Highlighter&lt;<span class="lifetime">'a</span>&gt;,
+    state: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HighlightState,
 }
 
 <span class="doccomment">/// Highlights a line of parsed code given a [`HighlightState`] and line of changes from the parser.
@@ -662,20 +662,20 @@
 /// [`RangedHighlightIterator`]: struct.RangedHighlightIterator.html
 /// [`Style`]: struct.Style.html
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>HighlightIterator&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
-    ranged_iterator: RangedHighlightIterator&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt;
+</span><span class="kw">pub struct </span>HighlightIterator&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
+    ranged_iterator: RangedHighlightIterator&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt;
 }
 
 <span class="kw">impl </span>HighlightState {
     <span class="doccomment">/// Note that the [`Highlighter`] is not stored; it is used to construct the initial stack
     /// of styles.
     ///
-    /// Most of the time you&#39;ll want to pass an empty stack as `initial_stack`, but see the docs for
+    /// Most of the time you'll want to pass an empty stack as `initial_stack`, but see the docs for
     /// [`HighlightState`] for a discussion of advanced caching use cases.
     ///
     /// [`Highlighter`]: struct.Highlighter.html
     /// [`HighlightState`]: struct.HighlightState.html
-    </span><span class="kw">pub fn </span>new(highlighter: <span class="kw-2">&amp;</span>Highlighter&lt;<span class="lifetime">&#39;_</span>&gt;, initial_stack: ScopeStack) -&gt; HighlightState {
+    </span><span class="kw">pub fn </span>new(highlighter: <span class="kw-2">&amp;</span>Highlighter&lt;<span class="lifetime">'_</span>&gt;, initial_stack: ScopeStack) -&gt; HighlightState {
         <span class="kw">let </span><span class="kw-2">mut </span>styles = <span class="macro">vec!</span>[highlighter.get_default()];
         <span class="kw">let </span><span class="kw-2">mut </span>single_caches = <span class="macro">vec!</span>[ScoredStyle::from_style(styles[<span class="number">0</span>])];
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..initial_stack.len() {
@@ -693,12 +693,12 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; RangedHighlightIterator&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
-    <span class="kw">pub fn </span>new(state: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>HighlightState,
-               changes: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[(usize, ScopeStackOp)],
-               text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>str,
-               highlighter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Highlighter&lt;<span class="lifetime">&#39;_</span>&gt;)
-               -&gt; RangedHighlightIterator&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; RangedHighlightIterator&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
+    <span class="kw">pub fn </span>new(state: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HighlightState,
+               changes: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[(usize, ScopeStackOp)],
+               text: <span class="kw-2">&amp;</span><span class="lifetime">'b </span>str,
+               highlighter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Highlighter&lt;<span class="lifetime">'_</span>&gt;)
+               -&gt; RangedHighlightIterator&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
         RangedHighlightIterator {
             index: <span class="number">0</span>,
             pos: <span class="number">0</span>,
@@ -710,12 +710,12 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; Iterator <span class="kw">for </span>RangedHighlightIterator&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
-    <span class="kw">type </span>Item = (Style, <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>str, Range&lt;usize&gt;);
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; Iterator <span class="kw">for </span>RangedHighlightIterator&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
+    <span class="kw">type </span>Item = (Style, <span class="kw-2">&amp;</span><span class="lifetime">'b </span>str, Range&lt;usize&gt;);
 
     <span class="doccomment">/// Yields the next token of text and the associated `Style` to render that text with.
     /// the concatenation of the strings in each token will make the original string.
-    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(Style, <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>str, Range&lt;usize&gt;)&gt; {
+    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(Style, <span class="kw-2">&amp;</span><span class="lifetime">'b </span>str, Range&lt;usize&gt;)&gt; {
         <span class="kw">if </span><span class="self">self</span>.pos == <span class="self">self</span>.text.len() &amp;&amp; <span class="self">self</span>.index &gt;= <span class="self">self</span>.changes.len() {
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
@@ -724,18 +724,18 @@
         } <span class="kw">else </span>{
             (<span class="self">self</span>.text.len(), ScopeStackOp::Noop)
         };
-        <span class="comment">// println!(&quot;{} - {:?}   {}:{}&quot;, self.index, self.pos, self.state.path.len(), self.state.styles.len());
+        <span class="comment">// println!("{} - {:?}   {}:{}", self.index, self.pos, self.state.path.len(), self.state.styles.len());
         </span><span class="kw">let </span>style = <span class="kw-2">*</span><span class="self">self</span>.state.styles.last().unwrap_or(<span class="kw-2">&amp;</span>Style::default());
         <span class="kw">let </span>text = <span class="kw-2">&amp;</span><span class="self">self</span>.text[<span class="self">self</span>.pos..end];
         <span class="kw">let </span>range = Range { start: <span class="self">self</span>.pos, end };
         {
-            <span class="comment">// closures mess with the borrow checker&#39;s ability to see different struct fields
+            <span class="comment">// closures mess with the borrow checker's ability to see different struct fields
             </span><span class="kw">let </span>m_path = <span class="kw-2">&amp;mut </span><span class="self">self</span>.state.path;
             <span class="kw">let </span>m_styles = <span class="kw-2">&amp;mut </span><span class="self">self</span>.state.styles;
             <span class="kw">let </span>m_caches = <span class="kw-2">&amp;mut </span><span class="self">self</span>.state.single_caches;
             <span class="kw">let </span>highlighter = <span class="kw-2">&amp;</span><span class="self">self</span>.highlighter;
             m_path.apply_with_hook(<span class="kw-2">&amp;</span>command, |op, cur_stack| {
-                <span class="comment">// println!(&quot;{:?} - {:?}&quot;, op, cur_stack);
+                <span class="comment">// println!("{:?} - {:?}", op, cur_stack);
                 </span><span class="kw">match </span>op {
                     BasicScopeStackOp::Push(<span class="kw">_</span>) =&gt; {
                         <span class="comment">// we can push multiple times so this might have changed
@@ -765,12 +765,12 @@
         }
     }
 }
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; HighlightIterator&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
-    <span class="kw">pub fn </span>new(state: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>HighlightState,
-               changes: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[(usize, ScopeStackOp)],
-               text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>str,
-               highlighter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Highlighter&lt;<span class="lifetime">&#39;_</span>&gt;)
-        -&gt; HighlightIterator&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; HighlightIterator&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
+    <span class="kw">pub fn </span>new(state: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HighlightState,
+               changes: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[(usize, ScopeStackOp)],
+               text: <span class="kw-2">&amp;</span><span class="lifetime">'b </span>str,
+               highlighter: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Highlighter&lt;<span class="lifetime">'_</span>&gt;)
+        -&gt; HighlightIterator&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
             HighlightIterator {
                 ranged_iterator: RangedHighlightIterator {
                     index: <span class="number">0</span>,
@@ -784,12 +784,12 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; Iterator <span class="kw">for </span>HighlightIterator&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; {
-    <span class="kw">type </span>Item = (Style, <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>str);
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; Iterator <span class="kw">for </span>HighlightIterator&lt;<span class="lifetime">'a</span>, <span class="lifetime">'b</span>&gt; {
+    <span class="kw">type </span>Item = (Style, <span class="kw-2">&amp;</span><span class="lifetime">'b </span>str);
 
     <span class="doccomment">/// Yields the next token of text and the associated `Style` to render that text with.
     /// the concatenation of the strings in each token will make the original string.
-    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(Style, <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>str)&gt; {
+    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(Style, <span class="kw-2">&amp;</span><span class="lifetime">'b </span>str)&gt; {
         <span class="self">self</span>.ranged_iterator.next().map(|e| (e.<span class="number">0</span>, e.<span class="number">1</span>))
     }
 }
@@ -835,8 +835,8 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Highlighter&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub fn </span>new(theme: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Theme) -&gt; Highlighter&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Highlighter&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub fn </span>new(theme: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Theme) -&gt; Highlighter&lt;<span class="lifetime">'a</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>single_selectors = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>multi_selectors = Vec::new();
         <span class="kw">for </span>item <span class="kw">in </span><span class="kw-2">&amp;</span>theme.scopes {
@@ -913,7 +913,7 @@
     /// in combination with style information from other sources.
     ///
     /// This operation is convenient but expensive. For reasonable performance,
-    /// the caller should be caching results. It&#39;s likely slower than [`style_for_stack`].
+    /// the caller should be caching results. It's likely slower than [`style_for_stack`].
     ///
     /// [`StyleModifier`]: struct.StyleModifier.html
     /// [`style_for_stack`]: #method.style_for_stack
@@ -943,7 +943,7 @@
     }
 }
 
-<span class="attr">#[cfg(all(feature = <span class="string">&quot;default-syntaxes&quot;</span>, feature = <span class="string">&quot;default-themes&quot;</span>))]
+<span class="attr">#[cfg(all(feature = <span class="string">"default-syntaxes"</span>, feature = <span class="string">"default-themes"</span>))]
 #[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
@@ -952,20 +952,20 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse() {
-        <span class="kw">let </span>ps = SyntaxSet::load_from_folder(<span class="string">&quot;testdata/Packages&quot;</span>).unwrap();
+        <span class="kw">let </span>ps = SyntaxSet::load_from_folder(<span class="string">"testdata/Packages"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state = {
-            <span class="kw">let </span>syntax = ps.find_syntax_by_name(<span class="string">&quot;Ruby on Rails&quot;</span>).unwrap();
+            <span class="kw">let </span>syntax = ps.find_syntax_by_name(<span class="string">"Ruby on Rails"</span>).unwrap();
             ParseState::new(syntax)
         };
         <span class="kw">let </span>ts = ThemeSet::load_defaults();
-        <span class="kw">let </span>highlighter = Highlighter::new(<span class="kw-2">&amp;</span>ts.themes[<span class="string">&quot;base16-ocean.dark&quot;</span>]);
+        <span class="kw">let </span>highlighter = Highlighter::new(<span class="kw-2">&amp;</span>ts.themes[<span class="string">"base16-ocean.dark"</span>]);
 
         <span class="kw">let </span><span class="kw-2">mut </span>highlight_state = HighlightState::new(<span class="kw-2">&amp;</span>highlighter, ScopeStack::new());
-        <span class="kw">let </span>line = <span class="string">&quot;module Bob::Wow::Troll::Five; 5; end&quot;</span>;
-        <span class="kw">let </span>ops = state.parse_line(line, <span class="kw-2">&amp;</span>ps).expect(<span class="string">&quot;#[cfg(test)]&quot;</span>);
+        <span class="kw">let </span>line = <span class="string">"module Bob::Wow::Troll::Five; 5; end"</span>;
+        <span class="kw">let </span>ops = state.parse_line(line, <span class="kw-2">&amp;</span>ps).expect(<span class="string">"#[cfg(test)]"</span>);
         <span class="kw">let </span>iter = HighlightIterator::new(<span class="kw-2">&amp;mut </span>highlight_state, <span class="kw-2">&amp;</span>ops[..], line, <span class="kw-2">&amp;</span>highlighter);
         <span class="kw">let </span>regions: Vec&lt;(Style, <span class="kw-2">&amp;</span>str)&gt; = iter.collect();
-        <span class="comment">// println!(&quot;{:#?}&quot;, regions);
+        <span class="comment">// println!("{:#?}", regions);
         </span><span class="macro">assert_eq!</span>(regions[<span class="number">11</span>],
                    (Style {
                        foreground: Color {
@@ -982,32 +982,32 @@
                        },
                        font_style: FontStyle::empty(),
                    },
-                    <span class="string">&quot;5&quot;</span>));
+                    <span class="string">"5"</span>));
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>can_parse_with_highlight_state_from_cache() {
-        <span class="kw">let </span>ps = SyntaxSet::load_from_folder(<span class="string">&quot;testdata/Packages&quot;</span>).unwrap();
+        <span class="kw">let </span>ps = SyntaxSet::load_from_folder(<span class="string">"testdata/Packages"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state = {
             <span class="kw">let </span>syntax = ps.find_syntax_by_scope(
-                Scope::new(<span class="string">&quot;source.python&quot;</span>).unwrap()).unwrap();
+                Scope::new(<span class="string">"source.python"</span>).unwrap()).unwrap();
             ParseState::new(syntax)
         };
         <span class="kw">let </span>ts = ThemeSet::load_defaults();
-        <span class="kw">let </span>highlighter = Highlighter::new(<span class="kw-2">&amp;</span>ts.themes[<span class="string">&quot;base16-ocean.dark&quot;</span>]);
+        <span class="kw">let </span>highlighter = Highlighter::new(<span class="kw-2">&amp;</span>ts.themes[<span class="string">"base16-ocean.dark"</span>]);
 
-        <span class="comment">// We start by parsing a python multiline-comment: &quot;&quot;&quot;
+        <span class="comment">// We start by parsing a python multiline-comment: """
         </span><span class="kw">let </span><span class="kw-2">mut </span>highlight_state = HighlightState::new(<span class="kw-2">&amp;</span>highlighter, ScopeStack::new());
-        <span class="kw">let </span>line = <span class="string">r#&quot;&quot;&quot;&quot;&quot;#</span>;
-        <span class="kw">let </span>ops = state.parse_line(line, <span class="kw-2">&amp;</span>ps).expect(<span class="string">&quot;#[cfg(test)]&quot;</span>);
+        <span class="kw">let </span>line = <span class="string">r#"""""#</span>;
+        <span class="kw">let </span>ops = state.parse_line(line, <span class="kw-2">&amp;</span>ps).expect(<span class="string">"#[cfg(test)]"</span>);
         <span class="kw">let </span>iter = HighlightIterator::new(<span class="kw-2">&amp;mut </span>highlight_state, <span class="kw-2">&amp;</span>ops[..], line, <span class="kw-2">&amp;</span>highlighter);
         <span class="macro">assert_eq!</span>(<span class="number">1</span>, iter.count());
         <span class="kw">let </span>path = highlight_state.path;
 
         <span class="comment">// We then parse the next line with a highlight state built from the previous state
         </span><span class="kw">let </span><span class="kw-2">mut </span>highlight_state = HighlightState::new(<span class="kw-2">&amp;</span>highlighter, path);
-        <span class="kw">let </span>line = <span class="string">&quot;multiline comment&quot;</span>;
-        <span class="kw">let </span>ops = state.parse_line(line, <span class="kw-2">&amp;</span>ps).expect(<span class="string">&quot;#[cfg(test)]&quot;</span>);
+        <span class="kw">let </span>line = <span class="string">"multiline comment"</span>;
+        <span class="kw">let </span>ops = state.parse_line(line, <span class="kw-2">&amp;</span>ps).expect(<span class="string">"#[cfg(test)]"</span>);
         <span class="kw">let </span>iter = HighlightIterator::new(<span class="kw-2">&amp;mut </span>highlight_state, <span class="kw-2">&amp;</span>ops[..], line, <span class="kw-2">&amp;</span>highlighter);
         <span class="kw">let </span>regions: Vec&lt;(Style, <span class="kw-2">&amp;</span>str)&gt; = iter.collect();
 
@@ -1029,7 +1029,7 @@
                        },
                        font_style: FontStyle::empty(),
                    },
-                    <span class="string">&quot;multiline comment&quot;</span>));
+                    <span class="string">"multiline comment"</span>));
     }
 
     <span class="comment">// see issues #133 and #203, this test tests the fixes for those issues
@@ -1047,7 +1047,7 @@
             settings: ThemeSettings::default(),
             scopes: <span class="macro">vec!</span>[
                 ThemeItem {
-                    scope: ScopeSelectors::from_str(<span class="string">&quot;comment.line&quot;</span>).unwrap(),
+                    scope: ScopeSelectors::from_str(<span class="string">"comment.line"</span>).unwrap(),
                     style: StyleModifier {
                         foreground: <span class="prelude-val">Some</span>(c1),
                         background: <span class="prelude-val">None</span>,
@@ -1055,7 +1055,7 @@
                     },
                 },
                 ThemeItem {
-                    scope: ScopeSelectors::from_str(<span class="string">&quot;comment&quot;</span>).unwrap(),
+                    scope: ScopeSelectors::from_str(<span class="string">"comment"</span>).unwrap(),
                     style: StyleModifier {
                         foreground: <span class="prelude-val">Some</span>(c2),
                         background: <span class="prelude-val">None</span>,
@@ -1063,7 +1063,7 @@
                     },
                 },
                 ThemeItem {
-                    scope: ScopeSelectors::from_str(<span class="string">&quot;comment.line.rs - keyword&quot;</span>).unwrap(),
+                    scope: ScopeSelectors::from_str(<span class="string">"comment.line.rs - keyword"</span>).unwrap(),
                     style: StyleModifier {
                         foreground: <span class="prelude-val">None</span>,
                         background: <span class="prelude-val">Some</span>(c1),
@@ -1071,7 +1071,7 @@
                     },
                 },
                 ThemeItem {
-                    scope: ScopeSelectors::from_str(<span class="string">&quot;no.match&quot;</span>).unwrap(),
+                    scope: ScopeSelectors::from_str(<span class="string">"no.match"</span>).unwrap(),
                     style: StyleModifier {
                         foreground: <span class="prelude-val">None</span>,
                         background: <span class="prelude-val">Some</span>(c2),
@@ -1085,24 +1085,24 @@
         <span class="kw">use </span><span class="kw">crate</span>::parsing::ScopeStackOp::<span class="kw-2">*</span>;
         <span class="kw">let </span>ops = [
             <span class="comment">// three rules apply at once here, two singles and one multi
-            </span>(<span class="number">0</span>, Push(Scope::new(<span class="string">&quot;comment.line.rs&quot;</span>).unwrap())),
+            </span>(<span class="number">0</span>, Push(Scope::new(<span class="string">"comment.line.rs"</span>).unwrap())),
             <span class="comment">// multi un-applies
-            </span>(<span class="number">1</span>, Push(Scope::new(<span class="string">&quot;keyword.control.rs&quot;</span>).unwrap())),
+            </span>(<span class="number">1</span>, Push(Scope::new(<span class="string">"keyword.control.rs"</span>).unwrap())),
             (<span class="number">2</span>, Pop(<span class="number">1</span>)),
         ];
 
         <span class="kw">let </span><span class="kw-2">mut </span>highlight_state = HighlightState::new(<span class="kw-2">&amp;</span>highlighter, ScopeStack::new());
-        <span class="kw">let </span>iter = HighlightIterator::new(<span class="kw-2">&amp;mut </span>highlight_state, <span class="kw-2">&amp;</span>ops[..], <span class="string">&quot;abcdef&quot;</span>, <span class="kw-2">&amp;</span>highlighter);
+        <span class="kw">let </span>iter = HighlightIterator::new(<span class="kw-2">&amp;mut </span>highlight_state, <span class="kw-2">&amp;</span>ops[..], <span class="string">"abcdef"</span>, <span class="kw-2">&amp;</span>highlighter);
         <span class="kw">let </span>regions: Vec&lt;Style&gt; = iter.map(|(s, <span class="kw">_</span>)| s).collect();
 
-        <span class="comment">// println!(&quot;{:#?}&quot;, regions);
+        <span class="comment">// println!("{:#?}", regions);
         </span><span class="macro">assert_eq!</span>(regions, <span class="macro">vec!</span>[
             Style { foreground: c1, background: c1, font_style: FontStyle::ITALIC },
             Style { foreground: c1, background: def_bg, font_style: FontStyle::ITALIC },
             Style { foreground: c1, background: c1, font_style: FontStyle::ITALIC },
         ]);
 
-        <span class="kw">let </span>full_stack = ScopeStack::from_str(<span class="string">&quot;comment.line.rs keyword.control.rs&quot;</span>).unwrap();
+        <span class="kw">let </span>full_stack = ScopeStack::from_str(<span class="string">"comment.line.rs keyword.control.rs"</span>).unwrap();
         <span class="kw">let </span>full_style = highlighter.style_for_stack(full_stack.as_slice());
         <span class="macro">assert_eq!</span>(full_style, Style { foreground: c1, background: def_bg, font_style: FontStyle::ITALIC });
         <span class="kw">let </span>full_mod = highlighter.style_mod_for_stack(full_stack.as_slice());
@@ -1111,20 +1111,20 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_ranges() {
-        <span class="kw">let </span>ps = SyntaxSet::load_from_folder(<span class="string">&quot;testdata/Packages&quot;</span>).unwrap();
+        <span class="kw">let </span>ps = SyntaxSet::load_from_folder(<span class="string">"testdata/Packages"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>state = {
-            <span class="kw">let </span>syntax = ps.find_syntax_by_name(<span class="string">&quot;Ruby on Rails&quot;</span>).unwrap();
+            <span class="kw">let </span>syntax = ps.find_syntax_by_name(<span class="string">"Ruby on Rails"</span>).unwrap();
             ParseState::new(syntax)
         };
         <span class="kw">let </span>ts = ThemeSet::load_defaults();
-        <span class="kw">let </span>highlighter = Highlighter::new(<span class="kw-2">&amp;</span>ts.themes[<span class="string">&quot;base16-ocean.dark&quot;</span>]);
+        <span class="kw">let </span>highlighter = Highlighter::new(<span class="kw-2">&amp;</span>ts.themes[<span class="string">"base16-ocean.dark"</span>]);
 
         <span class="kw">let </span><span class="kw-2">mut </span>highlight_state = HighlightState::new(<span class="kw-2">&amp;</span>highlighter, ScopeStack::new());
-        <span class="kw">let </span>line = <span class="string">&quot;module Bob::Wow::Troll::Five; 5; end&quot;</span>;
-        <span class="kw">let </span>ops = state.parse_line(line, <span class="kw-2">&amp;</span>ps).expect(<span class="string">&quot;#[cfg(test)]&quot;</span>);
+        <span class="kw">let </span>line = <span class="string">"module Bob::Wow::Troll::Five; 5; end"</span>;
+        <span class="kw">let </span>ops = state.parse_line(line, <span class="kw-2">&amp;</span>ps).expect(<span class="string">"#[cfg(test)]"</span>);
         <span class="kw">let </span>iter = RangedHighlightIterator::new(<span class="kw-2">&amp;mut </span>highlight_state, <span class="kw-2">&amp;</span>ops[..], line, <span class="kw-2">&amp;</span>highlighter);
         <span class="kw">let </span>regions: Vec&lt;(Style, <span class="kw-2">&amp;</span>str, Range&lt;usize&gt;)&gt; = iter.collect();
-        <span class="comment">// println!(&quot;{:#?}&quot;, regions);
+        <span class="comment">// println!("{:#?}", regions);
         </span><span class="macro">assert_eq!</span>(regions[<span class="number">11</span>],
                    (Style {
                        foreground: Color {
@@ -1141,7 +1141,7 @@
                        },
                        font_style: FontStyle::empty(),
                    },
-                    <span class="string">&quot;5&quot;</span>, Range { start: <span class="number">30</span>, end: <span class="number">31 </span>}));
+                    <span class="string">"5"</span>, Range { start: <span class="number">30</span>, end: <span class="number">31 </span>}));
     }
 }
 </code></pre></div></section></main></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/btree/set.rs`."><title>set.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/btree/set.rs`."><title>set.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (06e02d5b2 2023-12-09)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1899,10 +1899,10 @@
 
 <span class="doccomment">/// An ordered set based on a B-Tree.
 ///
-/// See [`BTreeMap`]&#39;s documentation for a detailed discussion of this collection&#39;s performance
+/// See [`BTreeMap`]'s documentation for a detailed discussion of this collection's performance
 /// benefits and drawbacks.
 ///
-/// It is a logic error for an item to be modified in such a way that the item&#39;s ordering relative
+/// It is a logic error for an item to be modified in such a way that the item's ordering relative
 /// to any other item, as determined by the [`Ord`] trait, changes while it is in the set. This is
 /// normally only possible through [`Cell`], [`RefCell`], global state, I/O, or unsafe code.
 /// The behavior resulting from such a logic error is not specified, but will be encapsulated to the
@@ -1925,23 +1925,23 @@
 /// let mut books = BTreeSet::new();
 ///
 /// // Add some books.
-/// books.try_insert(&quot;A Dance With Dragons&quot;)?;
-/// books.try_insert(&quot;To Kill a Mockingbird&quot;)?;
-/// books.try_insert(&quot;The Odyssey&quot;)?;
-/// books.try_insert(&quot;The Great Gatsby&quot;)?;
+/// books.try_insert("A Dance With Dragons")?;
+/// books.try_insert("To Kill a Mockingbird")?;
+/// books.try_insert("The Odyssey")?;
+/// books.try_insert("The Great Gatsby")?;
 ///
 /// // Check for a specific one.
-/// if !books.contains(&quot;The Winds of Winter&quot;) {
-///     println!(&quot;We have {} books, but The Winds of Winter ain&#39;t one.&quot;,
+/// if !books.contains("The Winds of Winter") {
+///     println!("We have {} books, but The Winds of Winter ain't one.",
 ///              books.len());
 /// }
 ///
 /// // Remove a book.
-/// books.remove(&quot;The Odyssey&quot;);
+/// books.remove("The Odyssey");
 ///
 /// // Iterate over everything.
 /// for book in &amp;books {
-///     println!(&quot;{book}&quot;);
+///     println!("{book}");
 /// }
 /// # Ok::&lt;_, rune::alloc::Error&gt;(())
 /// ```
@@ -2011,17 +2011,17 @@
 /// documentation for more.
 ///
 /// [`iter`]: BTreeSet::iter
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
-</span><span class="kw">pub struct </span>Iter&lt;<span class="lifetime">&#39;a</span>, T: <span class="lifetime">&#39;a</span>&gt; {
-    iter: Keys&lt;<span class="lifetime">&#39;a</span>, T, SetValZST&gt;,
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
+</span><span class="kw">pub struct </span>Iter&lt;<span class="lifetime">'a</span>, T: <span class="lifetime">'a</span>&gt; {
+    iter: Keys&lt;<span class="lifetime">'a</span>, T, SetValZST&gt;,
 }
 
-<span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;_</span>, T&gt;
+<span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>Iter&lt;<span class="lifetime">'_</span>, T&gt;
 <span class="kw">where
     </span>T: fmt::Debug,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;Iter&quot;</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.iter.clone()).finish()
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"Iter"</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.iter.clone()).finish()
     }
 }
 
@@ -2042,10 +2042,10 @@
 /// See its documentation for more.
 ///
 /// [`range`]: BTreeSet::range
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
 #[derive(Debug)]
-</span><span class="kw">pub struct </span>Range&lt;<span class="lifetime">&#39;a</span>, T: <span class="lifetime">&#39;a</span>&gt; {
-    iter: <span class="kw">super</span>::map::Range&lt;<span class="lifetime">&#39;a</span>, T, SetValZST&gt;,
+</span><span class="kw">pub struct </span>Range&lt;<span class="lifetime">'a</span>, T: <span class="lifetime">'a</span>&gt; {
+    iter: <span class="kw">super</span>::map::Range&lt;<span class="lifetime">'a</span>, T, SetValZST&gt;,
 }
 
 <span class="doccomment">/// A lazy iterator producing elements in the difference of `BTreeSet`s.
@@ -2054,60 +2054,60 @@
 /// See its documentation for more.
 ///
 /// [`difference`]: BTreeSet::difference
-</span><span class="attr">#[must_use = <span class="string">&quot;this returns the difference as an iterator, \
-              without modifying either input set&quot;</span>]
-</span><span class="kw">pub struct </span>Difference&lt;<span class="lifetime">&#39;a</span>, T: <span class="lifetime">&#39;a</span>, A: Allocator = Global&gt; {
-    inner: DifferenceInner&lt;<span class="lifetime">&#39;a</span>, T, A&gt;,
+</span><span class="attr">#[must_use = <span class="string">"this returns the difference as an iterator, \
+              without modifying either input set"</span>]
+</span><span class="kw">pub struct </span>Difference&lt;<span class="lifetime">'a</span>, T: <span class="lifetime">'a</span>, A: Allocator = Global&gt; {
+    inner: DifferenceInner&lt;<span class="lifetime">'a</span>, T, A&gt;,
 }
 
-<span class="kw">enum </span>DifferenceInner&lt;<span class="lifetime">&#39;a</span>, T: <span class="lifetime">&#39;a</span>, A: Allocator&gt; {
+<span class="kw">enum </span>DifferenceInner&lt;<span class="lifetime">'a</span>, T: <span class="lifetime">'a</span>, A: Allocator&gt; {
     Stitch {
         <span class="comment">// iterate all of `self` and some of `other`, spotting matches along the way
-        </span>self_iter: Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
-        other_iter: Peekable&lt;Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;&gt;,
+        </span>self_iter: Iter&lt;<span class="lifetime">'a</span>, T&gt;,
+        other_iter: Peekable&lt;Iter&lt;<span class="lifetime">'a</span>, T&gt;&gt;,
     },
     Search {
         <span class="comment">// iterate `self`, look up in `other`
-        </span>self_iter: Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
-        other_set: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BTreeSet&lt;T, A&gt;,
+        </span>self_iter: Iter&lt;<span class="lifetime">'a</span>, T&gt;,
+        other_set: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BTreeSet&lt;T, A&gt;,
     },
-    Iterate(Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;), <span class="comment">// simply produce all elements in `self`
+    Iterate(Iter&lt;<span class="lifetime">'a</span>, T&gt;), <span class="comment">// simply produce all elements in `self`
 </span>}
 
 <span class="comment">// Explicit Debug impl necessary because of issue #26925
-</span><span class="kw">impl</span>&lt;T, A: Allocator&gt; fmt::Debug <span class="kw">for </span>DifferenceInner&lt;<span class="lifetime">&#39;_</span>, T, A&gt;
+</span><span class="kw">impl</span>&lt;T, A: Allocator&gt; fmt::Debug <span class="kw">for </span>DifferenceInner&lt;<span class="lifetime">'_</span>, T, A&gt;
 <span class="kw">where
     </span>T: fmt::Debug,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
             DifferenceInner::Stitch {
                 self_iter,
                 other_iter,
             } =&gt; f
-                .debug_struct(<span class="string">&quot;Stitch&quot;</span>)
-                .field(<span class="string">&quot;self_iter&quot;</span>, self_iter)
-                .field(<span class="string">&quot;other_iter&quot;</span>, other_iter)
+                .debug_struct(<span class="string">"Stitch"</span>)
+                .field(<span class="string">"self_iter"</span>, self_iter)
+                .field(<span class="string">"other_iter"</span>, other_iter)
                 .finish(),
             DifferenceInner::Search {
                 self_iter,
                 other_set,
             } =&gt; f
-                .debug_struct(<span class="string">&quot;Search&quot;</span>)
-                .field(<span class="string">&quot;self_iter&quot;</span>, self_iter)
-                .field(<span class="string">&quot;other_iter&quot;</span>, other_set)
+                .debug_struct(<span class="string">"Search"</span>)
+                .field(<span class="string">"self_iter"</span>, self_iter)
+                .field(<span class="string">"other_iter"</span>, other_set)
                 .finish(),
-            DifferenceInner::Iterate(x) =&gt; f.debug_tuple(<span class="string">&quot;Iterate&quot;</span>).field(x).finish(),
+            DifferenceInner::Iterate(x) =&gt; f.debug_tuple(<span class="string">"Iterate"</span>).field(x).finish(),
         }
     }
 }
 
-<span class="kw">impl</span>&lt;T, A: Allocator&gt; fmt::Debug <span class="kw">for </span>Difference&lt;<span class="lifetime">&#39;_</span>, T, A&gt;
+<span class="kw">impl</span>&lt;T, A: Allocator&gt; fmt::Debug <span class="kw">for </span>Difference&lt;<span class="lifetime">'_</span>, T, A&gt;
 <span class="kw">where
     </span>T: fmt::Debug,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;Difference&quot;</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.inner).finish()
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"Difference"</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.inner).finish()
     }
 }
 
@@ -2117,16 +2117,16 @@
 /// [`BTreeSet`]. See its documentation for more.
 ///
 /// [`symmetric_difference`]: BTreeSet::symmetric_difference
-</span><span class="attr">#[must_use = <span class="string">&quot;this returns the difference as an iterator, \
-              without modifying either input set&quot;</span>]
-</span><span class="kw">pub struct </span>SymmetricDifference&lt;<span class="lifetime">&#39;a</span>, T: <span class="lifetime">&#39;a</span>&gt;(MergeIterInner&lt;Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;&gt;);
+</span><span class="attr">#[must_use = <span class="string">"this returns the difference as an iterator, \
+              without modifying either input set"</span>]
+</span><span class="kw">pub struct </span>SymmetricDifference&lt;<span class="lifetime">'a</span>, T: <span class="lifetime">'a</span>&gt;(MergeIterInner&lt;Iter&lt;<span class="lifetime">'a</span>, T&gt;&gt;);
 
-<span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>SymmetricDifference&lt;<span class="lifetime">&#39;_</span>, T&gt;
+<span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>SymmetricDifference&lt;<span class="lifetime">'_</span>, T&gt;
 <span class="kw">where
     </span>T: fmt::Debug,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;SymmetricDifference&quot;</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>).finish()
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"SymmetricDifference"</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>).finish()
     }
 }
 
@@ -2136,57 +2136,57 @@
 /// See its documentation for more.
 ///
 /// [`intersection`]: BTreeSet::intersection
-</span><span class="attr">#[must_use = <span class="string">&quot;this returns the intersection as an iterator, \
-              without modifying either input set&quot;</span>]
-</span><span class="kw">pub struct </span>Intersection&lt;<span class="lifetime">&#39;a</span>, T: <span class="lifetime">&#39;a</span>, A: Allocator = Global&gt; {
-    inner: IntersectionInner&lt;<span class="lifetime">&#39;a</span>, T, A&gt;,
+</span><span class="attr">#[must_use = <span class="string">"this returns the intersection as an iterator, \
+              without modifying either input set"</span>]
+</span><span class="kw">pub struct </span>Intersection&lt;<span class="lifetime">'a</span>, T: <span class="lifetime">'a</span>, A: Allocator = Global&gt; {
+    inner: IntersectionInner&lt;<span class="lifetime">'a</span>, T, A&gt;,
 }
 
-<span class="kw">enum </span>IntersectionInner&lt;<span class="lifetime">&#39;a</span>, T: <span class="lifetime">&#39;a</span>, A: Allocator&gt; {
+<span class="kw">enum </span>IntersectionInner&lt;<span class="lifetime">'a</span>, T: <span class="lifetime">'a</span>, A: Allocator&gt; {
     Stitch {
         <span class="comment">// iterate similarly sized sets jointly, spotting matches along the way
-        </span>a: Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
-        b: Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
+        </span>a: Iter&lt;<span class="lifetime">'a</span>, T&gt;,
+        b: Iter&lt;<span class="lifetime">'a</span>, T&gt;,
     },
     Search {
         <span class="comment">// iterate a small set, look up in the large set
-        </span>small_iter: Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;,
-        large_set: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BTreeSet&lt;T, A&gt;,
+        </span>small_iter: Iter&lt;<span class="lifetime">'a</span>, T&gt;,
+        large_set: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BTreeSet&lt;T, A&gt;,
     },
-    Answer(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;), <span class="comment">// return a specific element or emptiness
+    Answer(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt;), <span class="comment">// return a specific element or emptiness
 </span>}
 
 <span class="comment">// Explicit Debug impl necessary because of issue #26925
-</span><span class="kw">impl</span>&lt;T, A: Allocator&gt; fmt::Debug <span class="kw">for </span>IntersectionInner&lt;<span class="lifetime">&#39;_</span>, T, A&gt;
+</span><span class="kw">impl</span>&lt;T, A: Allocator&gt; fmt::Debug <span class="kw">for </span>IntersectionInner&lt;<span class="lifetime">'_</span>, T, A&gt;
 <span class="kw">where
     </span>T: fmt::Debug,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
             IntersectionInner::Stitch { a, b } =&gt; f
-                .debug_struct(<span class="string">&quot;Stitch&quot;</span>)
-                .field(<span class="string">&quot;a&quot;</span>, a)
-                .field(<span class="string">&quot;b&quot;</span>, b)
+                .debug_struct(<span class="string">"Stitch"</span>)
+                .field(<span class="string">"a"</span>, a)
+                .field(<span class="string">"b"</span>, b)
                 .finish(),
             IntersectionInner::Search {
                 small_iter,
                 large_set,
             } =&gt; f
-                .debug_struct(<span class="string">&quot;Search&quot;</span>)
-                .field(<span class="string">&quot;small_iter&quot;</span>, small_iter)
-                .field(<span class="string">&quot;large_set&quot;</span>, large_set)
+                .debug_struct(<span class="string">"Search"</span>)
+                .field(<span class="string">"small_iter"</span>, small_iter)
+                .field(<span class="string">"large_set"</span>, large_set)
                 .finish(),
-            IntersectionInner::Answer(x) =&gt; f.debug_tuple(<span class="string">&quot;Answer&quot;</span>).field(x).finish(),
+            IntersectionInner::Answer(x) =&gt; f.debug_tuple(<span class="string">"Answer"</span>).field(x).finish(),
         }
     }
 }
 
-<span class="kw">impl</span>&lt;T, A: Allocator&gt; fmt::Debug <span class="kw">for </span>Intersection&lt;<span class="lifetime">&#39;_</span>, T, A&gt;
+<span class="kw">impl</span>&lt;T, A: Allocator&gt; fmt::Debug <span class="kw">for </span>Intersection&lt;<span class="lifetime">'_</span>, T, A&gt;
 <span class="kw">where
     </span>T: fmt::Debug,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;Intersection&quot;</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.inner).finish()
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"Intersection"</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.inner).finish()
     }
 }
 
@@ -2196,16 +2196,16 @@
 /// See its documentation for more.
 ///
 /// [`union`]: BTreeSet::union
-</span><span class="attr">#[must_use = <span class="string">&quot;this returns the union as an iterator, \
-              without modifying either input set&quot;</span>]
-</span><span class="kw">pub struct </span>Union&lt;<span class="lifetime">&#39;a</span>, T: <span class="lifetime">&#39;a</span>&gt;(MergeIterInner&lt;Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;&gt;);
+</span><span class="attr">#[must_use = <span class="string">"this returns the union as an iterator, \
+              without modifying either input set"</span>]
+</span><span class="kw">pub struct </span>Union&lt;<span class="lifetime">'a</span>, T: <span class="lifetime">'a</span>&gt;(MergeIterInner&lt;Iter&lt;<span class="lifetime">'a</span>, T&gt;&gt;);
 
-<span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>Union&lt;<span class="lifetime">&#39;_</span>, T&gt;
+<span class="kw">impl</span>&lt;T&gt; fmt::Debug <span class="kw">for </span>Union&lt;<span class="lifetime">'_</span>, T&gt;
 <span class="kw">where
     </span>T: fmt::Debug,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;Union&quot;</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>).finish()
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"Union"</span>).field(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>).finish()
     }
 }
 
@@ -2213,8 +2213,8 @@
 // It estimates the relative size at which searching performs better
 // than iterating, based on the benchmarks in
 // https://github.com/ssomers/rust_bench_btreeset_intersection.
-// It&#39;s used to divide rather than multiply sizes, to rule out overflow,
-// and it&#39;s a power of two to make that division cheap.
+// It's used to divide rather than multiply sizes, to rule out overflow,
+// and it's a power of two to make that division cheap.
 </span><span class="kw">const </span>ITER_PERFORMANCE_TIPPING_SIZE_DIFF: usize = <span class="number">16</span>;
 
 <span class="kw">impl</span>&lt;T&gt; BTreeSet&lt;T&gt; {
@@ -2285,12 +2285,12 @@
     /// set.try_insert(5)?;
     /// set.try_insert(8)?;
     /// for &amp;elem in set.range((Included(&amp;4), Included(&amp;8))) {
-    ///     println!(&quot;{elem}&quot;);
+    ///     println!("{elem}");
     /// }
     /// assert_eq!(Some(&amp;5), set.range(4..).next());
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>range&lt;K: <span class="question-mark">?</span>Sized, R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; Range&lt;<span class="lifetime">&#39;_</span>, T&gt;
+    </span><span class="kw">pub fn </span>range&lt;K: <span class="question-mark">?</span>Sized, R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; Range&lt;<span class="lifetime">'_</span>, T&gt;
     <span class="kw">where
         </span>K: Ord,
         T: Borrow&lt;K&gt; + Ord,
@@ -2323,7 +2323,7 @@
     /// assert_eq!(diff, [1]);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>difference&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BTreeSet&lt;T, A&gt;) -&gt; Difference&lt;<span class="lifetime">&#39;a</span>, T, A&gt;
+    </span><span class="kw">pub fn </span>difference&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BTreeSet&lt;T, A&gt;) -&gt; Difference&lt;<span class="lifetime">'a</span>, T, A&gt;
     <span class="kw">where
         </span>T: Ord,
     {
@@ -2392,10 +2392,10 @@
     /// assert_eq!(sym_diff, [1, 3]);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>symmetric_difference&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
-        other: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BTreeSet&lt;T, A&gt;,
-    ) -&gt; SymmetricDifference&lt;<span class="lifetime">&#39;a</span>, T&gt;
+    </span><span class="kw">pub fn </span>symmetric_difference&lt;<span class="lifetime">'a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>,
+        other: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BTreeSet&lt;T, A&gt;,
+    ) -&gt; SymmetricDifference&lt;<span class="lifetime">'a</span>, T&gt;
     <span class="kw">where
         </span>T: Ord,
     {
@@ -2424,7 +2424,7 @@
     /// assert_eq!(intersection, [2]);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>intersection&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BTreeSet&lt;T, A&gt;) -&gt; Intersection&lt;<span class="lifetime">&#39;a</span>, T, A&gt;
+    </span><span class="kw">pub fn </span>intersection&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BTreeSet&lt;T, A&gt;) -&gt; Intersection&lt;<span class="lifetime">'a</span>, T, A&gt;
     <span class="kw">where
         </span>T: Ord,
     {
@@ -2489,7 +2489,7 @@
     /// assert_eq!(union, [1, 2]);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>union&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BTreeSet&lt;T, A&gt;) -&gt; Union&lt;<span class="lifetime">&#39;a</span>, T&gt;
+    </span><span class="kw">pub fn </span>union&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>BTreeSet&lt;T, A&gt;) -&gt; Union&lt;<span class="lifetime">'a</span>, T&gt;
     <span class="kw">where
         </span>T: Ord,
     {
@@ -2516,7 +2516,7 @@
 
     <span class="doccomment">/// Returns `true` if the set contains an element equal to the value.
     ///
-    /// The value may be any borrowed form of the set&#39;s element type,
+    /// The value may be any borrowed form of the set's element type,
     /// but the ordering on the borrowed form *must* match the
     /// ordering on the element type.
     ///
@@ -2541,7 +2541,7 @@
     <span class="doccomment">/// Returns a reference to the element in the set, if any, that is equal to
     /// the value.
     ///
-    /// The value may be any borrowed form of the set&#39;s element type,
+    /// The value may be any borrowed form of the set's element type,
     /// but the ordering on the borrowed form *must* match the
     /// ordering on the element type.
     ///
@@ -2894,7 +2894,7 @@
     <span class="doccomment">/// If the set contains an element equal to the value, removes it from the
     /// set and drops it. Returns whether such an element was present.
     ///
-    /// The value may be any borrowed form of the set&#39;s element type,
+    /// The value may be any borrowed form of the set's element type,
     /// but the ordering on the borrowed form *must* match the
     /// ordering on the element type.
     ///
@@ -2921,7 +2921,7 @@
     <span class="doccomment">/// Removes and returns the element in the set, if any, that is equal to
     /// the value.
     ///
-    /// The value may be any borrowed form of the set&#39;s element type,
+    /// The value may be any borrowed form of the set's element type,
     /// but the ordering on the borrowed form *must* match the
     /// ordering on the element type.
     ///
@@ -3099,10 +3099,10 @@
     /// assert_eq!(odds.into_iter().try_collect::&lt;Vec&lt;_&gt;&gt;()?, [1, 3, 5, 7]);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>extract_if&lt;<span class="lifetime">&#39;a</span>, F&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, pred: F) -&gt; ExtractIf&lt;<span class="lifetime">&#39;a</span>, T, F, A&gt;
+    </span><span class="kw">pub fn </span>extract_if&lt;<span class="lifetime">'a</span>, F&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">self</span>, pred: F) -&gt; ExtractIf&lt;<span class="lifetime">'a</span>, T, F, A&gt;
     <span class="kw">where
         </span>T: Ord,
-        F: <span class="lifetime">&#39;a </span>+ FnMut(<span class="kw-2">&amp;</span>T) -&gt; bool,
+        F: <span class="lifetime">'a </span>+ FnMut(<span class="kw-2">&amp;</span>T) -&gt; bool,
     {
         <span class="kw">let </span>(inner, alloc) = <span class="self">self</span>.map.extract_if_inner();
         ExtractIf { pred, inner, alloc }
@@ -3138,7 +3138,7 @@
     /// assert_eq!(set_iter.next(), None);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">'_</span>, T&gt; {
         Iter {
             iter: <span class="self">self</span>.map.keys(),
         }
@@ -3185,7 +3185,7 @@
     <span class="kw">type </span>Item = T;
     <span class="kw">type </span>IntoIter = IntoIter&lt;T, A&gt;;
 
-    <span class="doccomment">/// Gets an iterator for moving out the `BTreeSet`&#39;s contents.
+    <span class="doccomment">/// Gets an iterator for moving out the `BTreeSet`'s contents.
     ///
     /// # Examples
     ///
@@ -3206,43 +3206,43 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T, A: Allocator&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BTreeSet&lt;T, A&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T;
-    <span class="kw">type </span>IntoIter = Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T, A: Allocator&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span>BTreeSet&lt;T, A&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T;
+    <span class="kw">type </span>IntoIter = Iter&lt;<span class="lifetime">'a</span>, T&gt;;
 
-    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">'a</span>, T&gt; {
         <span class="self">self</span>.iter()
     }
 }
 
 <span class="doccomment">/// An iterator produced by calling `extract_if` on BTreeSet.
-</span><span class="attr">#[must_use = <span class="string">&quot;iterators are lazy and do nothing unless consumed&quot;</span>]
-</span><span class="kw">pub struct </span>ExtractIf&lt;<span class="lifetime">&#39;a</span>, T, F, A: Allocator = Global&gt;
+</span><span class="attr">#[must_use = <span class="string">"iterators are lazy and do nothing unless consumed"</span>]
+</span><span class="kw">pub struct </span>ExtractIf&lt;<span class="lifetime">'a</span>, T, F, A: Allocator = Global&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">&#39;a</span>,
-    F: <span class="lifetime">&#39;a </span>+ FnMut(<span class="kw-2">&amp;</span>T) -&gt; bool,
+    </span>T: <span class="lifetime">'a</span>,
+    F: <span class="lifetime">'a </span>+ FnMut(<span class="kw-2">&amp;</span>T) -&gt; bool,
 {
     pred: F,
-    inner: <span class="kw">super</span>::map::ExtractIfInner&lt;<span class="lifetime">&#39;a</span>, T, SetValZST&gt;,
-    <span class="doccomment">/// The BTreeMap will outlive this IntoIter so we don&#39;t care about drop order for `alloc`.
-    </span>alloc: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>A,
+    inner: <span class="kw">super</span>::map::ExtractIfInner&lt;<span class="lifetime">'a</span>, T, SetValZST&gt;,
+    <span class="doccomment">/// The BTreeMap will outlive this IntoIter so we don't care about drop order for `alloc`.
+    </span>alloc: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A,
 }
 
-<span class="kw">impl</span>&lt;T, F, A: Allocator&gt; fmt::Debug <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">&#39;_</span>, T, F, A&gt;
+<span class="kw">impl</span>&lt;T, F, A: Allocator&gt; fmt::Debug <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">'_</span>, T, F, A&gt;
 <span class="kw">where
     </span>T: fmt::Debug,
     F: FnMut(<span class="kw-2">&amp;</span>T) -&gt; bool,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;ExtractIf&quot;</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"ExtractIf"</span>)
             .field(<span class="kw-2">&amp;</span><span class="self">self</span>.inner.peek().map(|(k, <span class="kw">_</span>)| k))
             .finish()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T, F, A: Allocator&gt; Iterator <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">&#39;_</span>, T, F, A&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T, F, A: Allocator&gt; Iterator <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">'_</span>, T, F, A&gt;
 <span class="kw">where
-    </span>F: <span class="lifetime">&#39;a </span>+ FnMut(<span class="kw-2">&amp;</span>T) -&gt; bool,
+    </span>F: <span class="lifetime">'a </span>+ FnMut(<span class="kw-2">&amp;</span>T) -&gt; bool,
 {
     <span class="kw">type </span>Item = T;
 
@@ -3259,7 +3259,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T, F, A: Allocator&gt; FusedIterator <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">&#39;_</span>, T, F, A&gt; <span class="kw">where </span>F: FnMut(<span class="kw-2">&amp;</span>T) -&gt; bool {}
+<span class="kw">impl</span>&lt;T, F, A: Allocator&gt; FusedIterator <span class="kw">for </span>ExtractIf&lt;<span class="lifetime">'_</span>, T, F, A&gt; <span class="kw">where </span>F: FnMut(<span class="kw-2">&amp;</span>T) -&gt; bool {}
 
 <span class="kw">impl</span>&lt;T, A: Allocator&gt; TryExtend&lt;T&gt; <span class="kw">for </span>BTreeSet&lt;T, A&gt;
 <span class="kw">where
@@ -3286,21 +3286,21 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T, A: Allocator&gt; TryExtend&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; <span class="kw">for </span>BTreeSet&lt;T, A&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T, A: Allocator&gt; TryExtend&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; <span class="kw">for </span>BTreeSet&lt;T, A&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">&#39;a </span>+ Ord + Copy,
+    </span>T: <span class="lifetime">'a </span>+ Ord + Copy,
 {
-    <span class="kw">fn </span>try_extend&lt;I: IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    <span class="kw">fn </span>try_extend&lt;I: IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="self">self</span>.try_extend(iter.into_iter().copied())
     }
 }
 
 <span class="attr">#[cfg(test)]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T, A: Allocator&gt; Extend&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; <span class="kw">for </span>BTreeSet&lt;T, A&gt;
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T, A: Allocator&gt; Extend&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; <span class="kw">for </span>BTreeSet&lt;T, A&gt;
 <span class="kw">where
-    </span>T: <span class="lifetime">&#39;a </span>+ Ord + Copy,
+    </span>T: <span class="lifetime">'a </span>+ Ord + Copy,
 {
-    <span class="kw">fn </span>extend&lt;I: IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) {
+    <span class="kw">fn </span>extend&lt;I: IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) {
         <span class="self">self</span>.try_extend(iter).abort()
     }
 }
@@ -3316,22 +3316,22 @@
 <span class="kw">where
     </span>T: fmt::Debug,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         f.debug_set().entries(<span class="self">self</span>.iter()).finish()
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+<span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>Iter&lt;<span class="lifetime">'_</span>, T&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         Iter {
             iter: <span class="self">self</span>.iter.clone(),
         }
     }
 }
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; Iterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;a</span>, T&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; Iterator <span class="kw">for </span>Iter&lt;<span class="lifetime">'a</span>, T&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T;
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="self">self</span>.iter.next()
     }
 
@@ -3339,37 +3339,37 @@
         <span class="self">self</span>.iter.size_hint()
     }
 
-    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="self">self</span>.next_back()
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt;
     <span class="kw">where
-        </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T: Ord,
+        </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span>T: Ord,
     {
         <span class="self">self</span>.next()
     }
 
-    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;
+    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt;
     <span class="kw">where
-        </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T: Ord,
+        </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span>T: Ord,
     {
         <span class="self">self</span>.next_back()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; DoubleEndedIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;a</span>, T&gt; {
-    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; DoubleEndedIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">'a</span>, T&gt; {
+    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="self">self</span>.iter.next_back()
     }
 }
-<span class="kw">impl</span>&lt;T&gt; ExactSizeIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+<span class="kw">impl</span>&lt;T&gt; ExactSizeIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">'_</span>, T&gt; {
     <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.iter.len()
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; FusedIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;_</span>, T&gt; {}
+<span class="kw">impl</span>&lt;T&gt; FusedIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">'_</span>, T&gt; {}
 
 <span class="kw">impl</span>&lt;T, A: Allocator&gt; Iterator <span class="kw">for </span>IntoIter&lt;T, A&gt; {
     <span class="kw">type </span>Item = T;
@@ -3383,13 +3383,13 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+<span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>Iter&lt;<span class="lifetime">'_</span>, T&gt; {
     <span class="doccomment">/// Creates an empty `btree_set::Iter`.
     ///
     /// ```
     /// use rune::alloc::btree_set;
     ///
-    /// let iter: btree_set::Iter&lt;&#39;_, u8&gt; = Default::default();
+    /// let iter: btree_set::Iter&lt;'_, u8&gt; = Default::default();
     /// assert_eq!(iter.len(), 0);
     /// ```
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
@@ -3431,7 +3431,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+<span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>Range&lt;<span class="lifetime">'_</span>, T&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         Range {
             iter: <span class="self">self</span>.iter.clone(),
@@ -3439,47 +3439,47 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; Iterator <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;a</span>, T&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; Iterator <span class="kw">for </span>Range&lt;<span class="lifetime">'a</span>, T&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T;
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="self">self</span>.iter.next().map(|(k, <span class="kw">_</span>)| k)
     }
 
-    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>last(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="self">self</span>.next_back()
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt;
     <span class="kw">where
-        </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T: Ord,
+        </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span>T: Ord,
     {
         <span class="self">self</span>.next()
     }
 
-    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;
+    <span class="kw">fn </span>max(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt;
     <span class="kw">where
-        </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T: Ord,
+        </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span>T: Ord,
     {
         <span class="self">self</span>.next_back()
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; DoubleEndedIterator <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;a</span>, T&gt; {
-    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; DoubleEndedIterator <span class="kw">for </span>Range&lt;<span class="lifetime">'a</span>, T&gt; {
+    <span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="self">self</span>.iter.next_back().map(|(k, <span class="kw">_</span>)| k)
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; FusedIterator <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;_</span>, T&gt; {}
+<span class="kw">impl</span>&lt;T&gt; FusedIterator <span class="kw">for </span>Range&lt;<span class="lifetime">'_</span>, T&gt; {}
 
-<span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>Range&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+<span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>Range&lt;<span class="lifetime">'_</span>, T&gt; {
     <span class="doccomment">/// Creates an empty `btree_set::Range`.
     ///
     /// ```
     /// use rune::alloc::btree_set;
     ///
-    /// let iter: btree_set::Range&lt;&#39;_, u8&gt; = Default::default();
+    /// let iter: btree_set::Range&lt;'_, u8&gt; = Default::default();
     /// assert_eq!(iter.count(), 0);
     /// ```
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
@@ -3489,7 +3489,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T, A: Allocator&gt; Clone <span class="kw">for </span>Difference&lt;<span class="lifetime">&#39;_</span>, T, A&gt; {
+<span class="kw">impl</span>&lt;T, A: Allocator&gt; Clone <span class="kw">for </span>Difference&lt;<span class="lifetime">'_</span>, T, A&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         Difference {
             inner: <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.inner {
@@ -3513,10 +3513,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T: Ord, A: Allocator&gt; Iterator <span class="kw">for </span>Difference&lt;<span class="lifetime">&#39;a</span>, T, A&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T: Ord, A: Allocator&gt; Iterator <span class="kw">for </span>Difference&lt;<span class="lifetime">'a</span>, T, A&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T;
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.inner {
             DifferenceInner::Stitch {
                 self_iter,
@@ -3569,23 +3569,23 @@
         (self_len.saturating_sub(other_len), <span class="prelude-val">Some</span>(self_len))
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="self">self</span>.next()
     }
 }
 
-<span class="kw">impl</span>&lt;T: Ord, A: Allocator&gt; FusedIterator <span class="kw">for </span>Difference&lt;<span class="lifetime">&#39;_</span>, T, A&gt; {}
+<span class="kw">impl</span>&lt;T: Ord, A: Allocator&gt; FusedIterator <span class="kw">for </span>Difference&lt;<span class="lifetime">'_</span>, T, A&gt; {}
 
-<span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>SymmetricDifference&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+<span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>SymmetricDifference&lt;<span class="lifetime">'_</span>, T&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         SymmetricDifference(<span class="self">self</span>.<span class="number">0</span>.clone())
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T: Ord&gt; Iterator <span class="kw">for </span>SymmetricDifference&lt;<span class="lifetime">&#39;a</span>, T&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T: Ord&gt; Iterator <span class="kw">for </span>SymmetricDifference&lt;<span class="lifetime">'a</span>, T&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T;
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="kw">loop </span>{
             <span class="kw">let </span>(a_next, b_next) = <span class="self">self</span>.<span class="number">0</span>.nexts(<span class="self">Self</span>::Item::cmp);
             <span class="kw">if </span>a_next.and(b_next).is_none() {
@@ -3602,14 +3602,14 @@
         </span>(<span class="number">0</span>, <span class="prelude-val">Some</span>(a_len + b_len))
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="self">self</span>.next()
     }
 }
 
-<span class="kw">impl</span>&lt;T: Ord&gt; FusedIterator <span class="kw">for </span>SymmetricDifference&lt;<span class="lifetime">&#39;_</span>, T&gt; {}
+<span class="kw">impl</span>&lt;T: Ord&gt; FusedIterator <span class="kw">for </span>SymmetricDifference&lt;<span class="lifetime">'_</span>, T&gt; {}
 
-<span class="kw">impl</span>&lt;T, A: Allocator&gt; Clone <span class="kw">for </span>Intersection&lt;<span class="lifetime">&#39;_</span>, T, A&gt; {
+<span class="kw">impl</span>&lt;T, A: Allocator&gt; Clone <span class="kw">for </span>Intersection&lt;<span class="lifetime">'_</span>, T, A&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         Intersection {
             inner: <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.inner {
@@ -3629,10 +3629,10 @@
         }
     }
 }
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T: Ord, A: Allocator&gt; Iterator <span class="kw">for </span>Intersection&lt;<span class="lifetime">&#39;a</span>, T, A&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T: Ord, A: Allocator&gt; Iterator <span class="kw">for </span>Intersection&lt;<span class="lifetime">'a</span>, T, A&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T;
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.inner {
             IntersectionInner::Stitch { a, b } =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>a_next = a.next()<span class="question-mark">?</span>;
@@ -3667,22 +3667,22 @@
         }
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="self">self</span>.next()
     }
 }
 
-<span class="kw">impl</span>&lt;T: Ord, A: Allocator&gt; FusedIterator <span class="kw">for </span>Intersection&lt;<span class="lifetime">&#39;_</span>, T, A&gt; {}
+<span class="kw">impl</span>&lt;T: Ord, A: Allocator&gt; FusedIterator <span class="kw">for </span>Intersection&lt;<span class="lifetime">'_</span>, T, A&gt; {}
 
-<span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>Union&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+<span class="kw">impl</span>&lt;T&gt; Clone <span class="kw">for </span>Union&lt;<span class="lifetime">'_</span>, T&gt; {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         Union(<span class="self">self</span>.<span class="number">0</span>.clone())
     }
 }
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T: Ord&gt; Iterator <span class="kw">for </span>Union&lt;<span class="lifetime">&#39;a</span>, T&gt; {
-    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T: Ord&gt; Iterator <span class="kw">for </span>Union&lt;<span class="lifetime">'a</span>, T&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T;
 
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="kw">let </span>(a_next, b_next) = <span class="self">self</span>.<span class="number">0</span>.nexts(<span class="self">Self</span>::Item::cmp);
         a_next.or(b_next)
     }
@@ -3693,12 +3693,12 @@
         </span>(max(a_len, b_len), <span class="prelude-val">Some</span>(a_len + b_len))
     }
 
-    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="kw">fn </span>min(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; {
         <span class="self">self</span>.next()
     }
 }
 
-<span class="kw">impl</span>&lt;T: Ord&gt; FusedIterator <span class="kw">for </span>Union&lt;<span class="lifetime">&#39;_</span>, T&gt; {}
+<span class="kw">impl</span>&lt;T: Ord&gt; FusedIterator <span class="kw">for </span>Union&lt;<span class="lifetime">'_</span>, T&gt; {}
 
 <span class="kw">impl</span>&lt;T, A: Allocator&gt; TryFromIteratorIn&lt;T, A&gt; <span class="kw">for </span>BTreeSet&lt;T, A&gt;
 <span class="kw">where
