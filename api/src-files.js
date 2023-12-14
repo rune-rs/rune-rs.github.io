@@ -158,6 +158,6 @@ var srcIndex = JSON.parse('{\
 "webbrowser":["",[],["common.rs","lib.rs","unix.rs"]],\
 "winnow":["",[["ascii",[],["mod.rs"]],["binary",[["bits",[],["mod.rs"]]],["mod.rs"]],["combinator",[],["branch.rs","core.rs","mod.rs","multi.rs","parser.rs","sequence.rs"]],["stream",[],["impls.rs","mod.rs"]],["token",[],["mod.rs"]],["trace",[],["mod.rs"]]],["error.rs","lib.rs","macros.rs","parser.rs"]],\
 "yaml_rust":["",[],["emitter.rs","lib.rs","parser.rs","scanner.rs","yaml.rs"]],\
-"zerocopy":["",[["third_party",[["rust",[],["layout.rs"]]]]],["lib.rs","macro_util.rs","macros.rs","util.rs","wrappers.rs"]]\
+"zerocopy":["",[["third_party",[["rust",[],["layout.rs"]]]]],["lib.rs","macro_util.rs","macros.rs","post_monomorphization_compile_fail_tests.rs","util.rs","wrappers.rs"]]\
 }');
 createSrcSidebar();
