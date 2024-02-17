@@ -1,5 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pest_meta-2.7.5/src/optimizer/skipper.rs`."><title>skipper.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-804b98a1284a310a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="pest_meta" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0-nightly (d6d7a9386 2023-12-22)" data-channel="nightly" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><a class="sub-logo-container" href="../../../pest_meta/index.html"><img src="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg" alt="pest_meta"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/pest_meta-2.7.7/src/optimizer/skipper.rs`."><title>skipper.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="pest_meta" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0-nightly (a4472498d 2024-02-15)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="icon" href="https://raw.githubusercontent.com/pest-parser/pest/master/pest-logo.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../pest_meta/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -54,6 +55,27 @@
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
 <a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
 </pre></div><pre class="rust"><code><span class="comment">// pest. The Elegant Parser
 // Copyright (c) 2018 Dragoș Tiselice
 //
@@ -63,15 +85,32 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-</span><span class="kw">use </span><span class="kw">crate</span>::ast::<span class="kw-2">*</span>;
+</span><span class="kw">use </span>std::collections::HashMap;
 
-<span class="kw">pub fn </span>skip(rule: Rule) -&gt; Rule {
-    <span class="kw">fn </span>populate_choices(expr: Expr, <span class="kw-2">mut </span>choices: Vec&lt;String&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Expr&gt; {
+<span class="kw">use </span><span class="kw">crate</span>::ast::<span class="kw-2">*</span>;
+
+<span class="kw">pub fn </span>skip(rule: Rule, map: <span class="kw-2">&amp;</span>HashMap&lt;String, Expr&gt;) -&gt; Rule {
+    <span class="kw">fn </span>populate_choices(
+        expr: Expr,
+        map: <span class="kw-2">&amp;</span>HashMap&lt;String, Expr&gt;,
+        <span class="kw-2">mut </span>choices: Vec&lt;String&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Expr&gt; {
         <span class="kw">match </span>expr {
             Expr::Choice(lhs, rhs) =&gt; {
                 <span class="kw">if let </span>Expr::Str(string) = <span class="kw-2">*</span>lhs {
                     choices.push(string);
-                    populate_choices(<span class="kw-2">*</span>rhs, choices)
+                    populate_choices(<span class="kw-2">*</span>rhs, map, choices)
+                } <span class="kw">else if let </span>Expr::Ident(name) = <span class="kw-2">*</span>lhs {
+                    <span class="comment">// Try inlining rule in choices
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(Expr::Skip(<span class="kw-2">mut </span>inlined_choices)) = map
+                        .get(<span class="kw-2">&amp;</span>name)
+                        .and_then(|expr| populate_choices(expr.clone(), map, <span class="macro">vec!</span>[]))
+                    {
+                        choices.append(<span class="kw-2">&amp;mut </span>inlined_choices);
+                        populate_choices(<span class="kw-2">*</span>rhs, map, choices)
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">None
+                    </span>}
                 } <span class="kw">else </span>{
                     <span class="prelude-val">None
                 </span>}
@@ -80,6 +119,10 @@
                 choices.push(string);
                 <span class="prelude-val">Some</span>(Expr::Skip(choices))
             }
+            <span class="comment">// Try inlining single rule
+            </span>Expr::Ident(name) =&gt; map
+                .get(<span class="kw-2">&amp;</span>name)
+                .and_then(|expr| populate_choices(expr.clone(), map, choices)),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
@@ -94,7 +137,7 @@
                     <span class="kw">if let </span>Expr::Seq(lhs, rhs) = <span class="kw-2">*</span>expr {
                         <span class="kw">if let </span>(Expr::NegPred(expr), Expr::Ident(ident)) = (<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs) {
                             <span class="kw">if </span>ident == <span class="string">"ANY" </span>{
-                                <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = populate_choices(<span class="kw-2">*</span>expr, <span class="macro">vec!</span>[]) {
+                                <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = populate_choices(<span class="kw-2">*</span>expr, map, <span class="macro">vec!</span>[]) {
                                     <span class="kw">return </span>expr;
                                 }
                             }
