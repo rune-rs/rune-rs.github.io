@@ -3300,20 +3300,6 @@
 <a href="#3298" id="3298">3298</a>
 <a href="#3299" id="3299">3299</a>
 <a href="#3300" id="3300">3300</a>
-<a href="#3301" id="3301">3301</a>
-<a href="#3302" id="3302">3302</a>
-<a href="#3303" id="3303">3303</a>
-<a href="#3304" id="3304">3304</a>
-<a href="#3305" id="3305">3305</a>
-<a href="#3306" id="3306">3306</a>
-<a href="#3307" id="3307">3307</a>
-<a href="#3308" id="3308">3308</a>
-<a href="#3309" id="3309">3309</a>
-<a href="#3310" id="3310">3310</a>
-<a href="#3311" id="3311">3311</a>
-<a href="#3312" id="3312">3312</a>
-<a href="#3313" id="3313">3313</a>
-<a href="#3314" id="3314">3314</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::mem::{replace, swap};
 <span class="kw">use </span>core::ops;
@@ -3957,7 +3943,7 @@
         };
 
         <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>frame);
-        <span class="self">self</span>.stack.pop_stack_top(frame.stack_bottom)<span class="question-mark">?</span>;
+        <span class="self">self</span>.stack.pop_stack_top(frame.stack_bottom);
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ip, frame.ip)))
     }
 
@@ -3967,12 +3953,12 @@
         <span class="macro">tracing::trace!</span>(<span class="string">"popping call frame"</span>);
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(frame) = <span class="self">self</span>.call_frames.pop() <span class="kw">else </span>{
-            <span class="self">self</span>.stack.check_stack_top()<span class="question-mark">?</span>;
+            <span class="self">self</span>.stack.pop_stack_top(<span class="number">0</span>);
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
         };
 
         <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>frame);
-        <span class="self">self</span>.stack.pop_stack_top(frame.stack_bottom)<span class="question-mark">?</span>;
+        <span class="self">self</span>.stack.pop_stack_top(frame.stack_bottom);
         <span class="self">self</span>.ip = frame.ip;
         <span class="prelude-val">Ok</span>(frame.isolated)
     }
@@ -5344,15 +5330,7 @@
 
     <span class="attr">#[inline]
     #[tracing::instrument(skip(<span class="self">self</span>))]
-    </span><span class="kw">fn </span>op_return_internal(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        return_value: Value,
-        clean: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmErrorKind&gt; {
-        <span class="kw">if </span>clean &gt; <span class="number">0 </span>{
-            <span class="self">self</span>.stack.popn(clean)<span class="question-mark">?</span>;
-        }
-
+    </span><span class="kw">fn </span>op_return_internal(<span class="kw-2">&amp;mut </span><span class="self">self</span>, return_value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmErrorKind&gt; {
         <span class="kw">let </span>exit = <span class="self">self</span>.pop_call_frame()<span class="question-mark">?</span>;
         <span class="self">self</span>.stack.push(return_value)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(exit)
@@ -5414,9 +5392,9 @@
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_return(<span class="kw-2">&amp;mut </span><span class="self">self</span>, address: InstAddress, clean: usize) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmErrorKind&gt; {
+    </span><span class="kw">fn </span>op_return(<span class="kw-2">&amp;mut </span><span class="self">self</span>, address: InstAddress) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmErrorKind&gt; {
         <span class="kw">let </span>return_value = <span class="self">self</span>.stack.address(address)<span class="question-mark">?</span>;
-        <span class="self">self</span>.op_return_internal(return_value, clean)
+        <span class="self">self</span>.op_return_internal(return_value)
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
@@ -5787,7 +5765,7 @@
 
     <span class="doccomment">/// Perform the try operation on the given stack location.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_try(<span class="kw-2">&amp;mut </span><span class="self">self</span>, address: InstAddress, clean: usize, preserve: bool) -&gt; VmResult&lt;bool&gt; {
+    </span><span class="kw">fn </span>op_try(<span class="kw-2">&amp;mut </span><span class="self">self</span>, address: InstAddress, preserve: bool) -&gt; VmResult&lt;bool&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.address(address));
 
         <span class="kw">let </span>result = <span class="lifetime">'out</span>: {
@@ -5817,9 +5795,7 @@
 
                 VmResult::Ok(<span class="bool-val">false</span>)
             }
-            ControlFlow::Break(error) =&gt; {
-                VmResult::Ok(<span class="macro">vm_try!</span>(<span class="self">self</span>.op_return_internal(error, clean)))
-            }
+            ControlFlow::Break(error) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(<span class="self">self</span>.op_return_internal(error))),
         }
     }
 
@@ -6355,8 +6331,8 @@
                 Inst::IndexSet =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_index_set());
                 }
-                Inst::Return { address, clean } =&gt; {
-                    <span class="kw">if </span><span class="macro">vm_try!</span>(<span class="self">self</span>.op_return(address, clean)) {
+                Inst::Return { address } =&gt; {
+                    <span class="kw">if </span><span class="macro">vm_try!</span>(<span class="self">self</span>.op_return(address)) {
                         <span class="kw">return </span>VmResult::Ok(VmHalt::Exited);
                     }
                 }
@@ -6476,12 +6452,8 @@
                 Inst::IsUnit =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_is_unit());
                 }
-                Inst::Try {
-                    address,
-                    clean,
-                    preserve,
-                } =&gt; {
-                    <span class="kw">if </span><span class="macro">vm_try!</span>(<span class="self">self</span>.op_try(address, clean, preserve)) {
+                Inst::Try { address, preserve } =&gt; {
+                    <span class="kw">if </span><span class="macro">vm_try!</span>(<span class="self">self</span>.op_try(address, preserve)) {
                         <span class="kw">return </span>VmResult::Ok(VmHalt::Exited);
                     }
                 }

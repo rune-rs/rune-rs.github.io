@@ -528,6 +528,8 @@
 <a href="#526" id="526">526</a>
 <a href="#527" id="527">527</a>
 <a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::borrow;
 <span class="kw">use </span>core::cmp;
 <span class="kw">use </span>core::cmp::Ordering;
@@ -535,9 +537,10 @@
 <span class="kw">use </span>core::hash;
 <span class="kw">use </span>core::iter;
 
+<span class="kw">use </span><span class="kw">crate</span>::alloc::hashbrown::raw::RawIter;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{btree_map, BTreeMap};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{hash_map, HashMap};
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::compile::ItemBuf;
@@ -551,7 +554,7 @@
 ///
 /// [`into_iter`]: struct.Object.html#method.into_iter
 /// [`Object`]: struct.Object.html
-</span><span class="kw">pub type </span>IntoIter = btree_map::IntoIter&lt;String, Value&gt;;
+</span><span class="kw">pub type </span>IntoIter = hash_map::IntoIter&lt;String, Value&gt;;
 
 <span class="doccomment">/// A mutable iterator over the entries of a `Object`.
 ///
@@ -560,7 +563,7 @@
 ///
 /// [`iter_mut`]: struct.Object.html#method.iter_mut
 /// [`Object`]: struct.Object.html
-</span><span class="kw">pub type </span>IterMut&lt;<span class="lifetime">'a</span>&gt; = btree_map::IterMut&lt;<span class="lifetime">'a</span>, String, Value&gt;;
+</span><span class="kw">pub type </span>IterMut&lt;<span class="lifetime">'a</span>&gt; = hash_map::IterMut&lt;<span class="lifetime">'a</span>, String, Value&gt;;
 
 <span class="doccomment">/// An iterator over the entries of a `Object`.
 ///
@@ -569,7 +572,7 @@
 ///
 /// [`iter`]: struct.Object.html#method.iter
 /// [`Object`]: struct.Object.html
-</span><span class="kw">pub type </span>Iter&lt;<span class="lifetime">'a</span>&gt; = btree_map::Iter&lt;<span class="lifetime">'a</span>, String, Value&gt;;
+</span><span class="kw">pub type </span>Iter&lt;<span class="lifetime">'a</span>&gt; = hash_map::Iter&lt;<span class="lifetime">'a</span>, String, Value&gt;;
 
 <span class="doccomment">/// An iterator over the keys of a `HashMap`.
 ///
@@ -578,7 +581,7 @@
 ///
 /// [`keys`]: struct.Object.html#method.keys
 /// [`Object`]: struct.Object.html
-</span><span class="kw">pub type </span>Keys&lt;<span class="lifetime">'a</span>&gt; = btree_map::Keys&lt;<span class="lifetime">'a</span>, String, Value&gt;;
+</span><span class="kw">pub type </span>Keys&lt;<span class="lifetime">'a</span>&gt; = hash_map::Keys&lt;<span class="lifetime">'a</span>, String, Value&gt;;
 
 <span class="doccomment">/// An iterator over the values of a `HashMap`.
 ///
@@ -587,7 +590,7 @@
 ///
 /// [`values`]: struct.Object.html#method.values
 /// [`Object`]: struct.Object.html
-</span><span class="kw">pub type </span>Values&lt;<span class="lifetime">'a</span>&gt; = btree_map::Values&lt;<span class="lifetime">'a</span>, String, Value&gt;;
+</span><span class="kw">pub type </span>Values&lt;<span class="lifetime">'a</span>&gt; = hash_map::Values&lt;<span class="lifetime">'a</span>, String, Value&gt;;
 
 <span class="doccomment">/// Struct representing a dynamic anonymous object.
 ///
@@ -612,7 +615,7 @@
 #[repr(transparent)]
 #[rune(builtin, static_type = OBJECT_TYPE)]
 </span><span class="kw">pub struct </span>Object {
-    inner: BTreeMap&lt;String, Value&gt;,
+    inner: HashMap&lt;String, Value&gt;,
 }
 
 <span class="kw">impl </span>Object {
@@ -628,7 +631,7 @@
     #[rune::function(keep, path = <span class="self">Self</span>::new)]
     </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            inner: BTreeMap::new(),
+            inner: HashMap::new(),
         }
     }
 
@@ -647,11 +650,11 @@
     }
 
     <span class="doccomment">/// Construct a new object with the given capacity.
-    </span><span class="kw">pub fn </span>with_capacity(<span class="attr">#[allow(unused)] </span>capacity: usize) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
+    </span><span class="kw">pub fn </span>with_capacity(capacity: usize) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
         <span class="comment">// BTreeMap doesn't support setting capacity on creation but we keep
         // this here in case we want to switch store later.
         </span><span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            inner: BTreeMap::new(),
+            inner: HashMap::try_with_capacity(capacity)<span class="question-mark">?</span>,
         })
     }
 
@@ -778,7 +781,7 @@
     ///
     /// If the map did not have this key present, `None` is returned.
     </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, k: String, v: Value) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.inner.try_insert(k, v)<span class="question-mark">?</span>)
+        <span class="self">self</span>.inner.try_insert(k, v)
     }
 
     <span class="doccomment">/// Clears the object, removing all key-value pairs. Keeps the allocated
@@ -790,7 +793,7 @@
     }
 
     <span class="doccomment">/// Convert into inner.
-    </span><span class="kw">pub fn </span>into_inner(<span class="self">self</span>) -&gt; BTreeMap&lt;String, Value&gt; {
+    </span><span class="kw">pub fn </span>into_inner(<span class="self">self</span>) -&gt; HashMap&lt;String, Value&gt; {
         <span class="self">self</span>.inner
     }
 
@@ -838,7 +841,7 @@
     </span><span class="attr">#[rune::function(keep, path = <span class="self">Self</span>::iter)]
     </span><span class="kw">pub fn </span>rune_iter(this: Ref&lt;<span class="self">Self</span>&gt;) -&gt; Iterator {
         <span class="kw">struct </span>Iter {
-            iter: btree_map::IterRaw&lt;String, Value&gt;,
+            iter: RawIter&lt;(String, Value)&gt;,
             _guard: RawRef,
         }
 
@@ -846,22 +849,23 @@
             <span class="kw">type </span>Item = VmResult&lt;(String, Value)&gt;;
 
             <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
-                <span class="kw">let </span>(key, value) = <span class="self">self</span>.iter.next()<span class="question-mark">?</span>;
-
                 <span class="kw">unsafe </span>{
-                    <span class="kw">let </span>key = <span class="kw">match </span>(<span class="kw-2">*</span>key).try_clone() {
+                    <span class="kw">let </span>bucket = <span class="self">self</span>.iter.next()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>(key, value) = bucket.as_ref();
+
+                    <span class="kw">let </span>key = <span class="kw">match </span>key.try_clone() {
                         <span class="prelude-val">Ok</span>(key) =&gt; key,
                         <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(VmResult::err(err)),
                     };
 
-                    <span class="prelude-val">Some</span>(VmResult::Ok((key, (<span class="kw-2">*</span>value).clone())))
+                    <span class="prelude-val">Some</span>(VmResult::Ok((key, value.clone())))
                 }
             }
         }
 
         <span class="comment">// SAFETY: we're holding onto the related reference guard, and making
         // sure that it's dropped after the iterator.
-        </span><span class="kw">let </span>iter = <span class="kw">unsafe </span>{ this.inner.iter_raw() };
+        </span><span class="kw">let </span>iter = <span class="kw">unsafe </span>{ this.inner.raw_table().iter() };
         <span class="kw">let </span>(<span class="kw">_</span>, _guard) = Ref::into_raw(this);
 
         <span class="kw">let </span>iter = Iter { iter, _guard };
