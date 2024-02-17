@@ -194,8 +194,7 @@
 <a href="#192" id="192">192</a>
 <a href="#193" id="193">193</a>
 <a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>proc_macro2::{Ident, Span, TokenStream};
+</pre></div><pre class="rust"><code><span class="kw">use </span>proc_macro2::{Ident, TokenStream};
 <span class="kw">use </span>quote::{quote, ToTokens};
 <span class="kw">use </span>syn::parse::ParseStream;
 <span class="kw">use </span>syn::punctuated::Punctuated;
@@ -205,7 +204,7 @@
 </span><span class="kw">enum </span>Path {
     <span class="attr">#[default]
     </span><span class="prelude-val">None</span>,
-    Path(Span, syn::Path),
+    Path(syn::Path),
 }
 
 <span class="attr">#[derive(Default)]
@@ -216,18 +215,17 @@
 <span class="kw">impl </span>Config {
     <span class="doccomment">/// Parse the given parse stream.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>parse(input: ParseStream) -&gt; syn::Result&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>span = input.span();
         <span class="kw">let </span><span class="kw-2">mut </span>out = <span class="self">Self</span>::default();
 
         <span class="kw">while </span>!input.is_empty() {
             <span class="kw">let </span>ident = input.parse::&lt;syn::Ident&gt;()<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>ident == <span class="string">"path" </span>{
-                input.parse::&lt;<span class="macro">syn::Token!</span>[=]&gt;()<span class="question-mark">?</span>;
-                out.path = Path::Path(span, input.parse()<span class="question-mark">?</span>);
-            } <span class="kw">else </span>{
+            <span class="kw">if </span>ident != <span class="string">"path" </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(syn::Error::new_spanned(ident, <span class="string">"Unsupported option"</span>));
             }
+
+            input.parse::&lt;<span class="macro">syn::Token!</span>[=]&gt;()<span class="question-mark">?</span>;
+            out.path = Path::Path(input.parse()<span class="question-mark">?</span>);
 
             <span class="kw">if </span>input.parse::&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro">syn::Token!</span>[,]&gt;&gt;()<span class="question-mark">?</span>.is_none() {
                 <span class="kw">break</span>;
@@ -337,7 +335,7 @@
                         lit: syn::Lit::Str(<span class="self">self</span>.name_string.clone()),
                     }));
                 }
-                Path::Path(<span class="kw">_</span>, path) =&gt; {
+                Path::Path(path) =&gt; {
                     <span class="kw">for </span>s <span class="kw">in </span><span class="kw-2">&amp;</span>path.segments {
                         <span class="kw">let </span>syn::PathArguments::None = s.arguments <span class="kw">else </span>{
                             <span class="kw">return </span><span class="prelude-val">Err</span>(syn::Error::new_spanned(

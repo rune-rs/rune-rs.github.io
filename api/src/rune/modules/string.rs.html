@@ -1107,12 +1107,6 @@
 <a href="#1105" id="1105">1105</a>
 <a href="#1106" id="1106">1106</a>
 <a href="#1107" id="1107">1107</a>
-<a href="#1108" id="1108">1108</a>
-<a href="#1109" id="1109">1109</a>
-<a href="#1110" id="1110">1110</a>
-<a href="#1111" id="1111">1111</a>
-<a href="#1112" id="1112">1112</a>
-<a href="#1113" id="1113">1113</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The `std::string` module.
 
 </span><span class="kw">use </span>core::char;
@@ -1125,7 +1119,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::string::FromUtf8Error;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{String, Vec};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Bytes, Formatter, Iterator, Panic, Value, VmErrorKind, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Bytes, Formatter, Iterator, Panic, Value, ValueKind, VmErrorKind, VmResult};
 <span class="kw">use crate</span>::{Any, ContextError, Module};
 
 <span class="doccomment">/// Construct the `std::string` module.
@@ -1858,18 +1852,18 @@
 </span><span class="kw">fn </span>split(this: <span class="kw-2">&amp;</span>str, value: Value) -&gt; VmResult&lt;Iterator&gt; {
     <span class="kw">const </span>NAME: <span class="kw-2">&amp;</span>str = <span class="string">"std::str::Split"</span>;
 
-    <span class="kw">let </span>lines = <span class="kw">match </span>value {
-        Value::String(s) =&gt; {
+    <span class="kw">let </span>lines = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
+        ValueKind::String(<span class="kw-2">ref </span>s) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>out = Vec::new();
 
-            <span class="kw">for </span>value <span class="kw">in </span>this.split(<span class="macro">vm_try!</span>(s.borrow_ref()).as_str()) {
+            <span class="kw">for </span>value <span class="kw">in </span>this.split(s.as_str()) {
                 <span class="kw">let </span>value = <span class="macro">vm_try!</span>(String::try_from(value));
                 <span class="macro">vm_try!</span>(out.try_push(value));
             }
 
             out
         }
-        Value::Char(pat) =&gt; {
+        ValueKind::Char(pat) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>out = Vec::new();
 
             <span class="kw">for </span>value <span class="kw">in </span>this.split(pat) {
@@ -1879,11 +1873,10 @@
 
             out
         }
-        Value::Function(f) =&gt; {
-            <span class="kw">let </span>f = <span class="macro">vm_try!</span>(f.borrow_ref());
+        ValueKind::Function(<span class="kw-2">ref </span>f) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>err = <span class="prelude-val">None</span>;
 
-            <span class="kw">let </span>iter = this.split(|c: char| <span class="kw">match </span>f.call::&lt;<span class="kw">_</span>, bool&gt;((c,)) {
+            <span class="kw">let </span>iter = this.split(|c: char| <span class="kw">match </span>f.call::&lt;bool&gt;((c,)) {
                 VmResult::Ok(b) =&gt; b,
                 VmResult::Err(e) =&gt; {
                     <span class="kw">if </span>err.is_none() {
@@ -1907,9 +1900,9 @@
 
             out
         }
-        actual =&gt; {
+        <span class="kw-2">ref </span>actual =&gt; {
             <span class="kw">return </span>VmResult::err([
-                VmErrorKind::expected::&lt;String&gt;(<span class="macro">vm_try!</span>(actual.type_info())),
+                VmErrorKind::expected::&lt;String&gt;(actual.type_info()),
                 VmErrorKind::bad_argument(<span class="number">0</span>),
             ])
         }
@@ -2095,31 +2088,26 @@
 </span><span class="kw">fn </span>get(this: <span class="kw-2">&amp;</span>str, key: Value) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; {
     <span class="kw">use </span><span class="kw">crate</span>::runtime::TypeOf;
 
-    <span class="kw">let </span>slice = <span class="kw">match </span>key {
-        Value::RangeFrom(range) =&gt; {
-            <span class="kw">let </span>range = <span class="macro">vm_try!</span>(range.borrow_ref());
+    <span class="kw">let </span>slice = <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(key.borrow_kind_ref()) {
+        ValueKind::RangeFrom(range) =&gt; {
             <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
             this.get(start..)
         }
-        Value::RangeFull(..) =&gt; this.get(..),
-        Value::RangeInclusive(range) =&gt; {
-            <span class="kw">let </span>range = <span class="macro">vm_try!</span>(range.borrow_ref());
+        ValueKind::RangeFull(..) =&gt; this.get(..),
+        ValueKind::RangeInclusive(range) =&gt; {
             <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
             <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
             this.get(start..=end)
         }
-        Value::RangeToInclusive(range) =&gt; {
-            <span class="kw">let </span>range = <span class="macro">vm_try!</span>(range.borrow_ref());
+        ValueKind::RangeToInclusive(range) =&gt; {
             <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
             this.get(..=end)
         }
-        Value::RangeTo(range) =&gt; {
-            <span class="kw">let </span>range = <span class="macro">vm_try!</span>(range.borrow_ref());
+        ValueKind::RangeTo(range) =&gt; {
             <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
             this.get(..end)
         }
-        Value::Range(range) =&gt; {
-            <span class="kw">let </span>range = <span class="macro">vm_try!</span>(range.borrow_ref());
+        ValueKind::Range(range) =&gt; {
             <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
             <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
             this.get(start..end)
@@ -2127,7 +2115,7 @@
         index =&gt; {
             <span class="kw">return </span>VmResult::err(VmErrorKind::UnsupportedIndexGet {
                 target: String::type_info(),
-                index: <span class="macro">vm_try!</span>(index.type_info()),
+                index: index.type_info(),
             })
         }
     };

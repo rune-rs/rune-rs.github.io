@@ -320,13 +320,22 @@
 <a href="#318" id="318">318</a>
 <a href="#319" id="319">319</a>
 <a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::ops;
 
 <span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    EnvProtocolCaller, FromValue, Iterator, ProtocolCaller, ToValue, Value, VmErrorKind, VmResult,
+    EnvProtocolCaller, FromValue, Iterator, ProtocolCaller, ToValue, Value, ValueKind, VmErrorKind,
+    VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -374,8 +383,10 @@
 /// let _ = RangeInclusive::new(start, end);
 /// # Ok::&lt;_, rune::support::Error&gt;(())
 /// ```
-</span><span class="attr">#[derive(Any, Clone)]
-#[rune(builtin, constructor, from_value = Value::into_range_inclusive, static_type = RANGE_INCLUSIVE_TYPE)]
+</span><span class="attr">#[derive(Any, Clone, TryClone)]
+#[try_clone(<span class="kw">crate</span>)]
+#[rune(builtin, constructor, static_type = RANGE_INCLUSIVE_TYPE)]
+#[rune(from_value = Value::into_range_inclusive, from_value_ref = Value::into_range_inclusive_ref, from_value_mut = Value::into_range_inclusive_mut)]
 </span><span class="kw">pub struct </span>RangeInclusive {
     <span class="doccomment">/// The start value of the range.
     </span><span class="attr">#[rune(get, set)]
@@ -414,19 +425,22 @@
     </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VmResult&lt;Iterator&gt; {
         <span class="kw">const </span>NAME: <span class="kw-2">&amp;</span>str = <span class="string">"std::ops::RangeInclusive"</span>;
 
-        <span class="kw">match </span>(<span class="kw-2">&amp;</span><span class="self">self</span>.start, <span class="kw-2">&amp;</span><span class="self">self</span>.end) {
-            (Value::Byte(start), Value::Byte(end)) =&gt; {
+        <span class="kw">match </span>(
+            <span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.start.borrow_kind_ref()),
+            <span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.end.borrow_kind_ref()),
+        ) {
+            (ValueKind::Byte(start), ValueKind::Byte(end)) =&gt; {
                 VmResult::Ok(Iterator::from_double_ended(NAME, <span class="kw-2">*</span>start..=<span class="kw-2">*</span>end))
             }
-            (Value::Char(start), Value::Char(end)) =&gt; {
+            (ValueKind::Char(start), ValueKind::Char(end)) =&gt; {
                 VmResult::Ok(Iterator::from_double_ended(NAME, <span class="kw-2">*</span>start..=<span class="kw-2">*</span>end))
             }
-            (Value::Integer(start), Value::Integer(end)) =&gt; {
+            (ValueKind::Integer(start), ValueKind::Integer(end)) =&gt; {
                 VmResult::Ok(Iterator::from_double_ended(NAME, <span class="kw-2">*</span>start..=<span class="kw-2">*</span>end))
             }
             (start, end) =&gt; VmResult::err(VmErrorKind::UnsupportedIterRangeInclusive {
-                start: <span class="macro">vm_try!</span>(start.type_info()),
-                end: <span class="macro">vm_try!</span>(end.type_info()),
+                start: start.type_info(),
+                end: end.type_info(),
             }),
         }
     }
@@ -634,7 +648,7 @@
 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(value.into_range_inclusive()).take());
+        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(value.into_range_inclusive());
         <span class="kw">let </span>start = <span class="macro">vm_try!</span>(Idx::from_value(range.start));
         <span class="kw">let </span>end = <span class="macro">vm_try!</span>(Idx::from_value(range.end));
         VmResult::Ok(start..=end)

@@ -643,6 +643,15 @@
 <a href="#641" id="641">641</a>
 <a href="#642" id="642">642</a>
 <a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helper types for a holder of data.
 
 </span><span class="kw">use </span>core::any::TypeId;
@@ -658,7 +667,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{AnyTypeInfo, FullTypeOf, MaybeTypeOf, RawStr, TypeInfo};
 
 <span class="doccomment">/// Errors raised during casting operations.
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug, PartialEq)]
 #[allow(missing_docs)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>AnyObjError {
@@ -868,7 +877,7 @@
     ///
     /// ```
     /// use rune::Any;
-    /// use rune::runtime::AnyObj;
+    /// use rune::runtime::{AnyObj, VmResult};
     ///
     /// #[derive(Any)]
     /// struct Foo(u32);
@@ -878,9 +887,11 @@
     /// {
     ///     let mut any = unsafe { AnyObj::from_mut(&amp;mut v) };
     ///
-    ///     if let Some(v) = any.downcast_borrow_mut::&lt;Foo&gt;() {
-    ///         v.0 += 1;
-    ///     }
+    ///     let Ok(v) = any.downcast_borrow_mut::&lt;Foo&gt;() else {
+    ///         panic!("Conversion failed");
+    ///     };
+    ///
+    ///     v.0 += 1;
     /// }
     ///
     /// assert_eq!(v.0, 2);
@@ -995,8 +1006,7 @@
         <span class="self">self</span>.raw_as_ptr(TypeId::of::&lt;T&gt;()).is_ok()
     }
 
-    <span class="doccomment">/// Returns some reference to the boxed value if it is of type `T`, or
-    /// `None` if it isn't.
+    <span class="doccomment">/// Returns stored value if it is of type `T`, or `None` if it isn't.
     ///
     /// # Examples
     ///
@@ -1007,21 +1017,83 @@
     /// #[derive(Debug, PartialEq, Eq, Any)]
     /// struct Thing(u32);
     ///
+    /// let any = AnyObj::new(Thing(1u32))?;
+    ///
+    /// let Ok(thing) = any.downcast::&lt;Thing&gt;() else {
+    ///     panic!("Conversion failed");
+    /// };
+    ///
+    /// assert_eq!(thing, Thing(1));
+    /// # Ok::&lt;_, rune::support::Error&gt;(())
+    /// ```
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>downcast&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, (AnyObjError, <span class="self">Self</span>)&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">match </span><span class="self">self</span>.vtable.kind {
+            <span class="comment">// Only owned things can be taken.
+            </span>AnyObjKind::Owned =&gt; (),
+            AnyObjKind::RefPtr =&gt; {
+                <span class="kw">let </span>error = AnyObjError::RefAsOwned {
+                    name: <span class="self">self</span>.type_name(),
+                };
+                <span class="kw">return </span><span class="prelude-val">Err</span>((error, <span class="self">self</span>));
+            }
+            AnyObjKind::MutPtr =&gt; {
+                <span class="kw">let </span>error = AnyObjError::MutAsOwned {
+                    name: <span class="self">self</span>.type_name(),
+                };
+                <span class="kw">return </span><span class="prelude-val">Err</span>((error, <span class="self">self</span>));
+            }
+        };
+
+        <span class="kw">let </span>this = ManuallyDrop::new(<span class="self">self</span>);
+
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(ptr) = (this.vtable.as_ptr)(this.data.as_ptr(), TypeId::of::&lt;T&gt;()) <span class="kw">else </span>{
+                <span class="kw">let </span>this = ManuallyDrop::into_inner(this);
+                <span class="kw">return </span><span class="prelude-val">Err</span>((AnyObjError::Cast, this));
+            };
+
+            <span class="prelude-val">Ok</span>(Box::into_inner(Box::from_raw_in(
+                ptr.cast_mut().cast(),
+                rune_alloc::alloc::Global,
+            )))
+        }
+    }
+
+    <span class="doccomment">/// Returns some reference to the boxed value if it is of type `T`, or
+    /// `None` if it isn't.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rune::Any;
+    /// use rune::runtime::{AnyObj, AnyObjError};
+    ///
+    /// #[derive(Debug, PartialEq, Eq, Any)]
+    /// struct Thing(u32);
+    ///
     /// #[derive(Debug, PartialEq, Eq, Any)]
     /// struct Other;
     ///
     /// let any = AnyObj::new(Thing(1u32))?;
-    /// assert_eq!(Some(&amp;Thing(1u32)), any.downcast_borrow_ref::&lt;Thing&gt;());
-    /// assert_eq!(None, any.downcast_borrow_ref::&lt;Other&gt;());
+    /// assert_eq!(Ok(&amp;Thing(1u32)), any.downcast_borrow_ref::&lt;Thing&gt;());
+    /// assert_eq!(Err(AnyObjError::Cast), any.downcast_borrow_ref::&lt;Other&gt;());
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>downcast_borrow_ref&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt;
+    </span><span class="kw">pub fn </span>downcast_borrow_ref&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>T, AnyObjError&gt;
     <span class="kw">where
         </span>T: Any,
     {
         <span class="kw">unsafe </span>{
-            (<span class="self">self</span>.vtable.as_ptr)(<span class="self">self</span>.data.as_ptr(), TypeId::of::&lt;T&gt;()).map(|v| <span class="kw-2">&amp;*</span>(v <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>))
+            <span class="kw">let </span><span class="prelude-val">Some</span>(ptr) = (<span class="self">self</span>.vtable.as_ptr)(<span class="self">self</span>.data.as_ptr(), TypeId::of::&lt;T&gt;()) <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast);
+            };
+
+            <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;*</span>ptr.cast())
         }
     }
 
@@ -1039,16 +1111,26 @@
     ///
     /// let mut any = AnyObj::new(Thing(1u32))?;
     /// any.downcast_borrow_mut::&lt;Thing&gt;().unwrap().0 = 2;
-    /// assert_eq!(Some(&amp;Thing(2u32)), any.downcast_borrow_ref::&lt;Thing&gt;());
+    /// assert_eq!(Ok(&amp;Thing(2u32)), any.downcast_borrow_ref::&lt;Thing&gt;());
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>downcast_borrow_mut&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>T&gt;
+    </span><span class="kw">pub fn </span>downcast_borrow_mut&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>T, AnyObjError&gt;
     <span class="kw">where
         </span>T: Any,
     {
+        <span class="kw">if let </span>AnyObjKind::RefPtr = <span class="self">self</span>.vtable.kind {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::RefAsMut {
+                name: <span class="self">self</span>.type_name(),
+            });
+        }
+
         <span class="kw">unsafe </span>{
-            (<span class="self">self</span>.vtable.as_ptr)(<span class="self">self</span>.data.as_ptr(), TypeId::of::&lt;T&gt;()).map(|v| <span class="kw-2">&amp;mut *</span>(v <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>))
+            <span class="kw">let </span><span class="prelude-val">Some</span>(ptr) = (<span class="self">self</span>.vtable.as_ptr)(<span class="self">self</span>.data.as_ptr(), TypeId::of::&lt;T&gt;()) <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast);
+            };
+
+            <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;mut *</span>ptr.cast_mut().cast())
         }
     }
 
@@ -1058,70 +1140,6 @@
         </span><span class="kw">match unsafe </span>{ (<span class="self">self</span>.vtable.as_ptr)(<span class="self">self</span>.data.as_ptr(), expected) } {
             <span class="prelude-val">Some</span>(ptr) =&gt; <span class="prelude-val">Ok</span>(ptr),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(AnyObjError::Cast),
-        }
-    }
-
-    <span class="doccomment">/// Attempt to perform a conversion to a raw mutable pointer.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw_as_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expected: TypeId) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*mut </span>(), AnyObjError&gt; {
-        <span class="kw">match </span><span class="self">self</span>.vtable.kind {
-            <span class="comment">// Only owned and mutable pointers can be treated as mutable.
-            </span>AnyObjKind::Owned | AnyObjKind::MutPtr =&gt; (),
-            <span class="kw">_ </span>=&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::RefAsMut {
-                    name: <span class="self">self</span>.type_name(),
-                })
-            }
-        }
-
-        <span class="comment">// Safety: invariants are checked at construction time.
-        // We have mutable access to the inner value because we have mutable
-        // access to the `Any`.
-        </span><span class="kw">match unsafe </span>{ (<span class="self">self</span>.vtable.as_ptr)(<span class="self">self</span>.data.as_ptr(), expected) } {
-            <span class="prelude-val">Some</span>(ptr) =&gt; <span class="prelude-val">Ok</span>(ptr <span class="kw">as </span><span class="kw-2">*mut </span>()),
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(AnyObjError::Cast),
-        }
-    }
-
-    <span class="doccomment">/// Attempt to perform a conversion to a raw mutable pointer with the intent
-    /// of taking it.
-    ///
-    /// If the conversion is not possible, we return a reconstructed `Any` as
-    /// the error variant.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw_take(<span class="self">self</span>, expected: TypeId) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*mut </span>(), (AnyObjError, <span class="self">Self</span>)&gt; {
-        <span class="kw">match </span><span class="self">self</span>.vtable.kind {
-            <span class="comment">// Only owned things can be taken.
-            </span>AnyObjKind::Owned =&gt; (),
-            AnyObjKind::RefPtr =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>((
-                    AnyObjError::RefAsOwned {
-                        name: <span class="self">self</span>.type_name(),
-                    },
-                    <span class="self">self</span>,
-                ))
-            }
-            AnyObjKind::MutPtr =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>((
-                    AnyObjError::MutAsOwned {
-                        name: <span class="self">self</span>.type_name(),
-                    },
-                    <span class="self">self</span>,
-                ))
-            }
-        };
-
-        <span class="kw">let </span>this = ManuallyDrop::new(<span class="self">self</span>);
-
-        <span class="comment">// Safety: invariants are checked at construction time.
-        // We have mutable access to the inner value because we have mutable
-        // access to the `Any`.
-        </span><span class="kw">unsafe </span>{
-            <span class="kw">match </span>(this.vtable.as_ptr)(this.data.as_ptr(), expected) {
-                <span class="prelude-val">Some</span>(data) =&gt; <span class="prelude-val">Ok</span>(data <span class="kw">as </span><span class="kw-2">*mut </span>()),
-                <span class="prelude-val">None </span>=&gt; {
-                    <span class="kw">let </span>this = ManuallyDrop::into_inner(this);
-                    <span class="prelude-val">Err</span>((AnyObjError::Cast, this))
-                }
-            }
         }
     }
 

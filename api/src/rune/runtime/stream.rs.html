@@ -93,16 +93,31 @@
 <a href="#91" id="91">91</a>
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
-<span class="kw">use crate as </span>rune;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{GeneratorState, Shared, Value, Vm, VmErrorKind, VmExecution, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{GeneratorState, Mut, Value, Vm, VmErrorKind, VmExecution, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
 <span class="doccomment">/// A stream with a stored virtual machine.
 </span><span class="attr">#[derive(Any)]
-#[rune(builtin, static_type = STREAM_TYPE, from_value = Value::into_stream, from_value_params = [Vm]</span>)]
-<span class="kw">pub struct </span>Stream&lt;T&gt;
+#[rune(<span class="kw">crate</span>)]
+#[rune(builtin, static_type = STREAM_TYPE, from_value_params = [Vm]</span>)]
+<span class="attr">#[rune(from_value = Value::into_stream, from_value_ref = Value::into_stream_ref, from_value_mut = Value::into_stream_mut)]
+</span><span class="kw">pub struct </span>Stream&lt;T&gt;
 <span class="kw">where
     </span>T: AsRef&lt;Vm&gt; + AsMut&lt;Vm&gt;,
 {
@@ -129,14 +144,14 @@
 
     <span class="doccomment">/// Get the next value produced by this stream.
     </span><span class="kw">pub async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
-        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.resume(Value::EmptyTuple).<span class="kw">await</span>) {
+        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.resume(<span class="macro">vm_try!</span>(Value::empty())).<span class="kw">await</span>) {
             GeneratorState::Yielded(value) =&gt; <span class="prelude-val">Some</span>(value),
             GeneratorState::Complete(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
         })
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>next_shared(this: Shared&lt;Stream&lt;T&gt;&gt;) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
-        <span class="macro">vm_try!</span>(this.borrow_mut()).next().<span class="kw">await
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>next_shared(<span class="kw-2">mut </span>this: Mut&lt;Stream&lt;T&gt;&gt;) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
+        this.next().<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Get the next value produced by this stream.
@@ -160,10 +175,10 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>resume_shared(
-        this: Shared&lt;Stream&lt;T&gt;&gt;,
+        <span class="kw-2">mut </span>this: Mut&lt;Stream&lt;T&gt;&gt;,
         value: Value,
     ) -&gt; VmResult&lt;GeneratorState&gt; {
-        <span class="macro">vm_try!</span>(this.borrow_mut()).resume(value).<span class="kw">await
+        this.resume(value).<span class="kw">await
     </span>}
 }
 
@@ -184,6 +199,17 @@
         f.debug_struct(<span class="string">"Stream"</span>)
             .field(<span class="string">"completed"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.execution.is_none())
             .finish()
+    }
+}
+
+<span class="kw">impl</span>&lt;T&gt; TryClone <span class="kw">for </span>Stream&lt;T&gt;
+<span class="kw">where
+    </span>T: TryClone + AsRef&lt;Vm&gt; + AsMut&lt;Vm&gt;,
+{
+    <span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::alloc::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            execution: <span class="self">self</span>.execution.try_clone()<span class="question-mark">?</span>,
+        })
     }
 }
 </code></pre></div></section></main></body></html>

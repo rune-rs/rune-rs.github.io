@@ -432,6 +432,23 @@
 <a href="#430" id="430">430</a>
 <a href="#431" id="431">431</a>
 <a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::{replace, take};
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -441,7 +458,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, ErrorKind, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::hir;
 <span class="kw">use </span><span class="kw">crate</span>::query::Query;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Bytes, Shared};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Bytes, Value};
 <span class="kw">use </span><span class="kw">crate</span>::SourceId;
 
 <span class="kw">use </span>rune_macros::instrument;
@@ -484,7 +501,8 @@
                 ));
             };
 
-            ir::Ir::new(span, ir::Value::from_const(value).with_span(span)<span class="question-mark">?</span>)
+            <span class="kw">let </span>value = value.as_value().with_span(span)<span class="question-mark">?</span>;
+            ir::Ir::new(span, value)
         }
         hir::ExprKind::Variable(name) =&gt; {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Ir::new(span, name.into_owned()<span class="question-mark">?</span>));
@@ -636,28 +654,44 @@
 <span class="attr">#[instrument(span = span)]
 </span><span class="kw">fn </span>lit(c: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, span: Span, hir: hir::Lit&lt;<span class="lifetime">'_</span>&gt;) -&gt; compile::Result&lt;ir::Ir&gt; {
     <span class="prelude-val">Ok</span>(<span class="kw">match </span>hir {
-        hir::Lit::Bool(boolean) =&gt; ir::Ir::new(span, ir::Value::Bool(boolean)),
-        hir::Lit::Str(string) =&gt; ir::Ir::new(
-            span,
-            ir::Value::String(Shared::new(string.try_to_owned()<span class="question-mark">?</span>).with_span(span)<span class="question-mark">?</span>),
-        ),
-        hir::Lit::Integer(n) =&gt; ir::Ir::new(span, ir::Value::Integer(n)),
-        hir::Lit::Float(n) =&gt; ir::Ir::new(span, ir::Value::Float(n)),
-        hir::Lit::Byte(b) =&gt; ir::Ir::new(span, ir::Value::Byte(b)),
-        hir::Lit::ByteStr(byte_str) =&gt; {
-            <span class="kw">let </span>value = ir::Value::Bytes(
-                Shared::new(Bytes::from_vec(Vec::try_from(byte_str)<span class="question-mark">?</span>)).with_span(span)<span class="question-mark">?</span>,
-            );
+        hir::Lit::Bool(boolean) =&gt; {
+            <span class="kw">let </span>value = Value::try_from(boolean).with_span(span)<span class="question-mark">?</span>;
             ir::Ir::new(span, value)
         }
-        hir::Lit::Char(c) =&gt; ir::Ir::new(span, ir::Value::Char(c)),
+        hir::Lit::Str(string) =&gt; {
+            <span class="kw">let </span>string = string.try_to_owned().with_span(span)<span class="question-mark">?</span>;
+            <span class="kw">let </span>value = Value::try_from(string).with_span(span)<span class="question-mark">?</span>;
+            ir::Ir::new(span, value)
+        }
+        hir::Lit::Integer(n) =&gt; {
+            <span class="kw">let </span>value = Value::try_from(n).with_span(span)<span class="question-mark">?</span>;
+            ir::Ir::new(span, value)
+        }
+        hir::Lit::Float(n) =&gt; {
+            <span class="kw">let </span>value = Value::try_from(n).with_span(span)<span class="question-mark">?</span>;
+            ir::Ir::new(span, value)
+        }
+        hir::Lit::Byte(b) =&gt; {
+            <span class="kw">let </span>value = Value::try_from(b).with_span(span)<span class="question-mark">?</span>;
+            ir::Ir::new(span, value)
+        }
+        hir::Lit::ByteStr(byte_str) =&gt; {
+            <span class="kw">let </span>value = Bytes::from_vec(Vec::try_from(byte_str).with_span(span)<span class="question-mark">?</span>);
+            <span class="kw">let </span>value = Value::try_from(value).with_span(span)<span class="question-mark">?</span>;
+            ir::Ir::new(span, value)
+        }
+        hir::Lit::Char(c) =&gt; {
+            <span class="kw">let </span>value = Value::try_from(c).with_span(span)<span class="question-mark">?</span>;
+            ir::Ir::new(span, value)
+        }
     })
 }
 
 <span class="attr">#[instrument(span = span)]
 </span><span class="kw">fn </span>expr_tuple(c: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, span: Span, hir: <span class="kw-2">&amp;</span>hir::ExprSeq&lt;<span class="lifetime">'_</span>&gt;) -&gt; compile::Result&lt;ir::Ir&gt; {
     <span class="kw">if </span>hir.items.is_empty() {
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Ir::new(span, ir::Value::EmptyTuple));
+        <span class="kw">let </span>value = Value::empty().with_span(span)<span class="question-mark">?</span>;
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Ir::new(span, value));
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>items = Vec::new();

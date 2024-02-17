@@ -29,13 +29,13 @@
 <a href="#27" id="27">27</a>
 <a href="#28" id="28">28</a>
 <a href="#29" id="29">29</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::runtime::{Future, Select, Shared, ToValue, Vm, VmResult};
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::runtime::{Future, Select, ToValue, Vm, VmResult};
 
 <span class="doccomment">/// A stored await task.
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Awaited {
     <span class="doccomment">/// A future to be awaited.
-    </span>Future(Shared&lt;Future&gt;),
+    </span>Future(Future),
     <span class="doccomment">/// A select to be awaited.
     </span>Select(Select),
 }
@@ -45,7 +45,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>into_vm(<span class="self">self</span>, vm: <span class="kw-2">&amp;mut </span>Vm) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Future(future) =&gt; {
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(future.borrow_mut()).<span class="kw">await</span>.with_vm(vm));
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(future.<span class="kw">await</span>.with_vm(vm));
                 <span class="macro">vm_try!</span>(vm.stack_mut().push(value));
             }
             <span class="self">Self</span>::Select(select) =&gt; {

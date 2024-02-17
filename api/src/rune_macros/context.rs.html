@@ -753,6 +753,26 @@
 <a href="#751" id="751">751</a>
 <a href="#752" id="752">752</a>
 <a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cell::RefCell;
 
 <span class="kw">use </span><span class="kw">crate</span>::internals::<span class="kw-2">*</span>;
@@ -838,6 +858,10 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) static_type: <span class="prelude-ty">Option</span>&lt;syn::Ident&gt;,
     <span class="doccomment">/// Method to use to convert from value.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) from_value: <span class="prelude-ty">Option</span>&lt;syn::Path&gt;,
+    <span class="doccomment">/// Method to use to convert from value ref.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) from_value_ref: <span class="prelude-ty">Option</span>&lt;syn::Path&gt;,
+    <span class="doccomment">/// Method to use to convert from value mut.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) from_value_mut: <span class="prelude-ty">Option</span>&lt;syn::Path&gt;,
     <span class="doccomment">/// Method to use to convert from value.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) from_value_params: <span class="prelude-ty">Option</span>&lt;syn::punctuated::Punctuated&lt;syn::Type, <span class="macro">Token!</span>[,]&gt;&gt;,
 }
@@ -1031,31 +1055,38 @@
                                 ..
                             } = g;
 
+                            <span class="kw">let </span>Tokens {
+                                try_clone,
+                                vm_try,
+                                vm_result,
+                                ..
+                            } = g.tokens;
+
                             <span class="kw">match </span>target {
                                 GenerateTarget::Named { field_ident, field_name } =&gt; {
                                     <span class="kw">let </span>access = <span class="kw">if </span>g.attrs.copy {
                                         <span class="macro">quote!</span>(s.#field_ident)
                                     } <span class="kw">else </span>{
-                                        <span class="macro">quote!</span>(Clone::clone(<span class="kw-2">&amp;</span>s.#field_ident))
+                                        <span class="macro">quote!</span>(#<span class="macro">vm_try!</span>(#try_clone::try_clone(<span class="kw-2">&amp;</span>s.#field_ident)))
                                     };
 
                                     <span class="kw">let </span>protocol = g.tokens.protocol(PROTOCOL_GET);
 
                                     <span class="macro">quote_spanned! </span>{ g.field.span() =&gt;
-                                        module.field_function(#protocol, #field_name, |s: <span class="kw-2">&amp;</span><span class="self">Self</span>| #access)<span class="question-mark">?</span>;
+                                        module.field_function(#protocol, #field_name, |s: <span class="kw-2">&amp;</span><span class="self">Self</span>| #vm_result::Ok(#access))<span class="question-mark">?</span>;
                                     }
                                 }
                                 GenerateTarget::Numbered { field_index } =&gt; {
                                     <span class="kw">let </span>access = <span class="kw">if </span>g.attrs.copy {
                                         <span class="macro">quote!</span>(s.#field_index)
                                     } <span class="kw">else </span>{
-                                        <span class="macro">quote!</span>(Clone::clone(<span class="kw-2">&amp;</span>s.#field_index))
+                                        <span class="macro">quote!</span>(#<span class="macro">vm_try!</span>(#try_clone::try_clone(<span class="kw-2">&amp;</span>s.#field_index)))
                                     };
 
                                     <span class="kw">let </span>protocol = g.tokens.protocol(PROTOCOL_GET);
 
                                     <span class="macro">quote_spanned! </span>{ g.field.span() =&gt;
-                                        module.index_function(#protocol, #field_index, |s: <span class="kw-2">&amp;</span><span class="self">Self</span>| #access)<span class="question-mark">?</span>;
+                                        module.index_function(#protocol, #field_index, |s: <span class="kw-2">&amp;</span><span class="self">Self</span>| #vm_result::Ok(#access))<span class="question-mark">?</span>;
                                     }
                                 }
                             }
@@ -1204,10 +1235,13 @@
                         <span class="comment">// Parse `#[rune(name = "..")]`
                         </span>meta.input.parse::&lt;<span class="macro">Token!</span>[=]&gt;()<span class="question-mark">?</span>;
                         attr.name = <span class="prelude-val">Some</span>(meta.input.parse()<span class="question-mark">?</span>);
-                    } <span class="kw">else if </span>meta.path == MODULE {
-                        <span class="comment">// Parse `#[rune(module = &lt;path&gt;)]`
-                        </span>meta.input.parse::&lt;<span class="macro">Token!</span>[=]&gt;()<span class="question-mark">?</span>;
-                        attr.module = <span class="prelude-val">Some</span>(parse_path_compat(meta.input)<span class="question-mark">?</span>);
+                    } <span class="kw">else if </span>meta.path == MODULE || meta.path == CRATE {
+                        <span class="comment">// Parse `#[rune(crate [= &lt;path&gt;])]`
+                        </span><span class="kw">if </span>meta.input.parse::&lt;<span class="prelude-ty">Option</span>&lt;<span class="macro">Token!</span>[=]&gt;&gt;()<span class="question-mark">?</span>.is_some() {
+                            attr.module = <span class="prelude-val">Some</span>(parse_path_compat(meta.input)<span class="question-mark">?</span>);
+                        } <span class="kw">else </span>{
+                            attr.module = <span class="prelude-val">Some</span>(<span class="macro">syn::parse_quote!</span>(<span class="kw">crate</span>));
+                        }
                     } <span class="kw">else if </span>meta.path == INSTALL_WITH {
                         <span class="comment">// Parse `#[rune(install_with = &lt;path&gt;)]`
                         </span>meta.input.parse::&lt;<span class="macro">Token!</span>[=]&gt;()<span class="question-mark">?</span>;
@@ -1222,6 +1256,12 @@
                     } <span class="kw">else if </span>meta.path == FROM_VALUE {
                         meta.input.parse::&lt;<span class="macro">Token!</span>[=]&gt;()<span class="question-mark">?</span>;
                         attr.from_value = <span class="prelude-val">Some</span>(meta.input.parse()<span class="question-mark">?</span>);
+                    } <span class="kw">else if </span>meta.path == FROM_VALUE_REF {
+                        meta.input.parse::&lt;<span class="macro">Token!</span>[=]&gt;()<span class="question-mark">?</span>;
+                        attr.from_value_ref = <span class="prelude-val">Some</span>(meta.input.parse()<span class="question-mark">?</span>);
+                    } <span class="kw">else if </span>meta.path == FROM_VALUE_MUT {
+                        meta.input.parse::&lt;<span class="macro">Token!</span>[=]&gt;()<span class="question-mark">?</span>;
+                        attr.from_value_mut = <span class="prelude-val">Some</span>(meta.input.parse()<span class="question-mark">?</span>);
                     } <span class="kw">else if </span>meta.path == FROM_VALUE_PARAMS {
                         meta.input.parse::&lt;<span class="macro">Token!</span>[=]&gt;()<span class="question-mark">?</span>;
                         <span class="kw">let </span>content;
@@ -1351,7 +1391,7 @@
             any: path(m, [<span class="string">"Any"</span>]),
             box_: path(m, [<span class="string">"__private"</span>, <span class="string">"Box"</span>]),
             vec: path(m, [<span class="string">"alloc"</span>, <span class="string">"Vec"</span>]),
-            clone: path(<span class="kw-2">&amp;</span>core, [<span class="string">"clone"</span>, <span class="string">"Clone"</span>]),
+            try_clone: path(m, [<span class="string">"alloc"</span>, <span class="string">"clone"</span>, <span class="string">"TryClone"</span>]),
             compile_error: path(m, [<span class="string">"compile"</span>, <span class="string">"Error"</span>]),
             context_error: path(m, [<span class="string">"compile"</span>, <span class="string">"ContextError"</span>]),
             double_ended_iterator: path(<span class="kw-2">&amp;</span>core, [<span class="string">"iter"</span>, <span class="string">"DoubleEndedIterator"</span>]),
@@ -1384,7 +1424,6 @@
             raw_str: path(m, [<span class="string">"runtime"</span>, <span class="string">"RawStr"</span>]),
             ref_: path(m, [<span class="string">"runtime"</span>, <span class="string">"Ref"</span>]),
             result: path(<span class="kw-2">&amp;</span>core, [<span class="string">"result"</span>, <span class="string">"Result"</span>]),
-            shared: path(m, [<span class="string">"runtime"</span>, <span class="string">"Shared"</span>]),
             span: path(m, [<span class="string">"ast"</span>, <span class="string">"Span"</span>]),
             spanned: path(m, [<span class="string">"ast"</span>, <span class="string">"Spanned"</span>]),
             static_type_mod: path(m, [<span class="string">"runtime"</span>, <span class="string">"static_type"</span>]),
@@ -1401,6 +1440,7 @@
             unsafe_to_ref: path(m, [<span class="string">"runtime"</span>, <span class="string">"UnsafeToRef"</span>]),
             unsafe_to_value: path(m, [<span class="string">"runtime"</span>, <span class="string">"UnsafeToValue"</span>]),
             value: path(m, [<span class="string">"runtime"</span>, <span class="string">"Value"</span>]),
+            type_value: path(m, [<span class="string">"runtime"</span>, <span class="string">"TypeValue"</span>]),
             variant_data: path(m, [<span class="string">"runtime"</span>, <span class="string">"VariantData"</span>]),
             vm_result: path(m, [<span class="string">"runtime"</span>, <span class="string">"VmResult"</span>]),
             vm_try: path(m, [<span class="string">"vm_try"</span>]),
@@ -1443,7 +1483,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) any: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) box_: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) vec: syn::Path,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) clone: syn::Path,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) try_clone: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) compile_error: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) context_error: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) double_ended_iterator: syn::Path,
@@ -1476,7 +1516,6 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw_str: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) ref_: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) result: syn::Path,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) shared: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) span: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) spanned: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) static_type_mod: syn::Path,
@@ -1493,6 +1532,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) unsafe_to_ref: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) unsafe_to_value: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) value: syn::Path,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) type_value: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) variant_data: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) vm_result: syn::Path,
     <span class="kw">pub</span>(<span class="kw">crate</span>) vm_try: syn::Path,

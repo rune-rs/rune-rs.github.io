@@ -1023,10 +1023,6 @@
 <a href="#1021" id="1021">1021</a>
 <a href="#1022" id="1022">1022</a>
 <a href="#1023" id="1023">1023</a>
-<a href="#1024" id="1024">1024</a>
-<a href="#1025" id="1025">1025</a>
-<a href="#1026" id="1026">1026</a>
-<a href="#1027" id="1027">1027</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future::Future;
 
@@ -1038,7 +1034,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::module;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
     Args, Call, ConstValue, FromValue, FunctionHandler, OwnedTuple, Rtti, RuntimeContext, Stack,
-    Unit, Value, VariantRtti, Vm, VmCall, VmErrorKind, VmHalt, VmResult,
+    Unit, Value, ValueKind, VariantRtti, Vm, VmCall, VmErrorKind, VmHalt, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::shared::AssertSend;
 <span class="kw">use </span><span class="kw">crate</span>::Any;
@@ -1069,7 +1065,7 @@
 /// let build_some = build;
 /// assert_eq!(build_some(42), Some(42));
 /// ```
-</span><span class="attr">#[derive(Any)]
+</span><span class="attr">#[derive(Any, TryClone)]
 #[repr(transparent)]
 #[rune(builtin, static_type = FUNCTION_TYPE)]
 </span><span class="kw">pub struct </span>Function(FunctionImpl&lt;Value&gt;);
@@ -1201,13 +1197,12 @@
     /// let value = vm.call(["main"], ())?;
     ///
     /// let value: Function = rune::from_value(value)?;
-    /// assert_eq!(value.call::&lt;_, u32&gt;((1, 2)).into_result()?, 3);
+    /// assert_eq!(value.call::&lt;u32&gt;((1, 2)).into_result()?, 3);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>call&lt;A, T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, args: A) -&gt; VmResult&lt;T&gt;
+    </span><span class="kw">pub fn </span>call&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, args: <span class="kw">impl </span>Args) -&gt; VmResult&lt;T&gt;
     <span class="kw">where
-        </span>A: Args,
-        T: FromValue,
+        </span>T: FromValue,
     {
         <span class="self">self</span>.<span class="number">0</span>.call(args)
     }
@@ -1417,16 +1412,15 @@
     /// let add = vm.call(["main"], ())?;
     /// let add: SyncFunction = rune::from_value(add)?;
     ///
-    /// let value = add.async_send_call::&lt;_, u32&gt;((1, 2)).await.into_result()?;
+    /// let value = add.async_send_call::&lt;u32&gt;((1, 2)).await.into_result()?;
     /// assert_eq!(value, 3);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// # })?;
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub async fn </span>async_send_call&lt;A, T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, args: A) -&gt; VmResult&lt;T&gt;
+    </span><span class="kw">pub async fn </span>async_send_call&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, args: <span class="kw">impl </span>Args + Send) -&gt; VmResult&lt;T&gt;
     <span class="kw">where
-        </span>A: Send + Args,
-        T: Send + FromValue,
+        </span>T: Send + FromValue,
     {
         <span class="self">self</span>.<span class="number">0</span>.async_send_call(args).<span class="kw">await
     </span>}
@@ -1455,13 +1449,12 @@
     /// let add = vm.call(["main"], ())?;
     /// let add: SyncFunction = rune::from_value(add)?;
     ///
-    /// assert_eq!(add.call::&lt;_, u32&gt;((1, 2)).into_result()?, 3);
+    /// assert_eq!(add.call::&lt;u32&gt;((1, 2)).into_result()?, 3);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>call&lt;A, T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, args: A) -&gt; VmResult&lt;T&gt;
+    </span><span class="kw">pub fn </span>call&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, args: <span class="kw">impl </span>Args) -&gt; VmResult&lt;T&gt;
     <span class="kw">where
-        </span>A: Args,
-        T: FromValue,
+        </span>T: FromValue,
     {
         <span class="self">self</span>.<span class="number">0</span>.call(args)
     }
@@ -1528,10 +1521,9 @@
     OwnedTuple: TryFrom&lt;Box&lt;[V]&gt;&gt;,
     VmErrorKind: From&lt;&lt;OwnedTuple <span class="kw">as </span>TryFrom&lt;Box&lt;[V]&gt;&gt;&gt;::Error&gt;,
 {
-    <span class="kw">fn </span>call&lt;A, T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, args: A) -&gt; VmResult&lt;T&gt;
+    <span class="kw">fn </span>call&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, args: <span class="kw">impl </span>Args) -&gt; VmResult&lt;T&gt;
     <span class="kw">where
-        </span>A: Args,
-        T: FromValue,
+        </span>T: FromValue,
     {
         <span class="kw">let </span>value = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.inner {
             Inner::FnHandler(handler) =&gt; {
@@ -1580,14 +1572,14 @@
         T: <span class="lifetime">'a </span>+ Send + FromValue,
     {
         <span class="kw">let </span>future = <span class="kw">async move </span>{
-            <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.call(args));
+            <span class="kw">let </span>value: Value = <span class="macro">vm_try!</span>(<span class="self">self</span>.call(args));
 
-            <span class="kw">let </span>value = <span class="kw">match </span>value {
-                Value::Future(future) =&gt; {
-                    <span class="kw">let </span>future = <span class="macro">vm_try!</span>(future.take());
-                    <span class="macro">vm_try!</span>(future.<span class="kw">await</span>)
+            <span class="kw">let </span>value = <span class="lifetime">'out</span>: {
+                <span class="kw">if let </span>ValueKind::Future(future) = <span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(value.borrow_kind_mut()) {
+                    <span class="kw">break </span><span class="lifetime">'out </span><span class="macro">vm_try!</span>(future.<span class="kw">await</span>);
                 }
-                other =&gt; other,
+
+                value
             };
 
             T::from_value(value)
@@ -1872,7 +1864,7 @@
     }
 }
 
-<span class="attr">#[derive(Clone)]
+<span class="attr">#[derive(Clone, TryClone)]
 </span><span class="kw">struct </span>FnHandler {
     <span class="doccomment">/// The function handler.
     </span>handler: Arc&lt;FunctionHandler&gt;,
@@ -1886,7 +1878,7 @@
     }
 }
 
-<span class="attr">#[derive(Clone)]
+<span class="attr">#[derive(Clone, TryClone)]
 </span><span class="kw">struct </span>FnOffset {
     context: Arc&lt;RuntimeContext&gt;,
     <span class="doccomment">/// The unit where the function resides.
@@ -1903,11 +1895,7 @@
 
 <span class="kw">impl </span>FnOffset {
     <span class="doccomment">/// Perform a call into the specified offset and return the produced value.
-    </span><span class="kw">fn </span>call&lt;A, E&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, args: A, extra: E) -&gt; VmResult&lt;Value&gt;
-    <span class="kw">where
-        </span>A: Args,
-        E: Args,
-    {
+    </span><span class="kw">fn </span>call(<span class="kw-2">&amp;</span><span class="self">self</span>, args: <span class="kw">impl </span>Args, extra: <span class="kw">impl </span>Args) -&gt; VmResult&lt;Value&gt; {
         <span class="macro">vm_try!</span>(check_args(args.count(), <span class="self">self</span>.args));
 
         <span class="kw">let </span><span class="kw-2">mut </span>vm = Vm::new(<span class="self">self</span>.context.clone(), <span class="self">self</span>.unit.clone());
@@ -1986,13 +1974,13 @@
     }
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone, TryClone)]
 </span><span class="kw">struct </span>FnUnitStruct {
     <span class="doccomment">/// The type of the empty.
     </span>rtti: Arc&lt;Rtti&gt;,
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone, TryClone)]
 </span><span class="kw">struct </span>FnTupleStruct {
     <span class="doccomment">/// The type of the tuple.
     </span>rtti: Arc&lt;Rtti&gt;,
@@ -2000,13 +1988,13 @@
     </span>args: usize,
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone, TryClone)]
 </span><span class="kw">struct </span>FnUnitVariant {
     <span class="doccomment">/// Runtime information fo variant.
     </span>rtti: Arc&lt;VariantRtti&gt;,
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone, TryClone)]
 </span><span class="kw">struct </span>FnTupleVariant {
     <span class="doccomment">/// Runtime information fo variant.
     </span>rtti: Arc&lt;VariantRtti&gt;,
@@ -2015,14 +2003,18 @@
 }
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>SyncFunction {
-    <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>function = <span class="macro">vm_try!</span>(value.into_function());
-        <span class="kw">let </span>function = <span class="macro">vm_try!</span>(function.take());
-        function.into_sync()
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
+        <span class="macro">vm_try!</span>(value.into_function()).into_sync()
     }
 }
 
-<span class="macro">from_value!</span>(Function, into_function);
+<span class="macro">from_value2!</span>(
+    Function,
+    into_function_ref,
+    into_function_mut,
+    into_function
+);
 
 <span class="kw">fn </span>check_args(actual: usize, expected: usize) -&gt; VmResult&lt;()&gt; {
     <span class="kw">if </span>actual != expected {

@@ -459,12 +459,30 @@
 <a href="#457" id="457">457</a>
 <a href="#458" id="458">458</a>
 <a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future::Future;
 <span class="kw">use </span>core::mem::{replace, take};
 
 <span class="kw">use </span>::rust_alloc::sync::Arc;
 
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::budget;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
@@ -477,9 +495,9 @@
 /// correctly interact with functions that yield (like generators and streams)
 /// by initially just calling the function, then by providing a value pushed
 /// onto the stack.
-</span><span class="attr">#[derive(Debug, Clone, Copy)]
+</span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq)]
 #[non_exhaustive]
-</span><span class="kw">pub enum </span>ExecutionState {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExecutionState {
     <span class="doccomment">/// The initial state of an execution.
     </span>Initial,
     <span class="doccomment">/// The resumed state of an execution. This expects a value to be pushed
@@ -496,7 +514,9 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>VmExecutionState {
+<span class="attr">#[derive(TryClone)]
+#[try_clone(<span class="kw">crate</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>VmExecutionState {
     <span class="kw">pub</span>(<span class="kw">crate</span>) context: <span class="prelude-ty">Option</span>&lt;Arc&lt;RuntimeContext&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) unit: <span class="prelude-ty">Option</span>&lt;Arc&lt;Unit&gt;&gt;,
 }
@@ -659,7 +679,7 @@
     /// it while returning a unit from the current `yield`.
     </span><span class="kw">pub async fn </span>async_resume(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;GeneratorState&gt; {
         <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.state, ExecutionState::Resumed) {
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(Value::EmptyTuple));
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(<span class="macro">vm_try!</span>(Value::empty())));
         } <span class="kw">else </span>{
             <span class="self">self</span>.state = ExecutionState::Resumed;
         }
@@ -725,7 +745,7 @@
     </span><span class="attr">#[tracing::instrument(skip_all)]
     </span><span class="kw">pub fn </span>resume(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;GeneratorState&gt; {
         <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.state, ExecutionState::Resumed) {
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(Value::EmptyTuple));
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(<span class="macro">vm_try!</span>(Value::empty())));
         } <span class="kw">else </span>{
             <span class="self">self</span>.state = ExecutionState::Resumed;
         }
@@ -916,6 +936,20 @@
         <span class="comment">// Safety: we wrap all APIs around the [VmExecution], preventing values
         // from escaping from contained virtual machine.
         </span><span class="kw">unsafe </span>{ AssertSend::new(future) }
+    }
+}
+
+<span class="kw">impl</span>&lt;T&gt; TryClone <span class="kw">for </span>VmExecution&lt;T&gt;
+<span class="kw">where
+    </span>T: AsRef&lt;Vm&gt; + AsMut&lt;Vm&gt; + TryClone,
+{
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, rune_alloc::Error&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            head: <span class="self">self</span>.head.try_clone()<span class="question-mark">?</span>,
+            state: <span class="self">self</span>.state,
+            states: <span class="self">self</span>.states.try_clone()<span class="question-mark">?</span>,
+        })
     }
 }
 </code></pre></div></section></main></body></html>

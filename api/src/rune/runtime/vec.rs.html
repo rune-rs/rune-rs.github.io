@@ -567,9 +567,6 @@
 <a href="#565" id="565">565</a>
 <a href="#566" id="566">566</a>
 <a href="#567" id="567">567</a>
-<a href="#568" id="568">568</a>
-<a href="#569" id="569">569</a>
-<a href="#570" id="570">570</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>iter;
 
 <span class="kw">use </span>core::cmp;
@@ -586,8 +583,8 @@
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::runtime::Hasher;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Formatter, FromValue, Iterator, ProtocolCaller, RawRef, Ref, Shared, ToValue, UnsafeToRef,
-    Value, VmErrorKind, VmResult,
+    Formatter, FromValue, Iterator, ProtocolCaller, RawRef, Ref, ToValue, UnsafeToRef, Value,
+    ValueKind, VmErrorKind, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -612,7 +609,8 @@
 /// ```
 </span><span class="attr">#[derive(Any)]
 #[repr(transparent)]
-#[rune(builtin, static_type = VEC_TYPE, from_value = Value::into_vec)]
+#[rune(builtin, static_type = VEC_TYPE)]
+#[rune(from_value = Value::into_vec, from_value_ref = Value::into_vec_ref, from_value_mut = Value::into_vec_mut)]
 </span><span class="kw">pub struct </span>Vec {
     inner: alloc::Vec&lt;Value&gt;,
 }
@@ -666,8 +664,9 @@
     /// let mut v = Vec::new();
     /// assert!(v.is_empty());
     ///
-    /// v.push(Value::Integer(1));
+    /// v.push(rune::to_value(1u32)?);
     /// assert!(!v.is_empty());
+    /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.inner.is_empty()
@@ -906,44 +905,41 @@
     <span class="doccomment">/// This is a common get implementation that can be used across linear
     /// types, such as vectors and tuples.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>index_get(this: <span class="kw-2">&amp;</span>[Value], index: Value) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
-        <span class="kw">let </span>slice = <span class="kw">match </span>index {
-            Value::RangeFrom(range) =&gt; {
-                <span class="kw">let </span>range = <span class="macro">vm_try!</span>(range.borrow_ref());
-                <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
-                this.get(start..)
-            }
-            Value::RangeFull(..) =&gt; this.get(..),
-            Value::RangeInclusive(range) =&gt; {
-                <span class="kw">let </span>range = <span class="macro">vm_try!</span>(range.borrow_ref());
-                <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
-                <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
-                this.get(start..=end)
-            }
-            Value::RangeToInclusive(range) =&gt; {
-                <span class="kw">let </span>range = <span class="macro">vm_try!</span>(range.borrow_ref());
-                <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
-                this.get(..=end)
-            }
-            Value::RangeTo(range) =&gt; {
-                <span class="kw">let </span>range = <span class="macro">vm_try!</span>(range.borrow_ref());
-                <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
-                this.get(..end)
-            }
-            Value::Range(range) =&gt; {
-                <span class="kw">let </span>range = <span class="macro">vm_try!</span>(range.borrow_ref());
-                <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
-                <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
-                this.get(start..end)
-            }
-            value =&gt; {
-                <span class="kw">let </span>index = <span class="macro">vm_try!</span>(usize::from_value(value));
+        <span class="kw">let </span>slice: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[Value]&gt; = <span class="lifetime">'out</span>: {
+            <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(index.borrow_kind_ref()) {
+                ValueKind::RangeFrom(range) =&gt; {
+                    <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
+                    <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..);
+                }
+                ValueKind::RangeFull(..) =&gt; <span class="kw">break </span><span class="lifetime">'out </span>this.get(..),
+                ValueKind::RangeInclusive(range) =&gt; {
+                    <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
+                    <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
+                    <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..=end);
+                }
+                ValueKind::RangeToInclusive(range) =&gt; {
+                    <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
+                    <span class="kw">break </span><span class="lifetime">'out </span>this.get(..=end);
+                }
+                ValueKind::RangeTo(range) =&gt; {
+                    <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
+                    <span class="kw">break </span><span class="lifetime">'out </span>this.get(..end);
+                }
+                ValueKind::Range(range) =&gt; {
+                    <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
+                    <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
+                    <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..end);
+                }
+                <span class="kw">_ </span>=&gt; {}
+            };
 
-                <span class="kw">let </span><span class="prelude-val">Some</span>(value) = this.get(index) <span class="kw">else </span>{
-                    <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
-                };
+            <span class="kw">let </span>index = <span class="macro">vm_try!</span>(usize::from_value(index));
 
-                <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">Some</span>(value.clone()));
-            }
+            <span class="kw">let </span><span class="prelude-val">Some</span>(value) = this.get(index) <span class="kw">else </span>{
+                <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
+            };
+
+            <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">Some</span>(value.clone()));
         };
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(values) = slice <span class="kw">else </span>{
@@ -1068,7 +1064,6 @@
 {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.into_vec());
-        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(vec.take());
 
         <span class="kw">let </span><span class="kw-2">mut </span>output = ::rust_alloc::vec::Vec::with_capacity(vec.len());
 
@@ -1086,7 +1081,6 @@
 {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.into_vec());
-        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(vec.take());
 
         <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="macro">vm_try!</span>(alloc::Vec::try_with_capacity(vec.len()));
 
@@ -1102,8 +1096,8 @@
     <span class="kw">type </span>Guard = RawRef;
 
     <span class="kw">unsafe fn </span>unsafe_to_ref&lt;<span class="lifetime">'a</span>&gt;(value: Value) -&gt; VmResult&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.into_vec());
-        <span class="kw">let </span>(vec, guard) = Ref::into_raw(<span class="macro">vm_try!</span>(vec.into_ref()));
+        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.into_vec_ref());
+        <span class="kw">let </span>(vec, guard) = Ref::into_raw(vec);
         <span class="comment">// SAFETY: we're holding onto the guard for the vector here, so it is
         // live.
         </span>VmResult::Ok((vec.as_ref().as_slice(), guard))
@@ -1121,7 +1115,7 @@
             <span class="macro">vm_try!</span>(inner.try_push(<span class="macro">vm_try!</span>(value.to_value())));
         }
 
-        VmResult::Ok(Value::from(<span class="macro">vm_try!</span>(Shared::new(Vec { inner }))))
+        VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(Vec { inner })))
     }
 }
 
@@ -1137,7 +1131,7 @@
             <span class="macro">vm_try!</span>(inner.try_push(<span class="macro">vm_try!</span>(value.to_value())));
         }
 
-        VmResult::Ok(Value::from(<span class="macro">vm_try!</span>(Shared::new(Vec { inner }))))
+        VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(Vec { inner })))
     }
 }
 </code></pre></div></section></main></body></html>

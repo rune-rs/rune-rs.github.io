@@ -568,6 +568,9 @@
 <a href="#566" id="566">566</a>
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Types for dealing with formatting specifications.
 
 </span><span class="kw">use </span>core::fmt;
@@ -580,9 +583,10 @@
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::String;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Formatter, ProtocolCaller, Value, VmErrorKind, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Formatter, ProtocolCaller, Value, ValueKind, VmErrorKind, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
 <span class="doccomment">/// Error raised when trying to parse a type string and it fails.
@@ -609,7 +613,7 @@
 }
 
 <span class="doccomment">/// A format specification, wrapping an inner value.
-</span><span class="attr">#[derive(Any, Debug, Clone)]
+</span><span class="attr">#[derive(Any, Debug, Clone, TryClone)]
 #[rune(builtin, static_type = FORMAT_TYPE)]
 </span><span class="kw">pub struct </span>Format {
     <span class="doccomment">/// The value being formatted.
@@ -618,10 +622,11 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) spec: FormatSpec,
 }
 
-<span class="macro">from_value!</span>(Format, into_format);
+<span class="macro">from_value2!</span>(Format, into_format_ref, into_format_mut, into_format);
 
 <span class="doccomment">/// A format specification.
-</span><span class="attr">#[derive(Debug, Clone, Copy, Serialize, Deserialize, Decode, Encode)]
+</span><span class="attr">#[derive(Debug, Clone, Copy, TryClone, Serialize, Deserialize, Decode, Encode)]
+#[try_clone(copy)]
 #[non_exhaustive]
 </span><span class="kw">pub struct </span>FormatSpec {
     <span class="doccomment">/// Formatting flags.
@@ -776,22 +781,22 @@
         f: <span class="kw-2">&amp;mut </span>Formatter,
         caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
     ) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">match </span>value {
-            Value::Char(c) =&gt; {
-                <span class="macro">vm_try!</span>(f.buf_mut().try_push(<span class="kw-2">*</span>c));
+        <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
+            ValueKind::Char(c) =&gt; {
+                <span class="macro">vm_try!</span>(f.buf_mut().try_push(c));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, <span class="self">self</span>.align, <span class="self">self</span>.fill, <span class="prelude-val">None</span>));
             }
-            Value::String(s) =&gt; {
-                <span class="macro">vm_try!</span>(f.buf_mut().try_push_str(<span class="kw-2">&amp;</span><span class="macro">vm_try!</span>(s.borrow_ref())));
+            ValueKind::String(<span class="kw-2">ref </span>s) =&gt; {
+                <span class="macro">vm_try!</span>(f.buf_mut().try_push_str(s));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, <span class="self">self</span>.align, <span class="self">self</span>.fill, <span class="prelude-val">None</span>));
             }
-            Value::Integer(n) =&gt; {
-                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
+            ValueKind::Integer(n) =&gt; {
+                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(n);
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_number(f.buf_mut(), n));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
-            Value::Float(n) =&gt; {
-                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.float_traits(<span class="kw-2">*</span>n);
+            ValueKind::Float(n) =&gt; {
+                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.float_traits(n);
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_float(f.buf_mut(), n));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
@@ -809,22 +814,21 @@
         f: <span class="kw-2">&amp;mut </span>Formatter,
         caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
     ) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">match </span>value {
-            Value::String(s) =&gt; {
-                <span class="kw">let </span>s = <span class="macro">vm_try!</span>(s.borrow_ref());
-                <span class="macro">vm_write!</span>(f, <span class="string">"{:?}"</span>, <span class="kw-2">&amp;*</span>s);
+        <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
+            ValueKind::String(<span class="kw-2">ref </span>s) =&gt; {
+                <span class="macro">vm_write!</span>(f, <span class="string">"{s:?}"</span>);
             }
-            Value::Integer(n) =&gt; {
-                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
+            ValueKind::Integer(n) =&gt; {
+                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(n);
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_number(f.buf_mut(), n));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
-            Value::Float(n) =&gt; {
-                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.float_traits(<span class="kw-2">*</span>n);
+            ValueKind::Float(n) =&gt; {
+                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.float_traits(n);
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_float(f.buf_mut(), n));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
-            value =&gt; {
+            <span class="kw">_ </span>=&gt; {
                 <span class="macro">vm_try!</span>(value.string_debug_with(f, caller));
             }
         }
@@ -833,9 +837,9 @@
     }
 
     <span class="kw">fn </span>format_upper_hex(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>Value, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">match </span>value {
-            Value::Integer(n) =&gt; {
-                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
+        <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
+            ValueKind::Integer(n) =&gt; {
+                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(n);
                 <span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:X}"</span>, n);
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
@@ -848,9 +852,9 @@
     }
 
     <span class="kw">fn </span>format_lower_hex(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>Value, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">match </span>value {
-            Value::Integer(n) =&gt; {
-                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
+        <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
+            ValueKind::Integer(n) =&gt; {
+                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(n);
                 <span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:x}"</span>, n);
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
@@ -863,9 +867,9 @@
     }
 
     <span class="kw">fn </span>format_binary(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>Value, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">match </span>value {
-            Value::Integer(n) =&gt; {
-                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
+        <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
+            ValueKind::Integer(n) =&gt; {
+                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(n);
                 <span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:b}"</span>, n);
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
@@ -878,9 +882,9 @@
     }
 
     <span class="kw">fn </span>format_pointer(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>Value, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">match </span>value {
-            Value::Integer(n) =&gt; {
-                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
+        <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
+            ValueKind::Integer(n) =&gt; {
+                <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(n);
                 <span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:p}"</span>, n <span class="kw">as </span><span class="kw-2">*const </span>());
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
@@ -1012,7 +1016,8 @@
 }
 
 <span class="doccomment">/// The alignment requested.
-</span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Decode, Encode)]
+</span><span class="attr">#[derive(Debug, Clone, Copy, TryClone, PartialEq, Eq, Serialize, Deserialize, Decode, Encode)]
+#[try_clone(copy)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>Alignment {
     <span class="doccomment">/// Left alignment.
@@ -1076,9 +1081,10 @@
 }
 
 <span class="doccomment">/// Format specification flags.
-</span><span class="attr">#[derive(Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, Decode, Encode)]
+</span><span class="attr">#[derive(Clone, Copy, TryClone, Default, PartialEq, Eq, Serialize, Deserialize, Decode, Encode)]
 #[repr(transparent)]
 #[musli(transparent)]
+#[try_clone(copy)]
 </span><span class="kw">pub struct </span>Flags(u32);
 
 <span class="kw">impl </span>Flags {

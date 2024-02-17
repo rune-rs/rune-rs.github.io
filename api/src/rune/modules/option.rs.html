@@ -412,14 +412,10 @@
 <a href="#410" id="410">410</a>
 <a href="#411" id="411">411</a>
 <a href="#412" id="412">412</a>
-<a href="#413" id="413">413</a>
-<a href="#414" id="414">414</a>
-<a href="#415" id="415">415</a>
-<a href="#416" id="416">416</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The `std::option` module.
 
 </span><span class="kw">use crate as </span>rune;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{ControlFlow, Formatter, Function, Iterator, Panic, Shared, Value, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{ControlFlow, Formatter, Function, Iterator, Panic, Value, VmResult};
 <span class="kw">use crate</span>::{ContextError, Module};
 
 <span class="doccomment">/// Construct the `std::option` module.
@@ -600,7 +596,7 @@
 </span><span class="kw">fn </span>and_then(option: <span class="prelude-ty">Option</span>&lt;Value&gt;, then: Function) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
     <span class="kw">match </span>option {
         <span class="comment">// no need to clone v, passing the same reference forward
-        </span><span class="prelude-val">Some</span>(v) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(then.call::&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;((v,)))),
+        </span><span class="prelude-val">Some</span>(v) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(then.call((v,)))),
         <span class="prelude-val">None </span>=&gt; VmResult::Ok(<span class="prelude-val">None</span>),
     }
 }
@@ -628,7 +624,7 @@
 </span><span class="kw">fn </span>map(option: <span class="prelude-ty">Option</span>&lt;Value&gt;, then: Function) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
     <span class="kw">match </span>option {
         <span class="comment">// no need to clone v, passing the same reference forward
-        </span><span class="prelude-val">Some</span>(v) =&gt; VmResult::Ok(<span class="prelude-val">Some</span>(<span class="macro">vm_try!</span>(then.call::&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;((v,))))),
+        </span><span class="prelude-val">Some</span>(v) =&gt; VmResult::Ok(<span class="prelude-val">Some</span>(<span class="macro">vm_try!</span>(then.call((v,))))),
         <span class="prelude-val">None </span>=&gt; VmResult::Ok(<span class="prelude-val">None</span>),
     }
 }
@@ -671,24 +667,20 @@
     <span class="kw">let </span>value = <span class="kw">match </span>this {
         <span class="prelude-val">Some</span>(value) =&gt; value,
         <span class="prelude-val">None </span>=&gt; {
-            <span class="kw">let </span>none = Value::from(<span class="macro">vm_try!</span>(Shared::new(<span class="prelude-ty">Option</span>::&lt;Value&gt;::None)));
-            <span class="kw">let </span>result = Value::from(<span class="macro">vm_try!</span>(Shared::new(<span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::Ok(none))));
+            <span class="kw">let </span>none = <span class="macro">vm_try!</span>(Value::try_from(<span class="prelude-ty">Option</span>::&lt;Value&gt;::None));
+            <span class="kw">let </span>result = <span class="macro">vm_try!</span>(Value::try_from(<span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::Ok(none)));
             <span class="kw">return </span>VmResult::Ok(result);
         }
     };
 
-    <span class="kw">let </span>result = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(value.into_result()).take());
-
-    <span class="kw">match </span>result {
+    <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.into_result_ref()) {
         <span class="prelude-val">Ok</span>(ok) =&gt; {
-            <span class="kw">let </span>some = Value::from(<span class="macro">vm_try!</span>(Shared::new(<span class="prelude-ty">Option</span>::&lt;Value&gt;::Some(ok.clone()))));
-            <span class="kw">let </span>result = Value::from(<span class="macro">vm_try!</span>(Shared::new(<span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::Ok(some))));
+            <span class="kw">let </span>some = <span class="macro">vm_try!</span>(Value::try_from(<span class="prelude-val">Some</span>(ok.clone())));
+            <span class="kw">let </span>result = <span class="macro">vm_try!</span>(Value::try_from(<span class="prelude-val">Ok</span>(some)));
             VmResult::Ok(result)
         }
         <span class="prelude-val">Err</span>(err) =&gt; {
-            <span class="kw">let </span>result = Value::from(<span class="macro">vm_try!</span>(Shared::new(<span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::Err(
-                err.clone()
-            ))));
+            <span class="kw">let </span>result = <span class="macro">vm_try!</span>(Value::try_from(<span class="prelude-val">Err</span>(err.clone())));
             VmResult::Ok(result)
         }
     }
@@ -826,10 +818,10 @@
 /// assert_eq!(maybe_add_one(None), None);
 /// ```
 </span><span class="attr">#[rune::function(keep, instance, protocol = TRY)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>option_try(this: <span class="prelude-ty">Option</span>&lt;Value&gt;) -&gt; VmResult&lt;ControlFlow&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>option_try(this: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Value&gt;) -&gt; VmResult&lt;ControlFlow&gt; {
     VmResult::Ok(<span class="kw">match </span>this {
-        <span class="prelude-val">Some</span>(value) =&gt; ControlFlow::Continue(value),
-        <span class="prelude-val">None </span>=&gt; ControlFlow::Break(Value::Option(<span class="macro">vm_try!</span>(Shared::new(<span class="prelude-val">None</span>)))),
+        <span class="prelude-val">Some</span>(value) =&gt; ControlFlow::Continue(value.clone()),
+        <span class="prelude-val">None </span>=&gt; ControlFlow::Break(<span class="macro">vm_try!</span>(Value::try_from(<span class="prelude-val">None</span>))),
     })
 }
 </code></pre></div></section></main></body></html>

@@ -178,12 +178,6 @@
 <a href="#176" id="176">176</a>
 <a href="#177" id="177">177</a>
 <a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/// Helper to borrow out a [ResolveContext][crate::parse::ResolveContext].
 </span><span class="macro">macro_rules! </span>resolve_context {
     (<span class="macro-nonterminal">$q</span>:expr) =&gt; {
@@ -307,25 +301,15 @@
     }
 }
 
-<span class="doccomment">/// Implements a set of common value conversions.
-</span><span class="macro">macro_rules! </span>from_value {
-    (<span class="macro-nonterminal">$ty</span>:ty, <span class="macro-nonterminal">$into</span>:ident) =&gt; {
-        <span class="kw">impl </span><span class="macro-nonterminal">$crate::runtime::FromValue </span><span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
-            <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="macro-nonterminal">$crate::runtime::VmResult</span>&lt;<span class="self">Self</span>&gt; {
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.<span class="macro-nonterminal">$into</span>());
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.take());
-                <span class="macro-nonterminal">$crate::runtime::VmResult::Ok</span>(value)
-            }
-        }
-
+<span class="macro">macro_rules! </span>from_value_ref {
+    (<span class="macro-nonterminal">$ty</span>:ty, <span class="macro-nonterminal">$into_ref</span>:ident, <span class="macro-nonterminal">$into_mut</span>:ident, <span class="macro-nonterminal">$into</span>:ident) =&gt; {
         <span class="kw">impl </span><span class="macro-nonterminal">$crate::runtime::UnsafeToRef </span><span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
             <span class="kw">type </span>Guard = <span class="macro-nonterminal">$crate::runtime::RawRef</span>;
 
             <span class="kw">unsafe fn </span>unsafe_to_ref&lt;<span class="lifetime">'a</span>&gt;(
                 value: <span class="macro-nonterminal">$crate::runtime::Value</span>,
             ) -&gt; <span class="macro-nonterminal">$crate::runtime::VmResult</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.<span class="macro-nonterminal">$into</span>());
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.into_ref());
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.<span class="macro-nonterminal">$into_ref</span>());
                 <span class="kw">let </span>(value, guard) = <span class="macro-nonterminal">$crate::runtime::Ref::into_raw</span>(value);
                 <span class="macro-nonterminal">$crate::runtime::VmResult::Ok</span>((value.as_ref(), guard))
             }
@@ -337,35 +321,39 @@
             <span class="kw">unsafe fn </span>unsafe_to_mut&lt;<span class="lifetime">'a</span>&gt;(
                 value: <span class="macro-nonterminal">$crate::runtime::Value</span>,
             ) -&gt; <span class="macro-nonterminal">$crate::runtime::VmResult</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.<span class="macro-nonterminal">$into</span>());
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.into_mut());
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.<span class="macro-nonterminal">$into_mut</span>());
                 <span class="kw">let </span>(<span class="kw-2">mut </span>value, guard) = <span class="macro-nonterminal">$crate::runtime::Mut::into_raw</span>(value);
                 <span class="macro-nonterminal">$crate::runtime::VmResult::Ok</span>((value.as_mut(), guard))
             }
         }
 
-        <span class="kw">impl </span><span class="macro-nonterminal">$crate::runtime::FromValue </span><span class="kw">for </span><span class="macro-nonterminal">$crate::runtime::Shared</span>&lt;<span class="macro-nonterminal">$ty</span>&gt; {
-            <span class="attr">#[inline]
-            </span><span class="kw">fn </span>from_value(value: <span class="macro-nonterminal">$crate::runtime::Value</span>) -&gt; <span class="macro-nonterminal">$crate::runtime::VmResult</span>&lt;<span class="self">Self</span>&gt; {
-                value.<span class="macro-nonterminal">$into</span>()
-            }
-        }
-
         <span class="kw">impl </span><span class="macro-nonterminal">$crate::runtime::FromValue </span><span class="kw">for </span><span class="macro-nonterminal">$crate::runtime::Ref</span>&lt;<span class="macro-nonterminal">$ty</span>&gt; {
             <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="macro-nonterminal">$crate::runtime::VmResult</span>&lt;<span class="self">Self</span>&gt; {
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.<span class="macro-nonterminal">$into</span>());
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.into_ref());
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.<span class="macro-nonterminal">$into_ref</span>());
                 <span class="macro-nonterminal">$crate::runtime::VmResult::Ok</span>(value)
             }
         }
 
         <span class="kw">impl </span><span class="macro-nonterminal">$crate::runtime::FromValue </span><span class="kw">for </span><span class="macro-nonterminal">$crate::runtime::Mut</span>&lt;<span class="macro-nonterminal">$ty</span>&gt; {
             <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.<span class="macro-nonterminal">$into</span>());
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.into_mut());
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.<span class="macro-nonterminal">$into_mut</span>());
                 <span class="macro-nonterminal">$crate::runtime::VmResult::Ok</span>(value)
             }
         }
+    };
+}
+
+<span class="doccomment">/// Implements a set of common value conversions.
+</span><span class="macro">macro_rules! </span>from_value2 {
+    (<span class="macro-nonterminal">$ty</span>:ty, <span class="macro-nonterminal">$into_ref</span>:ident, <span class="macro-nonterminal">$into_mut</span>:ident, <span class="macro-nonterminal">$into</span>:ident) =&gt; {
+        <span class="kw">impl </span><span class="macro-nonterminal">$crate::runtime::FromValue </span><span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
+            <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="macro-nonterminal">$crate::runtime::VmResult</span>&lt;<span class="self">Self</span>&gt; {
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.<span class="macro-nonterminal">$into</span>());
+                <span class="macro-nonterminal">$crate::runtime::VmResult::Ok</span>(value)
+            }
+        }
+
+        <span class="macro">from_value_ref!</span>(<span class="macro-nonterminal">$ty</span>, <span class="macro-nonterminal">$into_ref</span>, <span class="macro-nonterminal">$into_mut</span>, <span class="macro-nonterminal">$into</span>);
     };
 }
 </code></pre></div></section></main></body></html>

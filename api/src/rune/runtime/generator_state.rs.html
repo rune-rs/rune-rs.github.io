@@ -100,7 +100,14 @@
 <a href="#98" id="98">98</a>
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{ProtocolCaller, Value, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -135,14 +142,14 @@
 /// assert_eq!(first, 1);
 ///
 /// // Additional resumes require a value.
-/// let second = match execution.resume_with(Value::from(2i64)).into_result()? {
+/// let second = match execution.resume_with(rune::to_value(2i64)?).into_result()? {
 ///     GeneratorState::Yielded(second) =&gt; rune::from_value::&lt;i64&gt;(second)?,
 ///     GeneratorState::Complete(..) =&gt; panic!("generator completed"),
 /// };
 ///
 /// assert_eq!(second, 3);
 ///
-/// let ret = match execution.resume_with(Value::from(42i64)).into_result()? {
+/// let ret = match execution.resume_with(rune::to_value(42i64)?).into_result()? {
 ///     GeneratorState::Complete(ret) =&gt; rune::from_value::&lt;i64&gt;(ret)?,
 ///     GeneratorState::Yielded(..) =&gt; panic!("generator yielded"),
 /// };
@@ -150,7 +157,7 @@
 /// assert_eq!(ret, 42);
 /// # Ok::&lt;_, rune::support::Error&gt;(())
 /// ```
-</span><span class="attr">#[derive(Any, Debug)]
+</span><span class="attr">#[derive(Any, Debug, TryClone)]
 #[rune(builtin, static_type = GENERATOR_STATE_TYPE)]
 </span><span class="kw">pub enum </span>GeneratorState {
     <span class="doccomment">/// The generator yielded.
@@ -199,5 +206,10 @@
     }
 }
 
-<span class="macro">from_value!</span>(GeneratorState, into_generator_state);
+<span class="macro">from_value2!</span>(
+    GeneratorState,
+    into_generator_state_ref,
+    into_generator_state_mut,
+    into_generator_state
+);
 </code></pre></div></section></main></body></html>

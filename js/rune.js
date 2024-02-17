@@ -246,10 +246,6 @@ var rune = (function (exports) {
           getInt32Memory0()[arg0 / 4 + 1] = len1;
           getInt32Memory0()[arg0 / 4 + 0] = ptr1;
       };
-      imports.wbg.__wbg_sleep_e610479fa9a14d22 = function(arg0) {
-          const ret = sleep(arg0);
-          return addHeapObject(ret);
-      };
       imports.wbg.__wbg_new_632630b5cec17f21 = function() {
           const ret = new Object();
           return addHeapObject(ret);
@@ -289,6 +285,10 @@ var rune = (function (exports) {
           }
           const ret = result;
           return ret;
+      };
+      imports.wbg.__wbg_sleep_e610479fa9a14d22 = function(arg0) {
+          const ret = sleep(arg0);
+          return addHeapObject(ret);
       };
       imports.wbg.__wbindgen_is_undefined = function(arg0) {
           const ret = getObject(arg0) === undefined;
@@ -436,8 +436,8 @@ var rune = (function (exports) {
       imports.wbg.__wbg_queueMicrotask_f61ee94ee663068b = function(arg0) {
           queueMicrotask(getObject(arg0));
       };
-      imports.wbg.__wbindgen_closure_wrapper4774 = function(arg0, arg1, arg2) {
-          const ret = makeMutClosure(arg0, arg1, 655, __wbg_adapter_24);
+      imports.wbg.__wbindgen_closure_wrapper4686 = function(arg0, arg1, arg2) {
+          const ret = makeMutClosure(arg0, arg1, 612, __wbg_adapter_24);
           return addHeapObject(ret);
       };
 
@@ -493,7 +493,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-e2089e02.wasm";
+                  let path = "/js/assets/rune_wasm-20655c13.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];

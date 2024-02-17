@@ -107,11 +107,15 @@
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::ops;
 
 <span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{FromValue, ProtocolCaller, ToValue, Value, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -138,8 +142,10 @@
 /// let _ = RangeFull::new();
 /// # Ok::&lt;_, rune::support::Error&gt;(())
 /// ```
-</span><span class="attr">#[derive(Any, Default, Clone)]
-#[rune(builtin, constructor, from_value = Value::into_range_full, static_type = RANGE_FULL_TYPE)]
+</span><span class="attr">#[derive(Any, Default, Clone, TryClone)]
+#[try_clone(<span class="kw">crate</span>)]
+#[rune(builtin, constructor, static_type = RANGE_FULL_TYPE)]
+#[rune(from_value = Value::into_range_full, from_value_ref = Value::into_range_full_ref, from_value_mut = Value::into_range_full_mut)]
 </span><span class="kw">pub struct </span>RangeFull;
 
 <span class="kw">impl </span>RangeFull {
@@ -210,7 +216,7 @@
 <span class="kw">impl </span>FromValue <span class="kw">for </span>ops::RangeFull {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>RangeFull = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(value.into_range_full()).take());
+        <span class="kw">let </span>RangeFull = <span class="macro">vm_try!</span>(value.into_range_full());
         VmResult::Ok(ops::RangeFull)
     }
 }

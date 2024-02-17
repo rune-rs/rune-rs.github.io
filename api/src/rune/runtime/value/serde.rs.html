@@ -314,26 +314,14 @@
 <a href="#312" id="312">312</a>
 <a href="#313" id="313">313</a>
 <a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a>
-<a href="#320" id="320">320</a>
-<a href="#321" id="321">321</a>
-<a href="#322" id="322">322</a>
-<a href="#323" id="323">323</a>
-<a href="#324" id="324">324</a>
-<a href="#325" id="325">325</a>
-<a href="#326" id="326">326</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Bytes, Object, Shared, Vec};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Bytes, Object, ValueKind, Vec};
 
-<span class="kw">use </span>serde::de::{<span class="self">self</span>, Deserialize <span class="kw">as _</span>, Error};
-<span class="kw">use </span>serde::ser::{<span class="self">self</span>, SerializeMap <span class="kw">as _</span>, SerializeSeq <span class="kw">as _</span>};
+<span class="kw">use </span>serde::de::{<span class="self">self</span>, Deserialize <span class="kw">as _</span>, Error <span class="kw">as _</span>};
+<span class="kw">use </span>serde::ser::{<span class="self">self</span>, Error <span class="kw">as _</span>, SerializeMap <span class="kw">as _</span>, SerializeSeq <span class="kw">as _</span>};
 
 <span class="kw">use </span><span class="kw">super</span>::Value;
 
@@ -353,35 +341,27 @@
     <span class="kw">where
         </span>S: ser::Serializer,
     {
-        <span class="kw">match </span><span class="self">self </span>{
-            Value::Bool(b) =&gt; serializer.serialize_bool(<span class="kw-2">*</span>b),
-            Value::Char(c) =&gt; serializer.serialize_char(<span class="kw-2">*</span>c),
-            Value::Byte(c) =&gt; serializer.serialize_u8(<span class="kw-2">*</span>c),
-            Value::Integer(integer) =&gt; serializer.serialize_i64(<span class="kw-2">*</span>integer),
-            Value::Float(float) =&gt; serializer.serialize_f64(<span class="kw-2">*</span>float),
-            Value::Type(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize types"</span>)),
-            Value::Ordering(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize orderings"</span>)),
-            Value::String(string) =&gt; {
-                <span class="kw">let </span>string = string.borrow_ref().map_err(ser::Error::custom)<span class="question-mark">?</span>;
-                serializer.serialize_str(<span class="kw-2">&amp;</span>string)
-            }
-            Value::Bytes(bytes) =&gt; {
-                <span class="kw">let </span>bytes = bytes.borrow_ref().map_err(ser::Error::custom)<span class="question-mark">?</span>;
-                serializer.serialize_bytes(<span class="kw-2">&amp;</span>bytes)
-            }
-            Value::Vec(vec) =&gt; {
-                <span class="kw">let </span>vec = vec.borrow_ref().map_err(ser::Error::custom)<span class="question-mark">?</span>;
+        <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="self">self</span>.borrow_kind_ref().map_err(S::Error::custom)<span class="question-mark">? </span>{
+            ValueKind::EmptyTuple =&gt; serializer.serialize_unit(),
+            ValueKind::Bool(b) =&gt; serializer.serialize_bool(<span class="kw-2">*</span>b),
+            ValueKind::Char(c) =&gt; serializer.serialize_char(<span class="kw-2">*</span>c),
+            ValueKind::Byte(c) =&gt; serializer.serialize_u8(<span class="kw-2">*</span>c),
+            ValueKind::Integer(integer) =&gt; serializer.serialize_i64(<span class="kw-2">*</span>integer),
+            ValueKind::Float(float) =&gt; serializer.serialize_f64(<span class="kw-2">*</span>float),
+            ValueKind::Type(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize types"</span>)),
+            ValueKind::Ordering(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize orderings"</span>)),
+            ValueKind::String(string) =&gt; serializer.serialize_str(string),
+            ValueKind::Bytes(bytes) =&gt; serializer.serialize_bytes(bytes),
+            ValueKind::Vec(vec) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_seq(<span class="prelude-val">Some</span>(vec.len()))<span class="question-mark">?</span>;
 
-                <span class="kw">for </span>value <span class="kw">in </span><span class="kw-2">&amp;*</span>vec {
+                <span class="kw">for </span>value <span class="kw">in </span>vec {
                     serializer.serialize_element(value)<span class="question-mark">?</span>;
                 }
 
                 serializer.end()
             }
-            Value::EmptyTuple =&gt; serializer.serialize_unit(),
-            Value::Tuple(tuple) =&gt; {
-                <span class="kw">let </span>tuple = tuple.borrow_ref().map_err(ser::Error::custom)<span class="question-mark">?</span>;
+            ValueKind::Tuple(tuple) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_seq(<span class="prelude-val">Some</span>(tuple.len()))<span class="question-mark">?</span>;
 
                 <span class="kw">for </span>value <span class="kw">in </span>tuple.iter() {
@@ -390,48 +370,50 @@
 
                 serializer.end()
             }
-            Value::Object(object) =&gt; {
-                <span class="kw">let </span>object = object.borrow_ref().map_err(ser::Error::custom)<span class="question-mark">?</span>;
+            ValueKind::Object(object) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_map(<span class="prelude-val">Some</span>(object.len()))<span class="question-mark">?</span>;
 
-                <span class="kw">for </span>(key, value) <span class="kw">in </span><span class="kw-2">&amp;*</span>object {
+                <span class="kw">for </span>(key, value) <span class="kw">in </span>object {
                     serializer.serialize_entry(key, value)<span class="question-mark">?</span>;
                 }
 
                 serializer.end()
             }
-            Value::Option(option) =&gt; {
-                <span class="kw">let </span>option = option.borrow_ref().map_err(ser::Error::custom)<span class="question-mark">?</span>;
-                &lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;::serialize(<span class="kw-2">&amp;*</span>option, serializer)
-            }
-            Value::EmptyStruct(..) =&gt; serializer.serialize_unit(),
-            Value::TupleStruct(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize tuple structs"</span>)),
-            Value::Struct(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize objects structs"</span>)),
-            Value::Variant(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize variants"</span>)),
-            Value::Result(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize results"</span>)),
-            Value::Future(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize futures"</span>)),
-            Value::Stream(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize streams"</span>)),
-            Value::Generator(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize generators"</span>)),
-            Value::GeneratorState(..) =&gt; {
+            ValueKind::Option(option) =&gt; &lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;::serialize(option, serializer),
+            ValueKind::EmptyStruct(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize empty structs"</span>)),
+            ValueKind::TupleStruct(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize tuple structs"</span>)),
+            ValueKind::Struct(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize objects structs"</span>)),
+            ValueKind::Variant(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize variants"</span>)),
+            ValueKind::Result(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize results"</span>)),
+            ValueKind::Future(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize futures"</span>)),
+            ValueKind::Stream(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize streams"</span>)),
+            ValueKind::Generator(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize generators"</span>)),
+            ValueKind::GeneratorState(..) =&gt; {
                 <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize generator states"</span>))
             }
-            Value::Function(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize function pointers"</span>)),
-            Value::Format(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize format specifications"</span>)),
-            Value::Iterator(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize iterators"</span>)),
-            Value::RangeFrom(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `start..` ranges"</span>)),
-            Value::RangeFull(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `..` ranges"</span>)),
-            Value::RangeInclusive(..) =&gt; {
+            ValueKind::Function(..) =&gt; {
+                <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize function pointers"</span>))
+            }
+            ValueKind::Format(..) =&gt; {
+                <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize format specifications"</span>))
+            }
+            ValueKind::Iterator(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize iterators"</span>)),
+            ValueKind::RangeFrom(..) =&gt; {
+                <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `start..` ranges"</span>))
+            }
+            ValueKind::RangeFull(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `..` ranges"</span>)),
+            ValueKind::RangeInclusive(..) =&gt; {
                 <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `start..=end` ranges"</span>))
             }
-            Value::RangeToInclusive(..) =&gt; {
+            ValueKind::RangeToInclusive(..) =&gt; {
                 <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `..=end` ranges"</span>))
             }
-            Value::RangeTo(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `..end` ranges"</span>)),
-            Value::Range(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `start..end` ranges"</span>)),
-            Value::ControlFlow(..) =&gt; {
+            ValueKind::RangeTo(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `..end` ranges"</span>)),
+            ValueKind::Range(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `start..end` ranges"</span>)),
+            ValueKind::ControlFlow(..) =&gt; {
                 <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `start..end` ranges"</span>))
             }
-            Value::Any(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize external objects"</span>)),
+            ValueKind::Any(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize external objects"</span>)),
         }
     }
 }
@@ -447,21 +429,21 @@
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>visit_str&lt;E&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+    </span><span class="kw">fn </span>visit_str&lt;E&gt;(<span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="kw">let </span>value = value.try_to_owned().map_err(E::custom)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(Value::String(Shared::new(value).map_err(E::custom)<span class="question-mark">?</span>))
+        <span class="kw">let </span>v = v.try_to_owned().map_err(E::custom)<span class="question-mark">?</span>;
+        Value::try_from(v).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>visit_string&lt;E&gt;(<span class="self">self</span>, value: ::rust_alloc::string::String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+    </span><span class="kw">fn </span>visit_string&lt;E&gt;(<span class="self">self</span>, v: ::rust_alloc::string::String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="kw">let </span>value = alloc::String::try_from(value).map_err(E::custom)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(Value::String(Shared::new(value).map_err(E::custom)<span class="question-mark">?</span>))
+        <span class="kw">let </span>v = alloc::String::try_from(v).map_err(E::custom)<span class="question-mark">?</span>;
+        Value::try_from(v).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -470,9 +452,8 @@
         </span>E: de::Error,
     {
         <span class="kw">let </span>v = alloc::Vec::try_from(v).map_err(E::custom)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(Value::Bytes(
-            Shared::new(Bytes::from_vec(v)).map_err(E::custom)<span class="question-mark">?</span>,
-        ))
+        <span class="kw">let </span>v = Bytes::from_vec(v);
+        Value::try_from(v).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -481,9 +462,8 @@
         </span>E: de::Error,
     {
         <span class="kw">let </span>v = alloc::Vec::try_from(v).map_err(E::custom)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(Value::Bytes(
-            Shared::new(Bytes::from_vec(v)).map_err(E::custom)<span class="question-mark">?</span>,
-        ))
+        <span class="kw">let </span>v = Bytes::from_vec(v);
+        Value::try_from(v).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -491,7 +471,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Integer(v <span class="kw">as </span>i64))
+        Value::try_from(v <span class="kw">as </span>i64).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -499,7 +479,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Integer(v <span class="kw">as </span>i64))
+        Value::try_from(v <span class="kw">as </span>i64).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -507,7 +487,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Integer(v <span class="kw">as </span>i64))
+        Value::try_from(v <span class="kw">as </span>i64).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -515,7 +495,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Integer(v))
+        Value::try_from(v).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -523,7 +503,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Integer(v <span class="kw">as </span>i64))
+        Value::try_from(v <span class="kw">as </span>i64).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -531,7 +511,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Integer(v <span class="kw">as </span>i64))
+        Value::try_from(v <span class="kw">as </span>i64).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -539,7 +519,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Integer(v <span class="kw">as </span>i64))
+        Value::try_from(v <span class="kw">as </span>i64).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -547,7 +527,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Integer(v <span class="kw">as </span>i64))
+        Value::try_from(v <span class="kw">as </span>i64).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -555,7 +535,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Integer(v <span class="kw">as </span>i64))
+        Value::try_from(v <span class="kw">as </span>i64).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -563,7 +543,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Integer(v <span class="kw">as </span>i64))
+        Value::try_from(v <span class="kw">as </span>i64).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -571,7 +551,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Float(v <span class="kw">as </span>f64))
+        Value::try_from(v <span class="kw">as </span>f64).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -579,7 +559,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Float(v))
+        Value::try_from(v).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -587,7 +567,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Bool(v))
+        Value::try_from(v).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -595,9 +575,8 @@
     <span class="kw">where
         </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
     {
-        <span class="kw">let </span>option =
-            Shared::new(<span class="prelude-val">Some</span>(Value::deserialize(deserializer)<span class="question-mark">?</span>)).map_err(D::Error::custom)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(Value::Option(option))
+        <span class="kw">let </span>some = <span class="prelude-val">Some</span>(Value::deserialize(deserializer)<span class="question-mark">?</span>);
+        Value::try_from(some).map_err(D::Error::custom)
     }
 
     <span class="attr">#[inline]
@@ -605,7 +584,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::Option(Shared::new(<span class="prelude-val">None</span>).map_err(E::custom)<span class="question-mark">?</span>))
+        Value::try_from(<span class="prelude-val">None</span>).map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -613,7 +592,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="prelude-val">Ok</span>(Value::EmptyTuple)
+        Value::empty().map_err(E::custom)
     }
 
     <span class="attr">#[inline]
@@ -631,9 +610,8 @@
             vec.try_push(elem).map_err(V::Error::custom)<span class="question-mark">?</span>;
         }
 
-        <span class="prelude-val">Ok</span>(Value::Vec(
-            Shared::new(Vec::from(vec)).map_err(V::Error::custom)<span class="question-mark">?</span>,
-        ))
+        <span class="kw">let </span>vec = Vec::from(vec);
+        Value::try_from(vec).map_err(V::Error::custom)
     }
 
     <span class="attr">#[inline]
@@ -647,9 +625,7 @@
             object.insert(key, value).map_err(V::Error::custom)<span class="question-mark">?</span>;
         }
 
-        <span class="prelude-val">Ok</span>(Value::Object(
-            Shared::new(object).map_err(V::Error::custom)<span class="question-mark">?</span>,
-        ))
+        Value::try_from(object).map_err(V::Error::custom)
     }
 }
 </code></pre></div></section></main></body></html>

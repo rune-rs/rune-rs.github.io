@@ -1336,6 +1336,25 @@
 <a href="#1334" id="1334">1334</a>
 <a href="#1335" id="1335">1335</a>
 <a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
@@ -1355,7 +1374,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::query::MissingId;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::debug::DebugSignature;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::unit::EncodeError;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{AccessError, TypeInfo, TypeOf};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{AccessError, RuntimeError, TypeInfo, TypeOf, ValueKind, VmError};
 <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::source;
 <span class="kw">use crate</span>::{Hash, SourceId};
@@ -1528,7 +1547,7 @@
     }
 
     <span class="doccomment">/// An error raised when we expect a certain constant value but get another.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expected_type&lt;S, E&gt;(spanned: S, actual: <span class="kw-2">&amp;</span>ir::Value) -&gt; <span class="self">Self
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expected_type&lt;S, E&gt;(spanned: S, actual: <span class="kw-2">&amp;</span>ValueKind) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>S: Spanned,
         E: TypeOf,
@@ -1563,6 +1582,7 @@
     IrError(IrErrorKind),
     MetaError(MetaError),
     AccessError(AccessError),
+    VmError(VmError),
     EncodeError(EncodeError),
     MissingLastId(MissingLastId),
     GuardMismatch(GuardMismatch),
@@ -1866,6 +1886,7 @@
                 ErrorKind::IrError(source) =&gt; <span class="prelude-val">Some</span>(source),
                 ErrorKind::MetaError(source) =&gt; <span class="prelude-val">Some</span>(source),
                 ErrorKind::AccessError(source) =&gt; <span class="prelude-val">Some</span>(source),
+                ErrorKind::VmError(source) =&gt; <span class="prelude-val">Some</span>(source),
                 ErrorKind::EncodeError(source) =&gt; <span class="prelude-val">Some</span>(source),
                 ErrorKind::MissingLastId(source) =&gt; <span class="prelude-val">Some</span>(source),
                 ErrorKind::GuardMismatch(source) =&gt; <span class="prelude-val">Some</span>(source),
@@ -1902,6 +1923,9 @@
                 error.fmt(f)<span class="question-mark">?</span>;
             }
             ErrorKind::AccessError(error) =&gt; {
+                error.fmt(f)<span class="question-mark">?</span>;
+            }
+            ErrorKind::VmError(error) =&gt; {
                 error.fmt(f)<span class="question-mark">?</span>;
             }
             ErrorKind::EncodeError(error) =&gt; {
@@ -2417,6 +2441,20 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(error: AccessError) -&gt; <span class="self">Self </span>{
         ErrorKind::AccessError(error)
+    }
+}
+
+<span class="kw">impl </span>From&lt;VmError&gt; <span class="kw">for </span>ErrorKind {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from(error: VmError) -&gt; <span class="self">Self </span>{
+        ErrorKind::VmError(error)
+    }
+}
+
+<span class="kw">impl </span>From&lt;RuntimeError&gt; <span class="kw">for </span>ErrorKind {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from(error: RuntimeError) -&gt; <span class="self">Self </span>{
+        ErrorKind::VmError(VmError::new(error.into_vm_error_kind()))
     }
 }
 

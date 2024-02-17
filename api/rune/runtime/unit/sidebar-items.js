@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["ArrayUnit","BadInstruction","BadJump","ByteCodeUnit","Logic","Unit"],"trait":["UnitEncoder","UnitStorage"],"type":["DefaultStorage"]};
+window.SIDEBAR_ITEMS = {"struct":["ArrayUnit","ByteCodeUnit","Logic","Unit"],"trait":["UnitEncoder","UnitStorage"],"type":["DefaultStorage"]};

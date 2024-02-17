@@ -572,13 +572,37 @@
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    AnyObj, Mut, RawMut, RawRef, Ref, Shared, Value, VmError, VmErrorKind, VmResult,
+    AnyObj, Mut, RawMut, RawRef, Ref, Value, ValueKind, VmError, VmErrorKind, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::Any;
+
+<span class="doccomment">/// Cheap conversion trait to convert something infallibly into a dynamic [`Value`].
+</span><span class="kw">pub trait </span>IntoValue {
+    <span class="doccomment">/// Convert into a dynamic [`Value`].
+    </span><span class="attr">#[doc(hidden)]
+    </span><span class="kw">fn </span>into_value(<span class="self">self</span>) -&gt; Value;
+}
+
+<span class="kw">impl </span>IntoValue <span class="kw">for </span>Value {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>into_value(<span class="self">self</span>) -&gt; Value {
+        <span class="self">self
+    </span>}
+}
+
+<span class="kw">impl </span>IntoValue <span class="kw">for </span><span class="kw-2">&amp;</span>Value {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>into_value(<span class="self">self</span>) -&gt; Value {
+        <span class="self">self</span>.clone()
+    }
+}
 
 <span class="doccomment">/// Derive macro for the [`FromValue`] trait for converting types from the
 /// dynamic `Value` container.
@@ -643,11 +667,11 @@
 /// assert_eq!(foo, 43);
 /// # Ok::&lt;_, rune::support::Error&gt;(())
 /// ```
-</span><span class="kw">pub fn </span>from_value&lt;T&gt;(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;T, VmError&gt;
+</span><span class="kw">pub fn </span>from_value&lt;T&gt;(value: <span class="kw">impl </span>IntoValue) -&gt; <span class="prelude-ty">Result</span>&lt;T, VmError&gt;
 <span class="kw">where
     </span>T: FromValue,
 {
-    T::from_value(value).into_result()
+    T::from_value(value.into_value()).into_result()
 }
 
 <span class="doccomment">/// Trait for converting types from the dynamic [Value] container.
@@ -756,7 +780,8 @@
     </span>T: Any,
 {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(value.into_any()).take_downcast()))
+        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.into_any());
+        VmResult::Ok(value)
     }
 }
 
@@ -764,8 +789,9 @@
 <span class="kw">where
     </span>T: Any,
 {
-    <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(value.into_any()).downcast_into_mut()))
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
+        VmResult::Ok(<span class="macro">vm_try!</span>(value.into_any_mut()))
     }
 }
 
@@ -773,14 +799,15 @@
 <span class="kw">where
     </span>T: Any,
 {
-    <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(value.into_any()).downcast_into_ref()))
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
+        VmResult::Ok(<span class="macro">vm_try!</span>(value.into_any_ref()))
     }
 }
 
-<span class="kw">impl </span>FromValue <span class="kw">for </span>Shared&lt;AnyObj&gt; {
+<span class="kw">impl </span>FromValue <span class="kw">for </span>AnyObj {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        value.into_any()
+        VmResult::Ok(<span class="macro">vm_try!</span>(value.into_any_obj()))
     }
 }
 
@@ -798,44 +825,20 @@
     </span>T: FromValue,
 {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>option = <span class="macro">vm_try!</span>(value.into_option());
-        <span class="kw">let </span>option = <span class="macro">vm_try!</span>(option.take());
-        VmResult::Ok(<span class="kw">match </span>option {
-            <span class="prelude-val">Some</span>(some) =&gt; <span class="prelude-val">Some</span>(<span class="macro">vm_try!</span>(T::from_value(some))),
+        VmResult::Ok(<span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.into_option_ref()) {
+            <span class="prelude-val">Some</span>(some) =&gt; <span class="prelude-val">Some</span>(<span class="macro">vm_try!</span>(T::from_value(some.clone()))),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         })
     }
 }
 
-<span class="kw">impl </span>UnsafeToRef <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;Value&gt; {
-    <span class="kw">type </span>Guard = RawRef;
-
-    <span class="kw">unsafe fn </span>unsafe_to_ref&lt;<span class="lifetime">'a</span>&gt;(value: Value) -&gt; VmResult&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-        <span class="kw">let </span>option = <span class="macro">vm_try!</span>(value.into_option());
-        <span class="kw">let </span>option = <span class="macro">vm_try!</span>(option.into_ref());
-        <span class="kw">let </span>(value, guard) = Ref::into_raw(option);
-        VmResult::Ok((value.as_ref(), guard))
-    }
-}
-
-<span class="kw">impl </span>UnsafeToMut <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;Value&gt; {
-    <span class="kw">type </span>Guard = RawMut;
-
-    <span class="kw">unsafe fn </span>unsafe_to_mut&lt;<span class="lifetime">'a</span>&gt;(value: Value) -&gt; VmResult&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-        <span class="kw">let </span>option = <span class="macro">vm_try!</span>(value.into_option());
-        <span class="kw">let </span>option = <span class="macro">vm_try!</span>(option.into_mut());
-        <span class="kw">let </span>(<span class="kw-2">mut </span>value, guard) = Mut::into_raw(option);
-        VmResult::Ok((value.as_mut(), guard))
-    }
-}
+<span class="macro">from_value_ref!</span>(<span class="prelude-ty">Option</span>&lt;Value&gt;, into_option_ref, into_option_mut, into_option);
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>alloc::String {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">match </span>value {
-            Value::String(string) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(string.take())),
-            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(<span class="macro">vm_try!</span>(
-                actual.type_info()
-            ))),
+        <span class="kw">match </span><span class="macro">vm_try!</span>(value.take_kind()) {
+            ValueKind::String(string) =&gt; VmResult::Ok(string),
+            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(actual.type_info())),
         }
     }
 }
@@ -850,15 +853,12 @@
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>alloc::Box&lt;str&gt; {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">match </span>value {
-            Value::String(string) =&gt; {
-                <span class="kw">let </span>string = <span class="macro">vm_try!</span>(string.take());
+        <span class="kw">match </span><span class="macro">vm_try!</span>(value.take_kind()) {
+            ValueKind::String(string) =&gt; {
                 <span class="kw">let </span>string = <span class="macro">vm_try!</span>(string.try_into_boxed_str());
                 VmResult::Ok(string)
             }
-            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(<span class="macro">vm_try!</span>(
-                actual.type_info()
-            ))),
+            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(actual.type_info())),
         }
     }
 }
@@ -866,50 +866,59 @@
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">impl </span>FromValue <span class="kw">for </span>::rust_alloc::boxed::Box&lt;str&gt; {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">match </span>value {
-            Value::String(string) =&gt; {
-                <span class="kw">let </span>string = <span class="macro">vm_try!</span>(string.take());
-                <span class="kw">let </span>string = ::rust_alloc::boxed::Box::from(string.as_str());
-                VmResult::Ok(string)
+        <span class="kw">match </span><span class="macro">vm_try!</span>(value.take_kind()) {
+            ValueKind::String(string) =&gt; {
+                VmResult::Ok(::rust_alloc::boxed::Box::&lt;str&gt;::from(string.as_str()))
             }
-            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(<span class="macro">vm_try!</span>(
-                actual.type_info()
-            ))),
+            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(actual.type_info())),
         }
     }
 }
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>Mut&lt;alloc::String&gt; {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">match </span>value {
-            Value::String(string) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(string.into_mut())),
-            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(<span class="macro">vm_try!</span>(
-                actual.type_info()
-            ))),
+        <span class="kw">let </span>result = Mut::try_map(<span class="macro">vm_try!</span>(value.into_kind_mut()), |kind| <span class="kw">match </span>kind {
+            ValueKind::String(string) =&gt; <span class="prelude-val">Some</span>(string),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        });
+
+        <span class="kw">match </span>result {
+            <span class="prelude-val">Ok</span>(string) =&gt; VmResult::Ok(string),
+            <span class="prelude-val">Err</span>(actual) =&gt; {
+                VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(actual.type_info()))
+            }
         }
     }
 }
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>Ref&lt;alloc::String&gt; {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">match </span>value {
-            Value::String(string) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(string.into_ref())),
-            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(<span class="macro">vm_try!</span>(
-                actual.type_info()
-            ))),
+        <span class="kw">let </span>result = Ref::try_map(<span class="macro">vm_try!</span>(value.into_kind_ref()), |kind| <span class="kw">match </span>kind {
+            ValueKind::String(string) =&gt; <span class="prelude-val">Some</span>(string),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        });
+
+        <span class="kw">match </span>result {
+            <span class="prelude-val">Ok</span>(string) =&gt; VmResult::Ok(string),
+            <span class="prelude-val">Err</span>(actual) =&gt; {
+                VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(actual.type_info()))
+            }
         }
     }
 }
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>Ref&lt;str&gt; {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">match </span>value {
-            Value::String(string) =&gt; {
-                VmResult::Ok(Ref::map(<span class="macro">vm_try!</span>(string.into_ref()), |s| s.as_str()))
+        <span class="kw">let </span>result = Ref::try_map(<span class="macro">vm_try!</span>(value.into_kind_ref()), |kind| <span class="kw">match </span>kind {
+            ValueKind::String(string) =&gt; <span class="prelude-val">Some</span>(string.as_str()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        });
+
+        <span class="kw">match </span>result {
+            <span class="prelude-val">Ok</span>(string) =&gt; VmResult::Ok(string),
+            <span class="prelude-val">Err</span>(actual) =&gt; {
+                VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(actual.type_info()))
             }
-            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(<span class="macro">vm_try!</span>(
-                actual.type_info()
-            ))),
         }
     }
 }
@@ -918,15 +927,19 @@
     <span class="kw">type </span>Guard = RawRef;
 
     <span class="kw">unsafe fn </span>unsafe_to_ref&lt;<span class="lifetime">'a</span>&gt;(value: Value) -&gt; VmResult&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-        <span class="kw">match </span>value {
-            Value::String(string) =&gt; {
-                <span class="kw">let </span>string = <span class="macro">vm_try!</span>(string.into_ref());
+        <span class="kw">let </span>result = Ref::try_map(<span class="macro">vm_try!</span>(value.into_kind_ref()), |kind| <span class="kw">match </span>kind {
+            ValueKind::String(string) =&gt; <span class="prelude-val">Some</span>(string.as_str()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        });
+
+        <span class="kw">match </span>result {
+            <span class="prelude-val">Ok</span>(string) =&gt; {
                 <span class="kw">let </span>(string, guard) = Ref::into_raw(string);
                 VmResult::Ok((string.as_ref(), guard))
             }
-            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(<span class="macro">vm_try!</span>(
-                actual.type_info()
-            ))),
+            <span class="prelude-val">Err</span>(actual) =&gt; {
+                VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(actual.type_info()))
+            }
         }
     }
 }
@@ -935,15 +948,19 @@
     <span class="kw">type </span>Guard = RawMut;
 
     <span class="kw">unsafe fn </span>unsafe_to_mut&lt;<span class="lifetime">'a</span>&gt;(value: Value) -&gt; VmResult&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-        <span class="kw">match </span>value {
-            Value::String(string) =&gt; {
-                <span class="kw">let </span>string = <span class="macro">vm_try!</span>(string.into_mut());
+        <span class="kw">let </span>result = Mut::try_map(<span class="macro">vm_try!</span>(value.into_kind_mut()), |kind| <span class="kw">match </span>kind {
+            ValueKind::String(string) =&gt; <span class="prelude-val">Some</span>(string.as_mut_str()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        });
+
+        <span class="kw">match </span>result {
+            <span class="prelude-val">Ok</span>(string) =&gt; {
                 <span class="kw">let </span>(<span class="kw-2">mut </span>string, guard) = Mut::into_raw(string);
-                VmResult::Ok((string.as_mut().as_mut_str(), guard))
+                VmResult::Ok((string.as_mut(), guard))
             }
-            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(<span class="macro">vm_try!</span>(
-                actual.type_info()
-            ))),
+            <span class="prelude-val">Err</span>(actual) =&gt; {
+                VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(actual.type_info()))
+            }
         }
     }
 }
@@ -952,15 +969,19 @@
     <span class="kw">type </span>Guard = RawRef;
 
     <span class="kw">unsafe fn </span>unsafe_to_ref&lt;<span class="lifetime">'a</span>&gt;(value: Value) -&gt; VmResult&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-        <span class="kw">match </span>value {
-            Value::String(string) =&gt; {
-                <span class="kw">let </span>string = <span class="macro">vm_try!</span>(string.into_ref());
+        <span class="kw">let </span>result = Ref::try_map(<span class="macro">vm_try!</span>(value.into_kind_ref()), |kind| <span class="kw">match </span>kind {
+            ValueKind::String(string) =&gt; <span class="prelude-val">Some</span>(string),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        });
+
+        <span class="kw">match </span>result {
+            <span class="prelude-val">Ok</span>(string) =&gt; {
                 <span class="kw">let </span>(string, guard) = Ref::into_raw(string);
                 VmResult::Ok((string.as_ref(), guard))
             }
-            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(<span class="macro">vm_try!</span>(
-                actual.type_info()
-            ))),
+            <span class="prelude-val">Err</span>(actual) =&gt; {
+                VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(actual.type_info()))
+            }
         }
     }
 }
@@ -969,15 +990,21 @@
     <span class="kw">type </span>Guard = RawMut;
 
     <span class="kw">unsafe fn </span>unsafe_to_mut&lt;<span class="lifetime">'a</span>&gt;(value: Value) -&gt; VmResult&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-        <span class="kw">match </span>value {
-            Value::String(string) =&gt; {
-                <span class="kw">let </span>string = <span class="macro">vm_try!</span>(string.into_mut());
+        <span class="kw">let </span>kind = <span class="macro">vm_try!</span>(value.into_kind_mut());
+
+        <span class="kw">let </span>result = Mut::try_map(kind, |kind| <span class="kw">match </span>kind {
+            ValueKind::String(string) =&gt; <span class="prelude-val">Some</span>(string),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        });
+
+        <span class="kw">match </span>result {
+            <span class="prelude-val">Ok</span>(string) =&gt; {
                 <span class="kw">let </span>(<span class="kw-2">mut </span>string, guard) = Mut::into_raw(string);
                 VmResult::Ok((string.as_mut(), guard))
             }
-            actual =&gt; VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(<span class="macro">vm_try!</span>(
-                actual.type_info()
-            ))),
+            <span class="prelude-val">Err</span>(actual) =&gt; {
+                VmResult::err(VmErrorKind::expected::&lt;alloc::String&gt;(actual.type_info()))
+            }
         }
     }
 }
@@ -987,61 +1014,42 @@
     </span>T: FromValue,
     E: FromValue,
 {
-    <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(value.into_result()).take()) {
-            <span class="prelude-val">Ok</span>(ok) =&gt; Result::Ok(<span class="macro">vm_try!</span>(T::from_value(ok))),
-            <span class="prelude-val">Err</span>(err) =&gt; Result::Err(<span class="macro">vm_try!</span>(E::from_value(err))),
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
+        VmResult::Ok(<span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.into_result_ref()) {
+            <span class="prelude-val">Ok</span>(ok) =&gt; Result::Ok(<span class="macro">vm_try!</span>(T::from_value(ok.clone()))),
+            <span class="prelude-val">Err</span>(err) =&gt; Result::Err(<span class="macro">vm_try!</span>(E::from_value(err.clone()))),
         })
     }
 }
 
-<span class="kw">impl </span>UnsafeToRef <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;Value, Value&gt; {
-    <span class="kw">type </span>Guard = RawRef;
-
-    <span class="kw">unsafe fn </span>unsafe_to_ref&lt;<span class="lifetime">'a</span>&gt;(value: Value) -&gt; VmResult&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-        <span class="kw">let </span>result = <span class="macro">vm_try!</span>(value.into_result());
-        <span class="kw">let </span>result = <span class="macro">vm_try!</span>(result.into_ref());
-        <span class="kw">let </span>(value, guard) = Ref::into_raw(result);
-        VmResult::Ok((value.as_ref(), guard))
-    }
-}
-
-<span class="kw">impl </span>UnsafeToMut <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;Value, Value&gt; {
-    <span class="kw">type </span>Guard = RawMut;
-
-    <span class="kw">unsafe fn </span>unsafe_to_mut&lt;<span class="lifetime">'a</span>&gt;(value: Value) -&gt; VmResult&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-        <span class="kw">let </span>result = <span class="macro">vm_try!</span>(value.into_result());
-        <span class="kw">let </span>result = <span class="macro">vm_try!</span>(result.into_mut());
-        <span class="kw">let </span>(<span class="kw-2">mut </span>value, guard) = Mut::into_raw(result);
-        VmResult::Ok((value.as_mut(), guard))
-    }
-}
+<span class="macro">from_value_ref!</span>(<span class="prelude-ty">Result</span>&lt;Value, Value&gt;, into_result_ref, into_result_mut, into_result);
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>u8 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(value.into_byte()))
+        VmResult::Ok(<span class="macro">vm_try!</span>(value.as_byte()))
     }
 }
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>bool {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(value.into_bool()))
+        VmResult::Ok(<span class="macro">vm_try!</span>(value.as_bool()))
     }
 }
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>char {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(value.into_char()))
+        VmResult::Ok(<span class="macro">vm_try!</span>(value.as_char()))
     }
 }
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>i64 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(value.into_integer()))
+        VmResult::Ok(<span class="macro">vm_try!</span>(value.as_integer()))
     }
 }
 
@@ -1050,7 +1058,7 @@
         <span class="kw">impl </span>FromValue <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
             <span class="attr">#[inline]
             </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-                value.try_into_integer()
+                VmResult::Ok(<span class="macro">vm_try!</span>(value.try_as_integer()))
             }
         }
     };
@@ -1070,14 +1078,14 @@
 <span class="kw">impl </span>FromValue <span class="kw">for </span>f64 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        value.into_float()
+        VmResult::Ok(<span class="macro">vm_try!</span>(value.as_float()))
     }
 }
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>f32 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(value.into_float()) <span class="kw">as </span>f32)
+        VmResult::Ok(<span class="macro">vm_try!</span>(value.as_float()) <span class="kw">as </span>f32)
     }
 }
 
@@ -1090,7 +1098,6 @@
             {
                 <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
                     <span class="kw">let </span>object = <span class="macro">vm_try!</span>(value.into_object());
-                    <span class="kw">let </span>object = <span class="macro">vm_try!</span>(object.take());
 
                     <span class="kw">let </span><span class="kw-2">mut </span>output = &lt;<span class="macro-nonterminal">$ty</span>&gt;::with_capacity(object.len());
 
@@ -1118,7 +1125,6 @@
         {
             <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
                 <span class="kw">let </span>object = <span class="macro">vm_try!</span>(value.into_object());
-                <span class="kw">let </span>object = <span class="macro">vm_try!</span>(object.take());
 
                 <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="macro">vm_try!</span>(&lt;<span class="macro-nonterminal">$ty</span>&gt;::try_with_capacity(object.len()));
 
@@ -1141,7 +1147,7 @@
 <span class="kw">impl </span>FromValue <span class="kw">for </span>Ordering {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        value.into_ordering()
+        VmResult::Ok(<span class="macro">vm_try!</span>(value.as_ordering()))
     }
 }
 </code></pre></div></section></main></body></html>

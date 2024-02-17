@@ -166,16 +166,12 @@
 <a href="#164" id="164">164</a>
 <a href="#165" id="165">165</a>
 <a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, try_vec, Box, HashMap, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::ast::Spanned;
-<span class="kw">use </span><span class="kw">crate</span>::compile::ir;
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, ErrorKind};
 <span class="kw">use </span><span class="kw">crate</span>::hir;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::Value;
 
 <span class="doccomment">/// Error indicating that a local variable is missing.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>MissingLocal(<span class="kw">pub</span>(<span class="kw">crate</span>) Box&lt;str&gt;);
@@ -205,11 +201,7 @@
     }
 
     <span class="doccomment">/// Declare a value in the scope.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>decl(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        name: <span class="kw-2">&amp;</span>hir::OwnedName,
-        value: ir::Value,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ErrorKind&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>decl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>hir::OwnedName, value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;(), ErrorKind&gt; {
         <span class="kw">let </span>last = <span class="self">self
             </span>.last_mut()
             .ok_or_else(|| ErrorKind::msg(<span class="string">"Expected at least one scope"</span>))<span class="question-mark">?</span>;
@@ -218,7 +210,7 @@
     }
 
     <span class="doccomment">/// Try to get the value out from the scopes.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_get(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>hir::OwnedName) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ir::Value&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_get(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>hir::OwnedName) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Value&gt; {
         <span class="kw">for </span>scope <span class="kw">in </span><span class="self">self</span>.scopes.iter().rev() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = scope.locals.get(name) {
                 <span class="kw">return </span><span class="prelude-val">Some</span>(current);
@@ -238,7 +230,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         name: <span class="kw-2">&amp;</span>hir::OwnedName,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
-    ) -&gt; compile::Result&lt;<span class="kw-2">&amp;</span>ir::Value&gt; {
+    ) -&gt; compile::Result&lt;<span class="kw-2">&amp;</span>Value&gt; {
         <span class="kw">for </span>scope <span class="kw">in </span><span class="self">self</span>.scopes.iter().rev() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = scope.locals.get(name) {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(current);
@@ -261,7 +253,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         name: <span class="kw-2">&amp;</span>hir::OwnedName,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
-    ) -&gt; compile::Result&lt;<span class="kw-2">&amp;mut </span>ir::Value&gt; {
+    ) -&gt; compile::Result&lt;<span class="kw-2">&amp;mut </span>Value&gt; {
         <span class="kw">for </span>scope <span class="kw">in </span><span class="self">self</span>.scopes.iter_mut().rev() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = scope.locals.get_mut(name) {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(current);
@@ -329,7 +321,7 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Scope {
     kind: ScopeKind,
     <span class="doccomment">/// Locals in the current scope.
-    </span>locals: HashMap&lt;hir::OwnedName, ir::Value&gt;,
+    </span>locals: HashMap&lt;hir::OwnedName, Value&gt;,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Scope {

@@ -191,17 +191,12 @@
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
 <a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box, HashMap, String, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    <span class="self">self</span>, Bytes, FromValue, Object, OwnedTuple, Shared, ToValue, TypeInfo, Value, VmErrorKind,
+    <span class="self">self</span>, Bytes, FromValue, Object, OwnedTuple, ToValue, TypeInfo, Value, ValueKind, VmErrorKind,
     VmResult,
 };
 
@@ -240,47 +235,48 @@
     /// We provide this associated method since a constant value can be
     /// converted into a value infallibly, which is not captured by the trait
     /// otherwise.
-    </span><span class="kw">pub fn </span>into_value(<span class="self">self</span>) -&gt; alloc::Result&lt;Value&gt; {
+    </span><span class="kw">pub fn </span>as_value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;Value&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Byte(b) =&gt; Value::Byte(b),
-            <span class="self">Self</span>::Char(c) =&gt; Value::Char(c),
-            <span class="self">Self</span>::Bool(b) =&gt; Value::Bool(b),
-            <span class="self">Self</span>::Integer(n) =&gt; Value::Integer(n),
-            <span class="self">Self</span>::Float(n) =&gt; Value::Float(n),
-            <span class="self">Self</span>::String(string) =&gt; Value::String(Shared::new(string)<span class="question-mark">?</span>),
-            <span class="self">Self</span>::Bytes(b) =&gt; Value::Bytes(Shared::new(b)<span class="question-mark">?</span>),
-            <span class="self">Self</span>::Option(option) =&gt; Value::Option(Shared::new(<span class="kw">match </span>option {
-                <span class="prelude-val">Some</span>(some) =&gt; <span class="prelude-val">Some</span>(Box::into_inner(some).into_value()<span class="question-mark">?</span>),
+            <span class="self">Self</span>::EmptyTuple =&gt; Value::empty()<span class="question-mark">?</span>,
+            <span class="self">Self</span>::Byte(b) =&gt; Value::try_from(<span class="kw-2">*</span>b)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::Char(c) =&gt; Value::try_from(<span class="kw-2">*</span>c)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::Bool(b) =&gt; Value::try_from(<span class="kw-2">*</span>b)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::Integer(n) =&gt; Value::try_from(<span class="kw-2">*</span>n)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::Float(n) =&gt; Value::try_from(<span class="kw-2">*</span>n)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::String(string) =&gt; Value::try_from(string.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::Bytes(b) =&gt; Value::try_from(b.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::Option(option) =&gt; Value::try_from(<span class="kw">match </span>option {
+                <span class="prelude-val">Some</span>(some) =&gt; <span class="prelude-val">Some</span>(some.as_value()<span class="question-mark">?</span>),
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
-            })<span class="question-mark">?</span>),
+            })<span class="question-mark">?</span>,
             <span class="self">Self</span>::Vec(vec) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>v = runtime::Vec::with_capacity(vec.len())<span class="question-mark">?</span>;
 
                 <span class="kw">for </span>value <span class="kw">in </span>vec {
-                    v.push(value.into_value()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                    v.push(value.as_value()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 }
 
-                Value::Vec(Shared::new(v)<span class="question-mark">?</span>)
-            }
-            <span class="self">Self</span>::EmptyTuple =&gt; Value::EmptyTuple,
+                Value::try_from(v)<span class="question-mark">?
+            </span>}
             <span class="self">Self</span>::Tuple(tuple) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>t = Vec::try_with_capacity(tuple.len())<span class="question-mark">?</span>;
 
-                <span class="kw">for </span>value <span class="kw">in </span>Vec::from(tuple) {
-                    t.try_push(value.into_value()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                <span class="kw">for </span>value <span class="kw">in </span>tuple.iter() {
+                    t.try_push(value.as_value()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 }
 
-                Value::Tuple(Shared::new(OwnedTuple::try_from(t)<span class="question-mark">?</span>)<span class="question-mark">?</span>)
-            }
+                Value::try_from(OwnedTuple::try_from(t)<span class="question-mark">?</span>)<span class="question-mark">?
+            </span>}
             <span class="self">Self</span>::Object(object) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>o = Object::with_capacity(object.len())<span class="question-mark">?</span>;
 
                 <span class="kw">for </span>(key, value) <span class="kw">in </span>object {
-                    o.insert(key, value.into_value()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>key = key.try_clone()<span class="question-mark">?</span>;
+                    o.insert(key, value.as_value()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 }
 
-                Value::Object(Shared::new(o)<span class="question-mark">?</span>)
-            }
+                Value::try_from(o)<span class="question-mark">?
+            </span>}
         })
     }
 
@@ -332,24 +328,20 @@
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>ConstValue {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="kw">match </span>value {
-            Value::EmptyTuple =&gt; <span class="self">Self</span>::EmptyTuple,
-            Value::Byte(b) =&gt; <span class="self">Self</span>::Byte(b),
-            Value::Char(c) =&gt; <span class="self">Self</span>::Char(c),
-            Value::Bool(b) =&gt; <span class="self">Self</span>::Bool(b),
-            Value::Integer(n) =&gt; <span class="self">Self</span>::Integer(n),
-            Value::Float(f) =&gt; <span class="self">Self</span>::Float(f),
-            Value::String(s) =&gt; <span class="self">Self</span>::String(<span class="macro">vm_try!</span>(s.take())),
-            Value::Option(option) =&gt; <span class="self">Self</span>::Option(<span class="kw">match </span><span class="macro">vm_try!</span>(option.take()) {
+        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(value.take_kind()) {
+            ValueKind::EmptyTuple =&gt; <span class="self">Self</span>::EmptyTuple,
+            ValueKind::Byte(b) =&gt; <span class="self">Self</span>::Byte(b),
+            ValueKind::Char(c) =&gt; <span class="self">Self</span>::Char(c),
+            ValueKind::Bool(b) =&gt; <span class="self">Self</span>::Bool(b),
+            ValueKind::Integer(n) =&gt; <span class="self">Self</span>::Integer(n),
+            ValueKind::Float(f) =&gt; <span class="self">Self</span>::Float(f),
+            ValueKind::String(s) =&gt; <span class="self">Self</span>::String(s),
+            ValueKind::Option(option) =&gt; <span class="self">Self</span>::Option(<span class="kw">match </span>option {
                 <span class="prelude-val">Some</span>(some) =&gt; <span class="prelude-val">Some</span>(<span class="macro">vm_try!</span>(Box::try_new(<span class="macro">vm_try!</span>(<span class="self">Self</span>::from_value(some))))),
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             }),
-            Value::Bytes(b) =&gt; {
-                <span class="kw">let </span>b = <span class="macro">vm_try!</span>(b.take());
-                <span class="self">Self</span>::Bytes(b)
-            }
-            Value::Vec(vec) =&gt; {
-                <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(vec.take());
+            ValueKind::Bytes(b) =&gt; <span class="self">Self</span>::Bytes(b),
+            ValueKind::Vec(vec) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>const_vec = <span class="macro">vm_try!</span>(Vec::try_with_capacity(vec.len()));
 
                 <span class="kw">for </span>value <span class="kw">in </span>vec {
@@ -358,8 +350,7 @@
 
                 <span class="self">Self</span>::Vec(const_vec)
             }
-            Value::Tuple(tuple) =&gt; {
-                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(tuple.take());
+            ValueKind::Tuple(tuple) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>const_tuple = <span class="macro">vm_try!</span>(Vec::try_with_capacity(tuple.len()));
 
                 <span class="kw">for </span>value <span class="kw">in </span>Vec::from(tuple.into_inner()) {
@@ -368,8 +359,7 @@
 
                 <span class="self">Self</span>::Tuple(<span class="macro">vm_try!</span>(const_tuple.try_into_boxed_slice()))
             }
-            Value::Object(object) =&gt; {
-                <span class="kw">let </span>object = <span class="macro">vm_try!</span>(object.take());
+            ValueKind::Object(object) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>const_object = <span class="macro">vm_try!</span>(HashMap::try_with_capacity(object.len()));
 
                 <span class="kw">for </span>(key, value) <span class="kw">in </span>object {
@@ -378,9 +368,9 @@
 
                 <span class="self">Self</span>::Object(const_object)
             }
-            value =&gt; {
+            actual =&gt; {
                 <span class="kw">return </span>VmResult::err(VmErrorKind::ConstNotSupported {
-                    actual: <span class="macro">vm_try!</span>(value.type_info()),
+                    actual: actual.type_info(),
                 })
             }
         })
@@ -389,7 +379,7 @@
 
 <span class="kw">impl </span>ToValue <span class="kw">for </span>ConstValue {
     <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(ConstValue::into_value(<span class="self">self</span>)))
+        VmResult::Ok(<span class="macro">vm_try!</span>(ConstValue::as_value(<span class="kw-2">&amp;</span><span class="self">self</span>)))
     }
 }
 </code></pre></div></section></main></body></html>

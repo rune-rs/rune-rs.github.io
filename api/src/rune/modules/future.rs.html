@@ -123,10 +123,11 @@
 <a href="#121" id="121">121</a>
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The `std::future` module.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Future, SelectFuture, Shared, Stack, Value, VmErrorKind, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Future, Mut, SelectFuture, Stack, Value, ValueKind, VmErrorKind, VmResult};
 <span class="kw">use crate</span>::{ContextError, Module};
 
 <span class="doccomment">/// Construct the `std::future` module.
@@ -185,18 +186,25 @@
     <span class="kw">let </span><span class="kw-2">mut </span>results = <span class="macro">vm_try!</span>(Vec::try_with_capacity(len));
 
     <span class="kw">for </span>(index, value) <span class="kw">in </span>values.into_iter().enumerate() {
-        <span class="kw">let </span>future = <span class="kw">match </span>value {
-            Value::Future(future) =&gt; <span class="macro">vm_try!</span>(future.clone().into_mut()),
-            value =&gt; {
+        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.clone().into_kind_mut());
+
+        <span class="kw">let </span>future = Mut::try_map(value, |kind| <span class="kw">match </span>kind {
+            ValueKind::Future(future) =&gt; <span class="prelude-val">Some</span>(future),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        });
+
+        <span class="kw">let </span>future = <span class="kw">match </span>future {
+            <span class="prelude-val">Ok</span>(future) =&gt; future,
+            <span class="prelude-val">Err</span>(actual) =&gt; {
                 <span class="kw">return </span>VmResult::err([
-                    VmErrorKind::expected::&lt;Future&gt;(<span class="macro">vm_try!</span>(value.type_info())),
+                    VmErrorKind::expected::&lt;Future&gt;(actual.type_info()),
                     VmErrorKind::bad_argument(index),
-                ])
+                ]);
             }
         };
 
         futures.push(SelectFuture::new(index, future));
-        <span class="macro">vm_try!</span>(results.try_push(Value::EmptyTuple));
+        <span class="macro">vm_try!</span>(results.try_push(<span class="macro">vm_try!</span>(Value::empty())));
     }
 
     <span class="kw">while </span>!futures.is_empty() {
@@ -208,26 +216,20 @@
 }
 
 <span class="kw">async fn </span>join(value: Value) -&gt; VmResult&lt;Value&gt; {
-    <span class="kw">match </span>value {
-        Value::EmptyTuple =&gt; VmResult::Ok(Value::EmptyTuple),
-        Value::Tuple(tuple) =&gt; {
-            <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(tuple.borrow_ref());
-            VmResult::Ok(<span class="macro">vm_try!</span>(
-                try_join_impl(tuple.iter(), tuple.len(), |vec| VmResult::Ok(<span class="macro">vm_try!</span>(
-                    Value::tuple(vec)
-                )))
-                .<span class="kw">await
-            </span>))
-        }
-        Value::Vec(vec) =&gt; {
-            <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(vec.borrow_ref());
-            VmResult::Ok(<span class="macro">vm_try!</span>(
-                try_join_impl(vec.iter(), vec.len(), Value::vec).<span class="kw">await
-            </span>))
-        }
-        actual =&gt; VmResult::err([
+    <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
+        ValueKind::EmptyTuple =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(Value::empty())),
+        ValueKind::Tuple(tuple) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(
+            try_join_impl(tuple.iter(), tuple.len(), |vec| VmResult::Ok(<span class="macro">vm_try!</span>(
+                Value::tuple(vec)
+            )))
+            .<span class="kw">await
+        </span>)),
+        ValueKind::Vec(vec) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(
+            try_join_impl(vec.iter(), vec.len(), Value::vec).<span class="kw">await
+        </span>)),
+        <span class="kw">_ </span>=&gt; VmResult::err([
             VmErrorKind::bad_argument(<span class="number">0</span>),
-            VmErrorKind::expected::&lt;<span class="kw">crate</span>::runtime::Vec&gt;(<span class="macro">vm_try!</span>(actual.type_info())),
+            VmErrorKind::expected::&lt;<span class="kw">crate</span>::runtime::Vec&gt;(<span class="macro">vm_try!</span>(value.type_info())),
         ]),
     }
 }
@@ -242,8 +244,8 @@
     }
 
     <span class="kw">let </span>value = <span class="macro">vm_try!</span>(stack.pop());
-    <span class="kw">let </span>value = Value::Future(<span class="macro">vm_try!</span>(Shared::new(<span class="macro">vm_try!</span>(Future::new(join(value))))));
-    <span class="macro">vm_try!</span>(stack.push(value));
+    <span class="kw">let </span>future = <span class="macro">vm_try!</span>(Future::new(join(value)));
+    <span class="macro">vm_try!</span>(stack.push(future));
     VmResult::Ok(())
 }
 </code></pre></div></section></main></body></html>

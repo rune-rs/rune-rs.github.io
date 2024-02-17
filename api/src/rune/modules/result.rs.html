@@ -282,7 +282,7 @@
 </span><span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{ControlFlow, Formatter, Function, Panic, Shared, Value, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{ControlFlow, Formatter, Function, Panic, Value, VmResult};
 <span class="kw">use crate</span>::{ContextError, Module};
 
 <span class="doccomment">/// Construct the `std::result` module.
@@ -438,7 +438,7 @@
 </span><span class="kw">fn </span>unwrap_or_else(this: <span class="prelude-ty">Result</span>&lt;Value, Value&gt;, default: Function) -&gt; VmResult&lt;Value&gt; {
     <span class="kw">match </span>this {
         <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(value),
-        <span class="prelude-val">Err</span>(error) =&gt; default.call::&lt;<span class="kw">_</span>, Value&gt;((error,)),
+        <span class="prelude-val">Err</span>(error) =&gt; default.call((error,)),
     }
 }
 
@@ -503,7 +503,7 @@
 </span><span class="attr">#[rune::function(instance)]
 </span><span class="kw">fn </span>and_then(this: <span class="kw-2">&amp;</span><span class="prelude-ty">Result</span>&lt;Value, Value&gt;, op: Function) -&gt; VmResult&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt; {
     <span class="kw">match </span>this {
-        <span class="prelude-val">Ok</span>(v) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(op.call::&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;((v,)))),
+        <span class="prelude-val">Ok</span>(v) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(op.call((v,)))),
         <span class="prelude-val">Err</span>(e) =&gt; VmResult::Ok(<span class="prelude-val">Err</span>(e.clone())),
     }
 }
@@ -530,7 +530,7 @@
 </span><span class="attr">#[rune::function(instance)]
 </span><span class="kw">fn </span>map(this: <span class="kw-2">&amp;</span><span class="prelude-ty">Result</span>&lt;Value, Value&gt;, then: Function) -&gt; VmResult&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt; {
     <span class="kw">match </span>this {
-        <span class="prelude-val">Ok</span>(v) =&gt; VmResult::Ok(<span class="prelude-val">Ok</span>(<span class="macro">vm_try!</span>(then.call::&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;((v,))))),
+        <span class="prelude-val">Ok</span>(v) =&gt; VmResult::Ok(<span class="prelude-val">Ok</span>(<span class="macro">vm_try!</span>(then.call((v,))))),
         <span class="prelude-val">Err</span>(e) =&gt; VmResult::Ok(<span class="prelude-val">Err</span>(e.clone())),
     }
 }
@@ -548,10 +548,10 @@
 /// assert_eq!(maybe_add_one(Err("not a number")), Err("not a number"));
 /// ```
 </span><span class="attr">#[rune::function(keep, instance, protocol = TRY)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>result_try(this: <span class="prelude-ty">Result</span>&lt;Value, Value&gt;) -&gt; VmResult&lt;ControlFlow&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>result_try(this: <span class="kw-2">&amp;</span><span class="prelude-ty">Result</span>&lt;Value, Value&gt;) -&gt; VmResult&lt;ControlFlow&gt; {
     VmResult::Ok(<span class="kw">match </span>this {
-        <span class="prelude-val">Ok</span>(value) =&gt; ControlFlow::Continue(value),
-        <span class="prelude-val">Err</span>(error) =&gt; ControlFlow::Break(Value::Result(<span class="macro">vm_try!</span>(Shared::new(<span class="prelude-val">Err</span>(error))))),
+        <span class="prelude-val">Ok</span>(value) =&gt; ControlFlow::Continue(value.clone()),
+        <span class="prelude-val">Err</span>(error) =&gt; ControlFlow::Break(<span class="macro">vm_try!</span>(Value::try_from(<span class="prelude-val">Err</span>(error.clone())))),
     })
 }
 </code></pre></div></section></main></body></html>

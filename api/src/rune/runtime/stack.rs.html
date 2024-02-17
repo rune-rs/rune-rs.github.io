@@ -439,6 +439,20 @@
 <a href="#437" id="437">437</a>
 <a href="#438" id="438">438</a>
 <a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::array;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
@@ -451,7 +465,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{InstAddress, Value};
 
 <span class="doccomment">/// An error raised when interacting with the stack.
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug, PartialEq)]
 #[non_exhaustive]
 </span><span class="kw">pub struct </span>StackError;
 
@@ -487,7 +501,9 @@
     /// let mut stack = Stack::new();
     /// assert!(stack.pop().is_err());
     /// stack.push(rune::to_value(String::from("Hello World"))?);
-    /// assert!(matches!(stack.pop()?, Value::String(..)));
+    /// let value = stack.pop()?;
+    /// let value: String = rune::from_value(value)?;
+    /// assert_eq!(value, "Hello World");
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
@@ -506,7 +522,9 @@
     /// let mut stack = Stack::with_capacity(16)?;
     /// assert!(stack.pop().is_err());
     /// stack.push(rune::to_value(String::from("Hello World"))?);
-    /// assert!(matches!(stack.pop()?, Value::String(..)));
+    /// let value = stack.pop()?;
+    /// let value: String = rune::from_value(value)?;
+    /// assert_eq!(value, "Hello World");
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>with_capacity(capacity: usize) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
@@ -586,11 +604,15 @@
     /// let mut stack = Stack::new();
     /// assert!(stack.pop().is_err());
     /// stack.push(rune::to_value(String::from("Hello World"))?);
-    /// assert!(matches!(stack.pop()?, Value::String(..)));
+    /// assert_eq!(rune::from_value::&lt;String&gt;(stack.pop()?)?, "Hello World");
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: Value) -&gt; alloc::Result&lt;()&gt; {
-        <span class="self">self</span>.stack.try_push(value)<span class="question-mark">?</span>;
+    </span><span class="kw">pub fn </span>push&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; alloc::Result&lt;()&gt;
+    <span class="kw">where
+        </span>Value: TryFrom&lt;T&gt;,
+        alloc::Error: From&lt;&lt;Value <span class="kw">as </span>TryFrom&lt;T&gt;&gt;::Error&gt;,
+    {
+        <span class="self">self</span>.stack.try_push(Value::try_from(value)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -603,7 +625,9 @@
     /// let mut stack = Stack::new();
     /// assert!(stack.pop().is_err());
     /// stack.push(rune::to_value(String::from("Hello World"))?);
-    /// assert!(matches!(stack.pop()?, Value::String(..)));
+    /// let value = stack.pop()?;
+    /// let value: String = rune::from_value(value)?;
+    /// assert_eq!(value, "Hello World");
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>pop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, StackError&gt; {
@@ -627,11 +651,11 @@
     /// stack.push(rune::to_value(String::from("foo"))?);
     /// stack.push(rune::to_value(())?);
     ///
-    /// let mut it = stack.drain(2)?;
+    /// let values = stack.drain(2)?.collect::&lt;Vec&lt;_&gt;&gt;();
     ///
-    /// assert!(matches!(it.next(), Some(Value::String(..))));
-    /// assert!(matches!(it.next(), Some(Value::EmptyTuple)));
-    /// assert!(matches!(it.next(), None));
+    /// assert_eq!(values.len(), 2);
+    /// assert_eq!(rune::from_value::&lt;String&gt;(&amp;values[0])?, "foo");
+    /// assert_eq!(rune::from_value(&amp;values[1])?, ());
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>drain(
@@ -662,13 +686,17 @@
     ///
     /// let mut stack = Stack::new();
     ///
-    /// stack.extend([Value::from(42i64), Value::try_from(String::try_from("foo")?)?, Value::EmptyTuple]);
+    /// stack.extend([
+    ///     rune::to_value(42i64)?,
+    ///     rune::to_value(String::try_from("foo")?)?,
+    ///     rune::to_value(())?
+    /// ]);
     ///
-    /// let mut it = stack.drain(2)?;
+    /// let values = stack.drain(2)?.collect::&lt;Vec&lt;_&gt;&gt;();
     ///
-    /// assert!(matches!(it.next(), Some(Value::String(..))));
-    /// assert!(matches!(it.next(), Some(Value::EmptyTuple)));
-    /// assert!(matches!(it.next(), None));
+    /// assert_eq!(values.len(), 2);
+    /// assert_eq!(rune::from_value::&lt;String&gt;(&amp;values[0])?, "foo");
+    /// assert_eq!(rune::from_value(&amp;values[1])?, ());
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>extend&lt;I&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) -&gt; alloc::Result&lt;()&gt;

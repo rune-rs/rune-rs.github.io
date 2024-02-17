@@ -119,9 +119,14 @@
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
 <a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::ops;
 
-<span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{Formatter, FromValue, ProtocolCaller, ToValue, Value, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
@@ -141,7 +146,9 @@
 /// assert_eq!(c.0, 42);
 /// assert_eq!(c, ControlFlow::Continue(42));
 /// ```
-</span><span class="attr">#[derive(Debug, Clone, Any)]
+</span><span class="attr">#[derive(Debug, Clone, TryClone, Any)]
+#[rune(<span class="kw">crate</span>)]
+#[try_clone(<span class="kw">crate</span>)]
 #[rune(builtin, static_type = CONTROL_FLOW_TYPE)]
 </span><span class="kw">pub enum </span>ControlFlow {
     <span class="doccomment">/// Move on to the next phase of the operation as normal.
@@ -201,7 +208,12 @@
     }
 }
 
-<span class="macro">from_value!</span>(ControlFlow, into_control_flow);
+<span class="macro">from_value2!</span>(
+    ControlFlow,
+    into_control_flow_ref,
+    into_control_flow_mut,
+    into_control_flow
+);
 
 <span class="kw">impl</span>&lt;B, C&gt; ToValue <span class="kw">for </span>ops::ControlFlow&lt;B, C&gt;
 <span class="kw">where
@@ -228,9 +240,7 @@
 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.into_control_flow());
-
-        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(value.take()) {
+        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(value.into_control_flow()) {
             ControlFlow::Continue(value) =&gt; {
                 ops::ControlFlow::Continue(<span class="macro">vm_try!</span>(C::from_value(value)))
             }

@@ -395,20 +395,6 @@
 <a href="#393" id="393">393</a>
 <a href="#394" id="394">394</a>
 <a href="#395" id="395">395</a>
-<a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a>
-<a href="#398" id="398">398</a>
-<a href="#399" id="399">399</a>
-<a href="#400" id="400">400</a>
-<a href="#401" id="401">401</a>
-<a href="#402" id="402">402</a>
-<a href="#403" id="403">403</a>
-<a href="#404" id="404">404</a>
-<a href="#405" id="405">405</a>
-<a href="#406" id="406">406</a>
-<a href="#407" id="407">407</a>
-<a href="#408" id="408">408</a>
-<a href="#409" id="409">409</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{try_format, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::ast::Spanned;
@@ -419,7 +405,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::hir;
 <span class="kw">use </span><span class="kw">crate</span>::parse::NonZeroId;
 <span class="kw">use </span><span class="kw">crate</span>::query::{Query, Used};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{ConstValue, Object, OwnedTuple};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{ConstValue, Object, OwnedTuple, Value, ValueKind};
 
 <span class="doccomment">/// The interpreter that executed [Ir][crate::ir::Ir].
 </span><span class="kw">pub struct </span>Interpreter&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; {
@@ -464,7 +450,7 @@
             },
         };
 
-        <span class="kw">let </span>const_value = ir_value.into_const(ir)<span class="question-mark">?</span>;
+        <span class="kw">let </span>const_value: ConstValue = <span class="kw">crate</span>::from_value(ir_value).with_span(ir)<span class="question-mark">?</span>;
 
         <span class="kw">if </span><span class="self">self
             </span>.q
@@ -479,7 +465,7 @@
     }
 
     <span class="doccomment">/// Evaluate to an ir value.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eval_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ir: <span class="kw-2">&amp;</span>ir::Ir, used: Used) -&gt; compile::Result&lt;ir::Value&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eval_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ir: <span class="kw-2">&amp;</span>ir::Ir, used: Used) -&gt; compile::Result&lt;Value&gt; {
         <span class="kw">match </span>ir::eval_ir(ir, <span class="self">self</span>, used) {
             <span class="prelude-val">Ok</span>(ir_value) =&gt; <span class="prelude-val">Ok</span>(ir_value),
             <span class="prelude-val">Err</span>(outcome) =&gt; <span class="kw">match </span>outcome {
@@ -503,7 +489,7 @@
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
         name: <span class="kw-2">&amp;</span>hir::OwnedName,
         used: Used,
-    ) -&gt; compile::Result&lt;ir::Value&gt; {
+    ) -&gt; compile::Result&lt;Value&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ir_value) = <span class="self">self</span>.scopes.try_get(name) {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(ir_value.try_clone()<span class="question-mark">?</span>);
         }
@@ -517,7 +503,7 @@
                 .alloc_item(base.extended(name.try_to_string()<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(const_value) = <span class="self">self</span>.q.consts.get(item) {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::from_const(const_value).with_span(span)<span class="question-mark">?</span>);
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(const_value.as_value().with_span(span)<span class="question-mark">?</span>);
             }
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(meta) = <span class="self">self</span>.q.query_meta(span, item, used)<span class="question-mark">? </span>{
@@ -530,7 +516,7 @@
                             ));
                         };
 
-                        <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::from_const(const_value).with_span(span)<span class="question-mark">?</span>);
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(const_value.as_value().with_span(span)<span class="question-mark">?</span>);
                     }
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
@@ -569,9 +555,9 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         spanned: S,
         id: NonZeroId,
-        args: Vec&lt;ir::Value&gt;,
+        args: Vec&lt;Value&gt;,
         used: Used,
-    ) -&gt; compile::Result&lt;ir::Value&gt;
+    ) -&gt; compile::Result&lt;Value&gt;
     <span class="kw">where
         </span>S: Copy + Spanned,
     {
@@ -602,23 +588,21 @@
 
 <span class="kw">impl </span>ir::Scopes {
     <span class="doccomment">/// Get the given target as mut.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_target(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ir_target: <span class="kw-2">&amp;</span>ir::IrTarget) -&gt; compile::Result&lt;ir::Value&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_target(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ir_target: <span class="kw-2">&amp;</span>ir::IrTarget) -&gt; compile::Result&lt;Value&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span>ir_target.kind {
             ir::IrTargetKind::Name(name) =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.get_name(name, ir_target)<span class="question-mark">?</span>.try_clone()<span class="question-mark">?</span>),
             ir::IrTargetKind::Field(ir_target, field) =&gt; {
                 <span class="kw">let </span>value = <span class="self">self</span>.get_target(ir_target)<span class="question-mark">?</span>;
 
-                <span class="kw">match </span>value {
-                    ir::Value::Object(object) =&gt; {
-                        <span class="kw">let </span>object = object.borrow_ref().with_span(ir_target)<span class="question-mark">?</span>;
-
+                <span class="kw">match </span><span class="kw-2">&amp;*</span>value.borrow_kind_ref().with_span(ir_target)<span class="question-mark">? </span>{
+                    ValueKind::Object(object) =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = object.get(field.as_ref()).try_cloned()<span class="question-mark">? </span>{
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(value);
                         }
                     }
                     actual =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;<span class="kw">_</span>, OwnedTuple&gt;(
-                            ir_target, <span class="kw-2">&amp;</span>actual,
+                            ir_target, actual,
                         ))
                     }
                 };
@@ -633,24 +617,20 @@
             ir::IrTargetKind::Index(target, index) =&gt; {
                 <span class="kw">let </span>value = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
 
-                <span class="kw">match </span>value {
-                    ir::Value::Vec(vec) =&gt; {
-                        <span class="kw">let </span>vec = vec.borrow_ref().with_span(ir_target)<span class="question-mark">?</span>;
-
+                <span class="kw">match </span><span class="kw-2">&amp;*</span>value.borrow_kind_ref().with_span(ir_target)<span class="question-mark">? </span>{
+                    ValueKind::Vec(vec) =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = vec.get(<span class="kw-2">*</span>index).try_cloned()<span class="question-mark">? </span>{
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(value);
                         }
                     }
-                    ir::Value::Tuple(tuple) =&gt; {
-                        <span class="kw">let </span>tuple = tuple.borrow_ref().with_span(ir_target)<span class="question-mark">?</span>;
-
+                    ValueKind::Tuple(tuple) =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = tuple.get(<span class="kw-2">*</span>index).try_cloned()<span class="question-mark">? </span>{
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(value);
                         }
                     }
                     actual =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;<span class="kw">_</span>, OwnedTuple&gt;(
-                            ir_target, <span class="kw-2">&amp;</span>actual,
+                            ir_target, actual,
                         ))
                     }
                 };
@@ -667,7 +647,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_target(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         ir_target: <span class="kw-2">&amp;</span>ir::IrTarget,
-        value: ir::Value,
+        value: Value,
     ) -&gt; compile::Result&lt;()&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span>ir_target.kind {
             ir::IrTargetKind::Name(name) =&gt; {
@@ -677,14 +657,14 @@
             ir::IrTargetKind::Field(target, field) =&gt; {
                 <span class="kw">let </span>current = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
 
-                <span class="kw">match </span>current {
-                    ir::Value::Object(object) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>object = object.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>;
-                        object.try_insert(field.as_ref().try_to_owned()<span class="question-mark">?</span>, value)<span class="question-mark">?</span>;
+                <span class="kw">match </span><span class="kw-2">&amp;mut *</span>current.borrow_kind_mut().with_span(ir_target)<span class="question-mark">? </span>{
+                    ValueKind::Object(object) =&gt; {
+                        <span class="kw">let </span>field = field.as_ref().try_to_owned()<span class="question-mark">?</span>;
+                        object.insert(field, value).with_span(ir_target)<span class="question-mark">?</span>;
                     }
                     actual =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;<span class="kw">_</span>, Object&gt;(
-                            ir_target, <span class="kw-2">&amp;</span>actual,
+                            ir_target, actual,
                         ));
                     }
                 }
@@ -694,18 +674,14 @@
             ir::IrTargetKind::Index(target, index) =&gt; {
                 <span class="kw">let </span>current = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
 
-                <span class="kw">match </span>current {
-                    ir::Value::Vec(vec) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>vec = vec.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>;
-
+                <span class="kw">match </span><span class="kw-2">&amp;mut *</span>current.borrow_kind_mut().with_span(ir_target)<span class="question-mark">? </span>{
+                    ValueKind::Vec(vec) =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = vec.get_mut(<span class="kw-2">*</span>index) {
                             <span class="kw-2">*</span>current = value;
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                         }
                     }
-                    ir::Value::Tuple(tuple) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>tuple = tuple.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>;
-
+                    ValueKind::Tuple(tuple) =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = tuple.get_mut(<span class="kw-2">*</span>index) {
                             <span class="kw-2">*</span>current = value;
                             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
@@ -713,7 +689,7 @@
                     }
                     actual =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;<span class="kw">_</span>, OwnedTuple&gt;(
-                            ir_target, <span class="kw-2">&amp;</span>actual,
+                            ir_target, actual,
                         ));
                     }
                 };
@@ -727,7 +703,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>mut_target(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         ir_target: <span class="kw-2">&amp;</span>ir::IrTarget,
-        op: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span>ir::Value) -&gt; compile::Result&lt;()&gt;,
+        op: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span>Value) -&gt; compile::Result&lt;()&gt;,
     ) -&gt; compile::Result&lt;()&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span>ir_target.kind {
             ir::IrTargetKind::Name(name) =&gt; {
@@ -736,11 +712,10 @@
             }
             ir::IrTargetKind::Field(target, field) =&gt; {
                 <span class="kw">let </span>current = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>kind = current.borrow_kind_mut().with_span(ir_target)<span class="question-mark">?</span>;
 
-                <span class="kw">match </span>current {
-                    ir::Value::Object(object) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>object = object.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>;
-
+                <span class="kw">match </span><span class="kw-2">&amp;mut *</span>kind {
+                    ValueKind::Object(object) =&gt; {
                         <span class="kw">let </span><span class="prelude-val">Some</span>(value) = object.get_mut(field.as_ref()) <span class="kw">else </span>{
                             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                                 ir_target,
@@ -753,17 +728,16 @@
                         op(value)
                     }
                     actual =&gt; <span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;<span class="kw">_</span>, Object&gt;(
-                        ir_target, <span class="kw-2">&amp;</span>actual,
+                        ir_target, actual,
                     )),
                 }
             }
             ir::IrTargetKind::Index(target, index) =&gt; {
                 <span class="kw">let </span>current = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>kind = current.borrow_kind_mut().with_span(ir_target)<span class="question-mark">?</span>;
 
-                <span class="kw">match </span>current {
-                    ir::Value::Vec(vec) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>vec = vec.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>;
-
+                <span class="kw">match </span><span class="kw-2">&amp;mut *</span>kind {
+                    ValueKind::Vec(vec) =&gt; {
                         <span class="kw">let </span>value = vec.get_mut(<span class="kw-2">*</span>index).ok_or_else(|| {
                             compile::Error::new(
                                 ir_target,
@@ -773,9 +747,7 @@
 
                         op(value)
                     }
-                    ir::Value::Tuple(tuple) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>tuple = tuple.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>;
-
+                    ValueKind::Tuple(tuple) =&gt; {
                         <span class="kw">let </span>value = tuple.get_mut(<span class="kw-2">*</span>index).ok_or_else(|| {
                             compile::Error::new(
                                 ir_target,
@@ -786,7 +758,7 @@
                         op(value)
                     }
                     actual =&gt; <span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;<span class="kw">_</span>, OwnedTuple&gt;(
-                        ir_target, <span class="kw-2">&amp;</span>actual,
+                        ir_target, actual,
                     )),
                 }
             }

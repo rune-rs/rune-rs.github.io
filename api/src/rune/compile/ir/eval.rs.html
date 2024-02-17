@@ -419,25 +419,16 @@
 <a href="#417" id="417">417</a>
 <a href="#418" id="418">418</a>
 <a href="#419" id="419">419</a>
-<a href="#420" id="420">420</a>
-<a href="#421" id="421">421</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::ops::{Add, Mul, Shl, Shr, Sub};
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{Box, HashMap, String, Vec};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{Box, String, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::ast::{Span, Spanned};
-<span class="kw">use </span><span class="kw">crate</span>::compile::ir;
+<span class="kw">use </span><span class="kw">crate</span>::compile::ir::{<span class="self">self</span>};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::query::Used;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::Shared;
-
-<span class="doccomment">/// Process an ir value as a boolean.
-</span><span class="kw">fn </span>as_bool(span: Span, value: ir::Value) -&gt; compile::Result&lt;bool&gt; {
-    value
-        .into_bool()
-        .map_err(|actual| compile::Error::expected_type::&lt;<span class="kw">_</span>, bool&gt;(span, <span class="kw-2">&amp;</span>actual))
-}
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Object, OwnedTuple, Value, ValueKind};
 
 <span class="doccomment">/// The outcome of a constant evaluation.
 </span><span class="kw">pub enum </span>EvalOutcome {
@@ -446,7 +437,7 @@
     <span class="doccomment">/// A compile error.
     </span>Error(compile::Error),
     <span class="doccomment">/// Break until the next loop, or the optional label.
-    </span>Break(Span, <span class="prelude-ty">Option</span>&lt;Box&lt;str&gt;&gt;, <span class="prelude-ty">Option</span>&lt;ir::Value&gt;),
+    </span>Break(Span, <span class="prelude-ty">Option</span>&lt;Box&lt;str&gt;&gt;, <span class="prelude-ty">Option</span>&lt;Value&gt;),
 }
 
 <span class="kw">impl </span>EvalOutcome {
@@ -472,7 +463,7 @@
     ir: <span class="kw-2">&amp;</span>ir::IrAssign,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
     <span class="kw">let </span>value = eval_ir(<span class="kw-2">&amp;</span>ir.value, interp, used)<span class="question-mark">?</span>;
 
@@ -480,108 +471,110 @@
         .scopes
         .mut_target(<span class="kw-2">&amp;</span>ir.target, <span class="kw">move </span>|t| ir.op.assign(ir, t, value))<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(ir::Value::EmptyTuple)
+    <span class="prelude-val">Ok</span>(Value::empty().with_span(ir)<span class="question-mark">?</span>)
 }
 
 <span class="kw">fn </span>eval_ir_binary(
     ir: <span class="kw-2">&amp;</span>ir::IrBinary,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
+    <span class="kw">fn </span>add_strings(a: <span class="kw-2">&amp;</span>str, b: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw">crate</span>::alloc::Result&lt;String&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>out = String::try_with_capacity(a.len() + b.len())<span class="question-mark">?</span>;
+        out.try_push_str(a)<span class="question-mark">?</span>;
+        out.try_push_str(b)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(out)
+    }
+
     <span class="kw">let </span>span = ir.span();
     interp.budget.take(span)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>a = eval_ir(<span class="kw-2">&amp;</span>ir.lhs, interp, used)<span class="question-mark">?</span>;
     <span class="kw">let </span>b = eval_ir(<span class="kw-2">&amp;</span>ir.rhs, interp, used)<span class="question-mark">?</span>;
 
-    <span class="kw">match </span>(a, b) {
-        (ir::Value::Integer(a), ir::Value::Integer(b)) =&gt; <span class="kw">match </span>ir.op {
-            ir::IrBinaryOp::Add =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Integer(a.add(<span class="kw-2">&amp;</span>b)));
-            }
-            ir::IrBinaryOp::Sub =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Integer(a.sub(<span class="kw-2">&amp;</span>b)));
-            }
-            ir::IrBinaryOp::Mul =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Integer(a.mul(<span class="kw-2">&amp;</span>b)));
-            }
-            ir::IrBinaryOp::Div =&gt; {
-                <span class="kw">let </span>number = a
-                    .checked_div(b)
-                    .ok_or_else(|| compile::Error::msg(span, <span class="string">"division by zero"</span>))<span class="question-mark">?</span>;
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Integer(number));
-            }
-            ir::IrBinaryOp::Shl =&gt; {
-                <span class="kw">let </span>b = u32::try_from(b).map_err(|<span class="kw">_</span>| {
-                    compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">"cannot be converted to shift operand"</span>)
-                })<span class="question-mark">?</span>;
+    <span class="kw">let </span>a = a.borrow_kind_ref().with_span(ir)<span class="question-mark">?</span>;
+    <span class="kw">let </span>b = b.borrow_kind_ref().with_span(ir)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>n = a.shl(b);
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Integer(n));
-            }
-            ir::IrBinaryOp::Shr =&gt; {
-                <span class="kw">let </span>b = u32::try_from(b).map_err(|<span class="kw">_</span>| {
-                    compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">"cannot be converted to shift operand"</span>)
-                })<span class="question-mark">?</span>;
+    <span class="kw">let </span>kind = <span class="lifetime">'out</span>: {
+        <span class="kw">match </span>(<span class="kw-2">&amp;*</span>a, <span class="kw-2">&amp;*</span>b) {
+            (ValueKind::Integer(a), ValueKind::Integer(b)) =&gt; <span class="kw">match </span>ir.op {
+                ir::IrBinaryOp::Add =&gt; {
+                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(a.add(b));
+                }
+                ir::IrBinaryOp::Sub =&gt; {
+                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(a.sub(b));
+                }
+                ir::IrBinaryOp::Mul =&gt; {
+                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(a.mul(b));
+                }
+                ir::IrBinaryOp::Div =&gt; {
+                    <span class="kw">let </span>number = a
+                        .checked_div(<span class="kw-2">*</span>b)
+                        .ok_or_else(|| compile::Error::msg(span, <span class="string">"division by zero"</span>))<span class="question-mark">?</span>;
+                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(number);
+                }
+                ir::IrBinaryOp::Shl =&gt; {
+                    <span class="kw">let </span>b = u32::try_from(<span class="kw-2">*</span>b).map_err(|<span class="kw">_</span>| {
+                        compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">"cannot be converted to shift operand"</span>)
+                    })<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>n = a.shr(b);
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Integer(n));
+                    <span class="kw">let </span>n = a.shl(b);
+                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(n);
+                }
+                ir::IrBinaryOp::Shr =&gt; {
+                    <span class="kw">let </span>b = u32::try_from(<span class="kw-2">*</span>b).map_err(|<span class="kw">_</span>| {
+                        compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">"cannot be converted to shift operand"</span>)
+                    })<span class="question-mark">?</span>;
+
+                    <span class="kw">let </span>n = a.shr(b);
+                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(n);
+                }
+                ir::IrBinaryOp::Lt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &lt; b),
+                ir::IrBinaryOp::Lte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &lt;= b),
+                ir::IrBinaryOp::Eq =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a == b),
+                ir::IrBinaryOp::Gt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &gt; b),
+                ir::IrBinaryOp::Gte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &gt;= b),
+            },
+            (ValueKind::Float(a), ValueKind::Float(b)) =&gt; {
+                <span class="attr">#[allow(clippy::float_cmp)]
+                </span><span class="kw">match </span>ir.op {
+                    ir::IrBinaryOp::Add =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Float(a + b),
+                    ir::IrBinaryOp::Sub =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Float(a - b),
+                    ir::IrBinaryOp::Mul =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Float(a * b),
+                    ir::IrBinaryOp::Div =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Float(a / b),
+                    ir::IrBinaryOp::Lt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &lt; b),
+                    ir::IrBinaryOp::Lte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &lt;= b),
+                    ir::IrBinaryOp::Eq =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a == b),
+                    ir::IrBinaryOp::Gt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &gt; b),
+                    ir::IrBinaryOp::Gte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &gt;= b),
+                    <span class="kw">_ </span>=&gt; (),
+                };
             }
-            ir::IrBinaryOp::Lt =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Bool(a &lt; b)),
-            ir::IrBinaryOp::Lte =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Bool(a &lt;= b)),
-            ir::IrBinaryOp::Eq =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Bool(a == b)),
-            ir::IrBinaryOp::Gt =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Bool(a &gt; b)),
-            ir::IrBinaryOp::Gte =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Bool(a &gt;= b)),
-        },
-        (ir::Value::Float(a), ir::Value::Float(b)) =&gt; {
-            <span class="attr">#[allow(clippy::float_cmp)]
-            </span><span class="kw">match </span>ir.op {
-                ir::IrBinaryOp::Add =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Float(a + b)),
-                ir::IrBinaryOp::Sub =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Float(a - b)),
-                ir::IrBinaryOp::Mul =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Float(a * b)),
-                ir::IrBinaryOp::Div =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Float(a / b)),
-                ir::IrBinaryOp::Lt =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Bool(a &lt; b)),
-                ir::IrBinaryOp::Lte =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Bool(a &lt;= b)),
-                ir::IrBinaryOp::Eq =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Bool(a == b)),
-                ir::IrBinaryOp::Gt =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Bool(a &gt; b)),
-                ir::IrBinaryOp::Gte =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::Bool(a &gt;= b)),
-                <span class="kw">_ </span>=&gt; (),
-            };
+            (ValueKind::String(a), ValueKind::String(b)) =&gt; {
+                <span class="kw">if let </span>ir::IrBinaryOp::Add = ir.op {
+                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::String(add_strings(a, b).with_span(span)<span class="question-mark">?</span>);
+                }
+            }
+            <span class="kw">_ </span>=&gt; (),
         }
-        (ir::Value::String(a), ir::Value::String(b)) =&gt; {
-            <span class="kw">if let </span>ir::IrBinaryOp::Add = ir.op {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(ir::Value::String(add_strings(span, <span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b)<span class="question-mark">?</span>));
-            }
-        }
-        <span class="kw">_ </span>=&gt; (),
-    }
 
-    <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(span));
+        <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(span));
+    };
 
-    <span class="kw">fn </span>add_strings(
-        span: Span,
-        a: <span class="kw-2">&amp;</span>Shared&lt;String&gt;,
-        b: <span class="kw-2">&amp;</span>Shared&lt;String&gt;,
-    ) -&gt; compile::Result&lt;Shared&lt;String&gt;&gt; {
-        <span class="kw">let </span>a = a.borrow_ref().with_span(span)<span class="question-mark">?</span>;
-        <span class="kw">let </span>b = b.borrow_ref().with_span(span)<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>a = (<span class="kw-2">*</span>a).try_clone()<span class="question-mark">?</span>;
-        a.try_push_str(<span class="kw-2">&amp;</span>b)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(Shared::new(a).with_span(span)<span class="question-mark">?</span>)
-    }
+    <span class="prelude-val">Ok</span>(Value::try_from(kind).with_span(span)<span class="question-mark">?</span>)
 }
 
 <span class="kw">fn </span>eval_ir_branches(
     ir: <span class="kw-2">&amp;</span>ir::IrBranches,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     <span class="kw">for </span>(ir_condition, branch) <span class="kw">in </span><span class="kw-2">&amp;</span>ir.branches {
         <span class="kw">let </span>guard = interp.scopes.push()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>value = eval_ir_condition(ir_condition, interp, used)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>output = <span class="kw">if </span>as_bool(ir_condition.span(), value)<span class="question-mark">? </span>{
+        <span class="kw">let </span>output = <span class="kw">if </span>value.as_bool().with_span(ir_condition)<span class="question-mark">? </span>{
             <span class="prelude-val">Some</span>(eval_ir_scope(branch, interp, used)<span class="question-mark">?</span>)
         } <span class="kw">else </span>{
             <span class="prelude-val">None
@@ -598,14 +591,14 @@
         <span class="kw">return </span>eval_ir_scope(branch, interp, used);
     }
 
-    <span class="prelude-val">Ok</span>(ir::Value::EmptyTuple)
+    <span class="prelude-val">Ok</span>(Value::empty().with_span(ir)<span class="question-mark">?</span>)
 }
 
 <span class="kw">fn </span>eval_ir_call(
     ir: <span class="kw-2">&amp;</span>ir::IrCall,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>args = Vec::new();
 
     <span class="kw">for </span>arg <span class="kw">in </span><span class="kw-2">&amp;</span>ir.args {
@@ -619,35 +612,37 @@
     ir: <span class="kw-2">&amp;</span>ir::IrCondition,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
-    <span class="prelude-val">Ok</span>(ir::Value::Bool(<span class="kw">match </span>ir {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
+    <span class="kw">let </span>value = <span class="kw">match </span>ir {
         ir::IrCondition::Ir(ir) =&gt; {
             <span class="kw">let </span>value = eval_ir(ir, interp, used)<span class="question-mark">?</span>;
-            as_bool(ir.span(), value)<span class="question-mark">?
+            value.as_bool().with_span(ir)<span class="question-mark">?
         </span>}
         ir::IrCondition::Let(ir_let) =&gt; {
             <span class="kw">let </span>value = eval_ir(<span class="kw-2">&amp;</span>ir_let.ir, interp, used)<span class="question-mark">?</span>;
             ir_let.pat.matches(interp, value, ir)<span class="question-mark">?
         </span>}
-    }))
+    };
+
+    <span class="prelude-val">Ok</span>(Value::try_from(value).with_span(ir)<span class="question-mark">?</span>)
 }
 
 <span class="kw">fn </span>eval_ir_decl(
     ir: <span class="kw-2">&amp;</span>ir::IrDecl,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
     <span class="kw">let </span>value = eval_ir(<span class="kw-2">&amp;</span>ir.value, interp, used)<span class="question-mark">?</span>;
     interp.scopes.decl(<span class="kw-2">&amp;</span>ir.name, value).with_span(ir)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(ir::Value::EmptyTuple)
+    <span class="prelude-val">Ok</span>(Value::empty().with_span(ir)<span class="question-mark">?</span>)
 }
 
 <span class="kw">fn </span>eval_ir_loop(
     ir: <span class="kw-2">&amp;</span>ir::IrLoop,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     <span class="kw">let </span>span = ir.span();
     interp.budget.take(span)<span class="question-mark">?</span>;
 
@@ -659,7 +654,7 @@
 
             <span class="kw">let </span>value = eval_ir_condition(condition, interp, used)<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>!as_bool(condition.span(), value)<span class="question-mark">? </span>{
+            <span class="kw">if </span>!value.as_bool().with_span(condition)<span class="question-mark">? </span>{
                 <span class="kw">break </span><span class="prelude-val">None</span>;
             }
         }
@@ -691,7 +686,7 @@
 
         <span class="prelude-val">Ok</span>(value)
     } <span class="kw">else </span>{
-        <span class="prelude-val">Ok</span>(ir::Value::EmptyTuple)
+        <span class="prelude-val">Ok</span>(Value::empty().with_span(ir)<span class="question-mark">?</span>)
     }
 }
 
@@ -699,21 +694,22 @@
     ir: <span class="kw-2">&amp;</span>ir::IrObject,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>object = HashMap::try_with_capacity(ir.assignments.len())<span class="question-mark">?</span>;
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>object = Object::with_capacity(ir.assignments.len())<span class="question-mark">?</span>;
 
     <span class="kw">for </span>(key, value) <span class="kw">in </span>ir.assignments.iter() {
-        object.try_insert(key.as_ref().try_to_owned()<span class="question-mark">?</span>, eval_ir(value, interp, used)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>key = key.as_ref().try_to_owned()<span class="question-mark">?</span>;
+        object.insert(key, eval_ir(value, interp, used)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
     }
 
-    <span class="prelude-val">Ok</span>(ir::Value::Object(Shared::new(object).with_span(ir)<span class="question-mark">?</span>))
+    <span class="prelude-val">Ok</span>(Value::try_from(object).with_span(ir)<span class="question-mark">?</span>)
 }
 
 <span class="kw">fn </span>eval_ir_scope(
     ir: <span class="kw-2">&amp;</span>ir::IrScope,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
     <span class="kw">let </span>guard = interp.scopes.push()<span class="question-mark">?</span>;
 
@@ -724,8 +720,8 @@
     <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(last) = <span class="kw-2">&amp;</span>ir.last {
         eval_ir(last, interp, used)<span class="question-mark">?
     </span>} <span class="kw">else </span>{
-        ir::Value::EmptyTuple
-    };
+        Value::empty().with_span(ir)<span class="question-mark">?
+    </span>};
 
     interp.scopes.pop(guard).with_span(ir)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(value)
@@ -735,18 +731,18 @@
     ir: <span class="kw-2">&amp;</span>ir::IrSet,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
     <span class="kw">let </span>value = eval_ir(<span class="kw-2">&amp;</span>ir.value, interp, used)<span class="question-mark">?</span>;
     interp.scopes.set_target(<span class="kw-2">&amp;</span>ir.target, value)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(ir::Value::EmptyTuple)
+    <span class="prelude-val">Ok</span>(Value::empty().with_span(ir)<span class="question-mark">?</span>)
 }
 
 <span class="kw">fn </span>eval_ir_template(
     ir: <span class="kw-2">&amp;</span>ir::IrTemplate,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
@@ -758,21 +754,21 @@
             }
             ir::IrTemplateComponent::Ir(ir) =&gt; {
                 <span class="kw">let </span>const_value = eval_ir(ir, interp, used)<span class="question-mark">?</span>;
+                <span class="kw">let </span>kind = const_value.borrow_kind_ref().with_span(ir)<span class="question-mark">?</span>;
 
-                <span class="kw">match </span>const_value {
-                    ir::Value::Integer(integer) =&gt; {
-                        <span class="macro">write!</span>(buf, <span class="string">"{}"</span>, integer)<span class="question-mark">?</span>;
+                <span class="kw">match </span><span class="kw-2">&amp;*</span>kind {
+                    ValueKind::Integer(integer) =&gt; {
+                        <span class="macro">write!</span>(buf, <span class="string">"{integer}"</span>)<span class="question-mark">?</span>;
                     }
-                    ir::Value::Float(float) =&gt; {
+                    ValueKind::Float(float) =&gt; {
                         <span class="kw">let </span><span class="kw-2">mut </span>buffer = ryu::Buffer::new();
-                        buf.try_push_str(buffer.format(float))<span class="question-mark">?</span>;
+                        buf.try_push_str(buffer.format(<span class="kw-2">*</span>float))<span class="question-mark">?</span>;
                     }
-                    ir::Value::Bool(b) =&gt; {
-                        <span class="macro">write!</span>(buf, <span class="string">"{}"</span>, b)<span class="question-mark">?</span>;
+                    ValueKind::Bool(b) =&gt; {
+                        <span class="macro">write!</span>(buf, <span class="string">"{b}"</span>)<span class="question-mark">?</span>;
                     }
-                    ir::Value::String(s) =&gt; {
-                        <span class="kw">let </span>s = s.borrow_ref().with_span(ir)<span class="question-mark">?</span>;
-                        buf.try_push_str(<span class="kw-2">&amp;</span>s)<span class="question-mark">?</span>;
+                    ValueKind::String(s) =&gt; {
+                        buf.try_push_str(s)<span class="question-mark">?</span>;
                     }
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
@@ -782,37 +778,37 @@
         }
     }
 
-    <span class="prelude-val">Ok</span>(ir::Value::String(Shared::new(buf).with_span(ir)<span class="question-mark">?</span>))
+    <span class="prelude-val">Ok</span>(Value::try_from(buf).with_span(ir)<span class="question-mark">?</span>)
 }
 
 <span class="kw">fn </span>eval_ir_tuple(
     ir: <span class="kw-2">&amp;</span>ir::Tuple,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>items = Vec::try_with_capacity(ir.items.len())<span class="question-mark">?</span>;
 
     <span class="kw">for </span>item <span class="kw">in </span>ir.items.iter() {
         items.try_push(eval_ir(item, interp, used)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
     }
 
-    <span class="prelude-val">Ok</span>(ir::Value::Tuple(
-        Shared::new(items.try_into_boxed_slice()<span class="question-mark">?</span>).with_span(ir)<span class="question-mark">?</span>,
-    ))
+    <span class="kw">let </span>tuple = OwnedTuple::try_from(items).with_span(ir)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(Value::try_from(tuple).with_span(ir)<span class="question-mark">?</span>)
 }
 
 <span class="kw">fn </span>eval_ir_vec(
     ir: <span class="kw-2">&amp;</span>ir::IrVec,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>vec = Vec::try_with_capacity(ir.items.len())<span class="question-mark">?</span>;
 
     <span class="kw">for </span>item <span class="kw">in </span>ir.items.iter() {
         vec.try_push(eval_ir(item, interp, used)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
     }
 
-    <span class="prelude-val">Ok</span>(ir::Value::Vec(Shared::new(vec).with_span(ir)<span class="question-mark">?</span>))
+    <span class="kw">let </span>vec = <span class="kw">crate</span>::runtime::Vec::from(vec);
+    <span class="prelude-val">Ok</span>(Value::try_from(vec).with_span(ir)<span class="question-mark">?</span>)
 }
 
 <span class="doccomment">/// IrEval the interior expression.
@@ -820,7 +816,7 @@
     ir: <span class="kw-2">&amp;</span>ir::Ir,
     interp: <span class="kw-2">&amp;mut </span>ir::Interpreter&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     used: Used,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ir::Value, EvalOutcome&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Value, EvalOutcome&gt; {
     interp.budget.take(ir)<span class="question-mark">?</span>;
 
     <span class="kw">match </span><span class="kw-2">&amp;</span>ir.kind {

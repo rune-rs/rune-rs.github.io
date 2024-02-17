@@ -134,10 +134,24 @@
 <a href="#132" id="132">132</a>
 <a href="#133" id="133">133</a>
 <a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::iter;
 
-<span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{GeneratorState, Iterator, Value, Vm, VmErrorKind, VmExecution, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -159,8 +173,10 @@
 /// assert!(g is Generator)
 /// ```
 </span><span class="attr">#[derive(Any)]
-#[rune(builtin, static_type = GENERATOR_TYPE, from_value = Value::into_generator, from_value_params = [Vm]</span>)]
-<span class="kw">pub struct </span>Generator&lt;T&gt;
+#[rune(<span class="kw">crate</span>)]
+#[rune(builtin, static_type = GENERATOR_TYPE, from_value_params = [Vm]</span>)]
+<span class="attr">#[rune(from_value = Value::into_generator, from_value_ref = Value::into_generator_ref, from_value_mut = Value::into_generator_mut)]
+</span><span class="kw">pub struct </span>Generator&lt;T&gt;
 <span class="kw">where
     </span>T: AsRef&lt;Vm&gt; + AsMut&lt;Vm&gt;,
 {
@@ -188,7 +204,7 @@
     <span class="doccomment">/// Get the next value produced by this stream.
     </span><span class="attr">#[allow(clippy::should_implement_trait)]
     </span><span class="kw">pub fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
-        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.resume(Value::EmptyTuple)) {
+        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.resume(<span class="macro">vm_try!</span>(Value::empty()))) {
             GeneratorState::Yielded(value) =&gt; <span class="prelude-val">Some</span>(value),
             GeneratorState::Complete(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
         })
@@ -266,6 +282,18 @@
         f.debug_struct(<span class="string">"Generator"</span>)
             .field(<span class="string">"completed"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.execution.is_none())
             .finish()
+    }
+}
+
+<span class="kw">impl</span>&lt;T&gt; TryClone <span class="kw">for </span>Generator&lt;T&gt;
+<span class="kw">where
+    </span>T: TryClone + AsRef&lt;Vm&gt; + AsMut&lt;Vm&gt;,
+{
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, rune_alloc::Error&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            execution: <span class="self">self</span>.execution.try_clone()<span class="question-mark">?</span>,
+        })
     }
 }
 </code></pre></div></section></main></body></html>

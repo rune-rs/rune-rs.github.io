@@ -287,13 +287,19 @@
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
 <a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::ops;
 
 <span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    EnvProtocolCaller, FromValue, Iterator, ProtocolCaller, ToValue, Value, VmErrorKind, VmResult,
+    EnvProtocolCaller, FromValue, Iterator, ProtocolCaller, ToValue, Value, ValueKind, VmErrorKind,
+    VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -337,8 +343,10 @@
 /// let _ = RangeFrom::new(start);
 /// # Ok::&lt;_, rune::support::Error&gt;(())
 /// ```
-</span><span class="attr">#[derive(Any, Clone)]
-#[rune(builtin, constructor, from_value = Value::into_range_from, static_type = RANGE_FROM_TYPE)]
+</span><span class="attr">#[derive(Any, Clone, TryClone)]
+#[try_clone(<span class="kw">crate</span>)]
+#[rune(builtin, constructor, static_type = RANGE_FROM_TYPE)]
+#[rune(from_value = Value::into_range_from, from_value_ref = Value::into_range_from_ref, from_value_mut = Value::into_range_from_mut)]
 </span><span class="kw">pub struct </span>RangeFrom {
     <span class="doccomment">/// The start value of the range.
     </span><span class="attr">#[rune(get, set)]
@@ -374,12 +382,12 @@
     </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VmResult&lt;Iterator&gt; {
         <span class="kw">const </span>NAME: <span class="kw-2">&amp;</span>str = <span class="string">"std::ops::RangeFrom"</span>;
 
-        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.start {
-            Value::Byte(start) =&gt; VmResult::Ok(Iterator::from(NAME, <span class="kw-2">*</span>start..)),
-            Value::Char(start) =&gt; VmResult::Ok(Iterator::from(NAME, <span class="kw-2">*</span>start..)),
-            Value::Integer(start) =&gt; VmResult::Ok(Iterator::from(NAME, <span class="kw-2">*</span>start..)),
-            start =&gt; VmResult::err(VmErrorKind::UnsupportedIterRangeFrom {
-                start: <span class="macro">vm_try!</span>(start.type_info()),
+        <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.start.borrow_kind_ref()) {
+            ValueKind::Byte(start) =&gt; VmResult::Ok(Iterator::from(NAME, start..)),
+            ValueKind::Char(start) =&gt; VmResult::Ok(Iterator::from(NAME, start..)),
+            ValueKind::Integer(start) =&gt; VmResult::Ok(Iterator::from(NAME, start..)),
+            <span class="kw-2">ref </span>start =&gt; VmResult::err(VmErrorKind::UnsupportedIterRangeFrom {
+                start: start.type_info(),
             }),
         }
     }
@@ -569,7 +577,7 @@
 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(value.into_range_from()).take());
+        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(value.into_range_from());
         <span class="kw">let </span>start = <span class="macro">vm_try!</span>(Idx::from_value(range.start));
         VmResult::Ok(ops::RangeFrom { start })
     }

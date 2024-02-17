@@ -208,11 +208,16 @@
 <a href="#206" id="206">206</a>
 <a href="#207" id="207">207</a>
 <a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::ops;
 
 <span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{EnvProtocolCaller, FromValue, ProtocolCaller, ToValue, Value, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -248,8 +253,11 @@
 /// let _ = RangeTo::new(end);
 /// # Ok::&lt;_, rune::support::Error&gt;(())
 /// ```
-</span><span class="attr">#[derive(Any, Clone)]
-#[rune(builtin, constructor, from_value = Value::into_range_to, static_type = RANGE_TO_TYPE)]
+</span><span class="attr">#[derive(Any, Clone, TryClone)]
+#[try_clone(<span class="kw">crate</span>)]
+#[rune(<span class="kw">crate</span>)]
+#[rune(builtin, constructor, static_type = RANGE_TO_TYPE)]
+#[rune(from_value = Value::into_range_to, from_value_ref = Value::into_range_to_ref, from_value_mut = Value::into_range_to_mut)]
 </span><span class="kw">pub struct </span>RangeTo {
     <span class="doccomment">/// The end value of the range.
     </span><span class="attr">#[rune(get, set)]
@@ -411,7 +419,7 @@
 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(value.into_range_to()).take());
+        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(value.into_range_to());
         <span class="kw">let </span>end = <span class="macro">vm_try!</span>(Idx::from_value(range.end));
         VmResult::Ok(ops::RangeTo { end })
     }

@@ -622,67 +622,10 @@
 <a href="#620" id="620">620</a>
 <a href="#621" id="621">621</a>
 <a href="#622" id="622">622</a>
-<a href="#623" id="623">623</a>
-<a href="#624" id="624">624</a>
-<a href="#625" id="625">625</a>
-<a href="#626" id="626">626</a>
-<a href="#627" id="627">627</a>
-<a href="#628" id="628">628</a>
-<a href="#629" id="629">629</a>
-<a href="#630" id="630">630</a>
-<a href="#631" id="631">631</a>
-<a href="#632" id="632">632</a>
-<a href="#633" id="633">633</a>
-<a href="#634" id="634">634</a>
-<a href="#635" id="635">635</a>
-<a href="#636" id="636">636</a>
-<a href="#637" id="637">637</a>
-<a href="#638" id="638">638</a>
-<a href="#639" id="639">639</a>
-<a href="#640" id="640">640</a>
-<a href="#641" id="641">641</a>
-<a href="#642" id="642">642</a>
-<a href="#643" id="643">643</a>
-<a href="#644" id="644">644</a>
-<a href="#645" id="645">645</a>
-<a href="#646" id="646">646</a>
-<a href="#647" id="647">647</a>
-<a href="#648" id="648">648</a>
-<a href="#649" id="649">649</a>
-<a href="#650" id="650">650</a>
-<a href="#651" id="651">651</a>
-<a href="#652" id="652">652</a>
-<a href="#653" id="653">653</a>
-<a href="#654" id="654">654</a>
-<a href="#655" id="655">655</a>
-<a href="#656" id="656">656</a>
-<a href="#657" id="657">657</a>
-<a href="#658" id="658">658</a>
-<a href="#659" id="659">659</a>
-<a href="#660" id="660">660</a>
-<a href="#661" id="661">661</a>
-<a href="#662" id="662">662</a>
-<a href="#663" id="663">663</a>
-<a href="#664" id="664">664</a>
-<a href="#665" id="665">665</a>
-<a href="#666" id="666">666</a>
-<a href="#667" id="667">667</a>
-<a href="#668" id="668">668</a>
-<a href="#669" id="669">669</a>
-<a href="#670" id="670">670</a>
-<a href="#671" id="671">671</a>
-<a href="#672" id="672">672</a>
-<a href="#673" id="673">673</a>
-<a href="#674" id="674">674</a>
-<a href="#675" id="675">675</a>
-<a href="#676" id="676">676</a>
-<a href="#677" id="677">677</a>
-<a href="#678" id="678">678</a>
-<a href="#679" id="679">679</a>
-<a href="#680" id="680">680</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cell::Cell;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future::Future;
+<span class="kw">use </span>core::marker::PhantomData;
 <span class="kw">use </span>core::mem::ManuallyDrop;
 <span class="kw">use </span>core::ops;
 <span class="kw">use </span>core::pin::Pin;
@@ -691,52 +634,53 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{AnyObjError, RawStr};
 
-<span class="doccomment">/// Bitflag which if set indicates that the accessed value is an external
-/// reference (exclusive or not).
-</span><span class="kw">const </span>IS_REF_MASK: isize = <span class="number">1isize</span>;
+<span class="doccomment">/// Test if exclusively held.
+</span><span class="kw">const </span>EXCLUSIVE: usize = <span class="number">1usize</span>.rotate_right(<span class="number">2</span>);
 <span class="doccomment">/// Sentinel value to indicate that access is taken.
-</span><span class="kw">const </span>TAKEN: isize = (isize::max_value() ^ IS_REF_MASK) &gt;&gt; <span class="number">1</span>;
-<span class="doccomment">/// Panic if we reach this number of shared accesses and we try to add one more,
-/// since it's the largest we can support.
-</span><span class="kw">const </span>MAX_USES: isize = <span class="number">0b11isize</span>.rotate_right(<span class="number">2</span>);
+</span><span class="kw">const </span>MOVED: usize = <span class="number">1usize</span>.rotate_right(<span class="number">1</span>);
+<span class="doccomment">/// Mask indicating if the value is exclusively set or moved.
+</span><span class="kw">const </span>MASK: usize = EXCLUSIVE | MOVED;
 
 <span class="doccomment">/// An error raised while downcasting.
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug, PartialEq)]
 #[allow(missing_docs)]
 #[non_exhaustive]
-</span><span class="kw">pub enum </span>AccessError {
-    UnexpectedType { expected: RawStr, actual: RawStr },
-    NotAccessibleRef { error: NotAccessibleRef },
-    NotAccessibleMut { error: NotAccessibleMut },
-    NotAccessibleTake { error: NotAccessibleTake },
-    AnyObjError { error: AnyObjError },
+</span><span class="kw">pub struct </span>AccessError {
+    kind: AccessErrorKind,
 }
 
-<span class="macro">cfg_std! </span>{
-    <span class="kw">impl </span>std::error::Error <span class="kw">for </span>AccessError {
-        <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>std::error::Error + <span class="lifetime">'static</span>)&gt; {
-            <span class="kw">match </span><span class="self">self </span>{
-                AccessError::NotAccessibleRef { error, .. } =&gt; <span class="prelude-val">Some</span>(error),
-                AccessError::NotAccessibleMut { error, .. } =&gt; <span class="prelude-val">Some</span>(error),
-                AccessError::NotAccessibleTake { error, .. } =&gt; <span class="prelude-val">Some</span>(error),
-                AccessError::AnyObjError { error, .. } =&gt; <span class="prelude-val">Some</span>(error),
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-            }
-        }
+<span class="kw">impl </span>AccessError {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(kind: AccessErrorKind) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ kind }
     }
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>AccessError {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
-        <span class="kw">match </span><span class="self">self </span>{
-            AccessError::UnexpectedType { expected, actual } =&gt; <span class="macro">write!</span>(
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.kind {
+            AccessErrorKind::UnexpectedType { expected, actual } =&gt; <span class="macro">write!</span>(
                 f,
                 <span class="string">"Expected data of type `{expected}`, but found `{actual}`"</span>,
             ),
-            AccessError::NotAccessibleRef { error } =&gt; error.fmt(f),
-            AccessError::NotAccessibleMut { error } =&gt; error.fmt(f),
-            AccessError::NotAccessibleTake { error } =&gt; error.fmt(f),
-            AccessError::AnyObjError { error } =&gt; error.fmt(f),
+            AccessErrorKind::NotAccessibleRef { error } =&gt; error.fmt(f),
+            AccessErrorKind::NotAccessibleMut { error } =&gt; error.fmt(f),
+            AccessErrorKind::NotAccessibleTake { error } =&gt; error.fmt(f),
+            AccessErrorKind::AnyObjError { error } =&gt; error.fmt(f),
+        }
+    }
+}
+
+<span class="macro">cfg_std! </span>{
+    <span class="kw">impl </span>std::error::Error <span class="kw">for </span>AccessError {
+        <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>std::error::Error + <span class="lifetime">'static</span>)&gt; {
+            <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.kind {
+                AccessErrorKind::NotAccessibleRef { error, .. } =&gt; <span class="prelude-val">Some</span>(error),
+                AccessErrorKind::NotAccessibleMut { error, .. } =&gt; <span class="prelude-val">Some</span>(error),
+                AccessErrorKind::NotAccessibleTake { error, .. } =&gt; <span class="prelude-val">Some</span>(error),
+                AccessErrorKind::AnyObjError { error, .. } =&gt; <span class="prelude-val">Some</span>(error),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+            }
         }
     }
 }
@@ -744,35 +688,51 @@
 <span class="kw">impl </span>From&lt;NotAccessibleRef&gt; <span class="kw">for </span>AccessError {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(error: NotAccessibleRef) -&gt; <span class="self">Self </span>{
-        AccessError::NotAccessibleRef { error }
+        AccessError::new(AccessErrorKind::NotAccessibleRef { error })
     }
 }
 
 <span class="kw">impl </span>From&lt;NotAccessibleMut&gt; <span class="kw">for </span>AccessError {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(error: NotAccessibleMut) -&gt; <span class="self">Self </span>{
-        AccessError::NotAccessibleMut { error }
+        AccessError::new(AccessErrorKind::NotAccessibleMut { error })
     }
 }
 
 <span class="kw">impl </span>From&lt;NotAccessibleTake&gt; <span class="kw">for </span>AccessError {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(error: NotAccessibleTake) -&gt; <span class="self">Self </span>{
-        AccessError::NotAccessibleTake { error }
+        AccessError::new(AccessErrorKind::NotAccessibleTake { error })
     }
 }
 
 <span class="kw">impl </span>From&lt;AnyObjError&gt; <span class="kw">for </span>AccessError {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(source: AnyObjError) -&gt; <span class="self">Self </span>{
-        AccessError::AnyObjError { error: source }
+        AccessError::new(AccessErrorKind::AnyObjError { error: source })
     }
+}
+
+<span class="kw">impl </span>From&lt;AccessErrorKind&gt; <span class="kw">for </span>AccessError {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from(kind: AccessErrorKind) -&gt; <span class="self">Self </span>{
+        AccessError::new(kind)
+    }
+}
+
+<span class="attr">#[derive(Debug, PartialEq)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>AccessErrorKind {
+    UnexpectedType { expected: RawStr, actual: RawStr },
+    NotAccessibleRef { error: NotAccessibleRef },
+    NotAccessibleMut { error: NotAccessibleMut },
+    NotAccessibleTake { error: NotAccessibleTake },
+    AnyObjError { error: AnyObjError },
 }
 
 <span class="doccomment">/// Error raised when tried to access for shared access but it was not
 /// accessible.
-</span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>NotAccessibleRef(Snapshot);
+</span><span class="attr">#[derive(Debug, PartialEq)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>NotAccessibleRef(Snapshot);
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>NotAccessibleRef {
     <span class="attr">#[inline]
@@ -787,8 +747,8 @@
 
 <span class="doccomment">/// Error raised when tried to access for exclusive access but it was not
 /// accessible.
-</span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>NotAccessibleMut(Snapshot);
+</span><span class="attr">#[derive(Debug, PartialEq)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>NotAccessibleMut(Snapshot);
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>NotAccessibleMut {
     <span class="attr">#[inline]
@@ -805,8 +765,8 @@
 ///
 /// This requires exclusive access, but it's a scenario we structure separately
 /// for diagnostics purposes.
-</span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>NotAccessibleTake(Snapshot);
+</span><span class="attr">#[derive(Debug, PartialEq)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>NotAccessibleTake(Snapshot);
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>NotAccessibleTake {
     <span class="attr">#[inline]
@@ -819,222 +779,131 @@
     <span class="kw">impl </span>std::error::Error <span class="kw">for </span>NotAccessibleTake {}
 }
 
-<span class="doccomment">/// The kind of access to perform.
-</span><span class="attr">#[derive(Debug, Clone, Copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>AccessKind {
-    <span class="doccomment">/// Access a reference.
-    </span>Any,
-    <span class="doccomment">/// Access something owned.
-    </span>Owned,
-}
-
 <span class="doccomment">/// Snapshot that can be used to indicate how the value was being accessed at
 /// the time of an error.
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(PartialEq)]
 #[repr(transparent)]
-</span><span class="kw">struct </span>Snapshot(isize);
+</span><span class="kw">pub struct </span>Snapshot(usize);
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>Snapshot {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self</span>.<span class="number">0 </span>&gt;&gt; <span class="number">1 </span>{
             <span class="number">0 </span>=&gt; <span class="macro">write!</span>(f, <span class="string">"fully accessible"</span>)<span class="question-mark">?</span>,
-            <span class="number">1 </span>=&gt; <span class="macro">write!</span>(f, <span class="string">"exclusively accessed"</span>)<span class="question-mark">?</span>,
-            TAKEN =&gt; <span class="macro">write!</span>(f, <span class="string">"moved"</span>)<span class="question-mark">?</span>,
-            n <span class="kw">if </span>n &lt; <span class="number">0 </span>=&gt; <span class="macro">write!</span>(f, <span class="string">"shared by {}"</span>, -n)<span class="question-mark">?</span>,
-            n =&gt; <span class="macro">write!</span>(f, <span class="string">"invalidly marked ({})"</span>, n)<span class="question-mark">?</span>,
-        }
-
-        <span class="kw">if </span><span class="self">self</span>.<span class="number">0 </span>&amp; IS_REF_MASK == <span class="number">1 </span>{
-            <span class="macro">write!</span>(f, <span class="string">" (ref)"</span>)<span class="question-mark">?</span>;
+            EXCLUSIVE =&gt; <span class="macro">write!</span>(f, <span class="string">"exclusively accessed"</span>)<span class="question-mark">?</span>,
+            MOVED =&gt; <span class="macro">write!</span>(f, <span class="string">"moved"</span>)<span class="question-mark">?</span>,
+            n =&gt; <span class="macro">write!</span>(f, <span class="string">"shared by {}"</span>, n)<span class="question-mark">?</span>,
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Snapshot {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"Snapshot({})"</span>, <span class="self">self</span>)
+    }
+}
+
 <span class="doccomment">/// Access flags.
 ///
 /// These accomplish the following things:
-/// * Indicates if a value is a reference.
 /// * Indicates if a value is exclusively held.
+/// * Indicates if a value is taken .
 /// * Indicates if a value is shared, and if so by how many.
-///
-/// It has the following bit-pattern (assume isize is 16 bits for simplicity):
-///
-/// ```text
-/// S0000000_00000000_00000000_0000000F
-/// |                                ||
-/// '-- Sign bit and number base ----'|
-///                   Reference Flag -'
-///
-/// The reference flag is the LSB, and the rest is treated as a signed number
-/// with the following properties:
-/// * If the value is `0`, it is not being accessed.
-/// * If the value is `1`, it is being exclusively accessed.
-/// * If the value is negative `n`, it is being shared accessed by `-n` uses.
-///
-/// This means that the maximum number of accesses for a 64-bit `isize` is
-/// `(1 &lt;&lt; 62) - 1` uses.
-///
-/// ```
 </span><span class="attr">#[repr(transparent)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Access(Cell&lt;isize&gt;);
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Access(Cell&lt;usize&gt;);
 
 <span class="kw">impl </span>Access {
     <span class="doccomment">/// Construct a new default access.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>new(is_ref: bool) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>initial = <span class="kw">if </span>is_ref { <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
-        <span class="self">Self</span>(Cell::new(initial))
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(Cell::new(<span class="number">0</span>))
     }
 
-    <span class="doccomment">/// Test if access is guarding a reference.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.get() &amp; IS_REF_MASK != <span class="number">0
-    </span>}
-
     <span class="doccomment">/// Test if we can have shared access without modifying the internal count.
-    </span><span class="attr">#[inline]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_shared(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.get() &lt;= <span class="number">0
+        <span class="self">self</span>.<span class="number">0</span>.get() &amp; MASK == <span class="number">0
     </span>}
 
     <span class="doccomment">/// Test if we can have exclusive access without modifying the internal
     /// count.
-    </span><span class="attr">#[inline]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_exclusive(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.get() == <span class="number">0
+        <span class="self">self</span>.<span class="number">0</span>.get() == <span class="number">0
     </span>}
 
     <span class="doccomment">/// Test if the data has been taken.
-    </span><span class="attr">#[inline]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_taken(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.get() == TAKEN
-    }
+        <span class="self">self</span>.<span class="number">0</span>.get() &amp; MOVED != <span class="number">0
+    </span>}
 
     <span class="doccomment">/// Mark that we want shared access to the given access token.
-    ///
-    /// # Safety
-    ///
-    /// The returned guard must not outlive the access token that created it.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>shared(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        kind: AccessKind,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;AccessGuard&lt;<span class="lifetime">'_</span>&gt;, NotAccessibleRef&gt; {
-        <span class="kw">if let </span>AccessKind::Owned = kind {
-            <span class="kw">if </span><span class="self">self</span>.is_ref() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(NotAccessibleRef(Snapshot(<span class="self">self</span>.<span class="number">0</span>.get())));
-            }
-        }
+    </span><span class="attr">#[inline(always)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>shared(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;AccessGuard&lt;<span class="lifetime">'_</span>&gt;, NotAccessibleRef&gt; {
+        <span class="kw">let </span>state = <span class="self">self</span>.<span class="number">0</span>.get();
 
-        <span class="kw">let </span>state = <span class="self">self</span>.get();
-
-        <span class="kw">if </span>state == MAX_USES {
+        <span class="kw">if </span>state == MASK {
             <span class="kw">crate</span>::alloc::abort();
         }
 
-        <span class="kw">let </span>n = state.wrapping_sub(<span class="number">1</span>);
-
-        <span class="kw">if </span>n &gt;= <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(NotAccessibleRef(Snapshot(<span class="self">self</span>.<span class="number">0</span>.get())));
+        <span class="kw">if </span>state &amp; MASK != <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(NotAccessibleRef(Snapshot(state)));
         }
 
-        <span class="self">self</span>.set(n);
+        <span class="self">self</span>.<span class="number">0</span>.set(state + <span class="number">1</span>);
         <span class="prelude-val">Ok</span>(AccessGuard(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Mark that we want exclusive access to the given access token.
-    ///
-    /// # Safety
-    ///
-    /// The returned guard must not outlive the access token that created it.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>exclusive(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        kind: AccessKind,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;AccessGuard&lt;<span class="lifetime">'_</span>&gt;, NotAccessibleMut&gt; {
-        <span class="kw">if let </span>AccessKind::Owned = kind {
-            <span class="kw">if </span><span class="self">self</span>.is_ref() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(NotAccessibleMut(Snapshot(<span class="self">self</span>.<span class="number">0</span>.get())));
-            }
+    </span><span class="attr">#[inline(always)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>exclusive(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;AccessGuard&lt;<span class="lifetime">'_</span>&gt;, NotAccessibleMut&gt; {
+        <span class="kw">let </span>state = <span class="self">self</span>.<span class="number">0</span>.get();
+
+        <span class="kw">if </span>state != <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(NotAccessibleMut(Snapshot(state)));
         }
 
-        <span class="kw">let </span>n = <span class="self">self</span>.get();
-
-        <span class="kw">if </span>n != <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(NotAccessibleMut(Snapshot(<span class="self">self</span>.<span class="number">0</span>.get())));
-        }
-
-        <span class="self">self</span>.set(n.wrapping_add(<span class="number">1</span>));
+        <span class="self">self</span>.<span class="number">0</span>.set(EXCLUSIVE);
         <span class="prelude-val">Ok</span>(AccessGuard(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Mark that we want to mark the given access as "taken".
     ///
     /// I.e. whatever guarded data is no longer available.
-    ///
-    /// # Safety
-    ///
-    /// The returned guard must not outlive the access token that created it.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>take(<span class="kw-2">&amp;</span><span class="self">self</span>, kind: AccessKind) -&gt; <span class="prelude-ty">Result</span>&lt;RawTakeGuard, NotAccessibleTake&gt; {
-        <span class="kw">if let </span>AccessKind::Owned = kind {
-            <span class="kw">if </span><span class="self">self</span>.is_ref() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(NotAccessibleTake(Snapshot(<span class="self">self</span>.<span class="number">0</span>.get())));
-            }
-        }
-
-        <span class="kw">let </span>state = <span class="self">self</span>.get();
+    </span><span class="attr">#[inline(always)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>take(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RawAccessGuard, NotAccessibleTake&gt; {
+        <span class="kw">let </span>state = <span class="self">self</span>.<span class="number">0</span>.get();
 
         <span class="kw">if </span>state != <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(NotAccessibleTake(Snapshot(<span class="self">self</span>.<span class="number">0</span>.get())));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(NotAccessibleTake(Snapshot(state)));
         }
 
-        <span class="self">self</span>.set(TAKEN);
-        <span class="prelude-val">Ok</span>(RawTakeGuard { access: <span class="self">self </span>})
+        <span class="self">self</span>.<span class="number">0</span>.set(MOVED);
+        <span class="prelude-val">Ok</span>(RawAccessGuard(<span class="self">self</span>.into()))
     }
 
-    <span class="doccomment">/// Release the current access level.
-    </span><span class="attr">#[inline]
+    <span class="doccomment">/// Release the current access, unless it's moved.
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">fn </span>release(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let </span>b = <span class="self">self</span>.get();
+        <span class="kw">let </span>b = <span class="self">self</span>.<span class="number">0</span>.get();
 
-        <span class="kw">let </span>b = <span class="kw">if </span>b &lt; <span class="number">0 </span>{
-            <span class="macro">debug_assert!</span>(b &lt; <span class="number">0</span>);
-            b.wrapping_add(<span class="number">1</span>)
-        } <span class="kw">else </span>{
-            <span class="macro">debug_assert_eq!</span>(b, <span class="number">1</span>, <span class="string">"borrow value should be exclusive (0)"</span>);
-            b.wrapping_sub(<span class="number">1</span>)
-        };
+        <span class="kw">let </span>b = <span class="kw">if </span>b &amp; MASK == <span class="number">0 </span>{ b - <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
 
-        <span class="self">self</span>.set(b);
+        <span class="self">self</span>.<span class="number">0</span>.set(b);
     }
 
-    <span class="doccomment">/// Untake the current access.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">fn </span>release_take(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let </span>b = <span class="self">self</span>.get();
-        <span class="macro">debug_assert_eq!</span>(b, TAKEN, <span class="string">"borrow value should be TAKEN ({})"</span>, TAKEN);
-        <span class="self">self</span>.set(<span class="number">0</span>);
-    }
-
-    <span class="doccomment">/// Get the current value of the flag.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; isize {
-        <span class="self">self</span>.<span class="number">0</span>.get() &gt;&gt; <span class="number">1
-    </span>}
-
-    <span class="doccomment">/// Set the current value of the flag.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, value: isize) {
-        <span class="self">self</span>.<span class="number">0</span>.set(<span class="self">self</span>.<span class="number">0</span>.get() &amp; IS_REF_MASK | value &lt;&lt; <span class="number">1</span>);
+    <span class="doccomment">/// Get a snapshot of current access.
+    </span><span class="attr">#[inline(always)]
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>snapshot(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Snapshot {
+        Snapshot(<span class="self">self</span>.<span class="number">0</span>.get())
     }
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Access {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, Snapshot(<span class="self">self</span>.get()))
+        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, Snapshot(<span class="self">self</span>.<span class="number">0</span>.get()))
     }
 }
 
@@ -1068,19 +937,18 @@
     /// # Examples
     ///
     /// ```
-    /// use rune::runtime::{BorrowRef, Shared};
+    /// use rune::runtime::{BorrowRef, Bytes};
+    /// use rune::alloc::try_vec;
     ///
-    /// let vec = Shared::&lt;Vec&lt;u32&gt;&gt;::new(vec![1, 2, 3, 4])?;
-    /// let vec = vec.borrow_ref()?;
-    /// let value: BorrowRef&lt;[u32]&gt; = BorrowRef::map(vec, |vec| &amp;vec[0..2]);
+    /// let bytes = rune::to_value(Bytes::from_vec(try_vec![1, 2, 3, 4]))?;
+    /// let bytes = bytes.borrow_bytes_ref()?;
     ///
-    /// assert_eq!(&amp;*value, &amp;[1u32, 2u32][..]);
+    /// let bytes: BorrowRef&lt;[u8]&gt; = BorrowRef::map(bytes, |bytes| &amp;bytes[0..2]);
+    ///
+    /// assert_eq!(&amp;bytes[..], &amp;[1u8, 2u8][..]);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>map&lt;M, U: <span class="question-mark">?</span>Sized&gt;(this: <span class="self">Self</span>, m: M) -&gt; BorrowRef&lt;<span class="lifetime">'a</span>, U&gt;
-    <span class="kw">where
-        </span>M: FnOnce(<span class="kw-2">&amp;</span>T) -&gt; <span class="kw-2">&amp;</span>U,
-    {
+    </span><span class="kw">pub fn </span>map&lt;U: <span class="question-mark">?</span>Sized&gt;(this: <span class="self">Self</span>, m: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>T) -&gt; <span class="kw-2">&amp;</span>U) -&gt; BorrowRef&lt;<span class="lifetime">'a</span>, U&gt; {
         BorrowRef {
             data: m(this.data),
             guard: this.guard,
@@ -1092,21 +960,32 @@
     /// # Examples
     ///
     /// ```
-    /// use rune::runtime::{BorrowRef, Shared};
+    /// use rune::runtime::{BorrowRef, Bytes};
+    /// use rune::alloc::try_vec;
     ///
-    /// let vec = Shared::&lt;Vec&lt;u32&gt;&gt;::new(vec![1, 2, 3, 4])?;
-    /// let vec = vec.borrow_ref()?;
-    /// let mut value: Option&lt;BorrowRef&lt;[u32]&gt;&gt; = BorrowRef::try_map(vec, |vec| vec.get(0..2));
+    /// let bytes = rune::to_value(Bytes::from_vec(try_vec![1, 2, 3, 4]))?;
+    /// let bytes = bytes.borrow_bytes_ref()?;
     ///
-    /// assert_eq!(value.as_deref(), Some(&amp;[1u32, 2u32][..]));
+    /// let Ok(bytes) = BorrowRef::try_map(bytes, |bytes| bytes.get(0..2)) else {
+    ///     panic!("Conversion failed");
+    /// };
+    ///
+    /// assert_eq!(&amp;bytes[..], &amp;[1u8, 2u8][..]);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>try_map&lt;M, U: <span class="question-mark">?</span>Sized&gt;(this: <span class="self">Self</span>, m: M) -&gt; <span class="prelude-ty">Option</span>&lt;BorrowRef&lt;<span class="lifetime">'a</span>, U&gt;&gt;
-    <span class="kw">where
-        </span>M: FnOnce(<span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>U&gt;,
-    {
-        <span class="prelude-val">Some</span>(BorrowRef {
-            data: m(this.data)<span class="question-mark">?</span>,
+    </span><span class="kw">pub fn </span>try_map&lt;U: <span class="question-mark">?</span>Sized&gt;(
+        this: <span class="self">Self</span>,
+        m: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>U&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BorrowRef&lt;<span class="lifetime">'a</span>, U&gt;, <span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="prelude-val">Some</span>(data) = m(this.data) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(BorrowRef {
+                data: this.data,
+                guard: this.guard,
+            });
+        };
+
+        <span class="prelude-val">Ok</span>(BorrowRef {
+            data,
             guard: this.guard,
         })
     }
@@ -1131,7 +1010,7 @@
 
 <span class="doccomment">/// A guard around some specific access access.
 </span><span class="attr">#[repr(transparent)]
-</span><span class="kw">pub struct </span>AccessGuard&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Access);
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AccessGuard&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Access);
 
 <span class="kw">impl </span>AccessGuard&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Convert into a raw guard which does not have a lifetime associated with
@@ -1141,7 +1020,7 @@
     ///
     /// Since we're losing track of the lifetime, caller must ensure that the
     /// access outlives the guard.
-    </span><span class="kw">pub unsafe fn </span>into_raw(<span class="self">self</span>) -&gt; RawAccessGuard {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>into_raw(<span class="self">self</span>) -&gt; RawAccessGuard {
         RawAccessGuard(ptr::NonNull::from(ManuallyDrop::new(<span class="self">self</span>).<span class="number">0</span>))
     }
 }
@@ -1152,27 +1031,13 @@
     }
 }
 
-<span class="doccomment">/// A raw guard around some level of access.
+<span class="doccomment">/// A raw guard around some level of access which will be released once the guard is dropped.
 </span><span class="attr">#[repr(transparent)]
-</span><span class="kw">pub struct </span>RawAccessGuard(ptr::NonNull&lt;Access&gt;);
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RawAccessGuard(ptr::NonNull&lt;Access&gt;);
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>RawAccessGuard {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.as_ref().release() }
-    }
-}
-
-<span class="doccomment">/// A taken access guard.
-///
-/// This is created with [Access::take], and must not outlive the [Access]
-/// instance it was created from.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RawTakeGuard {
-    access: <span class="kw-2">*const </span>Access,
-}
-
-<span class="kw">impl </span>Drop <span class="kw">for </span>RawTakeGuard {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">unsafe </span>{ (<span class="kw-2">*</span><span class="self">self</span>.access).release_take() }
     }
 }
 
@@ -1181,8 +1046,9 @@
 /// These guards are necessary, since we need to guarantee certain forms of
 /// access depending on what we do. Releasing the guard releases the access.
 </span><span class="kw">pub struct </span>BorrowMut&lt;<span class="lifetime">'a</span>, T: <span class="question-mark">?</span>Sized&gt; {
-    data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>T,
+    data: ptr::NonNull&lt;T&gt;,
     guard: AccessGuard&lt;<span class="lifetime">'a</span>&gt;,
+    _marker: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>T&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T: <span class="question-mark">?</span>Sized&gt; BorrowMut&lt;<span class="lifetime">'a</span>, T&gt; {
@@ -1196,8 +1062,9 @@
     /// this guard is dropped.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>new(data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>T, access: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Access) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            data,
+            data: ptr::NonNull::from(data),
             guard: AccessGuard(access),
+            _marker: PhantomData,
         }
     }
 
@@ -1206,22 +1073,25 @@
     /// # Examples
     ///
     /// ```
-    /// use rune::runtime::{BorrowMut, Shared};
+    /// use rune::runtime::{BorrowMut, Bytes};
+    /// use rune::alloc::try_vec;
     ///
-    /// let vec = Shared::&lt;Vec&lt;u32&gt;&gt;::new(vec![1, 2, 3, 4])?;
-    /// let vec = vec.borrow_mut()?;
-    /// let value: BorrowMut&lt;[u32]&gt; = BorrowMut::map(vec, |vec| &amp;mut vec[0..2]);
+    /// let bytes = rune::to_value(Bytes::from_vec(try_vec![1, 2, 3, 4]))?;
+    /// let bytes = bytes.borrow_bytes_mut()?;
     ///
-    /// assert_eq!(&amp;*value, &amp;mut [1u32, 2u32][..]);
+    /// let mut bytes: BorrowMut&lt;[u8]&gt; = BorrowMut::map(bytes, |bytes| &amp;mut bytes[0..2]);
+    ///
+    /// assert_eq!(&amp;mut bytes[..], &amp;mut [1u8, 2u8][..]);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>map&lt;M, U: <span class="question-mark">?</span>Sized&gt;(this: <span class="self">Self</span>, m: M) -&gt; BorrowMut&lt;<span class="lifetime">'a</span>, U&gt;
-    <span class="kw">where
-        </span>M: FnOnce(<span class="kw-2">&amp;mut </span>T) -&gt; <span class="kw-2">&amp;mut </span>U,
-    {
-        BorrowMut {
-            data: m(this.data),
-            guard: this.guard,
+    </span><span class="kw">pub fn </span>map&lt;U: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">mut </span>this: <span class="self">Self</span>, m: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span>T) -&gt; <span class="kw-2">&amp;mut </span>U) -&gt; BorrowMut&lt;<span class="lifetime">'a</span>, U&gt; {
+        <span class="comment">// SAFETY: This is safe per construction.
+        </span><span class="kw">unsafe </span>{
+            BorrowMut {
+                data: ptr::NonNull::from(m(this.data.as_mut())),
+                guard: this.guard,
+                _marker: PhantomData,
+            }
         }
     }
 
@@ -1230,23 +1100,38 @@
     /// # Examples
     ///
     /// ```
-    /// use rune::runtime::{BorrowMut, Shared};
+    /// use rune::runtime::{BorrowMut, Bytes};
+    /// use rune::alloc::try_vec;
     ///
-    /// let vec = Shared::&lt;Vec&lt;u32&gt;&gt;::new(vec![1, 2, 3, 4])?;
-    /// let vec = vec.borrow_mut()?;
-    /// let mut value: Option&lt;BorrowMut&lt;[u32]&gt;&gt; = BorrowMut::try_map(vec, |vec| vec.get_mut(0..2));
+    /// let bytes = rune::to_value(Bytes::from_vec(try_vec![1, 2, 3, 4]))?;
+    /// let bytes = bytes.borrow_bytes_mut()?;
     ///
-    /// assert_eq!(value.as_deref_mut(), Some(&amp;mut [1u32, 2u32][..]));
+    /// let Ok(mut bytes) = BorrowMut::try_map(bytes, |bytes| bytes.get_mut(0..2)) else {
+    ///     panic!("Conversion failed");
+    /// };
+    ///
+    /// assert_eq!(&amp;mut bytes[..], &amp;mut [1u8, 2u8][..]);
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>try_map&lt;M, U: <span class="question-mark">?</span>Sized&gt;(this: <span class="self">Self</span>, m: M) -&gt; <span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'a</span>, U&gt;&gt;
-    <span class="kw">where
-        </span>M: FnOnce(<span class="kw-2">&amp;mut </span>T) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>U&gt;,
-    {
-        <span class="prelude-val">Some</span>(BorrowMut {
-            data: m(this.data)<span class="question-mark">?</span>,
-            guard: this.guard,
-        })
+    </span><span class="kw">pub fn </span>try_map&lt;U: <span class="question-mark">?</span>Sized&gt;(
+        <span class="kw-2">mut </span>this: <span class="self">Self</span>,
+        m: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span>T) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>U&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;BorrowMut&lt;<span class="lifetime">'a</span>, U&gt;, <span class="self">Self</span>&gt; {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(data) = m(this.data.as_mut()) <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(BorrowMut {
+                    data: this.data,
+                    guard: this.guard,
+                    _marker: PhantomData,
+                });
+            };
+
+            <span class="prelude-val">Ok</span>(BorrowMut {
+                data: ptr::NonNull::from(data),
+                guard: this.guard,
+                _marker: PhantomData,
+            })
+        }
     }
 }
 
@@ -1254,13 +1139,15 @@
     <span class="kw">type </span>Target = T;
 
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
-        <span class="self">self</span>.data
+        <span class="comment">// SAFETY: This is correct per construction.
+        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.data.as_ref() }
     }
 }
 
 <span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; ops::DerefMut <span class="kw">for </span>BorrowMut&lt;<span class="lifetime">'_</span>, T&gt; {
     <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
-        <span class="self">self</span>.data
+        <span class="comment">// SAFETY: This is correct per construction.
+        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.data.as_mut() }
     }
 }
 
@@ -1288,76 +1175,73 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use super</span>::{Access, AccessKind};
+    <span class="kw">use </span><span class="kw">super</span>::Access;
 
     <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_non_ref() {
-        <span class="kw">unsafe </span>{
-            <span class="kw">let </span>access = Access::new(<span class="bool-val">false</span>);
+    </span><span class="kw">fn </span>access_shared() {
+        <span class="kw">let </span>access = Access::new();
 
-            <span class="macro">assert!</span>(!access.is_ref());
-            <span class="macro">assert!</span>(access.is_shared());
-            <span class="macro">assert!</span>(access.is_exclusive());
+        <span class="macro">assert!</span>(access.is_shared());
+        <span class="macro">assert!</span>(access.is_exclusive());
+        <span class="macro">assert!</span>(!access.is_taken());
 
-            <span class="kw">let </span>guard = access.shared(AccessKind::Any).unwrap();
+        <span class="kw">let </span>g1 = access.shared().unwrap();
+        <span class="kw">let </span>g2 = access.shared().unwrap();
 
-            <span class="macro">assert!</span>(!access.is_ref());
-            <span class="macro">assert!</span>(access.is_shared());
-            <span class="macro">assert!</span>(!access.is_exclusive());
+        <span class="macro">assert!</span>(access.is_shared());
+        <span class="macro">assert!</span>(!access.is_exclusive());
+        <span class="macro">assert!</span>(!access.is_taken());
 
-            drop(guard);
+        drop(g1);
 
-            <span class="macro">assert!</span>(!access.is_ref());
-            <span class="macro">assert!</span>(access.is_shared());
-            <span class="macro">assert!</span>(access.is_exclusive());
+        <span class="macro">assert!</span>(access.is_shared());
+        <span class="macro">assert!</span>(!access.is_exclusive());
+        <span class="macro">assert!</span>(!access.is_taken());
 
-            <span class="kw">let </span>guard = access.exclusive(AccessKind::Any).unwrap();
+        drop(g2);
 
-            <span class="macro">assert!</span>(!access.is_ref());
-            <span class="macro">assert!</span>(!access.is_shared());
-            <span class="macro">assert!</span>(!access.is_exclusive());
-
-            drop(guard);
-
-            <span class="macro">assert!</span>(!access.is_ref());
-            <span class="macro">assert!</span>(access.is_shared());
-            <span class="macro">assert!</span>(access.is_exclusive());
-        }
+        <span class="macro">assert!</span>(access.is_shared());
+        <span class="macro">assert!</span>(access.is_exclusive());
+        <span class="macro">assert!</span>(!access.is_taken());
     }
 
     <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_ref() {
-        <span class="kw">unsafe </span>{
-            <span class="kw">let </span>access = Access::new(<span class="bool-val">true</span>);
+    </span><span class="kw">fn </span>access_exclusive() {
+        <span class="kw">let </span>access = Access::new();
 
-            <span class="macro">assert!</span>(access.is_ref());
-            <span class="macro">assert!</span>(access.is_shared());
-            <span class="macro">assert!</span>(access.is_exclusive());
+        <span class="kw">let </span>guard = access.exclusive().unwrap();
+        <span class="macro">assert!</span>(access.exclusive().is_err());
 
-            <span class="kw">let </span>guard = access.shared(AccessKind::Any).unwrap();
+        <span class="macro">assert!</span>(!access.is_shared());
+        <span class="macro">assert!</span>(!access.is_exclusive());
+        <span class="macro">assert!</span>(!access.is_taken());
 
-            <span class="macro">assert!</span>(access.is_ref());
-            <span class="macro">assert!</span>(access.is_shared());
-            <span class="macro">assert!</span>(!access.is_exclusive());
+        drop(guard);
 
-            drop(guard);
+        <span class="macro">assert!</span>(access.is_shared());
+        <span class="macro">assert!</span>(access.is_exclusive());
+        <span class="macro">assert!</span>(!access.is_taken());
+    }
 
-            <span class="macro">assert!</span>(access.is_ref());
-            <span class="macro">assert!</span>(access.is_shared());
-            <span class="macro">assert!</span>(access.is_exclusive());
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>access_take() {
+        <span class="kw">let </span>access = Access::new();
 
-            <span class="kw">let </span>guard = access.exclusive(AccessKind::Any).unwrap();
+        <span class="kw">let </span>guard = access.exclusive().unwrap();
+        <span class="macro">assert!</span>(access.take().is_err());
+        drop(guard);
 
-            <span class="macro">assert!</span>(access.is_ref());
-            <span class="macro">assert!</span>(!access.is_shared());
-            <span class="macro">assert!</span>(!access.is_exclusive());
+        <span class="kw">let </span>g = access.take().unwrap();
 
-            drop(guard);
+        <span class="macro">assert!</span>(!access.is_shared());
+        <span class="macro">assert!</span>(!access.is_exclusive());
+        <span class="macro">assert!</span>(access.is_taken());
 
-            <span class="macro">assert!</span>(access.is_ref());
-            <span class="macro">assert!</span>(access.is_shared());
-            <span class="macro">assert!</span>(access.is_exclusive());
-        }
+        drop(g);
+
+        <span class="macro">assert!</span>(access.is_shared());
+        <span class="macro">assert!</span>(access.is_exclusive());
+        <span class="macro">assert!</span>(!access.is_taken());
     }
 }
 </code></pre></div></section></main></body></html>

@@ -584,7 +584,6 @@
 <a href="#582" id="582">582</a>
 <a href="#583" id="583">583</a>
 <a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Intermediate representation of Rune that can be evaluated in constant
 //! contexts.
 //!
@@ -594,7 +593,6 @@
 <span class="kw">mod </span>eval;
 <span class="kw">mod </span>interpreter;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>scopes;
-<span class="kw">mod </span>value;
 
 <span class="kw">use </span>core::ops::{AddAssign, MulAssign, ShlAssign, ShrAssign, SubAssign};
 
@@ -609,12 +607,12 @@
 <span class="kw">use </span><span class="kw">crate</span>::macros::MacroContext;
 <span class="kw">use </span><span class="kw">crate</span>::parse::NonZeroId;
 <span class="kw">use </span><span class="kw">crate</span>::query::Used;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Value, ValueKind};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::compiler::Ctxt;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::eval::{eval_ir, EvalOutcome};
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::interpreter::{Budget, Interpreter};
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::scopes::Scopes;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::value::Value;
 
 <span class="kw">impl </span>ast::Expr {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eval(<span class="kw-2">&amp;</span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>MacroContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;) -&gt; compile::Result&lt;Value&gt; {
@@ -1121,8 +1119,8 @@
     <span class="kw">where
         </span>S: Copy + Spanned,
     {
-        <span class="kw">if let </span>Value::Integer(target) = target {
-            <span class="kw">if let </span>Value::Integer(operand) = operand {
+        <span class="kw">if let </span>ValueKind::Integer(target) = <span class="kw-2">&amp;mut *</span>target.borrow_kind_mut().with_span(spanned)<span class="question-mark">? </span>{
+            <span class="kw">if let </span>ValueKind::Integer(operand) = <span class="kw-2">*</span>operand.borrow_kind_ref().with_span(spanned)<span class="question-mark">? </span>{
                 <span class="kw">return </span><span class="self">self</span>.assign_int(spanned, target, operand);
             }
         }

@@ -1158,9 +1158,12 @@
 <a href="#1156" id="1156">1156</a>
 <a href="#1157" id="1157">1157</a>
 <a href="#1158" id="1158">1158</a>
+<a href="#1159" id="1159">1159</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The `std::iter` module.
 
-</span><span class="kw">use crate as </span>rune;
+</span><span class="kw">use </span>core::convert::identity;
+
+<span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::String;
 <span class="kw">use </span><span class="kw">crate</span>::modules::collections::VecDeque;
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
@@ -1168,7 +1171,7 @@
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::runtime::EnvProtocolCaller;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    FromValue, Function, Iterator, Object, OwnedTuple, Protocol, Value, Vec, VmResult,
+    FromValue, Function, Iterator, Object, OwnedTuple, Protocol, Value, ValueKind, Vec, VmResult,
 };
 <span class="kw">use crate</span>::{ContextError, Module};
 
@@ -1203,7 +1206,7 @@
     module.function_meta(take)<span class="question-mark">?</span>;
     module.function_meta(count)<span class="question-mark">?</span>;
     module.associated_function(Protocol::NEXT, Iterator::next)<span class="question-mark">?</span>;
-    module.associated_function(Protocol::INTO_ITER, &lt;Iterator <span class="kw">as </span>From&lt;Iterator&gt;&gt;::from)<span class="question-mark">?</span>;
+    module.associated_function(Protocol::INTO_ITER, identity::&lt;Iterator&gt;)<span class="question-mark">?</span>;
 
     module.function_meta(range)<span class="question-mark">?</span>;
     module.function_meta(empty)<span class="question-mark">?</span>;
@@ -2300,16 +2303,15 @@
     <span class="kw">let </span><span class="kw-2">mut </span>string = String::new();
 
     <span class="kw">while let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(it.next()) {
-        <span class="kw">match </span>value {
-            Value::Char(c) =&gt; {
-                <span class="macro">vm_try!</span>(string.try_push(c));
+        <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
+            ValueKind::Char(c) =&gt; {
+                <span class="macro">vm_try!</span>(string.try_push(<span class="kw-2">*</span>c));
             }
-            Value::String(s) =&gt; {
-                <span class="kw">let </span>s = <span class="macro">vm_try!</span>(s.into_ref());
-                <span class="macro">vm_try!</span>(string.try_push_str(s.as_str()));
+            ValueKind::String(s) =&gt; {
+                <span class="macro">vm_try!</span>(string.try_push_str(s));
             }
             value =&gt; {
-                <span class="kw">return </span>VmResult::expected::&lt;String&gt;(<span class="macro">vm_try!</span>(value.type_info()));
+                <span class="kw">return </span>VmResult::expected::&lt;String&gt;(value.type_info());
             }
         }
     }
