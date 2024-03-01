@@ -274,10 +274,6 @@ var rune = (function (exports) {
           const ret = result;
           return ret;
       };
-      imports.wbg.__wbg_sleep_e610479fa9a14d22 = function(arg0) {
-          const ret = sleep(arg0);
-          return addHeapObject(ret);
-      };
       imports.wbg.__wbg_text_24a1c9b21feed3de = function() { return handleError(function (arg0) {
           const ret = getObject(arg0).text();
           return addHeapObject(ret);
@@ -289,6 +285,10 @@ var rune = (function (exports) {
           var len1 = WASM_VECTOR_LEN;
           getInt32Memory0()[arg0 / 4 + 1] = len1;
           getInt32Memory0()[arg0 / 4 + 0] = ptr1;
+      };
+      imports.wbg.__wbg_sleep_e610479fa9a14d22 = function(arg0) {
+          const ret = sleep(arg0);
+          return addHeapObject(ret);
       };
       imports.wbg.__wbindgen_is_undefined = function(arg0) {
           const ret = getObject(arg0) === undefined;
@@ -493,7 +493,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-2292d3c8.wasm";
+                  let path = "/js/assets/rune_wasm-954a47b9.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
