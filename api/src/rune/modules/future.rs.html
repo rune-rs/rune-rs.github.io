@@ -103,75 +103,19 @@
 <a href="#101" id="101">101</a>
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! The `std::future` module.
+</pre></div><pre class="rust"><code><span class="doccomment">//! Asynchronous computations.
 
-</span><span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Future, Mut, SelectFuture, Stack, Value, ValueKind, VmErrorKind, VmResult};
+</span><span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Future, Mut, SelectFuture, Value, ValueKind, VmErrorKind, VmResult};
 <span class="kw">use crate</span>::{ContextError, Module};
 
-<span class="doccomment">/// Construct the `std::future` module.
+<span class="doccomment">/// Asynchronous computations.
+</span><span class="attr">#[rune::module(::std::future)]
 </span><span class="kw">pub fn </span>module() -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>module = Module::with_crate_item(<span class="string">"std"</span>, [<span class="string">"future"</span>])<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>module = Module::from_meta(<span class="self">self</span>::module_meta)<span class="question-mark">?</span>;
     module.ty::&lt;Future&gt;()<span class="question-mark">?</span>;
-
-    module
-        .raw_function(<span class="string">"join"</span>, raw_join)
-        .build()<span class="question-mark">?
-        </span>.is_async(<span class="bool-val">true</span>)
-        .args(<span class="number">1</span>)
-        .argument_types([<span class="prelude-val">None</span>])<span class="question-mark">?
-        </span>.docs([
-            <span class="string">"Waits for a collection of futures to complete and joins their result."</span>,
-            <span class="string">""</span>,
-            <span class="string">"# Examples"</span>,
-            <span class="string">""</span>,
-            <span class="string">"```rune"</span>,
-            <span class="string">"let a = async { 1 };"</span>,
-            <span class="string">"let b = async { 2 };"</span>,
-            <span class="string">"let (a, b) = std::future::join((a, b)).await;"</span>,
-            <span class="string">"assert_eq!(1, a);"</span>,
-            <span class="string">"assert_eq!(2, b);"</span>,
-            <span class="string">"```"</span>,
-            <span class="string">""</span>,
-            <span class="string">"Using a vector:"</span>,
-            <span class="string">""</span>,
-            <span class="string">"```rune"</span>,
-            <span class="string">"let a = async { 1 };"</span>,
-            <span class="string">"let b = async { 2 };"</span>,
-            <span class="string">"let [a, b] = std::future::join([a, b]).await;"</span>,
-            <span class="string">"assert_eq!(1, a);"</span>,
-            <span class="string">"assert_eq!(2, b);"</span>,
-            <span class="string">"```"</span>,
-            <span class="string">""</span>,
-            <span class="string">"Joining an empty collection:"</span>,
-            <span class="string">""</span>,
-            <span class="string">"```rune"</span>,
-            <span class="string">"let () = std::future::join(()).await;"</span>,
-            <span class="string">"let [] = std::future::join([]).await;"</span>,
-            <span class="string">"```"</span>,
-        ])<span class="question-mark">?</span>;
-
+    module.function_meta(join)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(module)
 }
 
@@ -215,7 +159,36 @@
     factory(results)
 }
 
-<span class="kw">async fn </span>join(value: Value) -&gt; VmResult&lt;Value&gt; {
+<span class="doccomment">/// Waits for a collection of futures to complete and joins their result.
+///
+/// # Examples
+///
+/// ```rune
+/// let a = async { 1 };
+/// let b = async { 2 };
+/// let (a, b) = std::future::join((a, b)).await;
+/// assert_eq!(1, a);
+/// assert_eq!(2, b);
+/// ```
+///
+/// Using a vector:
+///
+/// ```rune
+/// let a = async { 1 };
+/// let b = async { 2 };
+/// let [a, b] = std::future::join([a, b]).await;
+/// assert_eq!(1, a);
+/// assert_eq!(2, b);
+/// ```
+///
+/// Joining an empty collection:
+///
+/// ```rune
+/// let () = std::future::join(()).await;
+/// let [] = std::future::join([]).await;
+/// ```
+</span><span class="attr">#[rune::function]
+</span><span class="kw">async fn </span>join(value: Value) -&gt; VmResult&lt;Value&gt; {
     <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
         ValueKind::EmptyTuple =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(Value::empty())),
         ValueKind::Tuple(tuple) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(
@@ -232,20 +205,5 @@
             VmErrorKind::expected::&lt;<span class="kw">crate</span>::runtime::Vec&gt;(<span class="macro">vm_try!</span>(value.type_info())),
         ]),
     }
-}
-
-<span class="doccomment">/// The join implementation.
-</span><span class="kw">fn </span>raw_join(stack: <span class="kw-2">&amp;mut </span>Stack, args: usize) -&gt; VmResult&lt;()&gt; {
-    <span class="kw">if </span>args != <span class="number">1 </span>{
-        <span class="kw">return </span>VmResult::err(VmErrorKind::BadArgumentCount {
-            actual: args,
-            expected: <span class="number">1</span>,
-        });
-    }
-
-    <span class="kw">let </span>value = <span class="macro">vm_try!</span>(stack.pop());
-    <span class="kw">let </span>future = <span class="macro">vm_try!</span>(Future::new(join(value)));
-    <span class="macro">vm_try!</span>(stack.push(future));
-    VmResult::Ok(())
 }
 </code></pre></div></section></main></body></html>

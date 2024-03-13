@@ -219,9 +219,8 @@
 <a href="#217" id="217">217</a>
 <a href="#218" id="218">218</a>
 <a href="#219" id="219">219</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! `std::test` module for the [Rune Language].
-//!
-//! [Rune Language]: https://rune-rs.github.io
+<a href="#220" id="220">220</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! Testing and benchmarking.
 
 </span><span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{try_format, Vec};
@@ -231,6 +230,24 @@
 <span class="kw">use </span><span class="kw">crate</span>::parse::Parser;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::Function;
 <span class="kw">use crate</span>::{Any, ContextError, Module, T};
+
+<span class="doccomment">/// Testing and benchmarking.
+</span><span class="attr">#[rune::module(::std::test)]
+</span><span class="kw">pub fn </span>module() -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>module = Module::from_meta(<span class="self">self</span>::module_meta)<span class="question-mark">?</span>.with_unique(<span class="string">"std::test"</span>);
+
+    module.macro_meta(assert)<span class="question-mark">?</span>;
+    module.macro_meta(assert_eq)<span class="question-mark">?</span>;
+    module.macro_meta(assert_ne)<span class="question-mark">?</span>;
+
+    module.ty::&lt;Bencher&gt;()<span class="question-mark">?</span>.docs([
+        <span class="string">"A type to perform benchmarks."</span>,
+        <span class="string">""</span>,
+        <span class="string">"This is the type of the argument to any function which is annotated with `#[bench]`"</span>,
+    ])<span class="question-mark">?</span>;
+    module.function_meta(Bencher::iter)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(module)
+}
 
 <span class="doccomment">/// A helper type to capture benchmarks.
 </span><span class="attr">#[derive(Default, Any)]
@@ -250,21 +267,6 @@
     </span><span class="kw">fn </span>iter(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: Function) {
         <span class="self">self</span>.fns.try_push(f).vm<span class="question-mark">?</span>;
     }
-}
-
-<span class="doccomment">/// Construct the `std::test` module.
-</span><span class="kw">pub fn </span>module() -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>module = Module::with_crate_item(<span class="string">"std"</span>, [<span class="string">"test"</span>])<span class="question-mark">?</span>.with_unique(<span class="string">"std::test"</span>);
-    module.macro_meta(assert)<span class="question-mark">?</span>;
-    module.macro_meta(assert_eq)<span class="question-mark">?</span>;
-    module.macro_meta(assert_ne)<span class="question-mark">?</span>;
-    module.ty::&lt;Bencher&gt;()<span class="question-mark">?</span>.docs([
-        <span class="string">"A type to perform benchmarks."</span>,
-        <span class="string">""</span>,
-        <span class="string">"This is the type of the argument to any function which is annotated with `#[bench]`"</span>,
-    ])<span class="question-mark">?</span>;
-    module.function_meta(Bencher::iter)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(module)
 }
 
 <span class="doccomment">/// Assert that the expression provided as an argument is true, or cause a vm
