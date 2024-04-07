@@ -1,0 +1,1 @@
+searchState.loadedDescShard("rune_alloc_macros", 0, "Macros for alloc crate of the Rune Language, an embeddable …")

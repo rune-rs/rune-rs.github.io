@@ -1,0 +1,1 @@
+searchState.loadedDescShard("rune_macros", 0, "Macros for the Rune Language, an embeddable dynamic …\nCalculate a type hash.")
