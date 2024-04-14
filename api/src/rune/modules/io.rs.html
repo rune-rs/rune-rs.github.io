@@ -202,21 +202,42 @@
 <a href="#202" id="202">202</a>
 <a href="#203" id="203">203</a>
 <a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! I/O functions.
 
+</span><span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
 </span><span class="kw">use </span>std::io::{<span class="self">self</span>, Write <span class="kw">as _</span>};
 
 <span class="kw">use crate as </span>rune;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
+<span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::compile;
 <span class="kw">use </span><span class="kw">crate</span>::macros::{quote, FormatArgs, MacroContext, TokenStream};
 <span class="kw">use </span><span class="kw">crate</span>::parse::Parser;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Formatter, Panic, Stack, Value, VmResult};
+<span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::runtime::{Formatter, VmResult};
+<span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::runtime::{Panic, Stack, Value};
 <span class="kw">use crate</span>::{ContextError, Module};
 
 <span class="doccomment">/// I/O functions.
 </span><span class="attr">#[rune::module(::std::io)]
-</span><span class="kw">pub fn </span>module(stdio: bool) -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
+</span><span class="kw">pub fn </span>module(
+    <span class="attr">#[cfg_attr(not(feature = <span class="string">"std"</span>), allow(unused))] </span>stdio: bool,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>module = Module::from_meta(<span class="self">self</span>::module_meta)<span class="question-mark">?</span>.with_unique(<span class="string">"std::io"</span>);
 
     module.item_mut().docs([
@@ -235,10 +256,13 @@
         <span class="string">"to be hooked up to whatever system you want."</span>,
     ])<span class="question-mark">?</span>;
 
-    module.ty::&lt;io::Error&gt;()<span class="question-mark">?</span>;
-    module.function_meta(io_error_string_display)<span class="question-mark">?</span>;
+    <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+    </span>module.ty::&lt;io::Error&gt;()<span class="question-mark">?</span>;
+    <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+    </span>module.function_meta(io_error_string_display)<span class="question-mark">?</span>;
 
-    <span class="kw">if </span>stdio {
+    <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+    </span><span class="kw">if </span>stdio {
         module.function_meta(print_impl)<span class="question-mark">?</span>;
         module.function_meta(println_impl)<span class="question-mark">?</span>;
 
@@ -272,12 +296,14 @@
 }
 
 <span class="attr">#[rune::function(instance, protocol = STRING_DISPLAY)]
+#[cfg(feature = <span class="string">"std"</span>)]
 </span><span class="kw">fn </span>io_error_string_display(error: <span class="kw-2">&amp;</span>io::Error, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
-    <span class="macro">vm_write!</span>(f, <span class="string">"{}"</span>, error);
+    <span class="macro">vm_write!</span>(f, <span class="string">"{error}"</span>);
     VmResult::Ok(())
 }
 
-<span class="kw">fn </span>dbg_impl(stack: <span class="kw-2">&amp;mut </span>Stack, args: usize) -&gt; VmResult&lt;()&gt; {
+<span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+</span><span class="kw">fn </span>dbg_impl(stack: <span class="kw-2">&amp;mut </span>Stack, args: usize) -&gt; VmResult&lt;()&gt; {
     <span class="kw">let </span>stdout = io::stdout();
     <span class="kw">let </span><span class="kw-2">mut </span>stdout = stdout.lock();
 
@@ -351,6 +377,7 @@
 /// print("Hi!");
 /// ```
 </span><span class="attr">#[rune::function(path = print)]
+#[cfg(feature = <span class="string">"std"</span>)]
 </span><span class="kw">fn </span>print_impl(m: <span class="kw-2">&amp;</span>str) -&gt; VmResult&lt;()&gt; {
     <span class="kw">let </span>stdout = io::stdout();
     <span class="kw">let </span><span class="kw-2">mut </span>stdout = stdout.lock();
@@ -396,6 +423,7 @@
 /// println("Hi!");
 /// ```
 </span><span class="attr">#[rune::function(path = println)]
+#[cfg(feature = <span class="string">"std"</span>)]
 </span><span class="kw">fn </span>println_impl(message: <span class="kw-2">&amp;</span>str) -&gt; VmResult&lt;()&gt; {
     <span class="kw">let </span>stdout = io::stdout();
     <span class="kw">let </span><span class="kw-2">mut </span>stdout = stdout.lock();

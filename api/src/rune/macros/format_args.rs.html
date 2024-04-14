@@ -682,6 +682,30 @@
 <a href="#682" id="682">682</a>
 <a href="#683" id="683">683</a>
 <a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
+<a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
+<a href="#692" id="692">692</a>
+<a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::str;
 
 <span class="kw">use crate as </span>rune;
@@ -689,7 +713,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, BTreeMap, BTreeSet, Box, HashMap, String, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Span, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, WithSpan};
-<span class="kw">use </span><span class="kw">crate</span>::macros::{quote, MacroContext, Quote};
+<span class="kw">use </span><span class="kw">crate</span>::macros::{quote, MacroContext, Quote, ToTokens, TokenStream};
 <span class="kw">use </span><span class="kw">crate</span>::parse::{Parse, Parser, Peek, Peeker};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::format;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::ValueKind;
@@ -733,14 +757,11 @@
             }
         }
 
-        <span class="kw">let </span>format = <span class="kw">match </span>format.take_kind().with_span(<span class="kw-2">&amp;</span><span class="self">self</span>.format)<span class="question-mark">? </span>{
-            ValueKind::String(string) =&gt; string,
-            <span class="kw">_ </span>=&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.format,
-                    <span class="string">"format argument must be a string"</span>,
-                ));
-            }
+        <span class="kw">let </span>ValueKind::String(format) = format.take_kind().with_span(<span class="kw-2">&amp;</span><span class="self">self</span>.format)<span class="question-mark">? </span><span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.format,
+                <span class="string">"format argument must be a string"</span>,
+            ));
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>unused_pos = (<span class="number">0</span>..pos.len()).try_collect::&lt;BTreeSet&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
@@ -749,7 +770,7 @@
             .map(|(key, n)| <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, alloc::Error&gt;((key.try_clone()<span class="question-mark">?</span>, n.span())))
             .try_collect::&lt;alloc::Result&lt;BTreeMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">??</span>;
 
-        <span class="kw">let </span>expanded = <span class="kw">match </span>expand_format_spec(
+        <span class="kw">let </span>result = expand_format_spec(
             cx,
             <span class="self">self</span>.format.span(),
             <span class="kw-2">&amp;</span>format,
@@ -757,11 +778,11 @@
             <span class="kw-2">&amp;mut </span>unused_pos,
             <span class="kw-2">&amp;</span>named,
             <span class="kw-2">&amp;mut </span>unused_named,
-        ) {
+        );
+
+        <span class="kw">let </span>expanded = <span class="kw">match </span>result {
             <span class="prelude-val">Ok</span>(expanded) =&gt; expanded,
-            <span class="prelude-val">Err</span>(message) =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(<span class="self">self</span>.format.span(), message));
-            }
+            <span class="prelude-val">Err</span>(message) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(<span class="self">self</span>.format.span(), message)),
         };
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = unused_pos.into_iter().flat_map(|n| pos.get(n)).next() {
@@ -858,18 +879,27 @@
     <span class="kw">let </span><span class="kw-2">mut </span>name = String::new();
     <span class="kw">let </span><span class="kw-2">mut </span>width = String::new();
     <span class="kw">let </span><span class="kw-2">mut </span>precision = String::new();
-    <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
 
+    <span class="kw">let </span><span class="kw-2">mut </span>buf = String::new();
     <span class="kw">let </span><span class="kw-2">mut </span>components = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>count = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>start = <span class="prelude-val">Some</span>(<span class="number">0</span>);
 
-    <span class="kw">while let </span><span class="prelude-val">Some</span>(value) = iter.next() {
-        <span class="kw">match </span>value {
+    <span class="kw">while let </span><span class="prelude-val">Some</span>((at, a, b)) = iter.next() {
+        <span class="kw">match </span>(a, b) {
             (<span class="string">'}'</span>, <span class="string">'}'</span>) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(start) = start.take() {
+                    buf.try_push_str(<span class="kw-2">&amp;</span>input[start..at])<span class="question-mark">?</span>;
+                }
+
                 buf.try_push(<span class="string">'}'</span>)<span class="question-mark">?</span>;
                 iter.next();
             }
             (<span class="string">'{'</span>, <span class="string">'{'</span>) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(start) = start.take() {
+                    buf.try_push_str(<span class="kw-2">&amp;</span>input[start..at])<span class="question-mark">?</span>;
+                }
+
                 buf.try_push(<span class="string">'{'</span>)<span class="question-mark">?</span>;
                 iter.next();
             }
@@ -880,8 +910,12 @@
                 ));
             }
             (<span class="string">'{'</span>, <span class="kw">_</span>) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(start) = start.take() {
+                    buf.try_push_str(<span class="kw-2">&amp;</span>input[start..at])<span class="question-mark">?</span>;
+                }
+
                 <span class="kw">if </span>!buf.is_empty() {
-                    components.try_push(C::Literal(buf.try_clone()<span class="question-mark">?</span>.try_into_boxed_str()<span class="question-mark">?</span>))<span class="question-mark">?</span>;
+                    components.try_push(C::Literal(Box::try_from(<span class="kw-2">&amp;</span>buf[..])<span class="question-mark">?</span>))<span class="question-mark">?</span>;
                     buf.clear();
                 }
 
@@ -899,14 +933,20 @@
                     unused_named,
                 )<span class="question-mark">?</span>)<span class="question-mark">?</span>;
             }
-            (a, <span class="kw">_</span>) =&gt; {
-                buf.try_push(a)<span class="question-mark">?</span>;
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">if </span>start.is_none() {
+                    start = <span class="prelude-val">Some</span>(at);
+                }
             }
         }
     }
 
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(start) = start.take() {
+        buf.try_push_str(<span class="kw-2">&amp;</span>input[start..])<span class="question-mark">?</span>;
+    }
+
     <span class="kw">if </span>!buf.is_empty() {
-        components.try_push(C::Literal(buf.try_clone()<span class="question-mark">?</span>.try_into_boxed_str()<span class="question-mark">?</span>))<span class="question-mark">?</span>;
+        components.try_push(C::Literal(Box::try_from(<span class="kw-2">&amp;</span>buf[..])<span class="question-mark">?</span>))<span class="question-mark">?</span>;
         buf.clear();
     }
 
@@ -919,7 +959,7 @@
     <span class="kw">for </span>c <span class="kw">in </span>components {
         <span class="kw">match </span>c {
             C::Literal(literal) =&gt; {
-                <span class="kw">let </span>lit = cx.lit(<span class="kw-2">&amp;*</span>literal)<span class="question-mark">?</span>;
+                <span class="kw">let </span>lit = cx.lit(literal.as_ref())<span class="question-mark">?</span>;
                 args.try_push(<span class="macro">quote!</span>(#lit))<span class="question-mark">?</span>;
             }
             C::Format {
@@ -998,10 +1038,28 @@
         <span class="attr">#[builtin] </span><span class="macro">template!</span>(#(args),<span class="kw-2">*</span>)
     });
 
+    <span class="kw">enum </span>ExprOrIdent&lt;<span class="lifetime">'a</span>&gt; {
+        Expr(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>ast::Expr),
+        Ident(ast::Ident),
+    }
+
+    <span class="kw">impl </span>ToTokens <span class="kw">for </span>ExprOrIdent&lt;<span class="lifetime">'_</span>&gt; {
+        <span class="kw">fn </span>to_tokens(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            cx: <span class="kw-2">&amp;mut </span>MacroContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+            stream: <span class="kw-2">&amp;mut </span>TokenStream,
+        ) -&gt; alloc::Result&lt;()&gt; {
+            <span class="kw">match </span><span class="self">self </span>{
+                <span class="self">Self</span>::Expr(expr) =&gt; expr.to_tokens(cx, stream),
+                <span class="self">Self</span>::Ident(ident) =&gt; ident.to_tokens(cx, stream),
+            }
+        }
+    }
+
     <span class="kw">enum </span>C&lt;<span class="lifetime">'a</span>&gt; {
         Literal(Box&lt;str&gt;),
         Format {
-            expr: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ast::Expr,
+            expr: ExprOrIdent&lt;<span class="lifetime">'a</span>&gt;,
             fill: <span class="prelude-ty">Option</span>&lt;char&gt;,
             align: <span class="prelude-ty">Option</span>&lt;format::Alignment&gt;,
             width: <span class="prelude-ty">Option</span>&lt;usize&gt;,
@@ -1068,11 +1126,8 @@
         <span class="kw">let </span><span class="kw-2">mut </span>mode = Mode::Start;
 
         <span class="kw">loop </span>{
-            <span class="kw">let </span>(a, b) = <span class="kw">match </span>iter.current() {
-                <span class="prelude-val">Some</span>(item) =&gt; item,
-                <span class="kw">_ </span>=&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">"unexpected end of format string"</span>));
-                }
+            <span class="kw">let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, a, b)) = iter.current() <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(span, <span class="string">"unexpected end of format string"</span>));
             };
 
             <span class="kw">match </span>mode {
@@ -1261,7 +1316,20 @@
             <span class="prelude-val">None
         </span>};
 
-        <span class="kw">let </span>expr = <span class="kw">if </span>!name.is_empty() {
+        <span class="kw">let </span>expr = <span class="lifetime">'expr</span>: {
+            <span class="kw">if </span>name.is_empty() {
+                <span class="kw">let </span><span class="prelude-val">Some</span>(expr) = pos.get(<span class="kw-2">*</span>count) <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
+                        span,
+                        <span class="macro">format!</span>(<span class="string">"missing positional argument #{count}"</span>),
+                    ));
+                };
+
+                unused_pos.remove(count);
+                <span class="kw-2">*</span>count += <span class="number">1</span>;
+                <span class="kw">break </span><span class="lifetime">'expr </span>ExprOrIdent::Expr(expr);
+            };
+
             <span class="kw">if let </span><span class="prelude-val">Ok</span>(n) = str::parse::&lt;usize&gt;(name) {
                 <span class="kw">let </span>expr = <span class="kw">match </span>pos.get(n) {
                     <span class="prelude-val">Some</span>(expr) =&gt; <span class="kw-2">*</span>expr,
@@ -1274,35 +1342,17 @@
                 };
 
                 unused_pos.remove(<span class="kw-2">&amp;</span>n);
-                expr
-            } <span class="kw">else </span>{
-                <span class="kw">let </span>expr = <span class="kw">match </span>named.get(name.as_str()) {
-                    <span class="prelude-val">Some</span>(n) =&gt; <span class="kw-2">&amp;</span>n.expr,
-                    <span class="prelude-val">None </span>=&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
-                            span,
-                            <span class="macro">format!</span>(<span class="string">"missing named argument `{}`"</span>, name),
-                        ));
-                    }
-                };
-
-                unused_named.remove(name.as_str());
-                expr
+                <span class="kw">break </span><span class="lifetime">'expr </span>ExprOrIdent::Expr(expr);
             }
-        } <span class="kw">else </span>{
-            <span class="kw">let </span>expr = <span class="kw">match </span>pos.get(<span class="kw-2">*</span>count) {
-                <span class="prelude-val">Some</span>(expr) =&gt; <span class="kw-2">*</span>expr,
-                <span class="prelude-val">None </span>=&gt; {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
-                        span,
-                        <span class="macro">format!</span>(<span class="string">"missing positional argument #{}"</span>, count),
-                    ));
-                }
-            };
 
-            unused_pos.remove(count);
-            <span class="kw-2">*</span>count += <span class="number">1</span>;
-            expr
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(n) = named.get(name.as_str()) {
+                unused_named.remove(name.as_str());
+                <span class="kw">break </span><span class="lifetime">'expr </span>ExprOrIdent::Expr(<span class="kw-2">&amp;</span>n.expr);
+            }
+
+            <span class="kw">let </span><span class="kw-2">mut </span>ident = cx.ident(name.as_str())<span class="question-mark">?</span>;
+            ident.span = span;
+            ExprOrIdent::Ident(ident)
         };
 
         <span class="kw">let </span>width = <span class="kw">if </span>!width.is_empty() {
@@ -1332,30 +1382,28 @@
 }
 
 <span class="kw">struct </span>Iter&lt;<span class="lifetime">'a</span>&gt; {
-    iter: str::Chars&lt;<span class="lifetime">'a</span>&gt;,
-    a: <span class="prelude-ty">Option</span>&lt;char&gt;,
-    b: <span class="prelude-ty">Option</span>&lt;char&gt;,
+    iter: str::CharIndices&lt;<span class="lifetime">'a</span>&gt;,
+    a: <span class="prelude-ty">Option</span>&lt;(usize, char)&gt;,
+    b: <span class="prelude-ty">Option</span>&lt;(usize, char)&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Iter&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>new(input: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>iter = input.chars();
-
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = input.char_indices();
         <span class="kw">let </span>a = iter.next();
         <span class="kw">let </span>b = iter.next();
-
         <span class="self">Self </span>{ iter, a, b }
     }
 
-    <span class="kw">fn </span>current(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(char, char)&gt; {
-        <span class="kw">let </span>a = <span class="self">self</span>.a<span class="question-mark">?</span>;
-        <span class="kw">let </span>b = <span class="self">self</span>.b.unwrap_or_default();
-        <span class="prelude-val">Some</span>((a, b))
+    <span class="kw">fn </span>current(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(usize, char, char)&gt; {
+        <span class="kw">let </span>(pos, a) = <span class="self">self</span>.a<span class="question-mark">?</span>;
+        <span class="kw">let </span>(<span class="kw">_</span>, b) = <span class="self">self</span>.b.unwrap_or_default();
+        <span class="prelude-val">Some</span>((pos, a, b))
     }
 }
 
 <span class="kw">impl </span>Iterator <span class="kw">for </span>Iter&lt;<span class="lifetime">'_</span>&gt; {
-    <span class="kw">type </span>Item = (char, char);
+    <span class="kw">type </span>Item = (usize, char, char);
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
         <span class="kw">let </span>value = <span class="self">self</span>.current()<span class="question-mark">?</span>;

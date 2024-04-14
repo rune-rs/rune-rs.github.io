@@ -185,12 +185,6 @@ changes. See the <a href="./hot_reloading.html">Hot reloading</a> section for mo
 used by multiple threads simultaneously through <code>Arc&lt;Unit&gt;</code> and
 <code>Arc&lt;RuntimeContext&gt;</code>. Constructing a <code>Vm</code> with these through <code>Vm::new</code> is a
 very cheap operation.</p>
-<blockquote>
-<p><code>Vm</code>'s do allocate a stack, to avoid this you'd have to employ even more
-advanced techniques, such as storing the virtual machine in a thread local and
-using it by swapping out the <code>Unit</code> and <code>RuntimeContext</code> associated with it
-through <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html#method.unit_mut"><code>Vm::unit_mut</code></a> and <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html#method.context_mut"><code>Vm::context_mut</code></a> respectively.</p>
-</blockquote>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>let unit: Arc&lt;Unit&gt; = /* todo */;
@@ -202,12 +196,19 @@ std::thread::spawn(move || {
     Ok(())
 });
 <span class="boring">}</span></code></pre></pre>
+<blockquote>
+<p>Virtual machines do allocate memory. To this overhead too you'd have to employ
+more advanced techniques, such as storing virtual machines in a pool or thread
+locals. Once a machine has been acquired the <code>Unit</code> and <code>RuntimeContext</code>
+associated with it can be swapped out to the ones you need using
+<a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html#method.unit_mut"><code>Vm::unit_mut</code></a> and <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html#method.context_mut"><code>Vm::context_mut</code></a> respectively.</p>
+</blockquote>
 <p>Using <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html#method.send_execute"><code>Vm::send_execute</code></a> is a way to assert that a given execution is thread
 safe. And allows you to use Rune in asynchronous multithreaded environments,
 such as Tokio. This is achieved by ensuring that all captured arguments are
 <a href="https://docs.rs/rune/latest/rune/runtime/enum.ConstValue.html"><code>ConstValue</code></a>'s, which in contrast to <a href="https://docs.rs/rune/latest/rune/runtime/enum.Value.html"><code>Value</code></a>'s are guaranteed to be
 thread-safe:</p>
-<pre><code>use rune::alloc::prelude::*;
+<pre><pre class="playground"><code class="language-rust">use rune::alloc::prelude::*;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
 
@@ -256,10 +257,11 @@ async fn main() -&gt; rune::support::Result&lt;()&gt; {
 
     tokio::try_join!(t1, t2).unwrap();
     Ok(())
-}
-</code></pre>
+}</code></pre></pre>
 <p>Finally <a href="https://docs.rs/rune/latest/rune/runtime/struct.Function.html#method.into_sync"><code>Function::into_sync</code></a> exists to coerce a function into a
-[<code>SyncFunction], which is a thread-safe variant of a regular [</code>Function<code>]. This is a fallible operation since all values which are captured in the function-type in case its a closure has to be coerced to [</code>ConstValue`]. If this is not the
+<a href="https://docs.rs/rune/latest/rune/runtime/struct.SyncFunction.html"><code>SyncFunction</code></a>, which is a thread-safe variant of a regular <a href="https://docs.rs/rune/latest/rune/runtime/struct.Function.html"><code>Function</code></a>. This
+is a fallible operation since all values which are captured in the function-type
+in case its a closure has to be coerced to <a href="https://docs.rs/rune/latest/rune/runtime/enum.ConstValue.html"><code>ConstValue</code></a>. If this is not the
 case, the conversion will fail.</p>
 
                     </main>
