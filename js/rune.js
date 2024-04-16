@@ -2,7 +2,7 @@ var rune = (function (exports) {
   'use strict';
 
   /// Hook used to construct an async sleep function.
-  function sleep(ms) {
+  function js_sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
@@ -154,7 +154,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_24(arg0, arg1, arg2) {
-      wasm$1.wasm_bindgen__convert__closures__invoke1_mut__h6a044798ccf7c6d9(arg0, arg1, addHeapObject(arg2));
+      wasm$1.wasm_bindgen__convert__closures__invoke1_mut__habf56cd4a20e813c(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -177,7 +177,7 @@ var rune = (function (exports) {
       }
   }
   function __wbg_adapter_60(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h20a526f75cd30da7(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h41ce271fc073c429(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function __wbg_load(module, imports) {
@@ -274,8 +274,8 @@ var rune = (function (exports) {
           const ret = result;
           return ret;
       };
-      imports.wbg.__wbg_sleep_e610479fa9a14d22 = function(arg0) {
-          const ret = sleep(arg0);
+      imports.wbg.__wbg_jssleep_b84b882978e977e1 = function(arg0) {
+          const ret = js_sleep(arg0);
           return addHeapObject(ret);
       };
       imports.wbg.__wbg_text_450a059667fd91fd = function() { return handleError(function (arg0) {
@@ -493,7 +493,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-3acb37ba.wasm";
+                  let path = "/js/assets/rune_wasm-f7d1ad55.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
