@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["OPTIONS"],"fn":["decode","encode","from_slice","to_fixed_bytes","to_vec","to_writer"],"struct":["Encoding","Error"],"type":["Result"]};

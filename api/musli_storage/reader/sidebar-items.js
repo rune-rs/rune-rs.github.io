@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["Limit","SliceReader","WithPosition"],"trait":["PosReader","Reader"]};

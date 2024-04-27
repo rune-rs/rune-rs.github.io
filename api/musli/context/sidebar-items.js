@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["Capture","ErrorMarker","Ignore","RichError","Same","StackContext","SystemContext"],"trait":["Error"]};

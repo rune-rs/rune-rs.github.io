@@ -1,1 +1,1 @@
-searchState.loadedDescShard("musli_macros", 0, "  \nPlease refer to the main musli documentation.\nPlease refer to the main musli documentation.")
+searchState.loadedDescShard("musli_macros", 0, "  ")

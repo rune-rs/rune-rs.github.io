@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["visit_bytes_fn","visit_string_fn"]};

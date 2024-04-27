@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["RawEnv"]};
+window.SIDEBAR_ITEMS = {"macro":["static_env"],"struct":["RawEnv"]};

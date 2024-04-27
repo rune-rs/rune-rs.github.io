@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["buffered_writer","error","fixed_bytes","int","reader","wrap","writer"]};

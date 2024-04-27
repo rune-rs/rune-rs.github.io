@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"derive":["Decode","Encode"],"mod":["compat","de","derives","en","error","mode","never","utils"]};
+window.SIDEBAR_ITEMS = {"attr":["decoder","encoder","visitor"],"derive":["Decode","Encode"],"macro":["default_allocator"],"mod":["allocator","buf","compat","context","de","en","fixed","help","hint","mode","no_std","options","reader","storage","wrap","writer"],"struct":["FixedBytes"],"trait":["Allocator","Buf","Context","Decode","Decoder","Encode","Encoder","Reader","Writer"],"type":["Options"]};
