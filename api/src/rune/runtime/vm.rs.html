@@ -3329,6 +3329,31 @@
 <a href="#3329" id="3329">3329</a>
 <a href="#3330" id="3330">3330</a>
 <a href="#3331" id="3331">3331</a>
+<a href="#3332" id="3332">3332</a>
+<a href="#3333" id="3333">3333</a>
+<a href="#3334" id="3334">3334</a>
+<a href="#3335" id="3335">3335</a>
+<a href="#3336" id="3336">3336</a>
+<a href="#3337" id="3337">3337</a>
+<a href="#3338" id="3338">3338</a>
+<a href="#3339" id="3339">3339</a>
+<a href="#3340" id="3340">3340</a>
+<a href="#3341" id="3341">3341</a>
+<a href="#3342" id="3342">3342</a>
+<a href="#3343" id="3343">3343</a>
+<a href="#3344" id="3344">3344</a>
+<a href="#3345" id="3345">3345</a>
+<a href="#3346" id="3346">3346</a>
+<a href="#3347" id="3347">3347</a>
+<a href="#3348" id="3348">3348</a>
+<a href="#3349" id="3349">3349</a>
+<a href="#3350" id="3350">3350</a>
+<a href="#3351" id="3351">3351</a>
+<a href="#3352" id="3352">3352</a>
+<a href="#3353" id="3353">3353</a>
+<a href="#3354" id="3354">3354</a>
+<a href="#3355" id="3355">3355</a>
+<a href="#3356" id="3356">3356</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::mem::{replace, swap};
 <span class="kw">use </span>core::ops;
@@ -3875,6 +3900,7 @@
             offset,
             call,
             args: expected,
+            ..
         }) = <span class="self">self</span>.unit.function(hash)
         {
             <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
@@ -5026,8 +5052,16 @@
 
     <span class="doccomment">/// Push the tuple that is on top of the stack.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_push_tuple(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>op_push_environment(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: usize) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop()).into_tuple());
+
+        <span class="kw">if </span>tuple.len() != count {
+            <span class="kw">return </span>err(VmErrorKind::BadEnvironmentCount {
+                expected: count,
+                actual: tuple.len(),
+            });
+        }
+
         <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.extend(tuple.iter().cloned()));
         VmResult::Ok(())
     }
@@ -5399,7 +5433,9 @@
     <span class="kw">fn </span>lookup_function_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Result</span>&lt;Function, VmErrorKind&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self</span>.unit.function(hash) {
             <span class="prelude-val">Some</span>(info) =&gt; <span class="kw">match </span>info {
-                UnitFn::Offset { offset, call, args } =&gt; Function::from_vm_offset(
+                UnitFn::Offset {
+                    offset, call, args, ..
+                } =&gt; Function::from_vm_offset(
                     <span class="self">self</span>.context.clone(),
                     <span class="self">self</span>.unit.clone(),
                     offset,
@@ -6097,10 +6133,22 @@
             .function(hash)
             .ok_or(VmErrorKind::MissingFunction { hash }));
 
-        <span class="kw">let </span>(offset, call, args) = <span class="kw">match </span>info {
-            UnitFn::Offset { offset, call, args } =&gt; (offset, call, args),
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span>err(VmErrorKind::MissingFunction { hash }),
+        <span class="kw">let </span>UnitFn::Offset {
+            offset,
+            call,
+            args,
+            captures: <span class="prelude-val">Some</span>(captures),
+        } = info
+        <span class="kw">else </span>{
+            <span class="kw">return </span>err(VmErrorKind::MissingFunction { hash });
         };
+
+        <span class="kw">if </span>captures != count {
+            <span class="kw">return </span>err(VmErrorKind::BadEnvironmentCount {
+                expected: captures,
+                actual: count,
+            });
+        }
 
         <span class="kw">let </span>environment =
             <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop_sequence(count))).try_into_boxed_slice());
@@ -6122,76 +6170,77 @@
     <span class="doccomment">/// Implementation of a function call.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, args: usize) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">match </span><span class="self">self</span>.unit.function(hash) {
-            <span class="prelude-val">Some</span>(info) =&gt; <span class="kw">match </span>info {
-                UnitFn::Offset {
-                    offset,
-                    call,
-                    args: expected,
-                } =&gt; {
-                    <span class="macro">vm_try!</span>(check_args(args, expected));
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, args));
-                }
-                UnitFn::EmptyStruct { hash } =&gt; {
-                    <span class="macro">vm_try!</span>(check_args(args, <span class="number">0</span>));
+        <span class="kw">let </span><span class="prelude-val">Some</span>(info) = <span class="self">self</span>.unit.function(hash) <span class="kw">else </span>{
+            <span class="kw">let </span>handler = <span class="macro">vm_try!</span>(<span class="self">self
+                </span>.context
+                .function(hash)
+                .ok_or(VmErrorKind::MissingFunction { hash }));
 
-                    <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
-                        </span>.unit
-                        .lookup_rtti(hash)
-                        .ok_or(VmErrorKind::MissingRtti { hash }));
+            <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, args));
+            <span class="kw">return </span>VmResult::Ok(());
+        };
 
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(<span class="macro">vm_try!</span>(Value::empty_struct(rtti.clone()))));
-                }
-                UnitFn::TupleStruct {
-                    hash,
-                    args: expected,
-                } =&gt; {
-                    <span class="macro">vm_try!</span>(check_args(args, expected));
-                    <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop_sequence(args)));
+        <span class="kw">match </span>info {
+            UnitFn::Offset {
+                offset,
+                call,
+                args: expected,
+                ..
+            } =&gt; {
+                <span class="macro">vm_try!</span>(check_args(args, expected));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, args));
+            }
+            UnitFn::EmptyStruct { hash } =&gt; {
+                <span class="macro">vm_try!</span>(check_args(args, <span class="number">0</span>));
 
-                    <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
-                        </span>.unit
-                        .lookup_rtti(hash)
-                        .ok_or(VmErrorKind::MissingRtti { hash }));
+                <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
+                    </span>.unit
+                    .lookup_rtti(hash)
+                    .ok_or(VmErrorKind::MissingRtti { hash }));
 
-                    <span class="macro">vm_try!</span>(<span class="self">self
-                        </span>.stack
-                        .push(<span class="macro">vm_try!</span>(Value::tuple_struct(rtti.clone(), tuple))));
-                }
-                UnitFn::TupleVariant {
-                    hash,
-                    args: expected,
-                } =&gt; {
-                    <span class="macro">vm_try!</span>(check_args(args, expected));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(<span class="macro">vm_try!</span>(Value::empty_struct(rtti.clone()))));
+            }
+            UnitFn::TupleStruct {
+                hash,
+                args: expected,
+            } =&gt; {
+                <span class="macro">vm_try!</span>(check_args(args, expected));
+                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop_sequence(args)));
 
-                    <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
-                        </span>.unit
-                        .lookup_variant_rtti(hash)
-                        .ok_or(VmErrorKind::MissingVariantRtti { hash }));
+                <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
+                    </span>.unit
+                    .lookup_rtti(hash)
+                    .ok_or(VmErrorKind::MissingRtti { hash }));
 
-                    <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop_sequence(args)));
-                    <span class="macro">vm_try!</span>(<span class="self">self
-                        </span>.stack
-                        .push(<span class="macro">vm_try!</span>(Value::tuple_variant(rtti.clone(), tuple))));
-                }
-                UnitFn::UnitVariant { hash } =&gt; {
-                    <span class="macro">vm_try!</span>(check_args(args, <span class="number">0</span>));
+                <span class="macro">vm_try!</span>(<span class="self">self
+                    </span>.stack
+                    .push(<span class="macro">vm_try!</span>(Value::tuple_struct(rtti.clone(), tuple))));
+            }
+            UnitFn::TupleVariant {
+                hash,
+                args: expected,
+            } =&gt; {
+                <span class="macro">vm_try!</span>(check_args(args, expected));
 
-                    <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
-                        </span>.unit
-                        .lookup_variant_rtti(hash)
-                        .ok_or(VmErrorKind::MissingVariantRtti { hash }));
+                <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
+                    </span>.unit
+                    .lookup_variant_rtti(hash)
+                    .ok_or(VmErrorKind::MissingVariantRtti { hash }));
 
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(<span class="macro">vm_try!</span>(Value::unit_variant(rtti.clone()))));
-                }
-            },
-            <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span>handler = <span class="macro">vm_try!</span>(<span class="self">self
-                    </span>.context
-                    .function(hash)
-                    .ok_or(VmErrorKind::MissingFunction { hash }));
+                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pop_sequence(args)));
+                <span class="macro">vm_try!</span>(<span class="self">self
+                    </span>.stack
+                    .push(<span class="macro">vm_try!</span>(Value::tuple_variant(rtti.clone(), tuple))));
+            }
+            UnitFn::UnitVariant { hash } =&gt; {
+                <span class="macro">vm_try!</span>(check_args(args, <span class="number">0</span>));
 
-                <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, args));
+                <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
+                    </span>.unit
+                    .lookup_variant_rtti(hash)
+                    .ok_or(VmErrorKind::MissingVariantRtti { hash }));
+
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(<span class="macro">vm_try!</span>(Value::unit_variant(rtti.clone()))));
             }
         }
 
@@ -6217,6 +6266,7 @@
             offset,
             call,
             args: expected,
+            ..
         }) = <span class="self">self</span>.unit.function(hash)
         {
             <span class="macro">vm_try!</span>(check_args(args, expected));
@@ -6476,8 +6526,8 @@
                 Inst::Tuple4 { args } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_tuple_n(<span class="kw-2">&amp;</span>args[..]));
                 }
-                Inst::PushTuple =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_push_tuple());
+                Inst::PushEnvironment { count } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_push_environment(count));
                 }
                 Inst::Object { slot } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_object(slot));
