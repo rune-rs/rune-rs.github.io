@@ -1052,6 +1052,16 @@
 <a href="#1052" id="1052">1052</a>
 <a href="#1053" id="1053">1053</a>
 <a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::convert::Infallible;
 <span class="kw">use </span>core::fmt;
 
@@ -1274,6 +1284,7 @@
 
 <span class="kw">impl</span>&lt;T&gt; VmResult&lt;T&gt; {
     <span class="doccomment">/// Construct a result containing a panic.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>panic&lt;D&gt;(message: D) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>D: <span class="lifetime">'static </span>+ BoxedPanic,
@@ -1283,11 +1294,47 @@
 
     <span class="doccomment">/// Construct an expectation error. The actual type received is `actual`,
     /// but we expected `E`.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>expected&lt;E&gt;(actual: TypeInfo) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>E: <span class="question-mark">?</span>Sized + TypeOf,
     {
         <span class="self">Self</span>::Err(VmError::expected::&lt;E&gt;(actual))
+    }
+
+    <span class="doccomment">/// Test if the result is an ok.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>is_ok(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::Ok(..))
+    }
+
+    <span class="doccomment">/// Test if the result is an error.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>is_err(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::Err(..))
+    }
+
+    <span class="doccomment">/// Expect a value or panic.
+    </span><span class="attr">#[inline]
+    #[track_caller]
+    </span><span class="kw">pub fn </span>expect(<span class="self">self</span>, msg: <span class="kw-2">&amp;</span>str) -&gt; T {
+        <span class="self">self</span>.into_result().expect(msg)
+    }
+
+    <span class="doccomment">/// Unwrap the interior value.
+    </span><span class="attr">#[inline]
+    #[track_caller]
+    </span><span class="kw">pub fn </span>unwrap(<span class="self">self</span>) -&gt; T {
+        <span class="self">self</span>.into_result().unwrap()
+    }
+
+    <span class="doccomment">/// Convert a [`VmResult`] into a [`Result`].
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>into_result(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, VmError&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Ok(value) =&gt; <span class="prelude-val">Ok</span>(value),
+            <span class="self">Self</span>::Err(error) =&gt; <span class="prelude-val">Err</span>(error),
+        }
     }
 
     <span class="doccomment">/// Construct a new error from a type that can be converted into a
@@ -1297,15 +1344,6 @@
         </span>VmError: From&lt;E&gt;,
     {
         <span class="self">Self</span>::Err(VmError::from(error))
-    }
-
-    <span class="doccomment">/// Convert a [`VmResult`] into a [`Result`].
-    </span><span class="attr">#[inline(always)]
-    </span><span class="kw">pub fn </span>into_result(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, VmError&gt; {
-        <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Ok(value) =&gt; <span class="prelude-val">Ok</span>(value),
-            <span class="self">Self</span>::Err(error) =&gt; <span class="prelude-val">Err</span>(error),
-        }
     }
 
     <span class="doccomment">/// Apply the given frame to the current result.
@@ -1346,24 +1384,6 @@
                 <span class="self">Self</span>::Err(err)
             }
         }
-    }
-
-    <span class="doccomment">/// Expect a value or panic.
-    </span><span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub fn </span>expect(<span class="self">self</span>, msg: <span class="kw-2">&amp;</span>str) -&gt; T {
-        <span class="self">self</span>.into_result().expect(msg)
-    }
-
-    <span class="doccomment">/// Unwrap the interior value.
-    </span><span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub fn </span>unwrap(<span class="self">self</span>) -&gt; T {
-        <span class="self">self</span>.into_result().unwrap()
-    }
-
-    <span class="doccomment">/// Test if it is an error.
-    </span><span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub fn </span>is_err(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::Err(..))
     }
 }
 
