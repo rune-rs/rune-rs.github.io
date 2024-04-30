@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b21aa549bf6d91ff.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0-nightly (1fffb2a35 2024-04-28)" data-channel="nightly" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../rune/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b21aa549bf6d91ff.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0-nightly (a8a1d3a77 2024-04-29)" data-channel="nightly" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../rune/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3354,9 +3354,87 @@
 <a href="#3354" id="3354">3354</a>
 <a href="#3355" id="3355">3355</a>
 <a href="#3356" id="3356">3356</a>
+<a href="#3357" id="3357">3357</a>
+<a href="#3358" id="3358">3358</a>
+<a href="#3359" id="3359">3359</a>
+<a href="#3360" id="3360">3360</a>
+<a href="#3361" id="3361">3361</a>
+<a href="#3362" id="3362">3362</a>
+<a href="#3363" id="3363">3363</a>
+<a href="#3364" id="3364">3364</a>
+<a href="#3365" id="3365">3365</a>
+<a href="#3366" id="3366">3366</a>
+<a href="#3367" id="3367">3367</a>
+<a href="#3368" id="3368">3368</a>
+<a href="#3369" id="3369">3369</a>
+<a href="#3370" id="3370">3370</a>
+<a href="#3371" id="3371">3371</a>
+<a href="#3372" id="3372">3372</a>
+<a href="#3373" id="3373">3373</a>
+<a href="#3374" id="3374">3374</a>
+<a href="#3375" id="3375">3375</a>
+<a href="#3376" id="3376">3376</a>
+<a href="#3377" id="3377">3377</a>
+<a href="#3378" id="3378">3378</a>
+<a href="#3379" id="3379">3379</a>
+<a href="#3380" id="3380">3380</a>
+<a href="#3381" id="3381">3381</a>
+<a href="#3382" id="3382">3382</a>
+<a href="#3383" id="3383">3383</a>
+<a href="#3384" id="3384">3384</a>
+<a href="#3385" id="3385">3385</a>
+<a href="#3386" id="3386">3386</a>
+<a href="#3387" id="3387">3387</a>
+<a href="#3388" id="3388">3388</a>
+<a href="#3389" id="3389">3389</a>
+<a href="#3390" id="3390">3390</a>
+<a href="#3391" id="3391">3391</a>
+<a href="#3392" id="3392">3392</a>
+<a href="#3393" id="3393">3393</a>
+<a href="#3394" id="3394">3394</a>
+<a href="#3395" id="3395">3395</a>
+<a href="#3396" id="3396">3396</a>
+<a href="#3397" id="3397">3397</a>
+<a href="#3398" id="3398">3398</a>
+<a href="#3399" id="3399">3399</a>
+<a href="#3400" id="3400">3400</a>
+<a href="#3401" id="3401">3401</a>
+<a href="#3402" id="3402">3402</a>
+<a href="#3403" id="3403">3403</a>
+<a href="#3404" id="3404">3404</a>
+<a href="#3405" id="3405">3405</a>
+<a href="#3406" id="3406">3406</a>
+<a href="#3407" id="3407">3407</a>
+<a href="#3408" id="3408">3408</a>
+<a href="#3409" id="3409">3409</a>
+<a href="#3410" id="3410">3410</a>
+<a href="#3411" id="3411">3411</a>
+<a href="#3412" id="3412">3412</a>
+<a href="#3413" id="3413">3413</a>
+<a href="#3414" id="3414">3414</a>
+<a href="#3415" id="3415">3415</a>
+<a href="#3416" id="3416">3416</a>
+<a href="#3417" id="3417">3417</a>
+<a href="#3418" id="3418">3418</a>
+<a href="#3419" id="3419">3419</a>
+<a href="#3420" id="3420">3420</a>
+<a href="#3421" id="3421">3421</a>
+<a href="#3422" id="3422">3422</a>
+<a href="#3423" id="3423">3423</a>
+<a href="#3424" id="3424">3424</a>
+<a href="#3425" id="3425">3425</a>
+<a href="#3426" id="3426">3426</a>
+<a href="#3427" id="3427">3427</a>
+<a href="#3428" id="3428">3428</a>
+<a href="#3429" id="3429">3429</a>
+<a href="#3430" id="3430">3430</a>
+<a href="#3431" id="3431">3431</a>
+<a href="#3432" id="3432">3432</a>
+<a href="#3433" id="3433">3433</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::mem::{replace, swap};
 <span class="kw">use </span>core::ops;
+<span class="kw">use </span>core::ptr::NonNull;
 <span class="kw">use </span>core::slice;
 
 <span class="kw">use </span>::rust_alloc::sync::Arc;
@@ -3377,6 +3455,8 @@
     Variant, VariantData, Vec, VmError, VmErrorKind, VmExecution, VmHalt, VmIntegerRepr, VmResult,
     VmSendExecution,
 };
+
+<span class="kw">use super</span>::{VmDiagnostics, VmDiagnosticsObj};
 
 <span class="doccomment">/// Small helper function to build errors.
 </span><span class="kw">fn </span>err&lt;T, E&gt;(error: E) -&gt; VmResult&lt;T&gt;
@@ -3798,6 +3878,49 @@
         <span class="prelude-val">Ok</span>(value)
     }
 
+    <span class="doccomment">/// Call the given function immediately, returning the produced value.
+    ///
+    /// This function permits for using references since it doesn't defer its
+    /// execution.
+    ///
+    /// # Panics
+    ///
+    /// If any of the arguments passed in are references, and that references is
+    /// captured somewhere in the call as [`Mut&lt;T&gt;`] or [`Ref&lt;T&gt;`]
+    /// this call will panic as we are trying to free the metadata relatedc to
+    /// the reference.
+    ///
+    /// [`Mut&lt;T&gt;`]: crate::runtime::Mut
+    /// [`Ref&lt;T&gt;`]: crate::runtime::Ref
+    </span><span class="kw">pub fn </span>call_with_diagnostics(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        name: <span class="kw">impl </span>ToTypeHash,
+        args: <span class="kw">impl </span>GuardedArgs,
+        diagnostics: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>VmDiagnostics&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Value, VmError&gt; {
+        <span class="self">self</span>.set_entrypoint(name, args.count())<span class="question-mark">?</span>;
+
+        <span class="comment">// Safety: We hold onto the guard until the vm has completed and
+        // `VmExecution` will clear the stack before this function returns.
+        // Erronously or not.
+        </span><span class="kw">let </span>guard = <span class="kw">unsafe </span>{ args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack).into_result()<span class="question-mark">? </span>};
+
+        <span class="kw">let </span>value = {
+            <span class="comment">// Clearing the stack here on panics has safety implications - see
+            // above.
+            </span><span class="kw">let </span>vm = ClearStack(<span class="self">self</span>);
+            VmExecution::new(<span class="kw-2">&amp;mut *</span>vm.<span class="number">0</span>)
+                .complete_with_diagnostics(diagnostics)
+                .into_result()<span class="question-mark">?
+        </span>};
+
+        <span class="comment">// Note: this might panic if something in the vm is holding on to a
+        // reference of the value. We should prevent it from being possible to
+        // take any owned references to values held by this.
+        </span>drop(guard);
+        <span class="prelude-val">Ok</span>(value)
+    }
+
     <span class="doccomment">/// Call the given function immediately asynchronously, returning the
     /// produced value.
     ///
@@ -3912,6 +4035,7 @@
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(hash) {
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
             <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
             <span class="comment">// Safety: We hold onto the guard for the duration of this call.
             </span><span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack)) };
@@ -3920,6 +4044,16 @@
         }
 
         VmResult::Ok(CallResult::Unsupported(target))
+    }
+
+    <span class="kw">fn </span>called_function_hook(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; VmResult&lt;()&gt; {
+        <span class="kw">crate</span>::runtime::env::exclusive(|<span class="kw">_</span>, <span class="kw">_</span>, diagnostics| {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(diagnostics) = diagnostics {
+                <span class="macro">vm_try!</span>(diagnostics.function_used(hash, <span class="self">self</span>.ip()));
+            }
+
+            VmResult::Ok(())
+        })
     }
 
     <span class="doccomment">/// Helper to call a field function.
@@ -3939,6 +4073,7 @@
         <span class="kw">let </span>hash = Hash::field_function(protocol, <span class="macro">vm_try!</span>(target.type_hash()), name);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(hash) {
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
             <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
             <span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack)) };
             <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, count));
@@ -6275,6 +6410,7 @@
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(hash) {
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
             <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, args));
             <span class="kw">return </span>VmResult::Ok(());
         }
@@ -6363,15 +6499,33 @@
     <span class="kw">where
         </span>F: FnOnce() -&gt; T,
     {
-        <span class="kw">let </span>_guard = <span class="kw">crate</span>::runtime::env::Guard::new(<span class="kw-2">&amp;</span><span class="self">self</span>.context, <span class="kw-2">&amp;</span><span class="self">self</span>.unit);
+        <span class="kw">let </span>_guard = <span class="kw">crate</span>::runtime::env::Guard::new(
+            NonNull::from(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
+            NonNull::from(<span class="kw-2">&amp;</span><span class="self">self</span>.unit),
+            <span class="prelude-val">None</span>,
+        );
         f()
     }
 
     <span class="doccomment">/// Evaluate a single instruction.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;VmHalt&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>, diagnostics: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>VmDiagnostics&gt;) -&gt; VmResult&lt;VmHalt&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>vm_diagnostics_obj;
+
+        <span class="kw">let </span>diagnostics = <span class="kw">match </span>diagnostics {
+            <span class="prelude-val">Some</span>(diagnostics) =&gt; {
+                vm_diagnostics_obj = VmDiagnosticsObj::new(diagnostics);
+                <span class="prelude-val">Some</span>(NonNull::from(<span class="kw-2">&amp;mut </span>vm_diagnostics_obj))
+            }
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+        };
+
         <span class="comment">// NB: set up environment so that native function can access context and
         // unit.
-        </span><span class="kw">let </span>_guard = <span class="kw">crate</span>::runtime::env::Guard::new(<span class="kw-2">&amp;</span><span class="self">self</span>.context, <span class="kw-2">&amp;</span><span class="self">self</span>.unit);
+        </span><span class="kw">let </span>_guard = <span class="kw">crate</span>::runtime::env::Guard::new(
+            NonNull::from(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
+            NonNull::from(<span class="kw-2">&amp;</span><span class="self">self</span>.unit),
+            diagnostics,
+        );
 
         <span class="kw">loop </span>{
             <span class="kw">if </span>!budget::take() {

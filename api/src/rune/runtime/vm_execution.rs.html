@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm_execution.rs`."><title>vm_execution.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b21aa549bf6d91ff.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0-nightly (1fffb2a35 2024-04-28)" data-channel="nightly" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../rune/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm_execution.rs`."><title>vm_execution.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b21aa549bf6d91ff.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0-nightly (a8a1d3a77 2024-04-29)" data-channel="nightly" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../rune/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -474,6 +474,86 @@
 <a href="#474" id="474">474</a>
 <a href="#475" id="475">475</a>
 <a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future::Future;
 <span class="kw">use </span>core::mem::{replace, take};
@@ -488,6 +568,8 @@
     VmHaltInfo, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::shared::AssertSend;
+
+<span class="kw">use </span><span class="kw">super</span>::VmDiagnostics;
 
 <span class="doccomment">/// The state of an execution. We keep track of this because it's important to
 /// correctly interact with functions that yield (like generators and streams)
@@ -649,7 +731,18 @@
     /// If any async instructions are encountered, this will error. This will
     /// also error if the execution is suspended through yielding.
     </span><span class="kw">pub fn </span>complete(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.resume()) {
+        <span class="self">self</span>.complete_with_diagnostics(<span class="prelude-val">None</span>)
+    }
+
+    <span class="doccomment">/// Complete the current execution without support for async instructions.
+    ///
+    /// If any async instructions are encountered, this will error. This will
+    /// also error if the execution is suspended through yielding.
+    </span><span class="kw">pub fn </span>complete_with_diagnostics(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        diagnostics: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>VmDiagnostics&gt;,
+    ) -&gt; VmResult&lt;Value&gt; {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.resume_with_diagnostics(diagnostics)) {
             GeneratorState::Complete(value) =&gt; VmResult::Ok(value),
             GeneratorState::Yielded(..) =&gt; VmResult::err(VmErrorKind::Halted {
                 halt: VmHaltInfo::Yielded,
@@ -668,7 +761,7 @@
         }
 
         <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(value));
-        <span class="self">self</span>.inner_async_resume().<span class="kw">await
+        <span class="self">self</span>.inner_async_resume(<span class="prelude-val">None</span>).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Resume the current execution with support for async instructions.
@@ -676,20 +769,40 @@
     /// If the function being executed is a generator or stream this will resume
     /// it while returning a unit from the current `yield`.
     </span><span class="kw">pub async fn </span>async_resume(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;GeneratorState&gt; {
+        <span class="self">self</span>.async_resume_with_diagnostics(<span class="prelude-val">None</span>).<span class="kw">await
+    </span>}
+
+    <span class="doccomment">/// Resume the current execution with support for async instructions.
+    ///
+    /// If the function being executed is a generator or stream this will resume
+    /// it while returning a unit from the current `yield`.
+    </span><span class="kw">pub async fn </span>async_resume_with_diagnostics(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        diagnostics: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>VmDiagnostics&gt;,
+    ) -&gt; VmResult&lt;GeneratorState&gt; {
         <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.state, ExecutionState::Resumed) {
             <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(<span class="macro">vm_try!</span>(Value::empty())));
         } <span class="kw">else </span>{
             <span class="self">self</span>.state = ExecutionState::Resumed;
         }
 
-        <span class="self">self</span>.inner_async_resume().<span class="kw">await
+        <span class="self">self</span>.inner_async_resume(diagnostics).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>inner_async_resume(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;GeneratorState&gt; {
+    <span class="kw">async fn </span>inner_async_resume(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw-2">mut </span>diagnostics: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>VmDiagnostics&gt;,
+    ) -&gt; VmResult&lt;GeneratorState&gt; {
         <span class="kw">loop </span>{
             <span class="kw">let </span>vm = <span class="self">self</span>.head.as_mut();
 
-            <span class="kw">match </span><span class="macro">vm_try!</span>(vm.run().with_vm(vm)) {
+            <span class="kw">match </span><span class="macro">vm_try!</span>(vm
+                .run(<span class="kw">match </span>diagnostics {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>value) =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut **</span>value),
+                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+                })
+                .with_vm(vm))
+            {
                 VmHalt::Exited =&gt; (),
                 VmHalt::Awaited(awaited) =&gt; {
                     <span class="macro">vm_try!</span>(awaited.into_vm(vm).<span class="kw">await</span>);
@@ -731,7 +844,7 @@
         }
 
         <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(value));
-        <span class="self">self</span>.inner_resume()
+        <span class="self">self</span>.inner_resume(<span class="prelude-val">None</span>)
     }
 
     <span class="doccomment">/// Resume the current execution without support for async instructions.
@@ -740,23 +853,45 @@
     /// it while returning a unit from the current `yield`.
     ///
     /// If any async instructions are encountered, this will error.
-    </span><span class="attr">#[tracing::instrument(skip_all)]
     </span><span class="kw">pub fn </span>resume(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;GeneratorState&gt; {
+        <span class="self">self</span>.resume_with_diagnostics(<span class="prelude-val">None</span>)
+    }
+
+    <span class="doccomment">/// Resume the current execution without support for async instructions.
+    ///
+    /// If the function being executed is a generator or stream this will resume
+    /// it while returning a unit from the current `yield`.
+    ///
+    /// If any async instructions are encountered, this will error.
+    </span><span class="attr">#[tracing::instrument(skip_all, fields(diagnostics=diagnostics.is_some()))]
+    </span><span class="kw">pub fn </span>resume_with_diagnostics(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        diagnostics: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>VmDiagnostics&gt;,
+    ) -&gt; VmResult&lt;GeneratorState&gt; {
         <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.state, ExecutionState::Resumed) {
             <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(<span class="macro">vm_try!</span>(Value::empty())));
         } <span class="kw">else </span>{
             <span class="self">self</span>.state = ExecutionState::Resumed;
         }
 
-        <span class="self">self</span>.inner_resume()
+        <span class="self">self</span>.inner_resume(diagnostics)
     }
 
-    <span class="kw">fn </span>inner_resume(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;GeneratorState&gt; {
+    <span class="kw">fn </span>inner_resume(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw-2">mut </span>diagnostics: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>VmDiagnostics&gt;,
+    ) -&gt; VmResult&lt;GeneratorState&gt; {
         <span class="kw">loop </span>{
             <span class="kw">let </span>len = <span class="self">self</span>.states.len();
             <span class="kw">let </span>vm = <span class="self">self</span>.head.as_mut();
 
-            <span class="kw">match </span><span class="macro">vm_try!</span>(vm.run().with_vm(vm)) {
+            <span class="kw">match </span><span class="macro">vm_try!</span>(vm
+                .run(<span class="kw">match </span>diagnostics {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>value) =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut **</span>value),
+                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+                })
+                .with_vm(vm))
+            {
                 VmHalt::Exited =&gt; (),
                 VmHalt::VmCall(vm_call) =&gt; {
                     <span class="macro">vm_try!</span>(vm_call.into_execution(<span class="self">self</span>));
@@ -790,7 +925,7 @@
         <span class="kw">let </span>len = <span class="self">self</span>.states.len();
         <span class="kw">let </span>vm = <span class="self">self</span>.head.as_mut();
 
-        <span class="kw">match </span><span class="macro">vm_try!</span>(budget::with(<span class="number">1</span>, || vm.run().with_vm(vm)).call()) {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(budget::with(<span class="number">1</span>, || vm.run(<span class="prelude-val">None</span>).with_vm(vm)).call()) {
             VmHalt::Exited =&gt; (),
             VmHalt::VmCall(vm_call) =&gt; {
                 <span class="macro">vm_try!</span>(vm_call.into_execution(<span class="self">self</span>));
@@ -818,7 +953,7 @@
     </span><span class="kw">pub async fn </span>async_step(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
         <span class="kw">let </span>vm = <span class="self">self</span>.head.as_mut();
 
-        <span class="kw">match </span><span class="macro">vm_try!</span>(budget::with(<span class="number">1</span>, || vm.run().with_vm(vm)).call()) {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(budget::with(<span class="number">1</span>, || vm.run(<span class="prelude-val">None</span>).with_vm(vm)).call()) {
             VmHalt::Exited =&gt; (),
             VmHalt::Awaited(awaited) =&gt; {
                 <span class="macro">vm_try!</span>(awaited.into_vm(vm).<span class="kw">await</span>);
@@ -922,6 +1057,31 @@
     </span><span class="kw">pub fn </span>async_complete(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Future&lt;Output = VmResult&lt;Value&gt;&gt; + Send + <span class="lifetime">'static </span>{
         <span class="kw">let </span>future = <span class="kw">async move </span>{
             <span class="kw">let </span>result = <span class="macro">vm_try!</span>(<span class="self">self</span>.<span class="number">0</span>.async_resume().<span class="kw">await</span>);
+
+            <span class="kw">match </span>result {
+                GeneratorState::Complete(value) =&gt; VmResult::Ok(value),
+                GeneratorState::Yielded(..) =&gt; VmResult::err(VmErrorKind::Halted {
+                    halt: VmHaltInfo::Yielded,
+                }),
+            }
+        };
+
+        <span class="comment">// Safety: we wrap all APIs around the [VmExecution], preventing values
+        // from escaping from contained virtual machine.
+        </span><span class="kw">unsafe </span>{ AssertSend::new(future) }
+    }
+
+    <span class="doccomment">/// Complete the current execution with support for async instructions.
+    ///
+    /// This requires that the result of the Vm is converted into a
+    /// [crate::FromValue] that also implements [Send],  which prevents non-Send
+    /// values from escaping from the virtual machine.
+    </span><span class="kw">pub fn </span>async_complete_with_diagnostics(
+        <span class="kw-2">mut </span><span class="self">self</span>,
+        diagnostics: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>VmDiagnostics&gt;,
+    ) -&gt; <span class="kw">impl </span>Future&lt;Output = VmResult&lt;Value&gt;&gt; + Send + <span class="lifetime">'_ </span>{
+        <span class="kw">let </span>future = <span class="kw">async move </span>{
+            <span class="kw">let </span>result = <span class="macro">vm_try!</span>(<span class="self">self</span>.<span class="number">0</span>.async_resume_with_diagnostics(diagnostics).<span class="kw">await</span>);
 
             <span class="kw">match </span>result {
                 GeneratorState::Complete(value) =&gt; VmResult::Ok(value),
