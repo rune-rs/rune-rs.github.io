@@ -43,6 +43,7 @@ var srcIndex = new Map(JSON.parse('[\
 ["home",["",[],["env.rs","lib.rs"]]],\
 ["idna",["",[],["lib.rs","punycode.rs","uts46.rs"]]],\
 ["indexmap",["",[["map",[["core",[],["entry.rs","raw.rs","raw_entry_v1.rs"]]],["core.rs","iter.rs","mutable.rs","slice.rs"]],["set",[],["iter.rs","mutable.rs","slice.rs"]]],["arbitrary.rs","lib.rs","macros.rs","map.rs","set.rs","util.rs"]]],\
+["is_terminal_polyfill",["",[],["lib.rs"]]],\
 ["itoa",["",[],["lib.rs","udiv128.rs"]]],\
 ["lazy_static",["",[],["inline_lazy.rs","lib.rs"]]],\
 ["libc",["",[["unix",[["linux_like",[["linux",[["arch",[["generic",[],["mod.rs"]]],["mod.rs"]],["gnu",[["b64",[["x86_64",[],["align.rs","mod.rs","not_x32.rs"]]],["mod.rs"]]],["align.rs","mod.rs"]]],["align.rs","mod.rs","non_exhaustive.rs"]]],["mod.rs"]]],["align.rs","mod.rs"]]],["fixed_width_ints.rs","lib.rs","macros.rs"]]],\

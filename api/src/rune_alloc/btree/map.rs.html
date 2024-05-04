@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/btree/map.rs`."><title>map.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b21aa549bf6d91ff.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0-nightly (a8a1d3a77 2024-04-29)" data-channel="nightly" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../rune_alloc/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/btree/map.rs`."><title>map.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b21aa549bf6d91ff.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0-nightly (d2d24e395 2024-05-03)" data-channel="nightly" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../rune_alloc/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3710,6 +3710,14 @@
 <a href="#3710" id="3710">3710</a>
 <a href="#3711" id="3711">3711</a>
 <a href="#3712" id="3712">3712</a>
+<a href="#3713" id="3713">3713</a>
+<a href="#3714" id="3714">3714</a>
+<a href="#3715" id="3715">3715</a>
+<a href="#3716" id="3716">3716</a>
+<a href="#3717" id="3717">3717</a>
+<a href="#3718" id="3718">3718</a>
+<a href="#3719" id="3719">3719</a>
+<a href="#3720" id="3720">3720</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! An ordered map based on a B-Tree.
 
 </span><span class="kw">use </span>core::borrow::Borrow;
@@ -3777,9 +3785,9 @@
 }
 
 <span class="attr">#[inline(always)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>infallible_cmp&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw">_</span>: <span class="kw-2">&amp;mut </span>(), a: <span class="kw-2">&amp;</span>T, b: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;Ordering, Infallible&gt;
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>infallible_cmp&lt;T&gt;(<span class="kw">_</span>: <span class="kw-2">&amp;mut </span>(), a: <span class="kw-2">&amp;</span>T, b: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;Ordering, Infallible&gt;
 <span class="kw">where
-    </span>T: Ord,
+    </span>T: <span class="question-mark">?</span>Sized + Ord,
 {
     <span class="prelude-val">Ok</span>(a.cmp(b))
 }
@@ -3965,13 +3973,14 @@
 
 <span class="kw">impl</span>&lt;K: TryClone, V: TryClone, A: Allocator + Clone&gt; TryClone <span class="kw">for </span>BTreeMap&lt;K, V, A&gt; {
     <span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BTreeMap&lt;K, V, A&gt;, Error&gt; {
-        <span class="kw">fn </span>clone_subtree&lt;<span class="lifetime">'a</span>, K: TryClone, V: TryClone, A: Allocator + Clone&gt;(
+        <span class="kw">fn </span>clone_subtree&lt;<span class="lifetime">'a</span>, K, V, A&gt;(
             node: NodeRef&lt;marker::Immut&lt;<span class="lifetime">'a</span>&gt;, K, V, marker::LeafOrInternal&gt;,
             alloc: <span class="kw-2">&amp;</span>A,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;BTreeMap&lt;K, V, A&gt;, Error&gt;
         <span class="kw">where
-            </span>K: <span class="lifetime">'a</span>,
-            V: <span class="lifetime">'a</span>,
+            </span>K: <span class="lifetime">'a </span>+ TryClone,
+            V: <span class="lifetime">'a </span>+ TryClone,
+            A: Allocator + Clone,
         {
             <span class="kw">match </span>node.force() {
                 Leaf(leaf) =&gt; {
@@ -4574,22 +4583,24 @@
     /// assert_eq!(map.get(&amp;2), None);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>get&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>V&gt;
+    </span><span class="kw">pub fn </span>get&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>V&gt;
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt; + Ord,
-        Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
+        K: Borrow&lt;Q&gt; + Ord,
     {
         into_ok(<span class="self">self</span>.get_with(<span class="kw-2">&amp;mut </span>(), key, infallible_cmp))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_with&lt;C: <span class="question-mark">?</span>Sized, Q: <span class="question-mark">?</span>Sized, E&gt;(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_with&lt;C, Q, E&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         cx: <span class="kw-2">&amp;mut </span>C,
         key: <span class="kw-2">&amp;</span>Q,
         cmp: CmpFn&lt;C, Q, E&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>V&gt;, E&gt;
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt;,
+        </span>C: <span class="question-mark">?</span>Sized,
+        Q: <span class="question-mark">?</span>Sized,
+        K: Borrow&lt;Q&gt;,
     {
         <span class="kw">let </span><span class="prelude-val">Some</span>(root_node) = <span class="self">self</span>.root.as_ref().map(NodeRef::reborrow) <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
@@ -4617,10 +4628,10 @@
     /// assert_eq!(map.get_key_value(&amp;2), None);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>get_key_value&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, k: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;</span>V)&gt;
+    </span><span class="kw">pub fn </span>get_key_value&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, k: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>K, <span class="kw-2">&amp;</span>V)&gt;
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt; + Ord,
-        Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
+        K: Borrow&lt;Q&gt; + Ord,
     {
         <span class="kw">let </span>root_node = <span class="self">self</span>.root.as_ref()<span class="question-mark">?</span>.reborrow();
         <span class="kw">match </span>into_ok(root_node.search_tree(<span class="kw-2">&amp;mut </span>(), k, infallible_cmp)) {
@@ -4815,23 +4826,24 @@
     /// assert_eq!(map.contains_key(&amp;2), false);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>contains_key&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; bool
+    </span><span class="kw">pub fn </span>contains_key&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; bool
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt; + Ord,
-        Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
+        K: Borrow&lt;Q&gt; + Ord,
     {
         into_ok(<span class="self">self</span>.contains_key_with(<span class="kw-2">&amp;mut </span>(), key, infallible_cmp))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>contains_key_with&lt;C: <span class="question-mark">?</span>Sized, Q: <span class="question-mark">?</span>Sized, E&gt;(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>contains_key_with&lt;C, Q, E&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         cx: <span class="kw-2">&amp;mut </span>C,
         key: <span class="kw-2">&amp;</span>Q,
         cmp: CmpFn&lt;C, Q, E&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, E&gt;
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt; + Ord,
-        Q: Ord,
+        </span>C: <span class="question-mark">?</span>Sized,
+        Q: <span class="question-mark">?</span>Sized + Ord,
+        K: Borrow&lt;Q&gt; + Ord,
     {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.get_with(cx, key, cmp)<span class="question-mark">?</span>.is_some())
     }
@@ -4860,10 +4872,10 @@
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
     </span><span class="comment">// See `get` for implementation notes, this is basically a copy-paste with mut's added
-    </span><span class="kw">pub fn </span>get_mut&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>V&gt;
+    </span><span class="kw">pub fn </span>get_mut&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>V&gt;
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt; + Ord,
-        Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
+        K: Borrow&lt;Q&gt; + Ord,
     {
         into_ok(<span class="self">self</span>.get_mut_with(<span class="kw-2">&amp;mut </span>(), key, infallible_cmp))
     }
@@ -5008,10 +5020,10 @@
     /// assert_eq!(map.remove(&amp;1), None);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>remove&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;V&gt;
+    </span><span class="kw">pub fn </span>remove&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;V&gt;
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt; + Ord,
-        Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
+        K: Borrow&lt;Q&gt; + Ord,
     {
         <span class="self">self</span>.remove_entry(key).map(|(<span class="kw">_</span>, v)| v)
     }
@@ -5035,9 +5047,9 @@
     /// assert_eq!(map.remove_entry(&amp;1), None);
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>remove_entry&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;(K, V)&gt;
+    </span><span class="kw">pub fn </span>remove_entry&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;(K, V)&gt;
     <span class="kw">where
-        </span>Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
         K: Borrow&lt;Q&gt; + Ord,
     {
         into_ok(<span class="self">self</span>.remove_entry_with(<span class="kw-2">&amp;mut </span>(), key, infallible_cmp))
@@ -5197,23 +5209,25 @@
     /// assert_eq!(Some((&amp;5, &amp;"b")), map.range(4..).next());
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>range&lt;Q: <span class="question-mark">?</span>Sized, R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; Range&lt;<span class="lifetime">'_</span>, K, V&gt;
+    </span><span class="kw">pub fn </span>range&lt;Q, R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; Range&lt;<span class="lifetime">'_</span>, K, V&gt;
     <span class="kw">where
-        </span>Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
         K: Borrow&lt;Q&gt; + Ord,
         R: RangeBounds&lt;Q&gt;,
     {
         into_ok(<span class="self">self</span>.range_with(<span class="kw-2">&amp;mut </span>(), range, infallible_cmp))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>range_with&lt;C: <span class="question-mark">?</span>Sized, Q: <span class="question-mark">?</span>Sized, R, E&gt;(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>range_with&lt;C, Q, R, E&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         cx: <span class="kw-2">&amp;mut </span>C,
         range: R,
         cmp: CmpFn&lt;C, Q, E&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Range&lt;<span class="lifetime">'_</span>, K, V&gt;, E&gt;
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt;,
+        </span>C: <span class="question-mark">?</span>Sized,
+        Q: <span class="question-mark">?</span>Sized,
+        K: Borrow&lt;Q&gt;,
         R: RangeBounds&lt;Q&gt;,
     {
         <span class="prelude-val">Ok</span>(<span class="kw">if let </span><span class="prelude-val">Some</span>(root) = <span class="kw-2">&amp;</span><span class="self">self</span>.root {
@@ -5258,9 +5272,9 @@
     /// }
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>range_mut&lt;Q: <span class="question-mark">?</span>Sized, R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: R) -&gt; RangeMut&lt;<span class="lifetime">'_</span>, K, V&gt;
+    </span><span class="kw">pub fn </span>range_mut&lt;Q, R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: R) -&gt; RangeMut&lt;<span class="lifetime">'_</span>, K, V&gt;
     <span class="kw">where
-        </span>Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
         K: Borrow&lt;Q&gt; + Ord,
         R: RangeBounds&lt;Q&gt;,
     {
@@ -5384,9 +5398,9 @@
     /// assert_eq!(b[&amp;41], "e");
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>try_split_off&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt;
+    </span><span class="kw">pub fn </span>try_split_off&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt;
     <span class="kw">where
-        </span>Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
         K: Borrow&lt;Q&gt; + Ord,
         A: Clone,
     {
@@ -5394,9 +5408,9 @@
     }
 
     <span class="attr">#[cfg(test)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>split_off&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="self">Self
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>split_off&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
         K: Borrow&lt;Q&gt; + Ord,
         A: Clone,
     {
@@ -6657,22 +6671,24 @@
     /// assert_eq!(cursor.key(), Some(&amp;3));
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>lower_bound_mut&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">'_</span>, K, V, A&gt;
+    </span><span class="kw">pub fn </span>lower_bound_mut&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">'_</span>, K, V, A&gt;
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt; + Ord,
-        Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
+        K: Borrow&lt;Q&gt; + Ord,
     {
         into_ok(<span class="self">self</span>.lower_bound_mut_with(<span class="kw-2">&amp;mut </span>(), bound, infallible_cmp))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lower_bound_mut_with&lt;C: <span class="question-mark">?</span>Sized, Q: <span class="question-mark">?</span>Sized, E&gt;(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lower_bound_mut_with&lt;C, Q, E&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         cx: <span class="kw-2">&amp;mut </span>C,
         bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;,
         cmp: CmpFn&lt;C, Q, E&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;CursorMut&lt;<span class="lifetime">'_</span>, K, V, A&gt;, E&gt;
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt;,
+        </span>C: <span class="question-mark">?</span>Sized,
+        Q: <span class="question-mark">?</span>Sized,
+        K: Borrow&lt;Q&gt;,
     {
         <span class="kw">let </span>(root, dormant_root) = DormantMutRef::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.root);
 
@@ -6779,10 +6795,10 @@
     /// assert_eq!(cursor.key(), Some(&amp;2));
     /// # Ok::&lt;_, rune::alloc::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>upper_bound_mut&lt;Q: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">'_</span>, K, V, A&gt;
+    </span><span class="kw">pub fn </span>upper_bound_mut&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">'_</span>, K, V, A&gt;
     <span class="kw">where
-        </span>K: Borrow&lt;Q&gt;,
-        Q: Ord,
+        </span>Q: <span class="question-mark">?</span>Sized + Ord,
+        K: Borrow&lt;Q&gt;,
     {
         into_ok(<span class="self">self</span>.upper_bound_mut_with(<span class="kw-2">&amp;mut </span>(), bound, infallible_cmp))
     }
