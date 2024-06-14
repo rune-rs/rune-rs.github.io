@@ -253,6 +253,15 @@
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
 <a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Specialized writter/string builders for the formatting module.
 
 </span><span class="attr">#[cfg(test)]
@@ -264,7 +273,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, try_vec, Vec};
-<span class="kw">use </span><span class="kw">crate</span>::ast::Span;
+<span class="kw">use </span><span class="kw">crate</span>::ast::{ByteIndex, Span};
 
 <span class="kw">use </span><span class="kw">super</span>::comments::Comment;
 <span class="kw">use </span><span class="kw">super</span>::error::FormattingError;
@@ -391,19 +400,7 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>into_inner(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;u8&gt;&gt;, FormattingError&gt; {
         <span class="kw">while </span>!<span class="self">self</span>.queued_spans.is_empty() {
             <span class="kw">let </span>span = <span class="self">self</span>.queued_spans.remove(<span class="number">0</span>);
-            <span class="kw">match </span>span {
-                ResolvedSpan::Empty(<span class="kw">_</span>) =&gt; {
-                    <span class="macro">writeln!</span>(<span class="self">self</span>.writer)<span class="question-mark">?</span>;
-                }
-                ResolvedSpan::Comment(comment) =&gt; {
-                    <span class="kw">if </span>comment.on_new_line {
-                        <span class="macro">writeln!</span>(<span class="self">self</span>.writer, <span class="string">"{}"</span>, <span class="self">self</span>.resolve(comment.span)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-                    } <span class="kw">else </span>{
-                        <span class="self">self</span>.extend_previous_line(<span class="string">b" "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.extend_previous_line(<span class="self">self</span>.resolve(comment.span)<span class="question-mark">?</span>.as_bytes())<span class="question-mark">?</span>;
-                    }
-                }
-            }
+            <span class="self">self</span>.write_span(span)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.writer.into_inner())
@@ -450,6 +447,49 @@
         <span class="self">self</span>.write_spanned(Span::new(<span class="number">0</span>, <span class="number">0</span>), text, <span class="bool-val">false</span>, <span class="bool-val">false</span>)
     }
 
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_queued_spans(<span class="kw-2">&amp;mut </span><span class="self">self</span>, until: ByteIndex) -&gt; <span class="prelude-ty">Result</span>&lt;(), FormattingError&gt; {
+        <span class="comment">// The queued recovered spans are ordered so we can pop them from the front if they're before the current span.
+        // If the current span is before the first queued span, we need to inject the queued span.
+
+        </span><span class="kw">while let </span><span class="prelude-val">Some</span>(queued_span) = <span class="self">self</span>.queued_spans.first() {
+            <span class="kw">if </span>queued_span.span().start &gt; until {
+                <span class="kw">break</span>;
+            }
+
+            <span class="kw">let </span>queued_span = <span class="self">self</span>.queued_spans.remove(<span class="number">0</span>);
+            <span class="self">self</span>.write_span(queued_span)<span class="question-mark">?</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>write_span(<span class="kw-2">&amp;mut </span><span class="self">self</span>, span: ResolvedSpan) -&gt; <span class="prelude-ty">Result</span>&lt;(), FormattingError&gt; {
+        <span class="kw">match </span>span {
+            ResolvedSpan::Empty(<span class="kw">_</span>) =&gt; {
+                <span class="macro">writeln!</span>(<span class="self">self</span>.writer)<span class="question-mark">?</span>;
+            }
+            ResolvedSpan::Comment(comment) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>lines = <span class="self">self</span>.resolve(comment.span)<span class="question-mark">?</span>.lines();
+
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(first_line) = lines.next() {
+                    <span class="kw">if </span>comment.on_new_line {
+                        <span class="macro">writeln!</span>(<span class="self">self</span>.writer, <span class="string">"{}"</span>, first_line)<span class="question-mark">?</span>;
+                    } <span class="kw">else </span>{
+                        <span class="self">self</span>.extend_previous_line(<span class="string">b" "</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.extend_previous_line(first_line.as_bytes())<span class="question-mark">?</span>;
+                    }
+                }
+
+                <span class="kw">for </span>line <span class="kw">in </span>lines {
+                    <span class="self">self</span>.newline()<span class="question-mark">?</span>;
+                    <span class="self">self</span>.extend_previous_line(line.as_bytes())<span class="question-mark">?</span>;
+                }
+            }
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>write_spanned(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         span: Span,
@@ -457,29 +497,7 @@
         newline: bool,
         space: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), FormattingError&gt; {
-        <span class="comment">// The queued recovered spans are ordered so we can pop them from the front if they're before the current span.
-        // If the current span is before the first queued span, we need to inject the queued span.
-
-        </span><span class="kw">while let </span><span class="prelude-val">Some</span>(queued_span) = <span class="self">self</span>.queued_spans.first() {
-            <span class="kw">if </span>queued_span.span().start &gt; span.start {
-                <span class="kw">break</span>;
-            }
-
-            <span class="kw">let </span>queued_span = <span class="self">self</span>.queued_spans.remove(<span class="number">0</span>);
-            <span class="kw">match </span>queued_span {
-                ResolvedSpan::Empty(<span class="kw">_</span>) =&gt; {
-                    <span class="macro">writeln!</span>(<span class="self">self</span>.writer)<span class="question-mark">?</span>;
-                }
-                ResolvedSpan::Comment(comment) =&gt; {
-                    <span class="kw">if </span>comment.on_new_line {
-                        <span class="macro">writeln!</span>(<span class="self">self</span>.writer, <span class="string">"{}"</span>, <span class="self">self</span>.resolve(comment.span)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-                    } <span class="kw">else </span>{
-                        <span class="self">self</span>.extend_previous_line(<span class="string">b" "</span>)<span class="question-mark">?</span>;
-                        <span class="self">self</span>.extend_previous_line(<span class="self">self</span>.resolve(comment.span)<span class="question-mark">?</span>.as_bytes())<span class="question-mark">?</span>;
-                    }
-                }
-            }
-        }
+        <span class="self">self</span>.write_queued_spans(span.start)<span class="question-mark">?</span>;
 
         <span class="macro">write!</span>(<span class="self">self</span>.writer, <span class="string">"{}"</span>, text)<span class="question-mark">?</span>;
 
