@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/lowering.rs`."><title>lowering.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (524d806c6 2024-07-05)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/lowering.rs`."><title>lowering.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (20ae37c18 2024-07-07)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1918,6 +1918,22 @@
 <a href="#1918" id="1918">1918</a>
 <a href="#1919" id="1919">1919</a>
 <a href="#1920" id="1920">1920</a>
+<a href="#1921" id="1921">1921</a>
+<a href="#1922" id="1922">1922</a>
+<a href="#1923" id="1923">1923</a>
+<a href="#1924" id="1924">1924</a>
+<a href="#1925" id="1925">1925</a>
+<a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a>
+<a href="#1933" id="1933">1933</a>
+<a href="#1934" id="1934">1934</a>
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cell::Cell;
 <span class="kw">use </span>core::ops::Neg;
 
@@ -1957,6 +1973,7 @@
     needs: Cell&lt;Needs&gt;,
     scopes: hir::Scopes&lt;<span class="lifetime">'hir</span>&gt;,
     const_eval: bool,
+    statements: Vec&lt;hir::Stmt&lt;<span class="lifetime">'hir</span>&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; {
@@ -2006,6 +2023,7 @@
             needs: Cell::new(Needs::default()),
             scopes: hir::Scopes::new()<span class="question-mark">?</span>,
             const_eval,
+            statements: Vec::new(),
         })
     }
 
@@ -2040,24 +2058,10 @@
     ast: <span class="kw-2">&amp;</span>ast::EmptyBlock,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
 ) -&gt; compile::Result&lt;hir::ItemFn&lt;<span class="lifetime">'hir</span>&gt;&gt; {
-    <span class="macro">alloc_with!</span>(cx, span);
-
-    cx.scopes.push()<span class="question-mark">?</span>;
-
-    <span class="kw">let </span>statements = <span class="macro">iter!</span>(<span class="kw-2">&amp;</span>ast.statements, |ast| stmt(cx, ast)<span class="question-mark">?</span>);
-
-    <span class="kw">let </span>layer = cx.scopes.pop().with_span(span)<span class="question-mark">?</span>;
-
-    <span class="kw">let </span>body = hir::Block {
-        span: span.span(),
-        statements,
-        drop: <span class="macro">iter!</span>(layer.into_drop_order()),
-    };
-
     <span class="prelude-val">Ok</span>(hir::ItemFn {
         span: span.span(),
         args: <span class="kw-2">&amp;</span>[],
-        body,
+        body: statements(cx, <span class="kw-2">&amp;</span>ast.statements, span)<span class="question-mark">?</span>,
     })
 }
 <span class="doccomment">/// Lower a function item.
@@ -2223,26 +2227,66 @@
     })))
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[inline]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>block&lt;<span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ast: <span class="kw-2">&amp;</span>ast::Block,
 ) -&gt; compile::Result&lt;hir::Block&lt;<span class="lifetime">'hir</span>&gt;&gt; {
-    <span class="macro">alloc_with!</span>(cx, ast);
+    statements(cx, <span class="kw-2">&amp;</span>ast.statements, ast)
+}
+
+<span class="attr">#[instrument(span = span)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>statements&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    statements: <span class="kw-2">&amp;</span>[ast::Stmt],
+    span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
+) -&gt; compile::Result&lt;hir::Block&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+    <span class="macro">alloc_with!</span>(cx, span);
 
     cx.scopes.push()<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>statements = <span class="macro">iter!</span>(<span class="kw-2">&amp;</span>ast.statements, |ast| stmt(cx, ast)<span class="question-mark">?</span>);
+    <span class="kw">let </span>at = cx.statements.len();
 
-    <span class="kw">let </span>layer = cx.scopes.pop().with_span(ast)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="prelude-val">None</span>;
 
-    <span class="kw">let </span>block = hir::Block {
-        span: ast.span(),
+    <span class="kw">for </span>ast <span class="kw">in </span>statements {
+        <span class="kw">let </span>(last, stmt) = <span class="kw">match </span>ast {
+            ast::Stmt::Local(ast) =&gt; (
+                value.take(),
+                <span class="prelude-val">Some</span>(hir::Stmt::Local(<span class="macro">alloc!</span>(local(cx, ast)<span class="question-mark">?</span>))),
+            ),
+            ast::Stmt::Expr(ast) =&gt; (
+                <span class="prelude-val">None</span>,
+                value.replace(<span class="kw-2">&amp;*</span><span class="macro">alloc!</span>(expr(cx, ast)<span class="question-mark">?</span>)).map(hir::Stmt::Expr),
+            ),
+            ast::Stmt::Semi(ast) =&gt; (
+                value.take(),
+                <span class="prelude-val">Some</span>(hir::Stmt::Expr(<span class="macro">alloc!</span>(expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>))),
+            ),
+            ast::Stmt::Item(..) =&gt; <span class="kw">continue</span>,
+        };
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(last) = last {
+            cx.statements
+                .try_push(hir::Stmt::Expr(last))
+                .with_span(span)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(stmt) = stmt {
+            cx.statements.try_push(stmt).with_span(span)<span class="question-mark">?</span>;
+        }
+    }
+
+    <span class="kw">let </span>statements = <span class="macro">iter!</span>(cx.statements.drain(at..));
+
+    <span class="kw">let </span>layer = cx.scopes.pop().with_span(span)<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(hir::Block {
+        span: span.span(),
         statements,
+        value,
         drop: <span class="macro">iter!</span>(layer.into_drop_order()),
-    };
-
-    <span class="prelude-val">Ok</span>(block)
+    })
 }
 
 <span class="attr">#[instrument(span = ast)]
@@ -3072,18 +3116,6 @@
         span: ast.span(),
         pat,
         expr,
-    })
-}
-
-<span class="doccomment">/// Lower a statement
-</span><span class="kw">fn </span>stmt&lt;<span class="lifetime">'hir</span>&gt;(cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;</span>ast::Stmt) -&gt; compile::Result&lt;hir::Stmt&lt;<span class="lifetime">'hir</span>&gt;&gt; {
-    <span class="macro">alloc_with!</span>(cx, ast);
-
-    <span class="prelude-val">Ok</span>(<span class="kw">match </span>ast {
-        ast::Stmt::Local(ast) =&gt; hir::Stmt::Local(<span class="macro">alloc!</span>(local(cx, ast)<span class="question-mark">?</span>)),
-        ast::Stmt::Expr(ast) =&gt; hir::Stmt::Expr(<span class="macro">alloc!</span>(expr(cx, ast)<span class="question-mark">?</span>)),
-        ast::Stmt::Semi(ast) =&gt; hir::Stmt::Semi(<span class="macro">alloc!</span>(expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>)),
-        ast::Stmt::Item(..) =&gt; hir::Stmt::Item(ast.span()),
     })
 }
 

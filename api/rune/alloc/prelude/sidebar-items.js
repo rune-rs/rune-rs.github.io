@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"derive":["TryClone"],"trait":["IteratorExt","OptionExt","TryClone","TryCopy","TryExtend","TryFromIterator","TryFromIteratorIn","TryToOwned","TryToString"]};
+window.SIDEBAR_ITEMS = {"derive":["TryClone"],"macro":["try_format","try_vec"],"struct":["Box","String","Vec"],"trait":["IteratorExt","OptionExt","TryClone","TryCopy","TryExtend","TryFromIterator","TryFromIteratorIn","TryToOwned","TryToString"]};
