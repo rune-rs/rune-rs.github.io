@@ -3087,9 +3087,8 @@
 <a href="#3087" id="3087">3087</a>
 <a href="#3088" id="3088">3088</a>
 <a href="#3089" id="3089">3089</a>
-<a href="#3090" id="3090">3090</a>
-<a href="#3091" id="3091">3091</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<span class="kw">use </span>core::mem::take;
 <span class="kw">use </span>core::slice;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -5774,7 +5773,6 @@
 
     <span class="kw">let </span>linear = <span class="macro">converge!</span>(exprs(cx, span, hir.exprs)<span class="question-mark">?</span>);
 
-    <span class="kw">let </span>branch_addr = cx.scopes.alloc(span)<span class="question-mark">?</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>value_addr = cx.scopes.alloc(span)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>select_label = cx.asm.new_label(<span class="string">"select"</span>);
@@ -5784,18 +5782,14 @@
         Inst::Select {
             addr: linear.addr(),
             len: hir.exprs.len(),
-            branch: branch_addr.output(),
             value: value_addr.output(),
         },
         span,
     )<span class="question-mark">?</span>;
 
-    <span class="kw">for </span>(branch, (label, <span class="kw">_</span>)) <span class="kw">in </span>cx.select_branches.iter().enumerate() {
-        cx.asm
-            .jump_if_branch(branch_addr.addr(), branch <span class="kw">as </span>i64, label, span)<span class="question-mark">?</span>;
+    <span class="kw">for </span>(label, <span class="kw">_</span>) <span class="kw">in </span><span class="kw-2">&amp;</span>cx.select_branches {
+        cx.asm.jump(label, span)<span class="question-mark">?</span>;
     }
-
-    branch_addr.free()<span class="question-mark">?</span>;
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, label)) = <span class="kw-2">&amp;</span>default_branch {
         cx.asm.jump(label, span)<span class="question-mark">?</span>;
@@ -5810,10 +5804,12 @@
             )<span class="question-mark">?</span>;
         }
 
-        cx.asm.jump(<span class="kw-2">&amp;</span>end_label, span)<span class="question-mark">?</span>;
+        <span class="kw">if </span>!cx.select_branches.is_empty() || default_branch.is_some() {
+            cx.asm.jump(<span class="kw-2">&amp;</span>end_label, span)<span class="question-mark">?</span>;
+        }
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>branches = core::mem::take(<span class="kw-2">&amp;mut </span>cx.select_branches);
+    <span class="kw">let </span><span class="kw-2">mut </span>branches = take(<span class="kw-2">&amp;mut </span>cx.select_branches);
 
     <span class="kw">for </span>(label, branch) <span class="kw">in </span>branches.drain(..) {
         cx.asm.label(<span class="kw-2">&amp;</span>label)<span class="question-mark">?</span>;

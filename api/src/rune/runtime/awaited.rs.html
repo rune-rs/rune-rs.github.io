@@ -35,7 +35,7 @@
     <span class="doccomment">/// A future to be awaited.
     </span>Future(Future, Output),
     <span class="doccomment">/// A select to be awaited.
-    </span>Select(Select, Output, Output),
+    </span>Select(Select, Output),
 }
 
 <span class="kw">impl </span>Awaited {
@@ -46,9 +46,9 @@
                 <span class="kw">let </span>value = <span class="macro">vm_try!</span>(future.<span class="kw">await</span>.with_vm(vm));
                 <span class="macro">vm_try!</span>(out.store(vm.stack_mut(), value));
             }
-            <span class="self">Self</span>::Select(select, branch_addr, value_addr) =&gt; {
-                <span class="kw">let </span>(branch, value) = <span class="macro">vm_try!</span>(select.<span class="kw">await</span>.with_vm(vm));
-                <span class="macro">vm_try!</span>(branch_addr.store(vm.stack_mut(), || branch));
+            <span class="self">Self</span>::Select(select, value_addr) =&gt; {
+                <span class="kw">let </span>(ip, value) = <span class="macro">vm_try!</span>(select.<span class="kw">await</span>.with_vm(vm));
+                vm.set_ip(ip);
                 <span class="macro">vm_try!</span>(value_addr.store(vm.stack_mut(), || value));
             }
         }
