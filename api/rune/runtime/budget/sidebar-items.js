@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["take","with"],"struct":["Budget"]};
+window.SIDEBAR_ITEMS = {"fn":["acquire","with"],"struct":["Budget","BudgetGuard"]};

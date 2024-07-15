@@ -1,1 +1,1 @@
-searchState.loadedDescShard("rune_macros", 0, "Macros for the Rune Language, an embeddable dynamic …\nCalculate a type hash.")
+searchState.loadedDescShard("rune_macros", 0, "Macros for the Rune Language, an embeddable dynamic …\nCalculate a type hash at compile time.\nCalculate an item reference at compile time.")

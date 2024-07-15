@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm_execution.rs`."><title>vm_execution.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (20ae37c18 2024-07-07)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm_execution.rs`."><title>vm_execution.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d9284afea 2024-07-14)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -553,6 +553,30 @@
 <a href="#553" id="553">553</a>
 <a href="#554" id="554">554</a>
 <a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future::Future;
 <span class="kw">use </span>core::mem::{replace, take};
@@ -562,8 +586,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::budget;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Generator, GeneratorState, RuntimeContext, Stream, Unit, Value, Vm, VmErrorKind, VmHalt,
-    VmHaltInfo, VmResult,
+    Generator, GeneratorState, InstAddress, Output, RuntimeContext, Stream, Unit, Value, Vm,
+    VmErrorKind, VmHalt, VmHaltInfo, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::shared::AssertSend;
 
@@ -578,16 +602,21 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExecutionState {
     <span class="doccomment">/// The initial state of an execution.
     </span>Initial,
-    <span class="doccomment">/// The resumed state of an execution. This expects a value to be pushed
-    /// onto the virtual machine before it is continued.
-    </span>Resumed,
+    <span class="doccomment">/// execution is waiting.
+    </span>Resumed(Output),
+    <span class="doccomment">/// Suspended execution.
+    </span>Suspended,
+    <span class="doccomment">/// Execution exited.
+    </span>Exited(<span class="prelude-ty">Option</span>&lt;InstAddress&gt;),
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>ExecutionState {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
             ExecutionState::Initial =&gt; <span class="macro">write!</span>(f, <span class="string">"initial"</span>),
-            ExecutionState::Resumed =&gt; <span class="macro">write!</span>(f, <span class="string">"resumed"</span>),
+            ExecutionState::Resumed(out) =&gt; <span class="macro">write!</span>(f, <span class="string">"resumed({out})"</span>),
+            ExecutionState::Suspended =&gt; <span class="macro">write!</span>(f, <span class="string">"suspended"</span>),
+            ExecutionState::Exited(..) =&gt; <span class="macro">write!</span>(f, <span class="string">"exited"</span>),
         }
     }
 }
@@ -630,7 +659,7 @@
 
     <span class="doccomment">/// Test if the current execution state is resumed.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_resumed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="macro">matches!</span>(<span class="self">self</span>.state, ExecutionState::Resumed)
+        <span class="macro">matches!</span>(<span class="self">self</span>.state, ExecutionState::Resumed(..))
     }
 
     <span class="doccomment">/// Coerce the current execution into a generator if appropriate.
@@ -751,14 +780,13 @@
     <span class="doccomment">/// Resume the current execution with the given value and resume
     /// asynchronous execution.
     </span><span class="kw">pub async fn </span>async_resume_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: Value) -&gt; VmResult&lt;GeneratorState&gt; {
-        <span class="kw">if </span>!<span class="macro">matches!</span>(<span class="self">self</span>.state, ExecutionState::Resumed) {
-            <span class="kw">return </span>VmResult::err(VmErrorKind::ExpectedExecutionState {
-                expected: ExecutionState::Resumed,
-                actual: <span class="self">self</span>.state,
-            });
-        }
+        <span class="kw">let </span>state = replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.state, ExecutionState::Suspended);
 
-        <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(value));
+        <span class="kw">let </span>ExecutionState::Resumed(out) = state <span class="kw">else </span>{
+            <span class="kw">return </span>VmResult::err(VmErrorKind::ExpectedExecutionState { actual: state });
+        };
+
+        <span class="macro">vm_try!</span>(out.store(<span class="self">self</span>.head.as_mut().stack_mut(), || VmResult::Ok(value)));
         <span class="self">self</span>.inner_async_resume(<span class="prelude-val">None</span>).<span class="kw">await
     </span>}
 
@@ -778,10 +806,8 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         diagnostics: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>VmDiagnostics&gt;,
     ) -&gt; VmResult&lt;GeneratorState&gt; {
-        <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.state, ExecutionState::Resumed) {
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(<span class="macro">vm_try!</span>(Value::empty())));
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.state = ExecutionState::Resumed;
+        <span class="kw">if let </span>ExecutionState::Resumed(out) = <span class="self">self</span>.state {
+            <span class="macro">vm_try!</span>(out.store(<span class="self">self</span>.head.as_mut().stack_mut(), Value::empty));
         }
 
         <span class="self">self</span>.inner_async_resume(diagnostics).<span class="kw">await
@@ -801,7 +827,9 @@
                 })
                 .with_vm(vm))
             {
-                VmHalt::Exited =&gt; (),
+                VmHalt::Exited(addr) =&gt; {
+                    <span class="self">self</span>.state = ExecutionState::Exited(addr);
+                }
                 VmHalt::Awaited(awaited) =&gt; {
                     <span class="macro">vm_try!</span>(awaited.into_vm(vm).<span class="kw">await</span>);
                     <span class="kw">continue</span>;
@@ -810,8 +838,13 @@
                     <span class="macro">vm_try!</span>(vm_call.into_execution(<span class="self">self</span>));
                     <span class="kw">continue</span>;
                 }
-                VmHalt::Yielded =&gt; {
-                    <span class="kw">let </span>value = <span class="macro">vm_try!</span>(vm.stack_mut().pop());
+                VmHalt::Yielded(addr, out) =&gt; {
+                    <span class="kw">let </span>value = <span class="kw">match </span>addr {
+                        <span class="prelude-val">Some</span>(addr) =&gt; <span class="macro">vm_try!</span>(vm.stack().at(addr)).clone(),
+                        <span class="prelude-val">None </span>=&gt; <span class="macro">vm_try!</span>(Value::empty()),
+                    };
+
+                    <span class="self">self</span>.state = ExecutionState::Resumed(out);
                     <span class="kw">return </span>VmResult::Ok(GeneratorState::Yielded(value));
                 }
                 halt =&gt; {
@@ -834,14 +867,13 @@
     /// execution.
     </span><span class="attr">#[tracing::instrument(skip_all, fields(<span class="question-mark">?</span>value))]
     </span><span class="kw">pub fn </span>resume_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: Value) -&gt; VmResult&lt;GeneratorState&gt; {
-        <span class="kw">if </span>!<span class="macro">matches!</span>(<span class="self">self</span>.state, ExecutionState::Resumed) {
-            <span class="kw">return </span>VmResult::err(VmErrorKind::ExpectedExecutionState {
-                expected: ExecutionState::Resumed,
-                actual: <span class="self">self</span>.state,
-            });
-        }
+        <span class="kw">let </span>state = replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.state, ExecutionState::Suspended);
 
-        <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(value));
+        <span class="kw">let </span>ExecutionState::Resumed(out) = state <span class="kw">else </span>{
+            <span class="kw">return </span>VmResult::err(VmErrorKind::ExpectedExecutionState { actual: state });
+        };
+
+        <span class="macro">vm_try!</span>(out.store(<span class="self">self</span>.head.as_mut().stack_mut(), || VmResult::Ok(value)));
         <span class="self">self</span>.inner_resume(<span class="prelude-val">None</span>)
     }
 
@@ -866,10 +898,8 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         diagnostics: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>VmDiagnostics&gt;,
     ) -&gt; VmResult&lt;GeneratorState&gt; {
-        <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.state, ExecutionState::Resumed) {
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_mut().stack_mut().push(<span class="macro">vm_try!</span>(Value::empty())));
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.state = ExecutionState::Resumed;
+        <span class="kw">if let </span>ExecutionState::Resumed(out) = replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.state, ExecutionState::Suspended) {
+            <span class="macro">vm_try!</span>(out.store(<span class="self">self</span>.head.as_mut().stack_mut(), Value::empty()));
         }
 
         <span class="self">self</span>.inner_resume(diagnostics)
@@ -890,13 +920,20 @@
                 })
                 .with_vm(vm))
             {
-                VmHalt::Exited =&gt; (),
+                VmHalt::Exited(addr) =&gt; {
+                    <span class="self">self</span>.state = ExecutionState::Exited(addr);
+                }
                 VmHalt::VmCall(vm_call) =&gt; {
                     <span class="macro">vm_try!</span>(vm_call.into_execution(<span class="self">self</span>));
                     <span class="kw">continue</span>;
                 }
-                VmHalt::Yielded =&gt; {
-                    <span class="kw">let </span>value = <span class="macro">vm_try!</span>(vm.stack_mut().pop());
+                VmHalt::Yielded(addr, out) =&gt; {
+                    <span class="kw">let </span>value = <span class="kw">match </span>addr {
+                        <span class="prelude-val">Some</span>(addr) =&gt; <span class="macro">vm_try!</span>(vm.stack().at(addr)).clone(),
+                        <span class="prelude-val">None </span>=&gt; <span class="macro">vm_try!</span>(Value::empty()),
+                    };
+
+                    <span class="self">self</span>.state = ExecutionState::Resumed(out);
                     <span class="kw">return </span>VmResult::Ok(GeneratorState::Yielded(value));
                 }
                 halt =&gt; {
@@ -924,7 +961,9 @@
         <span class="kw">let </span>vm = <span class="self">self</span>.head.as_mut();
 
         <span class="kw">match </span><span class="macro">vm_try!</span>(budget::with(<span class="number">1</span>, || vm.run(<span class="prelude-val">None</span>).with_vm(vm)).call()) {
-            VmHalt::Exited =&gt; (),
+            VmHalt::Exited(addr) =&gt; {
+                <span class="self">self</span>.state = ExecutionState::Exited(addr);
+            }
             VmHalt::VmCall(vm_call) =&gt; {
                 <span class="macro">vm_try!</span>(vm_call.into_execution(<span class="self">self</span>));
                 <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
@@ -952,7 +991,9 @@
         <span class="kw">let </span>vm = <span class="self">self</span>.head.as_mut();
 
         <span class="kw">match </span><span class="macro">vm_try!</span>(budget::with(<span class="number">1</span>, || vm.run(<span class="prelude-val">None</span>).with_vm(vm)).call()) {
-            VmHalt::Exited =&gt; (),
+            VmHalt::Exited(addr) =&gt; {
+                <span class="self">self</span>.state = ExecutionState::Exited(addr);
+            }
             VmHalt::Awaited(awaited) =&gt; {
                 <span class="macro">vm_try!</span>(awaited.into_vm(vm).<span class="kw">await</span>);
                 <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
@@ -980,9 +1021,16 @@
 
     <span class="doccomment">/// End execution and perform debug checks.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>end(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        <span class="kw">let </span>vm = <span class="self">self</span>.head.as_mut();
-        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(vm.stack_mut().pop());
-        <span class="macro">debug_assert!</span>(<span class="self">self</span>.states.is_empty(), <span class="string">"execution vms should be empty"</span>);
+        <span class="kw">let </span>ExecutionState::Exited(addr) = <span class="self">self</span>.state <span class="kw">else </span>{
+            <span class="kw">return </span>VmResult::err(VmErrorKind::ExpectedExitedExecutionState { actual: <span class="self">self</span>.state });
+        };
+
+        <span class="kw">let </span>value = <span class="kw">match </span>addr {
+            <span class="prelude-val">Some</span>(addr) =&gt; <span class="macro">vm_try!</span>(<span class="self">self</span>.head.as_ref().stack().at(addr)).clone(),
+            <span class="prelude-val">None </span>=&gt; <span class="macro">vm_try!</span>(Value::empty()),
+        };
+
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.states.is_empty(), <span class="string">"Execution states should be empty"</span>);
         VmResult::Ok(value)
     }
 

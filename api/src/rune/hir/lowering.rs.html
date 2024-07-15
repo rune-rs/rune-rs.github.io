@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/lowering.rs`."><title>lowering.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (20ae37c18 2024-07-07)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/lowering.rs`."><title>lowering.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d9284afea 2024-07-14)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1934,6 +1934,54 @@
 <a href="#1934" id="1934">1934</a>
 <a href="#1935" id="1935">1935</a>
 <a href="#1936" id="1936">1936</a>
+<a href="#1937" id="1937">1937</a>
+<a href="#1938" id="1938">1938</a>
+<a href="#1939" id="1939">1939</a>
+<a href="#1940" id="1940">1940</a>
+<a href="#1941" id="1941">1941</a>
+<a href="#1942" id="1942">1942</a>
+<a href="#1943" id="1943">1943</a>
+<a href="#1944" id="1944">1944</a>
+<a href="#1945" id="1945">1945</a>
+<a href="#1946" id="1946">1946</a>
+<a href="#1947" id="1947">1947</a>
+<a href="#1948" id="1948">1948</a>
+<a href="#1949" id="1949">1949</a>
+<a href="#1950" id="1950">1950</a>
+<a href="#1951" id="1951">1951</a>
+<a href="#1952" id="1952">1952</a>
+<a href="#1953" id="1953">1953</a>
+<a href="#1954" id="1954">1954</a>
+<a href="#1955" id="1955">1955</a>
+<a href="#1956" id="1956">1956</a>
+<a href="#1957" id="1957">1957</a>
+<a href="#1958" id="1958">1958</a>
+<a href="#1959" id="1959">1959</a>
+<a href="#1960" id="1960">1960</a>
+<a href="#1961" id="1961">1961</a>
+<a href="#1962" id="1962">1962</a>
+<a href="#1963" id="1963">1963</a>
+<a href="#1964" id="1964">1964</a>
+<a href="#1965" id="1965">1965</a>
+<a href="#1966" id="1966">1966</a>
+<a href="#1967" id="1967">1967</a>
+<a href="#1968" id="1968">1968</a>
+<a href="#1969" id="1969">1969</a>
+<a href="#1970" id="1970">1970</a>
+<a href="#1971" id="1971">1971</a>
+<a href="#1972" id="1972">1972</a>
+<a href="#1973" id="1973">1973</a>
+<a href="#1974" id="1974">1974</a>
+<a href="#1975" id="1975">1975</a>
+<a href="#1976" id="1976">1976</a>
+<a href="#1977" id="1977">1977</a>
+<a href="#1978" id="1978">1978</a>
+<a href="#1979" id="1979">1979</a>
+<a href="#1980" id="1980">1980</a>
+<a href="#1981" id="1981">1981</a>
+<a href="#1982" id="1982">1982</a>
+<a href="#1983" id="1983">1983</a>
+<a href="#1984" id="1984">1984</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cell::Cell;
 <span class="kw">use </span>core::ops::Neg;
 
@@ -1974,6 +2022,7 @@
     scopes: hir::Scopes&lt;<span class="lifetime">'hir</span>&gt;,
     const_eval: bool,
     statements: Vec&lt;hir::Stmt&lt;<span class="lifetime">'hir</span>&gt;&gt;,
+    pattern_bindings: Vec&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; {
@@ -2024,6 +2073,7 @@
             scopes: hir::Scopes::new()<span class="question-mark">?</span>,
             const_eval,
             statements: Vec::new(),
+            pattern_bindings: Vec::new(),
         })
     }
 
@@ -2061,9 +2111,10 @@
     <span class="prelude-val">Ok</span>(hir::ItemFn {
         span: span.span(),
         args: <span class="kw-2">&amp;</span>[],
-        body: statements(cx, <span class="kw-2">&amp;</span>ast.statements, span)<span class="question-mark">?</span>,
+        body: statements(cx, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ast.statements, span)<span class="question-mark">?</span>,
     })
 }
+
 <span class="doccomment">/// Lower a function item.
 </span><span class="attr">#[instrument(span = ast)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>item_fn&lt;<span class="lifetime">'hir</span>&gt;(
@@ -2075,7 +2126,7 @@
     <span class="prelude-val">Ok</span>(hir::ItemFn {
         span: ast.span(),
         args: <span class="macro">iter!</span>(<span class="kw-2">&amp;</span>ast.args, |(ast, <span class="kw">_</span>)| fn_arg(cx, ast)<span class="question-mark">?</span>),
-        body: block(cx, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>,
+        body: block(cx, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>,
     })
 }
 
@@ -2109,7 +2160,7 @@
     });
 
     <span class="prelude-val">Ok</span>(hir::AsyncBlock {
-        block: block(cx, ast)<span class="question-mark">?</span>,
+        block: block(cx, <span class="prelude-val">None</span>, ast)<span class="question-mark">?</span>,
         captures,
     })
 }
@@ -2230,20 +2281,27 @@
 <span class="attr">#[inline]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>block&lt;<span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(ast::Label, <span class="macro">T!</span>[:])&gt;,
     ast: <span class="kw-2">&amp;</span>ast::Block,
 ) -&gt; compile::Result&lt;hir::Block&lt;<span class="lifetime">'hir</span>&gt;&gt; {
-    statements(cx, <span class="kw-2">&amp;</span>ast.statements, ast)
+    statements(cx, label, <span class="kw-2">&amp;</span>ast.statements, ast)
 }
 
 <span class="attr">#[instrument(span = span)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>statements&lt;<span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(ast::Label, <span class="macro">T!</span>[:])&gt;,
     statements: <span class="kw-2">&amp;</span>[ast::Stmt],
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
 ) -&gt; compile::Result&lt;hir::Block&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="macro">alloc_with!</span>(cx, span);
 
-    cx.scopes.push()<span class="question-mark">?</span>;
+    <span class="kw">let </span>label = <span class="kw">match </span>label {
+        <span class="prelude-val">Some</span>((label, <span class="kw">_</span>)) =&gt; <span class="prelude-val">Some</span>(<span class="macro">alloc_str!</span>(label.resolve(<span class="macro">resolve_context!</span>(cx.q))<span class="question-mark">?</span>)),
+        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+    };
+
+    cx.scopes.push(label)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>at = cx.statements.len();
 
@@ -2283,6 +2341,7 @@
 
     <span class="prelude-val">Ok</span>(hir::Block {
         span: span.span(),
+        label,
         statements,
         value,
         drop: <span class="macro">iter!</span>(layer.into_drop_order()),
@@ -2491,7 +2550,7 @@
 
             cx.scopes.push_loop(label)<span class="question-mark">?</span>;
             <span class="kw">let </span>condition = condition(cx, <span class="kw-2">&amp;</span>ast.condition)<span class="question-mark">?</span>;
-            <span class="kw">let </span>body = block(cx, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>;
+            <span class="kw">let </span>body = block(cx, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>;
             <span class="kw">let </span>layer = cx.scopes.pop().with_span(ast)<span class="question-mark">?</span>;
 
             hir::ExprKind::Loop(<span class="macro">alloc!</span>(hir::ExprLoop {
@@ -2508,7 +2567,7 @@
             };
 
             cx.scopes.push_loop(label)<span class="question-mark">?</span>;
-            <span class="kw">let </span>body = block(cx, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>;
+            <span class="kw">let </span>body = block(cx, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>;
             <span class="kw">let </span>layer = cx.scopes.pop().with_span(ast)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>kind = hir::ExprKind::Loop(<span class="macro">alloc!</span>(hir::ExprLoop {
@@ -2529,8 +2588,8 @@
             };
 
             cx.scopes.push_loop(label)<span class="question-mark">?</span>;
-            <span class="kw">let </span>binding = pat(cx, <span class="kw-2">&amp;</span>ast.binding)<span class="question-mark">?</span>;
-            <span class="kw">let </span>body = block(cx, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>;
+            <span class="kw">let </span>binding = pat_binding(cx, <span class="kw-2">&amp;</span>ast.binding)<span class="question-mark">?</span>;
+            <span class="kw">let </span>body = block(cx, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>layer = cx.scopes.pop().with_span(ast)<span class="question-mark">?</span>;
 
@@ -2543,16 +2602,16 @@
             }))
         }
         ast::Expr::Let(ast) =&gt; hir::ExprKind::Let(<span class="macro">alloc!</span>(hir::ExprLet {
-            pat: pat(cx, <span class="kw-2">&amp;</span>ast.pat)<span class="question-mark">?</span>,
+            pat: pat_binding(cx, <span class="kw-2">&amp;</span>ast.pat)<span class="question-mark">?</span>,
             expr: expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>,
         })),
         ast::Expr::If(ast) =&gt; hir::ExprKind::If(<span class="macro">alloc!</span>(expr_if(cx, ast)<span class="question-mark">?</span>)),
         ast::Expr::Match(ast) =&gt; hir::ExprKind::Match(<span class="macro">alloc!</span>(hir::ExprMatch {
             expr: expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>,
             branches: <span class="macro">iter!</span>(<span class="kw-2">&amp;</span>ast.branches, |(ast, <span class="kw">_</span>)| {
-                cx.scopes.push()<span class="question-mark">?</span>;
+                cx.scopes.push(<span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>pat = pat(cx, <span class="kw-2">&amp;</span>ast.pat)<span class="question-mark">?</span>;
+                <span class="kw">let </span>pat = pat_binding(cx, <span class="kw-2">&amp;</span>ast.pat)<span class="question-mark">?</span>;
                 <span class="kw">let </span>condition = <span class="macro">option!</span>(<span class="kw-2">&amp;</span>ast.condition, |(<span class="kw">_</span>, ast)| expr(cx, ast)<span class="question-mark">?</span>);
                 <span class="kw">let </span>body = expr(cx, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>;
 
@@ -2606,30 +2665,48 @@
         ast::Expr::Return(ast) =&gt; hir::ExprKind::Return(<span class="macro">option!</span>(<span class="kw-2">&amp;</span>ast.expr, |ast| expr(cx, ast)<span class="question-mark">?</span>)),
         ast::Expr::Await(ast) =&gt; hir::ExprKind::Await(<span class="macro">alloc!</span>(expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>)),
         ast::Expr::Try(ast) =&gt; hir::ExprKind::Try(<span class="macro">alloc!</span>(expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>)),
-        ast::Expr::Select(ast) =&gt; hir::ExprKind::Select(<span class="macro">alloc!</span>(hir::ExprSelect {
-            branches: <span class="macro">iter!</span>(<span class="kw-2">&amp;</span>ast.branches, |(ast, <span class="kw">_</span>)| {
+        ast::Expr::Select(ast) =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>default = <span class="prelude-val">None</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>branches = Vec::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>exprs = Vec::new();
+
+            <span class="kw">for </span>(ast, <span class="kw">_</span>) <span class="kw">in </span><span class="kw-2">&amp;</span>ast.branches {
                 <span class="kw">match </span>ast {
                     ast::ExprSelectBranch::Pat(ast) =&gt; {
-                        cx.scopes.push()<span class="question-mark">?</span>;
+                        cx.scopes.push(<span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span>pat = pat(cx, <span class="kw-2">&amp;</span>ast.pat)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>pat = pat_binding(cx, <span class="kw-2">&amp;</span>ast.pat)<span class="question-mark">?</span>;
                         <span class="kw">let </span>body = expr(cx, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span>layer = cx.scopes.pop().with_span(ast)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>layer = cx.scopes.pop().with_span(<span class="kw-2">&amp;</span>ast)<span class="question-mark">?</span>;
 
-                        hir::ExprSelectBranch::Pat(<span class="macro">alloc!</span>(hir::ExprSelectPatBranch {
+                        exprs.try_push(expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>).with_span(<span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>;
+
+                        branches.try_push(hir::ExprSelectBranch {
                             pat,
-                            expr: expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>,
                             body,
                             drop: <span class="macro">iter!</span>(layer.into_drop_order()),
-                        }))
+                        })<span class="question-mark">?</span>;
                     }
                     ast::ExprSelectBranch::Default(ast) =&gt; {
-                        hir::ExprSelectBranch::Default(<span class="macro">alloc!</span>(expr(cx, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>))
+                        <span class="kw">if </span>default.is_some() {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
+                                ast,
+                                ErrorKind::SelectMultipleDefaults,
+                            ));
+                        }
+
+                        default = <span class="prelude-val">Some</span>(<span class="macro">alloc!</span>(expr(cx, <span class="kw-2">&amp;</span>ast.body)<span class="question-mark">?</span>));
                     }
                 }
-            })
-        })),
+            }
+
+            hir::ExprKind::Select(<span class="macro">alloc!</span>(hir::ExprSelect {
+                branches: <span class="macro">iter!</span>(branches),
+                exprs: <span class="macro">iter!</span>(exprs),
+                default: <span class="macro">option!</span>(default),
+            }))
+        }
         ast::Expr::Closure(ast) =&gt; expr_call_closure(cx, ast)<span class="question-mark">?</span>,
         ast::Expr::Lit(ast) =&gt; hir::ExprKind::Lit(lit(cx, <span class="kw-2">&amp;</span>ast.lit)<span class="question-mark">?</span>),
         ast::Expr::Object(ast) =&gt; expr_object(cx, ast)<span class="question-mark">?</span>,
@@ -2773,11 +2850,11 @@
 ) -&gt; compile::Result&lt;hir::Conditional&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="macro">alloc_with!</span>(cx, ast);
 
-    <span class="kw">let </span>length = <span class="number">1 </span>+ ast.expr_else_ifs.len() + usize::from(ast.expr_else.is_some());
+    <span class="kw">let </span>length = <span class="number">1 </span>+ ast.expr_else_ifs.len();
 
     <span class="kw">let </span>then = [(
         ast.if_.span().join(ast.block.span()),
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ast.condition),
+        <span class="kw-2">&amp;</span>ast.condition,
         <span class="kw-2">&amp;</span>ast.block,
     )]
     .into_iter();
@@ -2785,36 +2862,18 @@
     <span class="kw">let </span>else_ifs = ast
         .expr_else_ifs
         .iter()
-        .map(|ast| (ast.span(), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ast.condition), <span class="kw-2">&amp;</span>ast.block));
+        .map(|ast| (ast.span(), <span class="kw-2">&amp;</span>ast.condition, <span class="kw-2">&amp;</span>ast.block));
 
-    <span class="kw">let </span>fallback = ast
-        .expr_else
-        .iter()
-        .map(|ast| (ast.span(), <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ast.block));
+    <span class="kw">let </span>branches = <span class="macro">iter!</span>(then.chain(else_ifs), length, |(span, c, b)| {
+        cx.scopes.push(<span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>branches = then.chain(else_ifs).chain(fallback);
+        <span class="kw">let </span>condition = condition(cx, c)<span class="question-mark">?</span>;
+        <span class="kw">let </span>block = block(cx, <span class="prelude-val">None</span>, b)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>branches = <span class="macro">iter!</span>(branches, length, |(span, c, b)| {
-        <span class="kw">let </span>(condition, block, drop) = <span class="kw">match </span>c {
-            <span class="prelude-val">Some</span>(c) =&gt; {
-                cx.scopes.push()<span class="question-mark">?</span>;
+        <span class="kw">let </span>layer = cx.scopes.pop().with_span(ast)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>condition = condition(cx, c)<span class="question-mark">?</span>;
-                <span class="kw">let </span>block = block(cx, b)<span class="question-mark">?</span>;
-
-                <span class="kw">let </span>layer = cx.scopes.pop().with_span(ast)<span class="question-mark">?</span>;
-
-                (
-                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span><span class="macro">alloc!</span>(condition)),
-                    block,
-                    <span class="kw-2">&amp;*</span><span class="macro">iter!</span>(layer.into_drop_order()),
-                )
-            }
-            <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span>block = block(cx, b)<span class="question-mark">?</span>;
-                (<span class="prelude-val">None</span>, block, <span class="kw-2">&amp;</span>[][..])
-            }
-        };
+        <span class="kw">let </span>condition = <span class="kw-2">&amp;*</span><span class="macro">alloc!</span>(condition);
+        <span class="kw">let </span>drop = <span class="kw-2">&amp;*</span><span class="macro">iter!</span>(layer.into_drop_order());
 
         hir::ConditionalBranch {
             span,
@@ -2824,7 +2883,12 @@
         }
     });
 
-    <span class="prelude-val">Ok</span>(hir::Conditional { branches })
+    <span class="kw">let </span>fallback = <span class="kw">match </span><span class="kw-2">&amp;</span>ast.expr_else {
+        <span class="prelude-val">Some</span>(ast) =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span><span class="macro">alloc!</span>(block(cx, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>)),
+        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+    };
+
+    <span class="prelude-val">Ok</span>(hir::Conditional { branches, fallback })
 }
 
 <span class="attr">#[instrument(span = ast)]
@@ -2948,7 +3012,11 @@
     };
 
     <span class="kw">if let </span>ExprBlockKind::Default = kind {
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(hir::ExprKind::Block(<span class="macro">alloc!</span>(block(cx, <span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>)));
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(hir::ExprKind::Block(<span class="macro">alloc!</span>(block(
+            cx,
+            ast.label.as_ref(),
+            <span class="kw-2">&amp;</span>ast.block
+        )<span class="question-mark">?</span>)));
     }
 
     <span class="kw">if </span>cx.const_eval {
@@ -2962,7 +3030,14 @@
             ));
         };
 
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(hir::ExprKind::Block(<span class="macro">alloc!</span>(block(cx, <span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>)));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = <span class="kw-2">&amp;</span>ast.label {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
+                label,
+                <span class="string">"Constant blocks cannot be labelled"</span>,
+            ));
+        };
+
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(hir::ExprKind::Block(<span class="macro">alloc!</span>(block(cx, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>)));
     };
 
     <span class="kw">let </span>item = cx.q.item_for(<span class="kw-2">&amp;</span>ast.block).with_span(<span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>;
@@ -2974,8 +3049,15 @@
                 <span class="prelude-val">None </span>=&gt; {
                     <span class="macro">tracing::trace!</span>(<span class="string">"queuing async block build entry"</span>);
 
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = <span class="kw-2">&amp;</span>ast.label {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
+                            label,
+                            <span class="string">"Async blocks cannot be labelled"</span>,
+                        ));
+                    };
+
                     cx.scopes.push_captures()<span class="question-mark">?</span>;
-                    block(cx, <span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>;
+                    block(cx, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>;
                     <span class="kw">let </span>layer = cx.scopes.pop().with_span(<span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>;
 
                     cx.q.insert_captures(meta.hash, layer.captures())<span class="question-mark">?</span>;
@@ -3032,12 +3114,12 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = label {
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                 ast,
-                ErrorKind::MissingLoopLabel {
+                ErrorKind::MissingLabel {
                     label: label.try_into()<span class="question-mark">?</span>,
                 },
             ));
         } <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(ast, ErrorKind::BreakOutsideOfLoop));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(ast, ErrorKind::BreakUnsupported));
         }
     };
 
@@ -3071,12 +3153,12 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = label {
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                 ast,
-                ErrorKind::MissingLoopLabel {
+                ErrorKind::MissingLabel {
                     label: label.try_into()<span class="question-mark">?</span>,
                 },
             ));
         } <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(ast, ErrorKind::ContinueOutsideOfLoop));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(ast, ErrorKind::ContinueUnsupported));
         }
     };
 
@@ -3101,7 +3183,7 @@
             cx.scopes.define(hir::Name::SelfValue, ast)<span class="question-mark">?</span>;
             hir::FnArg::SelfValue(ast.span())
         }
-        ast::FnArg::Pat(ast) =&gt; hir::FnArg::Pat(<span class="macro">alloc!</span>(pat(cx, ast)<span class="question-mark">?</span>)),
+        ast::FnArg::Pat(ast) =&gt; hir::FnArg::Pat(<span class="macro">alloc!</span>(pat_binding(cx, ast)<span class="question-mark">?</span>)),
     })
 }
 
@@ -3110,13 +3192,25 @@
     <span class="comment">// Note: expression needs to be assembled before pattern, otherwise the
     // expression will see declarations in the pattern.
     </span><span class="kw">let </span>expr = expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>;
-    <span class="kw">let </span>pat = pat(cx, <span class="kw-2">&amp;</span>ast.pat)<span class="question-mark">?</span>;
+    <span class="kw">let </span>pat = pat_binding(cx, <span class="kw-2">&amp;</span>ast.pat)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(hir::Local {
         span: ast.span(),
         pat,
         expr,
     })
+}
+
+<span class="kw">fn </span>pat_binding&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
+    ast: <span class="kw-2">&amp;</span>ast::Pat,
+) -&gt; compile::Result&lt;hir::PatBinding&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+    <span class="macro">alloc_with!</span>(cx, ast);
+
+    <span class="kw">let </span>pat = pat(cx, ast)<span class="question-mark">?</span>;
+    <span class="kw">let </span>names = <span class="macro">iter!</span>(cx.pattern_bindings.drain(..));
+
+    <span class="prelude-val">Ok</span>(hir::PatBinding { pat, names })
 }
 
 <span class="kw">fn </span>pat&lt;<span class="lifetime">'hir</span>&gt;(cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;</span>ast::Pat) -&gt; compile::Result&lt;hir::Pat&lt;<span class="lifetime">'hir</span>&gt;&gt; {
@@ -3162,6 +3256,7 @@
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(ident) = ast.path.try_as_ident() {
                         <span class="kw">let </span>name = <span class="macro">alloc_str!</span>(ident.resolve(<span class="macro">resolve_context!</span>(cx.q))<span class="question-mark">?</span>);
                         cx.scopes.define(hir::Name::Str(name), ast)<span class="question-mark">?</span>;
+                        cx.pattern_bindings.try_push(hir::Name::Str(name))<span class="question-mark">?</span>;
                         <span class="kw">break </span><span class="lifetime">'path </span>hir::PatPathKind::Ident(name);
                     }
 
@@ -3260,6 +3355,7 @@
 
                             <span class="kw">let </span>key = <span class="macro">alloc_str!</span>(ident.resolve(<span class="macro">resolve_context!</span>(cx.q))<span class="question-mark">?</span>);
                             cx.scopes.define(hir::Name::Str(key), ident)<span class="question-mark">?</span>;
+                            cx.pattern_bindings.try_push(hir::Name::Str(key))<span class="question-mark">?</span>;
                             (key, hir::Binding::Ident(path.span(), key))
                         }
                         <span class="kw">_ </span>=&gt; {
@@ -3516,7 +3612,7 @@
     <span class="prelude-val">Ok</span>(<span class="kw">match </span>ast {
         ast::Condition::Expr(ast) =&gt; hir::Condition::Expr(<span class="macro">alloc!</span>(expr(cx, ast)<span class="question-mark">?</span>)),
         ast::Condition::ExprLet(ast) =&gt; hir::Condition::ExprLet(<span class="macro">alloc!</span>(hir::ExprLet {
-            pat: pat(cx, <span class="kw-2">&amp;</span>ast.pat)<span class="question-mark">?</span>,
+            pat: pat_binding(cx, <span class="kw-2">&amp;</span>ast.pat)<span class="question-mark">?</span>,
             expr: expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>,
         })),
     })

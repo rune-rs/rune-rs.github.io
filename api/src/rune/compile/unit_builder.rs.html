@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/unit_builder.rs`."><title>unit_builder.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (20ae37c18 2024-07-07)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/unit_builder.rs`."><title>unit_builder.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d9284afea 2024-07-14)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -949,10 +949,6 @@
 <a href="#949" id="949">949</a>
 <a href="#950" id="950">950</a>
 <a href="#951" id="951">951</a>
-<a href="#952" id="952">952</a>
-<a href="#953" id="953">953</a>
-<a href="#954" id="954">954</a>
-<a href="#955" id="955">955</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A single execution unit in the runestick virtual machine.
 //!
 //! A unit consists of a sequence of instructions, and lookaside tables for
@@ -1623,6 +1619,7 @@
         call: Call,
         debug_args: Box&lt;[Box&lt;str&gt;]&gt;,
         unit_storage: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>UnitEncoder,
+        size: usize,
     ) -&gt; compile::Result&lt;()&gt; {
         <span class="macro">tracing::trace!</span>(<span class="string">"instance fn: {}"</span>, item);
 
@@ -1683,7 +1680,7 @@
 
         <span class="self">self</span>.debug_mut()<span class="question-mark">?</span>.functions.try_insert(hash, signature)<span class="question-mark">?</span>;
         <span class="self">self</span>.functions_rev.try_insert(offset, hash)<span class="question-mark">?</span>;
-        <span class="self">self</span>.add_assembly(location, assembly, unit_storage)<span class="question-mark">?</span>;
+        <span class="self">self</span>.add_assembly(location, assembly, unit_storage, size)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1726,10 +1723,16 @@
         location: Location,
         assembly: Assembly,
         storage: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>UnitEncoder,
+        size: usize,
     ) -&gt; compile::Result&lt;()&gt; {
         <span class="self">self</span>.label_count = assembly.label_count;
 
+        storage
+            .encode(Inst::Allocate { size })
+            .with_span(location.span)<span class="question-mark">?</span>;
+
         <span class="kw">let </span>base = storage.extend_offsets(assembly.labels.len())<span class="question-mark">?</span>;
+
         <span class="self">self</span>.required_functions
             .try_extend(assembly.required_functions)<span class="question-mark">?</span>;
 
@@ -1775,33 +1778,7 @@
 
                     storage.encode(Inst::Jump { jump }).with_span(span)<span class="question-mark">?</span>;
                 }
-                AssemblyInst::JumpIf { label } =&gt; {
-                    <span class="kw">let </span>jump = label
-                        .jump()
-                        .ok_or(ErrorKind::MissingLabelLocation {
-                            name: label.name,
-                            index: label.index,
-                        })
-                        .with_span(span)<span class="question-mark">?</span>;
-
-                    <span class="macro">write!</span>(comment, <span class="string">"label:{}"</span>, label)<span class="question-mark">?</span>;
-
-                    storage.encode(Inst::JumpIf { jump }).with_span(span)<span class="question-mark">?</span>;
-                }
-                AssemblyInst::JumpIfOrPop { label } =&gt; {
-                    <span class="kw">let </span>jump = label
-                        .jump()
-                        .ok_or(ErrorKind::MissingLabelLocation {
-                            name: label.name,
-                            index: label.index,
-                        })
-                        .with_span(span)<span class="question-mark">?</span>;
-
-                    <span class="macro">write!</span>(comment, <span class="string">"label:{}"</span>, label)<span class="question-mark">?</span>;
-
-                    storage.encode(Inst::JumpIfOrPop { jump }).with_span(span)<span class="question-mark">?</span>;
-                }
-                AssemblyInst::JumpIfNotOrPop { label } =&gt; {
+                AssemblyInst::JumpIf { addr, label } =&gt; {
                     <span class="kw">let </span>jump = label
                         .jump()
                         .ok_or(ErrorKind::MissingLabelLocation {
@@ -1813,10 +1790,10 @@
                     <span class="macro">write!</span>(comment, <span class="string">"label:{}"</span>, label)<span class="question-mark">?</span>;
 
                     storage
-                        .encode(Inst::JumpIfNotOrPop { jump })
+                        .encode(Inst::JumpIf { cond: addr, jump })
                         .with_span(span)<span class="question-mark">?</span>;
                 }
-                AssemblyInst::JumpIfBranch { branch, label } =&gt; {
+                AssemblyInst::JumpIfNot { addr, label } =&gt; {
                     <span class="kw">let </span>jump = label
                         .jump()
                         .ok_or(ErrorKind::MissingLabelLocation {
@@ -1828,10 +1805,14 @@
                     <span class="macro">write!</span>(comment, <span class="string">"label:{}"</span>, label)<span class="question-mark">?</span>;
 
                     storage
-                        .encode(Inst::JumpIfBranch { branch, jump })
+                        .encode(Inst::JumpIfNot { cond: addr, jump })
                         .with_span(span)<span class="question-mark">?</span>;
                 }
-                AssemblyInst::PopAndJumpIfNot { count, label } =&gt; {
+                AssemblyInst::JumpIfBranch {
+                    addr,
+                    branch,
+                    label,
+                } =&gt; {
                     <span class="kw">let </span>jump = label
                         .jump()
                         .ok_or(ErrorKind::MissingLabelLocation {
@@ -1843,10 +1824,14 @@
                     <span class="macro">write!</span>(comment, <span class="string">"label:{}"</span>, label)<span class="question-mark">?</span>;
 
                     storage
-                        .encode(Inst::PopAndJumpIfNot { count, jump })
+                        .encode(Inst::JumpIfBranch {
+                            branch: addr,
+                            value: branch,
+                            jump,
+                        })
                         .with_span(span)<span class="question-mark">?</span>;
                 }
-                AssemblyInst::IterNext { offset, label } =&gt; {
+                AssemblyInst::IterNext { addr, label, out } =&gt; {
                     <span class="kw">let </span>jump = label
                         .jump()
                         .ok_or(ErrorKind::MissingLabelLocation {
@@ -1858,21 +1843,28 @@
                     <span class="macro">write!</span>(comment, <span class="string">"label:{}"</span>, label)<span class="question-mark">?</span>;
 
                     storage
-                        .encode(Inst::IterNext { offset, jump })
+                        .encode(Inst::IterNext { addr, jump, out })
                         .with_span(span)<span class="question-mark">?</span>;
                 }
                 AssemblyInst::Raw { raw } =&gt; {
                     <span class="comment">// Optimization to avoid performing lookups for recursive
                     // function calls.
                     </span><span class="kw">let </span>inst = <span class="kw">match </span>raw {
-                        inst @ Inst::Call { hash, args } =&gt; {
+                        inst @ Inst::Call {
+                            hash,
+                            addr,
+                            args,
+                            out,
+                        } =&gt; {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(UnitFn::Offset { offset, call, .. }) =
                                 <span class="self">self</span>.functions.get(<span class="kw-2">&amp;</span>hash)
                             {
                                 Inst::CallOffset {
                                     offset: <span class="kw-2">*</span>offset,
                                     call: <span class="kw-2">*</span>call,
+                                    addr,
                                     args,
+                                    out,
                                 }
                             } <span class="kw">else </span>{
                                 inst

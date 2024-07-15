@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/cli/run.rs`."><title>run.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (20ae37c18 2024-07-07)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/cli/run.rs`."><title>run.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d9284afea 2024-07-14)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -431,6 +431,11 @@
 <a href="#431" id="431">431</a>
 <a href="#432" id="432">432</a>
 <a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::io::Write;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::time::Instant;
@@ -447,6 +452,10 @@
     <span class="doccomment">/// Provide detailed tracing for each instruction executed.
     </span><span class="attr">#[arg(short, long)]
     </span>trace: bool,
+    <span class="doccomment">/// When tracing is enabled, do not include source references if they are
+    /// available.
+    </span><span class="attr">#[arg(long)]
+    </span>without_source: bool,
     <span class="doccomment">/// Time how long the script took to execute.
     </span><span class="attr">#[arg(long)]
     </span>time: bool,
@@ -485,9 +494,6 @@
     <span class="doccomment">/// Dump native types.
     </span><span class="attr">#[arg(long)]
     </span>dump_native_types: bool,
-    <span class="doccomment">/// Include source code references where appropriate (only available if -O debug-info=true).
-    </span><span class="attr">#[arg(long)]
-    </span>with_source: bool,
     <span class="doccomment">/// When tracing, limit the number of instructions to run with `limit`. This
     /// implies `--trace`.
     </span><span class="attr">#[arg(long)]
@@ -516,25 +522,21 @@
             <span class="self">self</span>.dump_native_types = <span class="bool-val">true</span>;
         }
 
+        <span class="kw">if </span><span class="self">self</span>.dump_functions
+        || <span class="self">self</span>.dump_native_functions
+        || <span class="self">self</span>.dump_stack
+        || <span class="self">self</span>.dump_types
+        || <span class="self">self</span>.dump_constants {
+            <span class="self">self</span>.dump_unit = <span class="bool-val">true</span>;
+        }
+
+        <span class="kw">if </span><span class="self">self</span>.dump_unit {
+            <span class="self">self</span>.emit_instructions = <span class="bool-val">true</span>;
+        }
+
         <span class="kw">if </span><span class="self">self</span>.trace_limit.is_some() {
             <span class="self">self</span>.trace = <span class="bool-val">true</span>;
         }
-    }
-}
-
-<span class="kw">impl </span>Flags {
-    <span class="kw">fn </span>emit_instructions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.dump_unit || <span class="self">self</span>.emit_instructions
-    }
-
-    <span class="kw">fn </span>dump_unit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.dump_unit
-            || <span class="self">self</span>.dump_functions
-            || <span class="self">self</span>.dump_native_functions
-            || <span class="self">self</span>.dump_stack
-            || <span class="self">self</span>.dump_types
-            || <span class="self">self</span>.dump_constants
-            || <span class="self">self</span>.emit_instructions
     }
 }
 
@@ -584,17 +586,17 @@
         }
     }
 
-    <span class="kw">if </span>args.dump_unit() {
+    <span class="kw">if </span>args.dump_unit {
         <span class="macro">writeln!</span>(
             io.stdout,
             <span class="string">"Unit size: {} bytes"</span>,
             unit.instructions().bytes()
         )<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>args.emit_instructions() {
+        <span class="kw">if </span>args.emit_instructions {
             <span class="kw">let </span><span class="kw-2">mut </span>o = io.stdout.lock();
             <span class="macro">writeln!</span>(o, <span class="string">"# instructions"</span>)<span class="question-mark">?</span>;
-            unit.emit_instructions(<span class="kw-2">&amp;mut </span>o, sources, args.with_source)<span class="question-mark">?</span>;
+            unit.emit_instructions(<span class="kw-2">&amp;mut </span>o, sources, args.without_source)<span class="question-mark">?</span>;
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>functions = unit.iter_functions().peekable();
@@ -652,7 +654,7 @@
             <span class="kw-2">&amp;mut </span>execution,
             sources,
             args.dump_stack,
-            args.with_source,
+            args.without_source,
             args.trace_limit.unwrap_or(usize::MAX),
         )
         .<span class="kw">await
@@ -685,6 +687,13 @@
         }
     };
 
+    <span class="kw">let </span>exit = <span class="kw">if let </span><span class="prelude-val">Some</span>(error) = errored {
+        error.emit(io.stdout, sources)<span class="question-mark">?</span>;
+        ExitCode::VmError
+    } <span class="kw">else </span>{
+        ExitCode::Success
+    };
+
     <span class="kw">if </span>args.dump_stack {
         <span class="macro">writeln!</span>(io.stdout, <span class="string">"# full stack dump after halting"</span>)<span class="question-mark">?</span>;
 
@@ -697,15 +706,15 @@
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>((count, frame)) = it.next() {
             <span class="kw">let </span>stack_top = <span class="kw">match </span>it.peek() {
-                <span class="prelude-val">Some</span>((<span class="kw">_</span>, next)) =&gt; next.stack_bottom,
-                <span class="prelude-val">None </span>=&gt; stack.stack_bottom(),
+                <span class="prelude-val">Some</span>((<span class="kw">_</span>, next)) =&gt; next.top,
+                <span class="prelude-val">None </span>=&gt; stack.top(),
             };
 
             <span class="kw">let </span>values = stack
-                .get(frame.stack_bottom..stack_top)
+                .get(frame.top..stack_top)
                 .expect(<span class="string">"bad stack slice"</span>);
 
-            <span class="macro">writeln!</span>(io.stdout, <span class="string">"  frame #{} (+{})"</span>, count, frame.stack_bottom)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(io.stdout, <span class="string">"  frame #{} (+{})"</span>, count, frame.top)<span class="question-mark">?</span>;
 
             <span class="kw">if </span>values.is_empty() {
                 <span class="macro">writeln!</span>(io.stdout, <span class="string">"    *empty*"</span>)<span class="question-mark">?</span>;
@@ -713,7 +722,7 @@
 
             vm.with(|| {
                 <span class="kw">for </span>(n, value) <span class="kw">in </span>stack.iter().enumerate() {
-                    <span class="macro">writeln!</span>(io.stdout, <span class="string">"{}+{} = {:?}"</span>, frame.stack_bottom, n, value)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(io.stdout, <span class="string">"    {}+{n} = {value:?}"</span>, frame.top)<span class="question-mark">?</span>;
                 }
 
                 <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, <span class="kw">crate</span>::support::Error&gt;(())
@@ -725,10 +734,10 @@
             io.stdout,
             <span class="string">"  frame #{} (+{})"</span>,
             frames.len(),
-            stack.stack_bottom()
+            stack.top()
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>values = stack.get(stack.stack_bottom()..).expect(<span class="string">"bad stack slice"</span>);
+        <span class="kw">let </span>values = stack.get(stack.top()..).expect(<span class="string">"bad stack slice"</span>);
 
         <span class="kw">if </span>values.is_empty() {
             <span class="macro">writeln!</span>(io.stdout, <span class="string">"    *empty*"</span>)<span class="question-mark">?</span>;
@@ -736,25 +745,14 @@
 
         vm.with(|| {
             <span class="kw">for </span>(n, value) <span class="kw">in </span>values.iter().enumerate() {
-                <span class="macro">writeln!</span>(
-                    io.stdout,
-                    <span class="string">"    {}+{} = {:?}"</span>,
-                    stack.stack_bottom(),
-                    n,
-                    value
-                )<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(io.stdout, <span class="string">"    {}+{n} = {value:?}"</span>, stack.top())<span class="question-mark">?</span>;
             }
 
             <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, <span class="kw">crate</span>::support::Error&gt;(())
         })<span class="question-mark">?</span>;
     }
 
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(error) = errored {
-        error.emit(io.stdout, sources)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(ExitCode::VmError)
-    } <span class="kw">else </span>{
-        <span class="prelude-val">Ok</span>(ExitCode::Success)
-    }
+    <span class="prelude-val">Ok</span>(exit)
 }
 
 <span class="doccomment">/// Perform a detailed trace of the program.
@@ -763,103 +761,115 @@
     execution: <span class="kw-2">&amp;mut </span>VmExecution&lt;T&gt;,
     sources: <span class="kw-2">&amp;</span>Sources,
     dump_stack: bool,
-    with_source: bool,
+    without_source: bool,
     <span class="kw-2">mut </span>limit: usize,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Value, TraceError&gt;
 <span class="kw">where
     </span>T: AsRef&lt;Vm&gt; + AsMut&lt;Vm&gt;,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>current_frame_len = execution.vm().call_frames().len();
+    <span class="kw">let </span><span class="kw-2">mut </span>result = VmResult::Ok(<span class="prelude-val">None</span>);
 
     <span class="kw">while </span>limit &gt; <span class="number">0 </span>{
-        limit = limit.wrapping_sub(<span class="number">1</span>);
-
-        {
-            <span class="kw">let </span>vm = execution.vm();
-            <span class="kw">let </span><span class="kw-2">mut </span>o = io.stdout.lock();
-
-            <span class="kw">if let </span><span class="prelude-val">Some</span>((hash, signature)) = vm
-                .unit()
-                .debug_info()
-                .and_then(|d| d.function_at(vm.last_ip()))
-            {
-                <span class="macro">writeln!</span>(o, <span class="string">"fn {} ({}):"</span>, signature, hash)<span class="question-mark">?</span>;
-            }
-
-            <span class="kw">let </span>debug = vm
-                .unit()
-                .debug_info()
-                .and_then(|d| d.instruction_at(vm.last_ip()));
-
-            <span class="kw">if </span>with_source {
-                <span class="kw">let </span>debug_info = debug.and_then(|d| sources.get(d.source_id).map(|s| (s, d.span)));
-                <span class="kw">if let </span><span class="prelude-val">Some</span>((source, span)) = debug_info {
-                    source.emit_source_line(<span class="kw-2">&amp;mut </span>o, span)<span class="question-mark">?</span>;
-                }
-            }
-
-            <span class="kw">for </span>label <span class="kw">in </span>debug.map(|d| d.labels.as_slice()).unwrap_or_default() {
-                <span class="macro">writeln!</span>(o, <span class="string">"{}:"</span>, label)<span class="question-mark">?</span>;
-            }
-
-            <span class="kw">if let </span><span class="prelude-val">Some</span>((inst, <span class="kw">_</span>)) = vm
-                .unit()
-                .instruction_at(vm.last_ip())
-                .map_err(VmError::from)<span class="question-mark">?
-            </span>{
-                <span class="macro">write!</span>(o, <span class="string">"  {:04} = {}"</span>, vm.last_ip(), inst)<span class="question-mark">?</span>;
-            } <span class="kw">else </span>{
-                <span class="macro">write!</span>(o, <span class="string">"  {:04} = *out of bounds*"</span>, vm.last_ip())<span class="question-mark">?</span>;
-            }
-
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(comment) = debug.and_then(|d| d.comment.as_ref()) {
-                <span class="macro">write!</span>(o, <span class="string">" // {}"</span>, comment)<span class="question-mark">?</span>;
-            }
-
-            <span class="macro">writeln!</span>(o)<span class="question-mark">?</span>;
-        }
-
-        <span class="kw">let </span>result = <span class="kw">match </span>execution.async_step().<span class="kw">await </span>{
-            VmResult::Ok(result) =&gt; result,
-            VmResult::Err(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TraceError::VmError(e)),
-        };
-
+        <span class="kw">let </span>vm = execution.vm();
+        <span class="kw">let </span>ip = vm.ip();
         <span class="kw">let </span><span class="kw-2">mut </span>o = io.stdout.lock();
 
-        <span class="kw">if </span>dump_stack {
-            <span class="kw">let </span>vm = execution.vm();
-            <span class="kw">let </span>frames = vm.call_frames();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((hash, signature)) = vm
+            .unit()
+            .debug_info()
+            .and_then(|d| d.function_at(ip))
+        {
+            <span class="macro">writeln!</span>(o, <span class="string">"fn {} ({}):"</span>, signature, hash)<span class="question-mark">?</span>;
+        }
 
+        <span class="kw">let </span>debug = vm
+            .unit()
+            .debug_info()
+            .and_then(|d| d.instruction_at(ip));
+
+        <span class="kw">for </span>label <span class="kw">in </span>debug.map(|d| d.labels.as_slice()).unwrap_or_default() {
+            <span class="macro">writeln!</span>(o, <span class="string">"{}:"</span>, label)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">if </span>!without_source {
+            <span class="kw">let </span>debug_info = debug.and_then(|d| sources.get(d.source_id).map(|s| (s, d.span)));
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(line) = debug_info.and_then(|(s, span)| s.source_line(span)) {
+                <span class="macro">write!</span>(o, <span class="string">"  "</span>)<span class="question-mark">?</span>;
+                line.write(<span class="kw-2">&amp;mut </span>o)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(o)<span class="question-mark">?</span>;
+            }
+        }
+
+        <span class="kw">if </span>dump_stack {
+            <span class="kw">let </span>frames = vm.call_frames();
             <span class="kw">let </span>stack = vm.stack();
 
             <span class="kw">if </span>current_frame_len != frames.len() {
-                <span class="kw">if </span>current_frame_len &lt; frames.len() {
-                    <span class="macro">writeln!</span>(o, <span class="string">"=&gt; frame {} ({}):"</span>, frames.len(), stack.stack_bottom())<span class="question-mark">?</span>;
+                <span class="kw">let </span>op = <span class="kw">if </span>current_frame_len &lt; frames.len() { <span class="string">"push" </span>} <span class="kw">else </span>{ <span class="string">"pop" </span>};
+                <span class="macro">write!</span>(o, <span class="string">"  {op} frame {} (+{})"</span>, frames.len(), stack.top())<span class="question-mark">?</span>;
+
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(frame) = frames.last() {
+                    <span class="macro">writeln!</span>(o, <span class="string">" {frame:?}"</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    <span class="macro">writeln!</span>(o, <span class="string">"&lt;= frame {} ({}):"</span>, frames.len(), stack.stack_bottom())<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(o, <span class="string">" *root*"</span>)<span class="question-mark">?</span>;
                 }
 
                 current_frame_len = frames.len();
             }
+        }
 
-            <span class="kw">let </span>values = stack.get(stack.stack_bottom()..).expect(<span class="string">"bad stack slice"</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((inst, <span class="kw">_</span>)) = vm
+            .unit()
+            .instruction_at(ip)
+            .map_err(VmError::from)<span class="question-mark">?
+        </span>{
+            <span class="macro">write!</span>(o, <span class="string">"  {:04} = {}"</span>, ip, inst)<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            <span class="macro">write!</span>(o, <span class="string">"  {:04} = *out of bounds*"</span>, ip)<span class="question-mark">?</span>;
+        }
 
-            <span class="kw">if </span>values.is_empty() {
-                <span class="macro">writeln!</span>(o, <span class="string">"    *empty*"</span>)<span class="question-mark">?</span>;
-            }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(comment) = debug.and_then(|d| d.comment.as_ref()) {
+            <span class="macro">write!</span>(o, <span class="string">" // {}"</span>, comment)<span class="question-mark">?</span>;
+        }
+
+        <span class="macro">writeln!</span>(o)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>dump_stack {
+            <span class="kw">let </span>stack = vm.stack();
+            <span class="kw">let </span>values = stack.get(stack.top()..).expect(<span class="string">"bad stack slice"</span>);
 
             vm.with(|| {
                 <span class="kw">for </span>(n, value) <span class="kw">in </span>values.iter().enumerate() {
-                    <span class="macro">writeln!</span>(o, <span class="string">"    {}+{} = {:?}"</span>, stack.stack_bottom(), n, value)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(o, <span class="string">"    {}+{n} = {value:?}"</span>, stack.top())<span class="question-mark">?</span>;
                 }
 
                 <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, TraceError&gt;(())
             })<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(result);
+        <span class="kw">match </span>result {
+            VmResult::Ok(result) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(result);
+                }
+            }
+            VmResult::Err(error) =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(TraceError::VmError(error));
+            }
         }
+
+        result = execution.async_step().<span class="kw">await</span>;
+
+        result = <span class="kw">match </span>result {
+            VmResult::Err(error) =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(TraceError::VmError(error));
+            }
+            result =&gt; result,
+        };
+
+        limit = limit.wrapping_sub(<span class="number">1</span>);
     }
 
     <span class="prelude-val">Err</span>(TraceError::Limited)

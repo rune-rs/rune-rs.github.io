@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/stack.rs`."><title>stack.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (20ae37c18 2024-07-07)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/stack.rs`."><title>stack.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d9284afea 2024-07-14)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -438,31 +438,73 @@
 <a href="#438" id="438">438</a>
 <a href="#439" id="439">439</a>
 <a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::array;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::slice;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::alloc::Global;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::borrow::Cow;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Vec};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{InstAddress, Value};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{InstAddress, Value, VmErrorKind};
 
-<span class="doccomment">/// An error raised when interacting with the stack.
+<span class="doccomment">/// An error raised when accessing an address on the stack.
 </span><span class="attr">#[derive(Debug, PartialEq)]
 #[non_exhaustive]
-</span><span class="kw">pub struct </span>StackError;
+</span><span class="kw">pub struct </span>StackError {
+    addr: InstAddress,
+}
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>StackError {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">"Tried to access out-of-bounds stack entry"</span>)
+        <span class="macro">write!</span>(f, <span class="string">"Tried to access out-of-bounds stack entry {}"</span>, <span class="self">self</span>.addr)
+    }
+}
+
+<span class="doccomment">/// An error raised when accessing a slice on the stack.
+</span><span class="attr">#[derive(Debug, PartialEq)]
+#[non_exhaustive]
+</span><span class="kw">pub struct </span>SliceError {
+    addr: InstAddress,
+    len: usize,
+    stack: usize,
+}
+
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>SliceError {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(
+            f,
+            <span class="string">"Tried to access out-of-bounds stack slice {}-{} in 0-{}"</span>,
+            <span class="self">self</span>.addr,
+            <span class="self">self</span>.addr.offset() + <span class="self">self</span>.len,
+            <span class="self">self</span>.stack
+        )
     }
 }
 
 <span class="macro">cfg_std!</span> {
     <span class="kw">impl </span>std::error::Error <span class="kw">for </span>StackError {}
+    <span class="kw">impl </span>std::error::Error <span class="kw">for </span>SliceError {}
 }
 
 <span class="doccomment">/// The stack of the virtual machine, where all values are stored.
@@ -473,20 +515,18 @@
     <span class="doccomment">/// The top of the current stack frame.
     ///
     /// It is not possible to interact with values below this stack frame.
-    </span>stack_bottom: usize,
+    </span>top: usize,
 }
 
 <span class="kw">impl </span>Stack {
     <span class="doccomment">/// Construct a new stack.
     ///
     /// ```
-    /// use rune::runtime::Stack;
-    /// use rune::Value;
+    /// use rune::runtime::{Stack, InstAddress};
     ///
     /// let mut stack = Stack::new();
-    /// assert!(stack.pop().is_err());
     /// stack.push(rune::to_value(String::from("Hello World"))?);
-    /// let value = stack.pop()?;
+    /// let value = stack.at(InstAddress::ZERO)?;
     /// let value: String = rune::from_value(value)?;
     /// assert_eq!(value, "Hello World");
     /// # Ok::&lt;_, rune::support::Error&gt;(())
@@ -494,20 +534,35 @@
     </span><span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             stack: Vec::new(),
-            stack_bottom: <span class="number">0</span>,
+            top: <span class="number">0</span>,
         }
+    }
+
+    <span class="doccomment">/// The current top address of the stack.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub const fn </span>addr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; InstAddress {
+        InstAddress::new(<span class="self">self</span>.stack.len().saturating_sub(<span class="self">self</span>.top))
+    }
+
+    <span class="doccomment">/// Try to resize the stack with space for the given size.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize) -&gt; alloc::Result&lt;()&gt; {
+        <span class="kw">if </span>size == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+
+        <span class="kw">let </span>empty = Value::empty()<span class="question-mark">?</span>;
+        <span class="self">self</span>.stack.try_resize(<span class="self">self</span>.top + size, empty)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Construct a new stack with the given capacity pre-allocated.
     ///
     /// ```
-    /// use rune::runtime::Stack;
-    /// use rune::Value;
+    /// use rune::runtime::{Stack, InstAddress};
     ///
     /// let mut stack = Stack::with_capacity(16)?;
-    /// assert!(stack.pop().is_err());
     /// stack.push(rune::to_value(String::from("Hello World"))?);
-    /// let value = stack.pop()?;
+    /// let value = stack.at(InstAddress::ZERO)?;
     /// let value: String = rune::from_value(value)?;
     /// assert_eq!(value, "Hello World");
     /// # Ok::&lt;_, rune::support::Error&gt;(())
@@ -515,13 +570,13 @@
     </span><span class="kw">pub fn </span>with_capacity(capacity: usize) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             stack: Vec::try_with_capacity(capacity)<span class="question-mark">?</span>,
-            stack_bottom: <span class="number">0</span>,
+            top: <span class="number">0</span>,
         })
     }
 
     <span class="doccomment">/// Check if the stack is empty.
     ///
-    /// This ignores [stack_bottom] and will just check if the full stack is
+    /// This ignores [top] and will just check if the full stack is
     /// empty.
     ///
     /// ```
@@ -534,14 +589,14 @@
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     ///
-    /// [stack_bottom]: Self::stack_bottom()
+    /// [top]: Self::top()
     </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.stack.is_empty()
     }
 
     <span class="doccomment">/// Get the length of the stack.
     ///
-    /// This ignores [stack_bottom] and will just return the total length of
+    /// This ignores [top] and will just return the total length of
     /// the stack.
     ///
     /// ```
@@ -554,25 +609,17 @@
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     ///
-    /// [stack_bottom]: Self::stack_bottom()
+    /// [top]: Self::top()
     </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.stack.len()
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>stack_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize, StackError&gt; {
-        <span class="kw">let </span><span class="prelude-val">Some</span>(size) = <span class="self">self</span>.stack.len().checked_sub(<span class="self">self</span>.stack_bottom) <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(StackError);
-        };
-
-        <span class="prelude-val">Ok</span>(size)
-    }
-
     <span class="doccomment">/// Perform a raw access over the stack.
     ///
-    /// This ignores [stack_bottom] and will just check that the given slice
+    /// This ignores [top] and will just check that the given slice
     /// index is within range.
     ///
-    /// [stack_bottom]: Self::stack_bottom()
+    /// [top]: Self::top()
     </span><span class="kw">pub fn </span>get&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, index: I) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;I <span class="kw">as </span>slice::SliceIndex&lt;[Value]&gt;&gt;::Output&gt;
     <span class="kw">where
         </span>I: slice::SliceIndex&lt;[Value]&gt;,
@@ -582,135 +629,81 @@
 
     <span class="doccomment">/// Push a value onto the stack.
     ///
+    /// # Examples
+    ///
     /// ```
-    /// use rune::runtime::Stack;
-    /// use rune::Value;
+    /// use rune::runtime::{Stack, InstAddress};
     ///
     /// let mut stack = Stack::new();
-    /// assert!(stack.pop().is_err());
     /// stack.push(rune::to_value(String::from("Hello World"))?);
-    /// assert_eq!(rune::from_value::&lt;String&gt;(stack.pop()?)?, "Hello World");
+    /// let value = stack.at(InstAddress::ZERO)?;
+    /// assert_eq!(rune::from_value::&lt;String&gt;(value)?, "Hello World");
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
     </span><span class="kw">pub fn </span>push&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; alloc::Result&lt;()&gt;
     <span class="kw">where
-        </span>Value: TryFrom&lt;T&gt;,
-        alloc::Error: From&lt;&lt;Value <span class="kw">as </span>TryFrom&lt;T&gt;&gt;::Error&gt;,
+        </span>T: TryInto&lt;Value, Error: Into&lt;alloc::Error&gt;&gt;,
     {
-        <span class="self">self</span>.stack.try_push(Value::try_from(value)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.stack.try_push(value.try_into().map_err(Into::into)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Pop a value from the stack.
-    ///
-    /// ```
-    /// use rune::runtime::Stack;
-    /// use rune::Value;
-    ///
-    /// let mut stack = Stack::new();
-    /// assert!(stack.pop().is_err());
-    /// stack.push(rune::to_value(String::from("Hello World"))?);
-    /// let value = stack.pop()?;
-    /// let value: String = rune::from_value(value)?;
-    /// assert_eq!(value, "Hello World");
-    /// # Ok::&lt;_, rune::support::Error&gt;(())
-    /// ```
-    </span><span class="kw">pub fn </span>pop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, StackError&gt; {
-        <span class="kw">if </span><span class="self">self</span>.stack.len() == <span class="self">self</span>.stack_bottom {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(StackError);
-        }
-
-        <span class="self">self</span>.stack.pop().ok_or(StackError)
+    <span class="doccomment">/// Drain the current stack down to the current stack bottom.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drain(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>DoubleEndedIterator&lt;Item = Value&gt; + <span class="lifetime">'_ </span>{
+        <span class="self">self</span>.stack.drain(<span class="self">self</span>.top..)
     }
 
-    <span class="doccomment">/// Drain the top `count` elements of the stack in the order that they were
-    /// pushed, from bottom to top.
+    <span class="doccomment">/// Get the slice at the given address with the given length.
+    ///
+    /// # Examples
     ///
     /// ```
-    /// use rune::runtime::Stack;
-    /// use rune::Value;
+    /// use rune::runtime::{Stack, InstAddress};
     ///
     /// let mut stack = Stack::new();
+    /// stack.push(rune::to_value(1i64)?);
+    /// stack.push(rune::to_value(1i64)?);
+    /// stack.push(rune::to_value(1i64)?);
     ///
-    /// stack.push(rune::to_value(42i64)?);
-    /// stack.push(rune::to_value(String::from("foo"))?);
-    /// stack.push(rune::to_value(())?);
-    ///
-    /// let values = stack.drain(2)?.collect::&lt;Vec&lt;_&gt;&gt;();
-    ///
+    /// let values = stack.slice_at(InstAddress::ZERO, 2)?;
     /// assert_eq!(values.len(), 2);
-    /// assert_eq!(rune::from_value::&lt;String&gt;(&amp;values[0])?, "foo");
-    /// assert_eq!(rune::from_value(&amp;values[1])?, ());
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>drain(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        count: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">impl </span>DoubleEndedIterator&lt;Item = Value&gt; + <span class="lifetime">'_</span>, StackError&gt; {
-        <span class="kw">match </span><span class="self">self</span>.stack.len().checked_sub(count) {
-            <span class="prelude-val">Some</span>(start) <span class="kw">if </span>start &gt;= <span class="self">self</span>.stack_bottom =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.stack.drain(start..)),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(StackError),
-        }
-    }
+    </span><span class="kw">pub fn </span>slice_at(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: InstAddress, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>[Value], SliceError&gt; {
+        <span class="kw">let </span>stack_len = <span class="self">self</span>.stack.len();
 
-    <span class="doccomment">/// Drain the top of the stack into a vector.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drain_vec&lt;<span class="kw">const </span>N: usize&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        count: usize,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;[Value; N], StackError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>it = <span class="self">self</span>.drain(count)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(array::from_fn(<span class="kw">move </span>|<span class="kw">_</span>| it.next().unwrap()))
-    }
-
-    <span class="doccomment">/// Extend the current stack with an iterator.
-    ///
-    /// ```
-    /// use rune::runtime::Stack;
-    /// use rune::alloc::String;
-    /// use rune::Value;
-    ///
-    /// let mut stack = Stack::new();
-    ///
-    /// stack.extend([
-    ///     rune::to_value(42i64)?,
-    ///     rune::to_value(String::try_from("foo")?)?,
-    ///     rune::to_value(())?
-    /// ]);
-    ///
-    /// let values = stack.drain(2)?.collect::&lt;Vec&lt;_&gt;&gt;();
-    ///
-    /// assert_eq!(values.len(), 2);
-    /// assert_eq!(rune::from_value::&lt;String&gt;(&amp;values[0])?, "foo");
-    /// assert_eq!(rune::from_value(&amp;values[1])?, ());
-    /// # Ok::&lt;_, rune::support::Error&gt;(())
-    /// ```
-    </span><span class="kw">pub fn </span>extend&lt;I&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: I) -&gt; alloc::Result&lt;()&gt;
-    <span class="kw">where
-        </span>I: IntoIterator&lt;Item = Value&gt;,
-    {
-        <span class="kw">for </span>value <span class="kw">in </span>iter {
-            <span class="self">self</span>.stack.try_push(value)<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(slice) = inner_slice_at(<span class="kw-2">&amp;</span><span class="self">self</span>.stack, <span class="self">self</span>.top, addr, len) {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(slice);
         }
 
-        <span class="prelude-val">Ok</span>(())
+        <span class="prelude-val">Err</span>(slice_error(stack_len, <span class="self">self</span>.top, addr, len))
+    }
+
+    <span class="doccomment">/// Get the mutable slice at the given address with the given length.
+    </span><span class="kw">pub fn </span>slice_at_mut(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        addr: InstAddress,
+        len: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>[Value], SliceError&gt; {
+        <span class="kw">let </span>stack_len = <span class="self">self</span>.stack.len();
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(slice) = inner_slice_at_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, <span class="self">self</span>.top, addr, len) {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(slice);
+        }
+
+        <span class="prelude-val">Err</span>(slice_error(stack_len, <span class="self">self</span>.top, addr, len))
+    }
+
+    <span class="doccomment">/// Get the slice at the given address with the given static length.
+    </span><span class="kw">pub fn </span>array_at&lt;<span class="kw">const </span>N: usize&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: InstAddress) -&gt; <span class="prelude-ty">Result</span>&lt;[<span class="kw-2">&amp;</span>Value; N], SliceError&gt; {
+        <span class="kw">let </span>slice = <span class="self">self</span>.slice_at(addr, N)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(array::from_fn(|i| <span class="kw-2">&amp;</span>slice[i]))
     }
 
     <span class="doccomment">/// Clear the current stack.
     </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.stack.clear();
-        <span class="self">self</span>.stack_bottom = <span class="number">0</span>;
-    }
-
-    <span class="doccomment">/// Get the last position on the stack.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>last(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>Value, StackError&gt; {
-        <span class="self">self</span>.stack.last().ok_or(StackError)
-    }
-
-    <span class="doccomment">/// Get the last position on the stack.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>peek(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Value&gt; {
-        <span class="self">self</span>.stack.last()
+        <span class="self">self</span>.top = <span class="number">0</span>;
     }
 
     <span class="doccomment">/// Iterate over the stack.
@@ -723,100 +716,75 @@
     /// The stack is partitioned into call frames, and once we enter a call
     /// frame the bottom of the stack corresponds to the bottom of the current
     /// call frame.
-    </span><span class="kw">pub fn </span>stack_bottom(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.stack_bottom
+    </span><span class="kw">pub fn </span>top(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.top
     }
 
     <span class="doccomment">/// Access the value at the given frame offset.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>at_offset(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>Value, StackError&gt; {
-        <span class="self">self</span>.stack_bottom
-            .checked_add(offset)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rune::runtime::{Stack, InstAddress};
+    ///
+    /// let mut stack = Stack::new();
+    /// stack.push(rune::to_value(String::from("Hello World"))?);
+    /// let value = stack.at(InstAddress::ZERO)?;
+    /// let value: String = rune::from_value(value)?;
+    /// assert_eq!(value, "Hello World");
+    /// # Ok::&lt;_, rune::support::Error&gt;(())
+    /// ```
+    </span><span class="kw">pub fn </span>at(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: InstAddress) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>Value, StackError&gt; {
+        <span class="self">self</span>.top
+            .checked_add(addr.offset())
             .and_then(|n| <span class="self">self</span>.stack.get(n))
-            .ok_or(StackError)
+            .ok_or(StackError { addr })
     }
 
-    <span class="doccomment">/// Peek the value at the given offset from the top.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>at_offset_from_top(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>Value, StackError&gt; {
-        <span class="kw">match </span><span class="self">self
-            </span>.stack
-            .len()
-            .checked_sub(offset)
-            .filter(|n| <span class="kw-2">*</span>n &gt;= <span class="self">self</span>.stack_bottom)
-            .and_then(|n| <span class="self">self</span>.stack.get(n))
-        {
-            <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Ok</span>(value),
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(StackError),
-        }
-    }
-
-    <span class="doccomment">/// Get the offset at the given location.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>at_offset_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>Value, StackError&gt; {
-        <span class="kw">let </span>n = <span class="kw">match </span><span class="self">self</span>.stack_bottom.checked_add(offset) {
-            <span class="prelude-val">Some</span>(n) =&gt; n,
-            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(StackError),
-        };
-
-        <span class="kw">match </span><span class="self">self</span>.stack.get_mut(n) {
-            <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Ok</span>(value),
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(StackError),
-        }
-    }
-
-    <span class="doccomment">/// Address a value on the stack.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>address(<span class="kw-2">&amp;mut </span><span class="self">self</span>, address: InstAddress) -&gt; <span class="prelude-ty">Result</span>&lt;Value, StackError&gt; {
-        <span class="prelude-val">Ok</span>(<span class="kw">match </span>address {
-            InstAddress::Top =&gt; <span class="self">self</span>.pop()<span class="question-mark">?</span>,
-            InstAddress::Offset(offset) =&gt; <span class="self">self</span>.at_offset(offset)<span class="question-mark">?</span>.clone(),
-        })
-    }
-
-    <span class="doccomment">/// Address a value on the stack.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>address_ref(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        address: InstAddress,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Cow&lt;<span class="lifetime">'_</span>, Value&gt;, StackError&gt; {
-        <span class="prelude-val">Ok</span>(<span class="kw">match </span>address {
-            InstAddress::Top =&gt; Cow::Owned(<span class="self">self</span>.pop()<span class="question-mark">?</span>),
-            InstAddress::Offset(offset) =&gt; Cow::Borrowed(<span class="self">self</span>.at_offset(offset)<span class="question-mark">?</span>),
-        })
-    }
-
-    <span class="doccomment">/// Pop the given number of elements from the stack.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>popn(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), StackError&gt; {
-        drop(<span class="self">self</span>.drain(count)<span class="question-mark">?</span>);
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="doccomment">/// Pop a sequence of values from the stack.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_sequence(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        count: usize,
-    ) -&gt; alloc::Result&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;Value&gt;, StackError&gt;&gt; {
-        <span class="kw">let </span><span class="prelude-val">Ok</span>(iter) = <span class="self">self</span>.drain(count) <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(StackError));
-        };
-
-        <span class="kw">let </span><span class="kw-2">mut </span>vec = Vec::try_with_capacity(iter.size_hint().<span class="number">0</span>)<span class="question-mark">?</span>;
-
-        <span class="kw">for </span>value <span class="kw">in </span>iter {
-            vec.try_push(value)<span class="question-mark">?</span>;
-        }
-
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(vec))
+    <span class="doccomment">/// Get a value mutable at the given index from the stack bottom.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rune::runtime::{Stack, InstAddress};
+    ///
+    /// let mut stack = Stack::new();
+    /// stack.push(rune::to_value(String::from("Hello World"))?);
+    /// let value = stack.at(InstAddress::ZERO)?;
+    /// let value: String = rune::from_value(value)?;
+    /// assert_eq!(value, "Hello World");
+    ///
+    /// *stack.at_mut(InstAddress::ZERO)? = rune::to_value(42i64)?;
+    /// let value = stack.at(InstAddress::ZERO)?;
+    /// let value: i64 = rune::from_value(value)?;
+    /// assert_eq!(value, 42);
+    /// # Ok::&lt;_, rune::support::Error&gt;(())
+    /// ```
+    </span><span class="kw">pub fn </span>at_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>Value, StackError&gt; {
+        <span class="self">self</span>.top
+            .checked_add(addr.offset())
+            .and_then(|n| <span class="self">self</span>.stack.get_mut(n))
+            .ok_or(StackError { addr })
     }
 
     <span class="doccomment">/// Swap the value at position a with the value at position b.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: usize, b: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), StackError&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>swap(<span class="kw-2">&amp;mut </span><span class="self">self</span>, a: InstAddress, b: InstAddress) -&gt; <span class="prelude-ty">Result</span>&lt;(), StackError&gt; {
+        <span class="kw">if </span>a == b {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+
         <span class="kw">let </span>a = <span class="self">self
-            </span>.stack_bottom
-            .checked_add(a)
+            </span>.top
+            .checked_add(a.offset())
             .filter(|<span class="kw-2">&amp;</span>n| n &lt; <span class="self">self</span>.stack.len())
-            .ok_or(StackError)<span class="question-mark">?</span>;
+            .ok_or(StackError { addr: a })<span class="question-mark">?</span>;
+
         <span class="kw">let </span>b = <span class="self">self
-            </span>.stack_bottom
-            .checked_add(b)
+            </span>.top
+            .checked_add(b.offset())
             .filter(|<span class="kw-2">&amp;</span>n| n &lt; <span class="self">self</span>.stack.len())
-            .ok_or(StackError)<span class="question-mark">?</span>;
+            .ok_or(StackError { addr: b })<span class="question-mark">?</span>;
+
         <span class="self">self</span>.stack.swap(a, b);
         <span class="prelude-val">Ok</span>(())
     }
@@ -828,13 +796,47 @@
     ///
     /// Returns the old stack top.
     </span><span class="attr">#[tracing::instrument(skip_all)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>swap_stack_bottom(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, StackError&gt; {
-        <span class="macro">tracing::trace!</span>(stack = <span class="question-mark">?</span><span class="self">self</span>.stack.len(), <span class="self">self</span>.stack_bottom, count);
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>swap_top(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, VmErrorKind&gt; {
+        <span class="kw">let </span>old_len = <span class="self">self</span>.stack.len();
 
-        <span class="kw">match </span><span class="self">self</span>.stack.len().checked_sub(count) {
-            <span class="prelude-val">Some</span>(new_top) =&gt; <span class="prelude-val">Ok</span>(replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack_bottom, new_top)),
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(StackError),
+        <span class="kw">if </span>len == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.top, old_len));
         }
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(start) = <span class="self">self</span>.top.checked_add(addr.offset()) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(VmErrorKind::StackError {
+                error: StackError { addr },
+            });
+        };
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(new_len) = old_len.checked_add(len) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(VmErrorKind::StackError {
+                error: StackError { addr },
+            });
+        };
+
+        <span class="kw">if </span>old_len &lt; start + len {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(VmErrorKind::StackError {
+                error: StackError { addr },
+            });
+        }
+
+        <span class="self">self</span>.stack.try_reserve(len)<span class="question-mark">?</span>;
+
+        <span class="comment">// SAFETY: We've ensured that the collection has space for the new
+        // values. It is also guaranteed to be non-overlapping.
+        </span><span class="kw">unsafe </span>{
+            <span class="kw">let </span>ptr = <span class="self">self</span>.stack.as_mut_ptr();
+            <span class="kw">let </span>from = slice::from_raw_parts(ptr.add(start), len);
+
+            <span class="kw">for </span>(value, n) <span class="kw">in </span>from.iter().zip(old_len..) {
+                ptr.add(n).write(value.clone());
+            }
+
+            <span class="self">self</span>.stack.set_len(new_len);
+        }
+
+        <span class="prelude-val">Ok</span>(replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.top, old_len))
     }
 
     <span class="doccomment">/// Pop the current stack top and modify it to a different one.
@@ -842,10 +844,47 @@
     /// This asserts that the size of the current stack frame is exactly zero
     /// before restoring it.
     </span><span class="attr">#[tracing::instrument(skip_all)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_stack_top(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stack_bottom: usize) {
-        <span class="macro">tracing::trace!</span>(stack = <span class="self">self</span>.stack.len(), <span class="self">self</span>.stack_bottom);
-        <span class="self">self</span>.stack.truncate(<span class="self">self</span>.stack_bottom);
-        <span class="self">self</span>.stack_bottom = stack_bottom;
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_stack_top(<span class="kw-2">&amp;mut </span><span class="self">self</span>, top: usize) -&gt; alloc::Result&lt;()&gt; {
+        <span class="macro">tracing::trace!</span>(stack = <span class="self">self</span>.stack.len(), <span class="self">self</span>.top);
+        <span class="self">self</span>.stack.truncate(<span class="self">self</span>.top);
+        <span class="self">self</span>.top = top;
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="attr">#[inline(always)]
+</span><span class="kw">fn </span>inner_slice_at(values: <span class="kw-2">&amp;</span>[Value], top: usize, addr: InstAddress, len: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[Value]&gt; {
+    <span class="kw">if </span>len == <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>[]);
+    }
+
+    <span class="kw">let </span>start = top.checked_add(addr.offset())<span class="question-mark">?</span>;
+    <span class="kw">let </span>end = start.checked_add(len)<span class="question-mark">?</span>;
+    values.get(start..end)
+}
+
+<span class="attr">#[inline(always)]
+</span><span class="kw">fn </span>inner_slice_at_mut(
+    values: <span class="kw-2">&amp;mut </span>[Value],
+    top: usize,
+    addr: InstAddress,
+    len: usize,
+) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>[Value]&gt; {
+    <span class="kw">if </span>len == <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>[]);
+    }
+
+    <span class="kw">let </span>start = top.checked_add(addr.offset())<span class="question-mark">?</span>;
+    <span class="kw">let </span>end = start.checked_add(len)<span class="question-mark">?</span>;
+    values.get_mut(start..end)
+}
+
+<span class="attr">#[inline(always)]
+</span><span class="kw">fn </span>slice_error(stack: usize, bottom: usize, addr: InstAddress, len: usize) -&gt; SliceError {
+    SliceError {
+        addr,
+        len,
+        stack: stack.saturating_sub(bottom),
     }
 }
 
@@ -853,7 +892,7 @@
     <span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             stack: <span class="self">self</span>.stack.try_clone()<span class="question-mark">?</span>,
-            stack_bottom: <span class="self">self</span>.stack_bottom,
+            top: <span class="self">self</span>.top,
         })
     }
 }
@@ -865,17 +904,14 @@
     ) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             stack: iter.into_iter().try_collect_in(alloc)<span class="question-mark">?</span>,
-            stack_bottom: <span class="number">0</span>,
+            top: <span class="number">0</span>,
         })
     }
 }
 
 <span class="kw">impl </span>From&lt;Vec&lt;Value&gt;&gt; <span class="kw">for </span>Stack {
     <span class="kw">fn </span>from(stack: Vec&lt;Value&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            stack,
-            stack_bottom: <span class="number">0</span>,
-        }
+        <span class="self">Self </span>{ stack, top: <span class="number">0 </span>}
     }
 }
 </code></pre></div></section></main></body></html>
