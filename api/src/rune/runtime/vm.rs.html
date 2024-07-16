@@ -3611,7 +3611,74 @@
 <a href="#3611" id="3611">3611</a>
 <a href="#3612" id="3612">3612</a>
 <a href="#3613" id="3613">3613</a>
+<a href="#3614" id="3614">3614</a>
+<a href="#3615" id="3615">3615</a>
+<a href="#3616" id="3616">3616</a>
+<a href="#3617" id="3617">3617</a>
+<a href="#3618" id="3618">3618</a>
+<a href="#3619" id="3619">3619</a>
+<a href="#3620" id="3620">3620</a>
+<a href="#3621" id="3621">3621</a>
+<a href="#3622" id="3622">3622</a>
+<a href="#3623" id="3623">3623</a>
+<a href="#3624" id="3624">3624</a>
+<a href="#3625" id="3625">3625</a>
+<a href="#3626" id="3626">3626</a>
+<a href="#3627" id="3627">3627</a>
+<a href="#3628" id="3628">3628</a>
+<a href="#3629" id="3629">3629</a>
+<a href="#3630" id="3630">3630</a>
+<a href="#3631" id="3631">3631</a>
+<a href="#3632" id="3632">3632</a>
+<a href="#3633" id="3633">3633</a>
+<a href="#3634" id="3634">3634</a>
+<a href="#3635" id="3635">3635</a>
+<a href="#3636" id="3636">3636</a>
+<a href="#3637" id="3637">3637</a>
+<a href="#3638" id="3638">3638</a>
+<a href="#3639" id="3639">3639</a>
+<a href="#3640" id="3640">3640</a>
+<a href="#3641" id="3641">3641</a>
+<a href="#3642" id="3642">3642</a>
+<a href="#3643" id="3643">3643</a>
+<a href="#3644" id="3644">3644</a>
+<a href="#3645" id="3645">3645</a>
+<a href="#3646" id="3646">3646</a>
+<a href="#3647" id="3647">3647</a>
+<a href="#3648" id="3648">3648</a>
+<a href="#3649" id="3649">3649</a>
+<a href="#3650" id="3650">3650</a>
+<a href="#3651" id="3651">3651</a>
+<a href="#3652" id="3652">3652</a>
+<a href="#3653" id="3653">3653</a>
+<a href="#3654" id="3654">3654</a>
+<a href="#3655" id="3655">3655</a>
+<a href="#3656" id="3656">3656</a>
+<a href="#3657" id="3657">3657</a>
+<a href="#3658" id="3658">3658</a>
+<a href="#3659" id="3659">3659</a>
+<a href="#3660" id="3660">3660</a>
+<a href="#3661" id="3661">3661</a>
+<a href="#3662" id="3662">3662</a>
+<a href="#3663" id="3663">3663</a>
+<a href="#3664" id="3664">3664</a>
+<a href="#3665" id="3665">3665</a>
+<a href="#3666" id="3666">3666</a>
+<a href="#3667" id="3667">3667</a>
+<a href="#3668" id="3668">3668</a>
+<a href="#3669" id="3669">3669</a>
+<a href="#3670" id="3670">3670</a>
+<a href="#3671" id="3671">3671</a>
+<a href="#3672" id="3672">3672</a>
+<a href="#3673" id="3673">3673</a>
+<a href="#3674" id="3674">3674</a>
+<a href="#3675" id="3675">3675</a>
+<a href="#3676" id="3676">3676</a>
+<a href="#3677" id="3677">3677</a>
+<a href="#3678" id="3678">3678</a>
+<a href="#3679" id="3679">3679</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
 <span class="kw">use </span>core::ptr::NonNull;
@@ -3623,7 +3690,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
 <span class="kw">use </span><span class="kw">crate</span>::hash::{Hash, IntoHash, ToTypeHash};
 <span class="kw">use </span><span class="kw">crate</span>::modules::{option, result};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::budget;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::future::SelectFuture;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::unit::{UnitFn, UnitStorage};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
@@ -3635,8 +3701,47 @@
     Value, ValueKind, Variant, VariantData, Vec, VmError, VmErrorKind, VmExecution, VmHalt,
     VmIntegerRepr, VmResult, VmSendExecution,
 };
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{budget, ProtocolCaller};
 
 <span class="kw">use super</span>::{VmDiagnostics, VmDiagnosticsObj};
+
+<span class="doccomment">/// Indicating the kind of isolation that is present for a frame.
+</span><span class="attr">#[derive(Debug, Clone, Copy)]
+</span><span class="kw">pub enum </span>Isolated {
+    <span class="doccomment">/// The frame is isolated, once pop it will cause the execution to complete.
+    </span>Isolated,
+    <span class="doccomment">/// No isolation is present, the vm will continue executing.
+    </span><span class="prelude-val">None</span>,
+}
+
+<span class="kw">impl </span>Isolated {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(value: bool) -&gt; <span class="self">Self </span>{
+        <span class="kw">if </span>value {
+            <span class="self">Self</span>::Isolated
+        } <span class="kw">else </span>{
+            <span class="self">Self</span>::None
+        }
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>then_some&lt;T&gt;(<span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Isolated =&gt; <span class="prelude-val">Some</span>(value),
+            <span class="self">Self</span>::None =&gt; <span class="prelude-val">None</span>,
+        }
+    }
+}
+
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Isolated {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Isolated =&gt; <span class="macro">write!</span>(f, <span class="string">"isolated"</span>),
+            <span class="self">Self</span>::None =&gt; <span class="macro">write!</span>(f, <span class="string">"none"</span>),
+        }
+    }
+}
 
 <span class="doccomment">/// Small helper function to build errors.
 </span><span class="kw">fn </span>err&lt;T, E&gt;(error: E) -&gt; VmResult&lt;T&gt;
@@ -3649,9 +3754,23 @@
 <span class="doccomment">/// The result from a dynamic call. Indicates if the attempted operation is
 /// supported.
 </span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>CallResultOnly&lt;T&gt; {
+    <span class="doccomment">/// Call successful. Return value is on the stack.
+    </span><span class="prelude-val">Ok</span>(T),
+    <span class="doccomment">/// Call failed because function was missing so the method is unsupported.
+    /// Contains target value.
+    </span>Unsupported(Value),
+}
+
+<span class="doccomment">/// The result from a dynamic call. Indicates if the attempted operation is
+/// supported.
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>CallResult&lt;T&gt; {
     <span class="doccomment">/// Call successful. Return value is on the stack.
     </span><span class="prelude-val">Ok</span>(T),
+    <span class="doccomment">/// A call frame was pushed onto the virtual machine, which needs to be
+    /// advanced to produce the result.
+    </span>Frame,
     <span class="doccomment">/// Call failed because function was missing so the method is unsupported.
     /// Contains target value.
     </span>Unsupported(Value),
@@ -4181,6 +4300,7 @@
     </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>call_instance_fn&lt;H, A&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        isolated: Isolated,
         target: Value,
         hash: H,
         args: A,
@@ -4193,44 +4313,7 @@
         <span class="kw">let </span>count = args.count().wrapping_add(<span class="number">1</span>);
         <span class="kw">let </span>type_hash = <span class="macro">vm_try!</span>(target.type_hash());
         <span class="kw">let </span>hash = Hash::associated_function(type_hash, hash.to_type_hash());
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(UnitFn::Offset {
-            offset,
-            call,
-            args: expected,
-            ..
-        }) = <span class="self">self</span>.unit.function(hash)
-        {
-            <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
-            <span class="comment">// Safety: We hold onto the guard for the duration of this call.
-            </span><span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack)) };
-            <span class="macro">vm_try!</span>(check_args(count, expected));
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, addr, count, out));
-            <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
-        }
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(hash) {
-            <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
-            <span class="comment">// Safety: We hold onto the guard for the duration of this call.
-            </span><span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack)) };
-            <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, addr, count, out));
-            <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
-        }
-
-        VmResult::Ok(CallResult::Unsupported(target))
-    }
-
-    <span class="kw">fn </span>called_function_hook(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">crate</span>::runtime::env::exclusive(|<span class="kw">_</span>, <span class="kw">_</span>, diagnostics| {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(diagnostics) = diagnostics {
-                <span class="macro">vm_try!</span>(diagnostics.function_used(hash, <span class="self">self</span>.ip()));
-            }
-
-            VmResult::Ok(())
-        })
+        <span class="self">self</span>.call_hash_with(isolated, hash, target, args, count, out)
     }
 
     <span class="doccomment">/// Helper to call a field function.
@@ -4249,17 +4332,7 @@
     {
         <span class="kw">let </span>count = args.count().wrapping_add(<span class="number">1</span>);
         <span class="kw">let </span>hash = Hash::field_function(protocol, <span class="macro">vm_try!</span>(target.type_hash()), name);
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(hash) {
-            <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
-            <span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack)) };
-            <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, addr, count, out));
-            <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
-        }
-
-        VmResult::Ok(CallResult::Unsupported(target))
+        <span class="self">self</span>.call_hash_with(Isolated::None, hash, target, args, count, out)
     }
 
     <span class="doccomment">/// Helper to call an index function.
@@ -4277,12 +4350,65 @@
     {
         <span class="kw">let </span>count = args.count().wrapping_add(<span class="number">1</span>);
         <span class="kw">let </span>hash = Hash::index_function(protocol, <span class="macro">vm_try!</span>(target.type_hash()), Hash::index(index));
+        <span class="self">self</span>.call_hash_with(Isolated::None, hash, target, args, count, out)
+    }
+
+    <span class="kw">fn </span>called_function_hook(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; VmResult&lt;()&gt; {
+        <span class="kw">crate</span>::runtime::env::exclusive(|<span class="kw">_</span>, <span class="kw">_</span>, diagnostics| {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(diagnostics) = diagnostics {
+                <span class="macro">vm_try!</span>(diagnostics.function_used(hash, <span class="self">self</span>.ip()));
+            }
+
+            VmResult::Ok(())
+        })
+    }
+
+    <span class="kw">fn </span>call_hash_with&lt;A&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        isolated: Isolated,
+        hash: Hash,
+        target: Value,
+        args: A,
+        count: usize,
+        out: Output,
+    ) -&gt; VmResult&lt;CallResult&lt;()&gt;&gt;
+    <span class="kw">where
+        </span>A: GuardedArgs,
+    {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(UnitFn::Offset {
+            offset,
+            call,
+            args: expected,
+            ..
+        }) = <span class="self">self</span>.unit.function(hash)
+        {
+            <span class="macro">vm_try!</span>(check_args(count, expected));
+
+            <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
+            <span class="comment">// Safety: We hold onto the guard for the duration of this call.
+            </span><span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack)) };
+
+            <span class="kw">let </span>result = <span class="self">self</span>.call_offset_fn(offset, call, addr, count, isolated, out);
+            <span class="self">self</span>.stack.truncate(addr);
+
+            <span class="kw">if </span><span class="macro">vm_try!</span>(result) {
+                <span class="kw">return </span>VmResult::Ok(CallResult::Frame);
+            } <span class="kw">else </span>{
+                <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
+            }
+        }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(hash) {
             <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
             <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
-            <span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack)) };
-            <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, addr, count, out));
+            <span class="comment">// Safety: We hold onto the guard for the duration of this call.
+            </span><span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack)) };
+            <span class="kw">let </span>result = handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, addr, count, out);
+            <span class="self">self</span>.stack.truncate(addr);
+            <span class="macro">vm_try!</span>(result);
             <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
         }
 
@@ -4318,7 +4444,7 @@
         ip: usize,
         addr: InstAddress,
         args: usize,
-        isolated: bool,
+        isolated: Isolated,
         out: Output,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmErrorKind&gt; {
         <span class="macro">tracing::trace!</span>(<span class="string">"pushing call frame"</span>);
@@ -4355,12 +4481,12 @@
 
     <span class="doccomment">/// Pop a call frame and return it.
     </span><span class="attr">#[tracing::instrument(skip(<span class="self">self</span>), fields(call_frames = <span class="self">self</span>.call_frames.len(), top = <span class="self">self</span>.stack.top(), stack = <span class="self">self</span>.stack.len(), <span class="self">self</span>.ip))]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_call_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(bool, <span class="prelude-ty">Option</span>&lt;Output&gt;), VmErrorKind&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>pop_call_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(Isolated, <span class="prelude-ty">Option</span>&lt;Output&gt;), VmErrorKind&gt; {
         <span class="macro">tracing::trace!</span>(<span class="string">"popping call frame"</span>);
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(frame) = <span class="self">self</span>.call_frames.pop() <span class="kw">else </span>{
             <span class="self">self</span>.stack.pop_stack_top(<span class="number">0</span>)<span class="question-mark">?</span>;
-            <span class="kw">return </span><span class="prelude-val">Ok</span>((<span class="bool-val">true</span>, <span class="prelude-val">None</span>));
+            <span class="kw">return </span><span class="prelude-val">Ok</span>((Isolated::Isolated, <span class="prelude-val">None</span>));
         };
 
         <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>frame);
@@ -4634,12 +4760,9 @@
 
         <span class="kw">let </span>hash = index.hash();
 
-        VmResult::Ok(
-            <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(Protocol::GET, target, hash, (), out)) {
-                CallResult::Ok(()) =&gt; CallResult::Ok(()),
-                CallResult::Unsupported(target) =&gt; CallResult::Unsupported(target),
-            },
-        )
+        <span class="kw">let </span>result = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(Protocol::GET, target, hash, (), out));
+
+        VmResult::Ok(result)
     }
 
     <span class="kw">fn </span>try_object_slot_index_set(
@@ -4684,11 +4807,9 @@
         }
 
         <span class="kw">let </span>hash = field.hash();
-
-        <span class="kw">let </span>value =
+        <span class="kw">let </span>result =
             <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(Protocol::SET, target, hash, (value,), Output::discard()));
-
-        VmResult::Ok(value)
+        VmResult::Ok(result)
     }
 
     <span class="kw">fn </span>on_tuple&lt;F, O&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: TypeCheck, value: <span class="kw-2">&amp;</span>Value, f: F) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;O&gt;&gt;
@@ -4883,6 +5004,7 @@
         call: Call,
         addr: InstAddress,
         args: usize,
+        isolated: Isolated,
         out: Output,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmErrorKind&gt; {
         <span class="kw">let </span>moved = <span class="kw">match </span>call {
@@ -4891,7 +5013,7 @@
                 <span class="bool-val">false
             </span>}
             Call::Immediate =&gt; {
-                <span class="self">self</span>.push_call_frame(offset, addr, args, <span class="bool-val">false</span>, out)<span class="question-mark">?</span>;
+                <span class="self">self</span>.push_call_frame(offset, addr, args, isolated, out)<span class="question-mark">?</span>;
                 <span class="bool-val">true
             </span>}
             Call::Stream =&gt; {
@@ -4954,9 +5076,13 @@
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span>fallback {
             TargetFallback::Value(lhs, rhs) =&gt; {
-                <span class="kw">if let </span>CallResult::Unsupported(lhs) =
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(lhs, protocol, (<span class="kw-2">&amp;</span>rhs,), Output::discard()))
-                {
+                <span class="kw">if let </span>CallResult::Unsupported(lhs) = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(
+                    Isolated::None,
+                    lhs,
+                    protocol,
+                    (<span class="kw-2">&amp;</span>rhs,),
+                    Output::discard()
+                )) {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                         op: protocol.name,
                         lhs: <span class="macro">vm_try!</span>(lhs.type_info()),
@@ -5034,7 +5160,7 @@
         <span class="kw">let </span>rhs = rhs.clone();
 
         <span class="kw">if let </span>CallResult::Unsupported(lhs) =
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(lhs, protocol, (<span class="kw-2">&amp;</span>rhs,), out))
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(Isolated::None, lhs, protocol, (<span class="kw-2">&amp;</span>rhs,), out))
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                 op: protocol.name,
@@ -5080,7 +5206,7 @@
         };
 
         <span class="kw">if let </span>CallResult::Unsupported(lhs) =
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(lhs, protocol, (<span class="kw-2">&amp;</span>rhs,), out))
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(Isolated::None, lhs, protocol, (<span class="kw-2">&amp;</span>rhs,), out))
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                 op: protocol.name,
@@ -5164,7 +5290,7 @@
         }
 
         <span class="kw">if let </span>CallResult::Unsupported(lhs) =
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(lhs, protocol, (<span class="kw-2">&amp;</span>rhs,), out))
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(Isolated::None, lhs, protocol, (<span class="kw-2">&amp;</span>rhs,), out))
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                 op: protocol.name,
@@ -5774,6 +5900,7 @@
         <span class="kw">let </span>value = value.clone();
 
         <span class="kw">if let </span>CallResult::Unsupported(target) = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(
+            Isolated::None,
             target,
             Protocol::INDEX_SET,
             (<span class="kw-2">&amp;</span>index, <span class="kw-2">&amp;</span>value),
@@ -5933,9 +6060,13 @@
             <span class="kw">let </span>target = target.clone();
             <span class="kw">let </span>index = index.clone();
 
-            <span class="kw">if let </span>CallResult::Unsupported(target) =
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(target, Protocol::INDEX_GET, (<span class="kw-2">&amp;</span>index,), out))
-            {
+            <span class="kw">if let </span>CallResult::Unsupported(target) = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(
+                Isolated::None,
+                target,
+                Protocol::INDEX_GET,
+                (<span class="kw-2">&amp;</span>index,),
+                out
+            )) {
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedIndexGet {
                     target: <span class="macro">vm_try!</span>(target.type_info()),
                     index: <span class="macro">vm_try!</span>(index.type_info()),
@@ -6030,12 +6161,15 @@
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr)).clone();
 
-        <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.try_object_slot_index_get(target, slot, out)) {
-            CallResult::Ok(()) =&gt; VmResult::Ok(()),
-            CallResult::Unsupported(target) =&gt; err(VmErrorKind::UnsupportedObjectSlotIndexGet {
+        <span class="kw">if let </span>CallResult::Unsupported(target) =
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.try_object_slot_index_get(target, slot, out))
+        {
+            <span class="kw">return </span>err(VmErrorKind::UnsupportedObjectSlotIndexGet {
                 target: <span class="macro">vm_try!</span>(target.type_info()),
-            }),
+            });
         }
+
+        VmResult::Ok(())
     }
 
     <span class="doccomment">/// Operation to allocate an object.
@@ -6237,27 +6371,27 @@
     <span class="doccomment">/// Perform the try operation on the given stack location.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_try(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, out: Output) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Output&gt;&gt; {
-        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr)).clone();
-
         <span class="kw">let </span>result = <span class="lifetime">'out</span>: {
-            <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
-                ValueKind::Result(result) =&gt; <span class="kw">break </span><span class="lifetime">'out </span><span class="macro">vm_try!</span>(result::result_try(result)),
-                ValueKind::Option(option) =&gt; <span class="kw">break </span><span class="lifetime">'out </span><span class="macro">vm_try!</span>(option::option_try(option)),
-                <span class="kw">_ </span>=&gt; {}
+            <span class="kw">let </span>value = {
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
+
+                <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
+                    ValueKind::Result(result) =&gt; <span class="kw">break </span><span class="lifetime">'out </span><span class="macro">vm_try!</span>(result::result_try(result)),
+                    ValueKind::Option(option) =&gt; <span class="kw">break </span><span class="lifetime">'out </span><span class="macro">vm_try!</span>(option::option_try(option)),
+                    <span class="kw">_ </span>=&gt; {}
+                }
+
+                value.clone()
+            };
+
+            <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.try_call_protocol_fn(Protocol::TRY, value, ())) {
+                CallResultOnly::Ok(value) =&gt; <span class="macro">vm_try!</span>(ControlFlow::from_value(value)),
+                CallResultOnly::Unsupported(target) =&gt; {
+                    <span class="kw">return </span>err(VmErrorKind::UnsupportedTryOperand {
+                        actual: <span class="macro">vm_try!</span>(target.type_info()),
+                    })
+                }
             }
-
-            <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
-
-            <span class="kw">if let </span>CallResult::Unsupported(target) =
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(value, Protocol::TRY, (), addr.output()))
-            {
-                <span class="kw">return </span>err(VmErrorKind::UnsupportedTryOperand {
-                    actual: <span class="macro">vm_try!</span>(target.type_info()),
-                });
-            }
-
-            <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr)).clone();
-            <span class="macro">vm_try!</span>(ControlFlow::from_value(value))
         };
 
         <span class="kw">match </span>result {
@@ -6416,13 +6550,10 @@
 
             <span class="kw">let </span>value = value.clone();
 
-            <span class="kw">let </span>CallResult::Ok(()) =
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(value, Protocol::IS_VARIANT, (index,), out))
-            <span class="kw">else </span>{
-                <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
-            };
-
-            <span class="kw">return </span>VmResult::Ok(());
+            <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.try_call_protocol_fn(Protocol::IS_VARIANT, value, (index,))) {
+                CallResultOnly::Ok(value) =&gt; <span class="macro">vm_try!</span>(bool::from_value(value)),
+                CallResultOnly::Unsupported(..) =&gt; <span class="bool-val">false</span>,
+            }
         };
 
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
@@ -6615,7 +6746,7 @@
                 ..
             } =&gt; {
                 <span class="macro">vm_try!</span>(check_args(args, expected));
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, addr, args, out));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, addr, args, Isolated::None, out));
             }
             UnitFn::EmptyStruct { hash } =&gt; {
                 <span class="macro">vm_try!</span>(check_args(args, <span class="number">0</span>));
@@ -6689,7 +6820,7 @@
         args: usize,
         out: Output,
     ) -&gt; VmResult&lt;()&gt; {
-        <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, addr, args, out));
+        <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, addr, args, Isolated::None, out));
         VmResult::Ok(())
     }
 
@@ -6712,8 +6843,9 @@
             ..
         }) = <span class="self">self</span>.unit.function(hash)
         {
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
             <span class="macro">vm_try!</span>(check_args(args, expected));
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, addr, args, out));
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, addr, args, Isolated::None, out));
             <span class="kw">return </span>VmResult::Ok(());
         }
 
@@ -7192,7 +7324,7 @@
     </span><span class="kw">pub </span>top: usize,
     <span class="doccomment">/// Indicates that the call frame is isolated and should force an exit into
     /// the vm execution context.
-    </span><span class="kw">pub </span>isolated: bool,
+    </span><span class="kw">pub </span>isolated: Isolated,
     <span class="doccomment">/// Keep the value produced from the call frame.
     </span><span class="kw">pub </span>out: Output,
 }

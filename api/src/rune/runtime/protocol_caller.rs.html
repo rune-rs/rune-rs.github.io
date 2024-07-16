@@ -115,23 +115,51 @@
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::runtime::vm::CallResult;
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::runtime::vm::{CallResult, CallResultOnly, Isolated};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    GuardedArgs, Output, Protocol, Stack, UnitFn, Value, Vm, VmError, VmErrorKind, VmResult,
+    GuardedArgs, Protocol, Stack, UnitFn, Value, Vm, VmError, VmErrorKind, VmExecution, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::Hash;
 
 <span class="doccomment">/// Trait used for integrating an instance function call.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>ProtocolCaller: Sized {
     <span class="doccomment">/// Call the given protocol function.
-    </span><span class="kw">fn </span>call_protocol_fn&lt;A&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        protocol: Protocol,
-        target: Value,
-        args: A,
-    ) -&gt; VmResult&lt;Value&gt;
+    </span><span class="kw">fn </span>call_protocol_fn&lt;A&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, protocol: Protocol, target: Value, args: A) -&gt; VmResult&lt;Value&gt;
     <span class="kw">where
-        </span>A: GuardedArgs;
+        </span>A: GuardedArgs,
+    {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.try_call_protocol_fn(protocol, target, args)) {
+            CallResultOnly::Ok(value) =&gt; VmResult::Ok(value),
+            CallResultOnly::Unsupported(value) =&gt; {
+                VmResult::err(VmErrorKind::MissingProtocolFunction {
+                    protocol,
+                    instance: <span class="macro">vm_try!</span>(value.type_info()),
+                })
+            }
+        }
+    }
 
     <span class="doccomment">/// Call the given protocol function.
     </span><span class="kw">fn </span>try_call_protocol_fn&lt;A&gt;(
@@ -139,15 +167,10 @@
         protocol: Protocol,
         target: Value,
         args: A,
-    ) -&gt; VmResult&lt;CallResult&lt;Value&gt;&gt;
+    ) -&gt; VmResult&lt;CallResultOnly&lt;Value&gt;&gt;
     <span class="kw">where
         </span>A: GuardedArgs,
-        <span class="self">Self</span>: Sized,
-    {
-        VmResult::Ok(CallResult::Ok(<span class="macro">vm_try!</span>(
-            <span class="self">self</span>.call_protocol_fn(protocol, target, args)
-        )))
-    }
+        <span class="self">Self</span>: Sized;
 }
 
 <span class="doccomment">/// Use the global environment caller.
@@ -156,11 +179,28 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>EnvProtocolCaller;
 
 <span class="kw">impl </span>ProtocolCaller <span class="kw">for </span>EnvProtocolCaller {
-    <span class="kw">fn </span>call_protocol_fn&lt;A&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, protocol: Protocol, target: Value, args: A) -&gt; VmResult&lt;Value&gt;
+    <span class="kw">fn </span>try_call_protocol_fn&lt;A&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        protocol: Protocol,
+        target: Value,
+        args: A,
+    ) -&gt; VmResult&lt;CallResultOnly&lt;Value&gt;&gt;
     <span class="kw">where
         </span>A: GuardedArgs,
     {
-        <span class="kw">return </span><span class="kw">crate</span>::runtime::env::shared(|context, unit| {
+        <span class="doccomment">/// Check that arguments matches expected or raise the appropriate error.
+        </span><span class="kw">fn </span>check_args(args: usize, expected: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmError&gt; {
+            <span class="kw">if </span>args != expected {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(VmError::from(VmErrorKind::BadArgumentCount {
+                    actual: args,
+                    expected,
+                }));
+            }
+
+            <span class="prelude-val">Ok</span>(())
+        }
+
+        <span class="kw">crate</span>::runtime::env::shared(|context, unit| {
             <span class="kw">let </span>count = args.count() + <span class="number">1</span>;
             <span class="kw">let </span>hash = Hash::associated_function(<span class="macro">vm_try!</span>(target.type_hash()), protocol.hash);
 
@@ -181,55 +221,59 @@
 
                 <span class="kw">let </span><span class="kw-2">mut </span>vm = Vm::with_stack(context.clone(), unit.clone(), stack);
                 vm.set_ip(offset);
-                <span class="kw">return </span>call.call_with_vm(vm);
+                <span class="kw">return </span>VmResult::Ok(CallResultOnly::Ok(<span class="macro">vm_try!</span>(call.call_with_vm(vm))));
             }
 
-            <span class="kw">let </span><span class="prelude-val">Some</span>(handler) = context.function(hash) <span class="kw">else </span>{
-                <span class="kw">return </span>VmResult::err(VmErrorKind::MissingProtocolFunction {
-                    protocol,
-                    instance: <span class="macro">vm_try!</span>(target.type_info()),
-                });
-            };
-
-            <span class="kw">let </span><span class="kw-2">mut </span>stack = <span class="macro">vm_try!</span>(Stack::with_capacity(count));
-            <span class="kw">let </span>addr = stack.addr();
-            <span class="macro">vm_try!</span>(stack.push(target));
-            <span class="comment">// Safety: We hold onto the guard until the vm has completed.
-            </span><span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(<span class="kw-2">&amp;mut </span>stack)) };
-            <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span>stack, addr, count, Output::keep(<span class="number">0</span>)));
-            VmResult::Ok(<span class="macro">vm_try!</span>(stack.at(addr)).clone())
-        });
-
-        <span class="doccomment">/// Check that arguments matches expected or raise the appropriate error.
-        </span><span class="kw">fn </span>check_args(args: usize, expected: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmError&gt; {
-            <span class="kw">if </span>args != expected {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(VmError::from(VmErrorKind::BadArgumentCount {
-                    actual: args,
-                    expected,
-                }));
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = context.function(hash) {
+                <span class="kw">let </span><span class="kw-2">mut </span>stack = <span class="macro">vm_try!</span>(Stack::with_capacity(count));
+                <span class="kw">let </span>addr = stack.addr();
+                <span class="macro">vm_try!</span>(stack.push(target));
+                <span class="comment">// Safety: We hold onto the guard until the vm has completed.
+                </span><span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(<span class="kw-2">&amp;mut </span>stack)) };
+                <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span>stack, addr, count, addr.output()));
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(stack.at(addr)).clone();
+                stack.truncate(addr);
+                <span class="kw">return </span>VmResult::Ok(CallResultOnly::Ok(value));
             }
 
-            <span class="prelude-val">Ok</span>(())
-        }
+            VmResult::Ok(CallResultOnly::Unsupported(target))
+        })
     }
 }
 
 <span class="kw">impl </span>ProtocolCaller <span class="kw">for </span>Vm {
-    <span class="kw">fn </span>call_protocol_fn&lt;A&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, protocol: Protocol, target: Value, args: A) -&gt; VmResult&lt;Value&gt;
+    <span class="kw">fn </span>try_call_protocol_fn&lt;A&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        protocol: Protocol,
+        target: Value,
+        args: A,
+    ) -&gt; VmResult&lt;CallResultOnly&lt;Value&gt;&gt;
     <span class="kw">where
         </span>A: GuardedArgs,
     {
         <span class="kw">let </span>addr = <span class="self">self</span>.stack().addr();
+        <span class="macro">vm_try!</span>(<span class="self">self</span>.stack_mut().push(()));
 
-        <span class="kw">if let </span>CallResult::Unsupported(..) =
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(target, protocol, args, addr.output()))
-        {
-            <span class="kw">return </span>VmResult::err(VmErrorKind::MissingFunction {
-                hash: protocol.hash,
-            });
+        <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(
+            Isolated::Isolated,
+            target,
+            protocol,
+            args,
+            addr.output()
+        )) {
+            CallResult::Unsupported(value) =&gt; VmResult::Ok(CallResultOnly::Unsupported(value)),
+            CallResult::Ok(()) =&gt; {
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack().at(addr)).clone();
+                <span class="self">self</span>.stack_mut().truncate(addr);
+                VmResult::Ok(CallResultOnly::Ok(value))
+            }
+            CallResult::Frame =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>execution = VmExecution::new(<span class="self">self</span>);
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(execution.complete());
+                execution.vm_mut().stack_mut().truncate(addr);
+                VmResult::Ok(CallResultOnly::Ok(value))
+            }
         }
-
-        VmResult::Ok(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack().at(addr)).clone())
     }
 }
 </code></pre></div></section></main></body></html>
