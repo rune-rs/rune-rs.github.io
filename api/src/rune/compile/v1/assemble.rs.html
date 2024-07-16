@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d9284afea 2024-07-14)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (24d2ac0b5 2024-07-15)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3084,17 +3084,6 @@
 <a href="#3084" id="3084">3084</a>
 <a href="#3085" id="3085">3085</a>
 <a href="#3086" id="3086">3086</a>
-<a href="#3087" id="3087">3087</a>
-<a href="#3088" id="3088">3088</a>
-<a href="#3089" id="3089">3089</a>
-<a href="#3090" id="3090">3090</a>
-<a href="#3091" id="3091">3091</a>
-<a href="#3092" id="3092">3092</a>
-<a href="#3093" id="3093">3093</a>
-<a href="#3094" id="3094">3094</a>
-<a href="#3095" id="3095">3095</a>
-<a href="#3096" id="3096">3096</a>
-<a href="#3097" id="3097">3097</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::take;
 <span class="kw">use </span>core::slice;
@@ -3103,12 +3092,12 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::BTreeMap;
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Span, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::ir;
-<span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, Assembly, AssemblyInst, ErrorKind, ItemId, ModId, Options, WithSpan};
+<span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, Assembly, ErrorKind, ItemId, ModId, Options, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::hir;
 <span class="kw">use </span><span class="kw">crate</span>::query::{ConstFn, Query, Used};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
     ConstValue, Inst, InstAddress, InstAssignOp, InstOp, InstRange, InstTarget, InstValue,
-    InstVariant, Label, PanicReason, Protocol, TypeCheck,
+    InstVariant, Label, Output, PanicReason, Protocol, TypeCheck,
 };
 <span class="kw">use </span><span class="kw">crate</span>::shared::FixedVec;
 <span class="kw">use crate</span>::{Hash, SourceId};
@@ -3629,9 +3618,13 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>needs = cx.scopes.defer(hir);
                 <span class="macro">converge!</span>(load(cx, <span class="kw-2">&amp;mut </span>needs)<span class="question-mark">?</span>, free(needs));
 
-                <span class="kw">let </span>inst = pat_sequence_kind_to_inst(<span class="kw-2">*</span>kind, needs.addr()<span class="question-mark">?</span>.addr(), false_label)<span class="question-mark">?</span>;
-                cx.asm.push_asm_inst(inst, hir)<span class="question-mark">?</span>;
+                <span class="kw">let </span>cond = cx.scopes.alloc(hir)<span class="question-mark">?</span>;
+                <span class="kw">let </span>inst = pat_sequence_kind_to_inst(<span class="kw-2">*</span>kind, needs.addr()<span class="question-mark">?</span>.addr(), cond.output());
 
+                cx.asm.push(inst, hir)<span class="question-mark">?</span>;
+                cx.asm.jump_if_not(cond.addr(), false_label, hir)<span class="question-mark">?</span>;
+
+                cond.free()<span class="question-mark">?</span>;
                 needs.free()<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(Asm::new(span, Pattern::Refutable))
             }
@@ -3665,13 +3658,15 @@
 ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>, Pattern&gt;&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>needs = cx.scopes.defer(hir);
     <span class="macro">converge!</span>(load(cx, <span class="kw-2">&amp;mut </span>needs)<span class="question-mark">?</span>, free(needs));
+    <span class="kw">let </span>cond = cx.scopes.alloc(hir)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span><span class="prelude-val">Some</span>(inst) = pat_lit_inst(cx, hir, needs.addr()<span class="question-mark">?</span>.addr(), false_label)<span class="question-mark">? </span><span class="kw">else </span>{
+    <span class="kw">let </span><span class="prelude-val">Some</span>(inst) = pat_lit_inst(cx, hir, needs.addr()<span class="question-mark">?</span>.addr(), cond.addr())<span class="question-mark">? </span><span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(hir, ErrorKind::UnsupportedPatternExpr));
     };
 
-    cx.asm.push_asm_inst(inst, hir)<span class="question-mark">?</span>;
-
+    cx.asm.push(inst, hir)<span class="question-mark">?</span>;
+    cx.asm.jump_if_not(cond.addr(), false_label, hir)<span class="question-mark">?</span>;
+    cond.free()<span class="question-mark">?</span>;
     needs.free()<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(Asm::new(hir, Pattern::Refutable))
 }
@@ -3681,43 +3676,29 @@
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::Expr&lt;<span class="lifetime">'_</span>&gt;,
     addr: InstAddress,
-    false_label: <span class="kw-2">&amp;</span>Label,
-) -&gt; compile::Result&lt;<span class="prelude-ty">Option</span>&lt;AssemblyInst&gt;&gt; {
+    cond: InstAddress,
+) -&gt; compile::Result&lt;<span class="prelude-ty">Option</span>&lt;Inst&gt;&gt; {
     <span class="kw">let </span>hir::ExprKind::Lit(lit) = hir.kind <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
     };
 
+    <span class="kw">let </span>out = cond.output();
+
     <span class="kw">let </span>inst = <span class="kw">match </span>lit {
-        hir::Lit::Byte(value) =&gt; AssemblyInst::EqByte {
-            addr,
-            value,
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
-        },
-        hir::Lit::Char(value) =&gt; AssemblyInst::EqChar {
-            addr,
-            value,
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
-        },
-        hir::Lit::Str(string) =&gt; AssemblyInst::EqString {
+        hir::Lit::Byte(value) =&gt; Inst::EqByte { addr, value, out },
+        hir::Lit::Char(value) =&gt; Inst::EqChar { addr, value, out },
+        hir::Lit::Str(string) =&gt; Inst::EqString {
             addr,
             slot: cx.q.unit.new_static_string(hir, string)<span class="question-mark">?</span>,
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
+            out,
         },
-        hir::Lit::ByteStr(bytes) =&gt; AssemblyInst::EqBytes {
+        hir::Lit::ByteStr(bytes) =&gt; Inst::EqBytes {
             addr,
             slot: cx.q.unit.new_static_bytes(hir, bytes)<span class="question-mark">?</span>,
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
+            out,
         },
-        hir::Lit::Integer(value) =&gt; AssemblyInst::EqInteger {
-            addr,
-            value,
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
-        },
-        hir::Lit::Bool(value) =&gt; AssemblyInst::EqBool {
-            addr,
-            value,
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
-        },
+        hir::Lit::Integer(value) =&gt; Inst::EqInteger { addr, value, out },
+        hir::Lit::Bool(value) =&gt; Inst::EqBool { addr, value, out },
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
     };
 
@@ -3816,8 +3797,9 @@
 
         cx.asm.jump_if_not(cond.addr(), false_label, span)<span class="question-mark">?</span>;
     } <span class="kw">else </span>{
-        <span class="kw">let </span>inst = pat_sequence_kind_to_inst(hir.kind, addr.addr(), false_label)<span class="question-mark">?</span>;
-        cx.asm.push_asm_inst(inst, span)<span class="question-mark">?</span>;
+        <span class="kw">let </span>inst = pat_sequence_kind_to_inst(hir.kind, addr.addr(), cond.output());
+        cx.asm.push(inst, span)<span class="question-mark">?</span>;
+        cx.asm.jump_if_not(cond.addr(), false_label, span)<span class="question-mark">?</span>;
 
         <span class="kw">for </span>(index, p) <span class="kw">in </span>hir.items.iter().enumerate() {
             <span class="kw">let </span><span class="kw-2">mut </span>load = |cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;, needs: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;| {
@@ -3844,45 +3826,37 @@
     <span class="prelude-val">Ok</span>(Asm::new(span, Pattern::Refutable))
 }
 
-<span class="kw">fn </span>pat_sequence_kind_to_inst(
-    kind: hir::PatSequenceKind,
-    addr: InstAddress,
-    false_label: <span class="kw-2">&amp;</span>Label,
-) -&gt; compile::Result&lt;AssemblyInst&gt; {
-    <span class="prelude-val">Ok</span>(<span class="kw">match </span>kind {
-        hir::PatSequenceKind::Type { hash } =&gt; AssemblyInst::MatchType {
-            hash,
-            addr,
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
-        },
-        hir::PatSequenceKind::BuiltInVariant { type_check } =&gt; AssemblyInst::MatchBuiltIn {
+<span class="kw">fn </span>pat_sequence_kind_to_inst(kind: hir::PatSequenceKind, addr: InstAddress, out: Output) -&gt; Inst {
+    <span class="kw">match </span>kind {
+        hir::PatSequenceKind::Type { hash } =&gt; Inst::MatchType { hash, addr, out },
+        hir::PatSequenceKind::BuiltInVariant { type_check } =&gt; Inst::MatchBuiltIn {
             type_check,
             addr,
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
+            out,
         },
         hir::PatSequenceKind::Variant {
             variant_hash,
             enum_hash,
             index,
-        } =&gt; AssemblyInst::MatchVariant {
+        } =&gt; Inst::MatchVariant {
             variant_hash,
             enum_hash,
             index,
             addr,
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
+            out,
         },
         hir::PatSequenceKind::Anonymous {
             type_check,
             count,
             is_open,
-        } =&gt; AssemblyInst::MatchSequence {
+        } =&gt; Inst::MatchSequence {
             type_check,
             len: count,
             exact: !is_open,
             addr,
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
+            out,
         },
-    })
+    }
 }
 
 <span class="doccomment">/// Assemble an object pattern.
@@ -3902,6 +3876,8 @@
     <span class="macro">converge!</span>(load(cx, <span class="kw-2">&amp;mut </span>needs)<span class="question-mark">?</span>, free(needs));
     <span class="kw">let </span>addr = needs.addr()<span class="question-mark">?</span>;
 
+    <span class="kw">let </span>cond = cx.scopes.alloc(span)<span class="question-mark">?</span>;
+
     <span class="kw">let </span><span class="kw-2">mut </span>string_slots = Vec::new();
 
     <span class="kw">for </span>binding <span class="kw">in </span>hir.bindings {
@@ -3909,44 +3885,46 @@
     }
 
     <span class="kw">let </span>inst = <span class="kw">match </span>hir.kind {
-        hir::PatSequenceKind::Type { hash } =&gt; AssemblyInst::MatchType {
+        hir::PatSequenceKind::Type { hash } =&gt; Inst::MatchType {
             hash,
             addr: addr.addr(),
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
+            out: cond.output(),
         },
-        hir::PatSequenceKind::BuiltInVariant { type_check } =&gt; AssemblyInst::MatchBuiltIn {
+        hir::PatSequenceKind::BuiltInVariant { type_check } =&gt; Inst::MatchBuiltIn {
             type_check,
             addr: addr.addr(),
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
+            out: cond.output(),
         },
         hir::PatSequenceKind::Variant {
             variant_hash,
             enum_hash,
             index,
-        } =&gt; AssemblyInst::MatchVariant {
+        } =&gt; Inst::MatchVariant {
             variant_hash,
             enum_hash,
             index,
             addr: addr.addr(),
-            else_: false_label.try_clone()<span class="question-mark">?</span>,
+            out: cond.output(),
         },
         hir::PatSequenceKind::Anonymous { is_open, .. } =&gt; {
             <span class="kw">let </span>keys =
                 cx.q.unit
                     .new_static_object_keys_iter(span, hir.bindings.iter().map(|b| b.key()))<span class="question-mark">?</span>;
 
-            AssemblyInst::MatchObject {
+            Inst::MatchObject {
                 slot: keys,
                 exact: !is_open,
                 addr: addr.addr(),
-                else_: false_label.try_clone()<span class="question-mark">?</span>,
+                out: cond.output(),
             }
         }
     };
 
     <span class="comment">// Copy the temporary and check that its length matches the pattern and
     // that it is indeed a vector.
-    </span>cx.asm.push_asm_inst(inst, span)<span class="question-mark">?</span>;
+    </span>cx.asm.push(inst, span)<span class="question-mark">?</span>;
+    cx.asm.jump_if_not(cond.addr(), false_label, span)<span class="question-mark">?</span>;
+    cond.free()<span class="question-mark">?</span>;
 
     <span class="kw">for </span>(binding, slot) <span class="kw">in </span>hir.bindings.iter().zip(string_slots) {
         <span class="kw">match </span>binding {

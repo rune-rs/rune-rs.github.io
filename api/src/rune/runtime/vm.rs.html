@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d9284afea 2024-07-14)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (24d2ac0b5 2024-07-15)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3611,78 +3611,6 @@
 <a href="#3611" id="3611">3611</a>
 <a href="#3612" id="3612">3612</a>
 <a href="#3613" id="3613">3613</a>
-<a href="#3614" id="3614">3614</a>
-<a href="#3615" id="3615">3615</a>
-<a href="#3616" id="3616">3616</a>
-<a href="#3617" id="3617">3617</a>
-<a href="#3618" id="3618">3618</a>
-<a href="#3619" id="3619">3619</a>
-<a href="#3620" id="3620">3620</a>
-<a href="#3621" id="3621">3621</a>
-<a href="#3622" id="3622">3622</a>
-<a href="#3623" id="3623">3623</a>
-<a href="#3624" id="3624">3624</a>
-<a href="#3625" id="3625">3625</a>
-<a href="#3626" id="3626">3626</a>
-<a href="#3627" id="3627">3627</a>
-<a href="#3628" id="3628">3628</a>
-<a href="#3629" id="3629">3629</a>
-<a href="#3630" id="3630">3630</a>
-<a href="#3631" id="3631">3631</a>
-<a href="#3632" id="3632">3632</a>
-<a href="#3633" id="3633">3633</a>
-<a href="#3634" id="3634">3634</a>
-<a href="#3635" id="3635">3635</a>
-<a href="#3636" id="3636">3636</a>
-<a href="#3637" id="3637">3637</a>
-<a href="#3638" id="3638">3638</a>
-<a href="#3639" id="3639">3639</a>
-<a href="#3640" id="3640">3640</a>
-<a href="#3641" id="3641">3641</a>
-<a href="#3642" id="3642">3642</a>
-<a href="#3643" id="3643">3643</a>
-<a href="#3644" id="3644">3644</a>
-<a href="#3645" id="3645">3645</a>
-<a href="#3646" id="3646">3646</a>
-<a href="#3647" id="3647">3647</a>
-<a href="#3648" id="3648">3648</a>
-<a href="#3649" id="3649">3649</a>
-<a href="#3650" id="3650">3650</a>
-<a href="#3651" id="3651">3651</a>
-<a href="#3652" id="3652">3652</a>
-<a href="#3653" id="3653">3653</a>
-<a href="#3654" id="3654">3654</a>
-<a href="#3655" id="3655">3655</a>
-<a href="#3656" id="3656">3656</a>
-<a href="#3657" id="3657">3657</a>
-<a href="#3658" id="3658">3658</a>
-<a href="#3659" id="3659">3659</a>
-<a href="#3660" id="3660">3660</a>
-<a href="#3661" id="3661">3661</a>
-<a href="#3662" id="3662">3662</a>
-<a href="#3663" id="3663">3663</a>
-<a href="#3664" id="3664">3664</a>
-<a href="#3665" id="3665">3665</a>
-<a href="#3666" id="3666">3666</a>
-<a href="#3667" id="3667">3667</a>
-<a href="#3668" id="3668">3668</a>
-<a href="#3669" id="3669">3669</a>
-<a href="#3670" id="3670">3670</a>
-<a href="#3671" id="3671">3671</a>
-<a href="#3672" id="3672">3672</a>
-<a href="#3673" id="3673">3673</a>
-<a href="#3674" id="3674">3674</a>
-<a href="#3675" id="3675">3675</a>
-<a href="#3676" id="3676">3676</a>
-<a href="#3677" id="3677">3677</a>
-<a href="#3678" id="3678">3678</a>
-<a href="#3679" id="3679">3679</a>
-<a href="#3680" id="3680">3680</a>
-<a href="#3681" id="3681">3681</a>
-<a href="#3682" id="3682">3682</a>
-<a href="#3683" id="3683">3683</a>
-<a href="#3684" id="3684">3684</a>
-<a href="#3685" id="3685">3685</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -6342,7 +6270,7 @@
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_eq_byte(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: u8, jump_else: usize) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>op_eq_byte(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: u8, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
         <span class="kw">let </span>is_match = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(v.borrow_kind_ref()) {
@@ -6350,20 +6278,12 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
 
-        <span class="kw">if </span>!is_match {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_eq_character(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        addr: InstAddress,
-        value: char,
-        jump_else: usize,
-    ) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>op_eq_character(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: char, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
         <span class="kw">let </span>is_match = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(v.borrow_kind_ref()) {
@@ -6371,15 +6291,12 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
 
-        <span class="kw">if </span>!is_match {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_eq_integer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: i64, jump_else: usize) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>op_eq_integer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: i64, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
         <span class="kw">let </span>is_match = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(v.borrow_kind_ref()) {
@@ -6387,15 +6304,12 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
 
-        <span class="kw">if </span>!is_match {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_eq_bool(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: bool, jump_else: usize) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>op_eq_bool(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: bool, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
         <span class="kw">let </span>is_match = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(v.borrow_kind_ref()) {
@@ -6403,17 +6317,14 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
 
-        <span class="kw">if </span>!is_match {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
 
     <span class="doccomment">/// Test if the top of stack is equal to the string at the given static
     /// string slot.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_eq_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, slot: usize, jump_else: usize) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>op_eq_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, slot: usize, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
         <span class="kw">let </span>is_match = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(v.borrow_kind_ref()) {
@@ -6424,17 +6335,14 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
 
-        <span class="kw">if </span>!is_match {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
 
     <span class="doccomment">/// Test if the top of stack is equal to the string at the given static
     /// bytes slot.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_eq_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, slot: usize, jump_else: usize) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>op_eq_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, slot: usize, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
         <span class="kw">let </span>is_match = <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(v.borrow_kind_ref()) {
@@ -6445,10 +6353,7 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
 
-        <span class="kw">if </span>!is_match {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
 
@@ -6459,7 +6364,7 @@
         len: usize,
         exact: bool,
         addr: InstAddress,
-        jump_else: usize,
+        out: Output,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
@@ -6471,21 +6376,15 @@
             }
         }));
 
-        <span class="kw">if </span>!result.unwrap_or_default() {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, result.unwrap_or_default()));
         VmResult::Ok(())
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_match_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, addr: InstAddress, jump_else: usize) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>op_match_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, addr: InstAddress, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
-
-        <span class="kw">if </span><span class="macro">vm_try!</span>(value.type_hash()) != hash {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="kw">let </span>is_match = <span class="macro">vm_try!</span>(value.type_hash()) == hash;
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
 
@@ -6496,11 +6395,11 @@
         variant_hash: Hash,
         index: usize,
         addr: InstAddress,
-        jump_else: usize,
+        out: Output,
     ) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>is_match = <span class="lifetime">'out</span>: {
-            <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
+        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
+        <span class="kw">let </span>is_match = <span class="lifetime">'out</span>: {
             <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_kind_ref()) {
                 ValueKind::Variant(variant) =&gt; {
                     <span class="kw">break </span><span class="lifetime">'out </span>variant.rtti().hash == variant_hash;
@@ -6517,29 +6416,16 @@
 
             <span class="kw">let </span>value = value.clone();
 
-            <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(()));
-
-            <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(
-                value,
-                Protocol::IS_VARIANT,
-                (index,),
-                addr.output()
-            )) {
-                CallResult::Ok(()) =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr)).as_bool())
-                }
-                CallResult::Unsupported(..) =&gt; <span class="bool-val">false</span>,
+            <span class="kw">let </span>CallResult::Ok(()) =
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(value, Protocol::IS_VARIANT, (index,), out))
+            <span class="kw">else </span>{
+                <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
             };
 
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.truncate(addr));
-            is_match
+            <span class="kw">return </span>VmResult::Ok(());
         };
 
-        <span class="kw">if </span>!is_match {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
 
@@ -6548,7 +6434,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         type_check: TypeCheck,
         addr: InstAddress,
-        jump_else: usize,
+        out: Output,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::runtime::GeneratorState::<span class="kw-2">*</span>;
 
@@ -6576,10 +6462,7 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
 
-        <span class="kw">if </span>!is_match {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
 
@@ -6589,7 +6472,7 @@
         slot: usize,
         exact: bool,
         addr: InstAddress,
-        jump_else: usize,
+        out: Output,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">fn </span>test(object: <span class="kw-2">&amp;</span>Object, keys: <span class="kw-2">&amp;</span>[alloc::String], exact: bool) -&gt; bool {
             <span class="kw">if </span>exact {
@@ -6623,10 +6506,7 @@
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
 
-        <span class="kw">if </span>!is_match {
-            <span class="self">self</span>.ip = jump_else;
-        }
-
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
 
@@ -7183,87 +7063,63 @@
                         <span class="kw">return </span>VmResult::Ok(VmHalt::Exited(out.as_addr()));
                     }
                 }
-                Inst::EqByte {
-                    addr,
-                    value,
-                    jump_else,
-                } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_byte(addr, value, jump_else));
+                Inst::EqByte { addr, value, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_byte(addr, value, out));
                 }
-                Inst::EqChar {
-                    addr,
-                    value,
-                    jump_else,
-                } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_character(addr, value, jump_else));
+                Inst::EqChar { addr, value, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_character(addr, value, out));
                 }
-                Inst::EqInteger {
-                    addr,
-                    value,
-                    jump_else,
-                } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_integer(addr, value, jump_else));
+                Inst::EqInteger { addr, value, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_integer(addr, value, out));
                 }
                 Inst::EqBool {
                     addr,
                     value: boolean,
-                    jump_else,
+                    out,
                 } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_bool(addr, boolean, jump_else));
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_bool(addr, boolean, out));
                 }
-                Inst::EqString {
-                    addr,
-                    slot,
-                    jump_else,
-                } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_string(addr, slot, jump_else));
+                Inst::EqString { addr, slot, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_string(addr, slot, out));
                 }
-                Inst::EqBytes {
-                    addr,
-                    slot,
-                    jump_else,
-                } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_bytes(addr, slot, jump_else));
+                Inst::EqBytes { addr, slot, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_bytes(addr, slot, out));
                 }
                 Inst::MatchSequence {
                     type_check,
                     len,
                     exact,
                     addr,
-                    jump_else,
+                    out,
                 } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_match_sequence(type_check, len, exact, addr, jump_else));
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_match_sequence(type_check, len, exact, addr, out));
                 }
-                Inst::MatchType {
-                    hash,
-                    addr,
-                    jump_else,
-                } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_match_type(hash, addr, jump_else));
+                Inst::MatchType { hash, addr, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_match_type(hash, addr, out));
                 }
                 Inst::MatchVariant {
                     enum_hash,
                     variant_hash,
                     index,
                     addr,
-                    jump_else,
+                    out,
                 } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_match_variant(enum_hash, variant_hash, index, addr, jump_else));
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_match_variant(enum_hash, variant_hash, index, addr, out));
                 }
                 Inst::MatchBuiltIn {
                     type_check,
                     addr,
-                    jump_else,
+                    out,
                 } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_match_builtin(type_check, addr, jump_else));
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_match_builtin(type_check, addr, out));
                 }
                 Inst::MatchObject {
                     slot,
                     exact,
                     addr,
-                    jump_else,
+                    out,
                 } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_match_object(slot, exact, addr, jump_else));
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_match_object(slot, exact, addr, out));
                 }
                 Inst::Yield { addr, out } =&gt; {
                     <span class="kw">return </span>VmResult::Ok(VmHalt::Yielded(<span class="prelude-val">Some</span>(addr), out));
