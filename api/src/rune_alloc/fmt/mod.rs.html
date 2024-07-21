@@ -171,6 +171,9 @@
 <a href="#171" id="171">171</a>
 <a href="#172" id="172">172</a>
 <a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Built-in formatting utilities.
 
 </span><span class="kw">mod </span>impls;
@@ -245,16 +248,19 @@
 
     <span class="attr">#[inline]
     #[doc(hidden)]
-    </span><span class="kw">fn </span>write_fmt(<span class="kw-2">&amp;mut </span><span class="self">self</span>, args: fmt::Arguments&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;
-    <span class="kw">where
-        </span><span class="self">Self</span>: Sized,
-    {
-        <span class="kw">struct </span>Writer&lt;<span class="lifetime">'a</span>&gt; {
-            target: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">dyn </span>TryWrite,
+    </span><span class="kw">fn </span>write_fmt(<span class="kw-2">&amp;mut </span><span class="self">self</span>, args: fmt::Arguments&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">struct </span>Writer&lt;<span class="lifetime">'a</span>, T&gt;
+        <span class="kw">where
+            </span>T: <span class="question-mark">?</span>Sized,
+        {
+            target: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>T,
             error: <span class="prelude-ty">Option</span>&lt;Error&gt;,
         }
 
-        <span class="kw">impl </span>fmt::Write <span class="kw">for </span>Writer&lt;<span class="lifetime">'_</span>&gt; {
+        <span class="kw">impl</span>&lt;T&gt; fmt::Write <span class="kw">for </span>Writer&lt;<span class="lifetime">'_</span>, T&gt;
+        <span class="kw">where
+            </span>T: <span class="question-mark">?</span>Sized + TryWrite,
+        {
             <span class="attr">#[inline]
             </span><span class="kw">fn </span>write_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;</span>str) -&gt; fmt::Result {
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = (<span class="kw-2">*</span><span class="self">self</span>.target).try_write_str(s) {

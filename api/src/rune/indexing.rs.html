@@ -150,6 +150,8 @@
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
 <a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
 </pre></div><pre class="rust"><code><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>index;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>items;
 <span class="kw">mod </span>scopes;
@@ -219,11 +221,13 @@
 <span class="kw">impl </span>FunctionAst {
     <span class="doccomment">/// Get the number of arguments for the function ast.
     </span><span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>args(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="kw">match </span><span class="self">self </span>{
-            FunctionAst::Empty(..) =&gt; <span class="number">0</span>,
-            FunctionAst::Item(ast) =&gt; ast.args.len(),
-        }
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>args(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned&gt; {
+        <span class="kw">let </span>args = <span class="kw">match </span><span class="self">self </span>{
+            FunctionAst::Item(ast) =&gt; ast.args.as_slice(),
+            FunctionAst::Empty(..) =&gt; <span class="kw-2">&amp;</span>[],
+        };
+
+        args.iter().map(|(arg, <span class="kw">_</span>)| -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned { arg })
     }
 }
 

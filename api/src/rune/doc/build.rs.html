@@ -1220,30 +1220,6 @@
 <a href="#1220" id="1220">1220</a>
 <a href="#1221" id="1221">1221</a>
 <a href="#1222" id="1222">1222</a>
-<a href="#1223" id="1223">1223</a>
-<a href="#1224" id="1224">1224</a>
-<a href="#1225" id="1225">1225</a>
-<a href="#1226" id="1226">1226</a>
-<a href="#1227" id="1227">1227</a>
-<a href="#1228" id="1228">1228</a>
-<a href="#1229" id="1229">1229</a>
-<a href="#1230" id="1230">1230</a>
-<a href="#1231" id="1231">1231</a>
-<a href="#1232" id="1232">1232</a>
-<a href="#1233" id="1233">1233</a>
-<a href="#1234" id="1234">1234</a>
-<a href="#1235" id="1235">1235</a>
-<a href="#1236" id="1236">1236</a>
-<a href="#1237" id="1237">1237</a>
-<a href="#1238" id="1238">1238</a>
-<a href="#1239" id="1239">1239</a>
-<a href="#1240" id="1240">1240</a>
-<a href="#1241" id="1241">1241</a>
-<a href="#1242" id="1242">1242</a>
-<a href="#1243" id="1243">1243</a>
-<a href="#1244" id="1244">1244</a>
-<a href="#1245" id="1245">1245</a>
-<a href="#1246" id="1246">1246</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>enum_;
 <span class="kw">mod </span>js;
 <span class="kw">mod </span>markdown;
@@ -1265,14 +1241,12 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::borrow::Cow;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::try_format;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String, Vec, VecDeque};
-<span class="kw">use </span><span class="kw">crate</span>::compile::{ComponentRef, Item, ItemBuf};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, VecDeque};
+<span class="kw">use </span><span class="kw">crate</span>::compile::{meta, ComponentRef, Item, ItemBuf};
 <span class="kw">use </span><span class="kw">crate</span>::doc::artifacts::Test;
 <span class="kw">use </span><span class="kw">crate</span>::doc::context::{Function, Kind, Meta, Signature};
 <span class="kw">use </span><span class="kw">crate</span>::doc::templating;
 <span class="kw">use </span><span class="kw">crate</span>::doc::{Artifacts, Context, Visitor};
-<span class="kw">use </span><span class="kw">crate</span>::std;
 <span class="kw">use </span><span class="kw">crate</span>::std::borrow::ToOwned;
 <span class="kw">use </span><span class="kw">crate</span>::Hash;
 
@@ -1788,7 +1762,20 @@
     }
 
     <span class="doccomment">/// Convert a hash into a link.
-    </span><span class="kw">fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash, text: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; {
+    </span><span class="kw">fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash, text: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;, generics: <span class="kw-2">&amp;</span>[meta::DocType]) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
+        <span class="self">self</span>.write_link(<span class="kw-2">&amp;mut </span>s, hash, text, generics)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(s)
+    }
+
+    <span class="doccomment">/// Convert a hash into a link.
+    </span><span class="kw">fn </span>write_link(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        o: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>TryWrite,
+        hash: Hash,
+        text: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        generics: <span class="kw-2">&amp;</span>[meta::DocType],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">fn </span>into_item_kind(meta: Meta&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;ItemKind&gt; {
             <span class="kw">match </span><span class="kw-2">&amp;</span>meta.kind {
                 Kind::Type =&gt; <span class="prelude-val">Some</span>(ItemKind::Type),
@@ -1812,7 +1799,8 @@
                 <span class="macro">tracing::warn!</span>(<span class="string">"Candidate: {:?}"</span>, meta.kind);
             }
 
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="macro">try_format!</span>(<span class="string">"{hash}"</span>)));
+            <span class="macro">write!</span>(o, <span class="string">"{hash}"</span>)<span class="question-mark">?</span>;
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         };
 
         <span class="kw">let </span>item = meta.item.context(<span class="string">"Missing item link meta"</span>)<span class="question-mark">?</span>;
@@ -1826,100 +1814,65 @@
         };
 
         <span class="kw">let </span>path = <span class="self">self</span>.item_path(item, kind)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="macro">try_format!</span>(
-            <span class="string">"&lt;a class=\"{kind}\" href=\"{path}\"&gt;{name}&lt;/a&gt;"
-        </span>)))
+
+        <span class="macro">write!</span>(o, <span class="string">"&lt;a class=\"{kind}\" href=\"{path}\"&gt;{name}&lt;/a&gt;"</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>!generics.is_empty() {
+            <span class="kw">let </span><span class="kw-2">mut </span>it = generics.iter().peekable();
+            <span class="macro">write!</span>(o, <span class="string">"&lt;"</span>)<span class="question-mark">?</span>;
+
+            <span class="kw">while let </span><span class="prelude-val">Some</span>(ty) = it.next() {
+                <span class="kw">match </span>ty.base {
+                    <span class="prelude-val">Some</span>(hash) =&gt; {
+                        <span class="self">self</span>.write_link(o, hash, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ty.generics)<span class="question-mark">?</span>;
+                    }
+                    <span class="prelude-val">None </span>=&gt; {
+                        <span class="macro">write!</span>(o, <span class="string">"?"</span>)<span class="question-mark">?</span>;
+                    }
+                }
+
+                <span class="kw">if </span>it.peek().is_some() {
+                    <span class="macro">write!</span>(o, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                }
+            }
+
+            <span class="macro">write!</span>(o, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Coerce args into string.
     </span><span class="kw">fn </span>args_to_string(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        arg_names: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[String]&gt;,
-        args: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         sig: Signature,
-        argument_types: <span class="kw-2">&amp;</span>[<span class="prelude-ty">Option</span>&lt;Hash&gt;],
+        arguments: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[meta::DocArgument]&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-        <span class="kw">use </span>std::borrow::Cow;
-
         <span class="kw">let </span><span class="kw-2">mut </span>string = String::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>types = argument_types.iter();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>args_iter;
-        <span class="kw">let </span><span class="kw-2">mut </span>function_iter;
-        <span class="kw">let </span><span class="kw-2">mut </span>instance_iter;
-
-        <span class="kw">let </span>it: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Iterator&lt;Item = Cow&lt;<span class="lifetime">'_</span>, str&gt;&gt; = <span class="kw">if let </span><span class="prelude-val">Some</span>(arg_names) = arg_names {
-            args_iter = arg_names.iter().map(|s| Cow::Borrowed(s.as_str()));
-            <span class="kw-2">&amp;mut </span>args_iter
-        } <span class="kw">else </span>{
+        <span class="kw">let </span><span class="prelude-val">Some</span>(arguments) = arguments <span class="kw">else </span>{
             <span class="kw">match </span>sig {
                 Signature::Function =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>string = String::new();
-
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(count) = args <span class="kw">else </span>{
-                        <span class="macro">write!</span>(string, <span class="string">".."</span>)<span class="question-mark">?</span>;
-                        <span class="kw">return </span><span class="prelude-val">Ok</span>(string);
-                    };
-
-                    function_iter = (<span class="number">0</span>..count).map(|n| {
-                        <span class="kw">if </span>n == <span class="number">0 </span>{
-                            Cow::Borrowed(<span class="string">"value"</span>)
-                        } <span class="kw">else </span>{
-                            Cow::Owned(<span class="macro">format!</span>(<span class="string">"value{}"</span>, n))
-                        }
-                    });
-
-                    <span class="kw-2">&amp;mut </span>function_iter
+                    <span class="macro">write!</span>(string, <span class="string">".."</span>)<span class="question-mark">?</span>;
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(string);
                 }
                 Signature::Instance =&gt; {
-                    <span class="kw">let </span>s = [Cow::Borrowed(<span class="string">"self"</span>)];
-
-                    <span class="kw">let </span>(n, f): (usize, <span class="kw">fn</span>(usize) -&gt; Cow&lt;<span class="lifetime">'static</span>, str&gt;) = <span class="kw">match </span>args {
-                        <span class="prelude-val">Some</span>(n) =&gt; {
-                            <span class="kw">let </span>f = <span class="kw">move </span>|n| {
-                                <span class="kw">if </span>n != <span class="number">1 </span>{
-                                    Cow::Owned(<span class="macro">format!</span>(<span class="string">"value{n}"</span>))
-                                } <span class="kw">else </span>{
-                                    Cow::Borrowed(<span class="string">"value"</span>)
-                                }
-                            };
-
-                            (n, f)
-                        }
-                        <span class="prelude-val">None </span>=&gt; {
-                            <span class="kw">let </span>f = <span class="kw">move </span>|<span class="kw">_</span>| Cow::Borrowed(<span class="string">".."</span>);
-                            (<span class="number">2</span>, f)
-                        }
-                    };
-
-                    instance_iter = s.into_iter().chain((<span class="number">1</span>..n).map(f));
-                    <span class="kw-2">&amp;mut </span>instance_iter
+                    <span class="kw">let </span><span class="kw-2">mut </span>string = String::new();
+                    <span class="macro">write!</span>(string, <span class="string">"self, .."</span>)<span class="question-mark">?</span>;
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(string);
                 }
             }
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>it = it.peekable();
+        <span class="kw">let </span><span class="kw-2">mut </span>it = arguments.iter().peekable();
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>(arg) = it.next() {
-            <span class="kw">if </span>arg == <span class="string">"self" </span>{
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>(hash)) = types.next() {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(link) = <span class="self">self</span>.link(<span class="kw-2">*</span>hash, <span class="prelude-val">Some</span>(<span class="string">"self"</span>))<span class="question-mark">? </span>{
-                        string.try_push_str(<span class="kw-2">&amp;</span>link)<span class="question-mark">?</span>;
-                    } <span class="kw">else </span>{
-                        string.try_push_str(<span class="string">"self"</span>)<span class="question-mark">?</span>;
-                    }
-                } <span class="kw">else </span>{
-                    string.try_push_str(<span class="string">"self"</span>)<span class="question-mark">?</span>;
-                }
-            } <span class="kw">else </span>{
-                string.try_push_str(arg.as_ref())<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(string, <span class="string">"{}"</span>, arg.name)<span class="question-mark">?</span>;
 
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>(hash)) = types.next() {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(link) = <span class="self">self</span>.link(<span class="kw-2">*</span>hash, <span class="prelude-val">None</span>)<span class="question-mark">? </span>{
-                        string.try_push_str(<span class="string">": "</span>)<span class="question-mark">?</span>;
-                        string.try_push_str(<span class="kw-2">&amp;</span>link)<span class="question-mark">?</span>;
-                    }
-                }
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(hash) = arg.base {
+                string.try_push_str(<span class="string">": "</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.write_link(<span class="kw-2">&amp;mut </span>string, hash, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>arg.generics)<span class="question-mark">?</span>;
             }
 
             <span class="kw">if </span>it.peek().is_some() {
@@ -2256,12 +2209,7 @@
                         path: cx.item_path(<span class="kw-2">&amp;</span>item, ItemKind::Function)<span class="question-mark">?</span>,
                         item: item.try_clone()<span class="question-mark">?</span>,
                         name,
-                        args: cx.args_to_string(
-                            f.arg_names,
-                            f.args,
-                            f.signature,
-                            f.argument_types,
-                        )<span class="question-mark">?</span>,
+                        args: cx.args_to_string(f.signature, f.arguments)<span class="question-mark">?</span>,
                         doc: cx.render_line_docs(m, m.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>,
                     })<span class="question-mark">?</span>;
                 }
@@ -2376,8 +2324,12 @@
     <span class="kw">let </span>doc = cx.render_docs(meta, meta.docs, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>return_type = <span class="kw">match </span>f.return_type {
-        <span class="prelude-val">Some</span>(hash) =&gt; cx.link(hash, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
-        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+        meta::DocType {
+            base: <span class="prelude-val">Some</span>(hash),
+            generics,
+            ..
+        } =&gt; <span class="prelude-val">Some</span>(cx.link(<span class="kw-2">*</span>hash, <span class="prelude-val">None</span>, generics)<span class="question-mark">?</span>),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     };
 
     <span class="kw">let </span>item = meta.item.context(<span class="string">"Missing item"</span>)<span class="question-mark">?</span>;
@@ -2392,7 +2344,7 @@
             deprecated,
             item,
             name,
-            args: cx.args_to_string(f.arg_names, f.args, f.signature, f.argument_types)<span class="question-mark">?</span>,
+            args: cx.args_to_string(f.signature, f.arguments)<span class="question-mark">?</span>,
             doc,
             return_type,
         })

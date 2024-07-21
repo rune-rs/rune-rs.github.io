@@ -231,13 +231,21 @@
 <a href="#231" id="231">231</a>
 <a href="#232" id="232">232</a>
 <a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::{Context, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>serde::Serialize;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::borrow::Cow;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{String, Vec};
-<span class="kw">use </span><span class="kw">crate</span>::compile::{ComponentRef, Item};
+<span class="kw">use </span><span class="kw">crate</span>::compile::{meta, ComponentRef, Item};
 <span class="kw">use </span><span class="kw">crate</span>::doc::build::{Builder, Ctxt, IndexEntry, IndexKind};
 <span class="kw">use </span><span class="kw">crate</span>::doc::context::{Assoc, AssocFnKind, Meta};
 
@@ -311,7 +319,7 @@
                         value = <span class="macro">format!</span>(<span class="string">"value.{index}"</span>);
                         (protocol, value.as_str(), <span class="prelude-val">None</span>)
                     }
-                    AssocFnKind::Method(name, args, sig) =&gt; {
+                    AssocFnKind::Method(name, sig) =&gt; {
                         <span class="kw">let </span>line_doc =
                             cx.render_line_docs(meta, assoc.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>;
 
@@ -319,34 +327,36 @@
                         <span class="kw">let </span>doc = cx.render_docs(meta, assoc.docs, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                         cx.state.item.pop()<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span><span class="kw-2">mut </span>list = Vec::new();
+                        <span class="kw">let </span>parameters = <span class="kw">if </span>!assoc.parameter_types.is_empty() {
+                            <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
+                            <span class="kw">let </span><span class="kw-2">mut </span>it = assoc.parameter_types.iter().peekable();
 
-                        <span class="kw">for </span><span class="kw-2">&amp;</span>hash <span class="kw">in </span>assoc.parameter_types {
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>(link) = cx.link(hash, <span class="prelude-val">None</span>)<span class="question-mark">? </span>{
-                                list.try_push(link)<span class="question-mark">?</span>;
-                            } <span class="kw">else </span>{
-                                list.try_push(hash.try_to_string()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                            <span class="kw">while let </span><span class="prelude-val">Some</span>(hash) = it.next() {
+                                cx.write_link(<span class="kw-2">&amp;mut </span>s, <span class="kw-2">*</span>hash, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+
+                                <span class="kw">if </span>it.peek().is_some() {
+                                    <span class="macro">write!</span>(s, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                                }
                             }
-                        }
 
-                        <span class="kw">let </span>parameters = (!list.is_empty())
-                            .then(|| list.iter().try_join(<span class="string">", "</span>))
-                            .transpose()<span class="question-mark">?</span>;
+                            <span class="prelude-val">Some</span>(s)
+                        } <span class="kw">else </span>{
+                            <span class="prelude-val">None
+                        </span>};
 
                         methods.try_push(Method {
                             is_async: assoc.is_async,
                             deprecated: assoc.deprecated,
                             name,
-                            args: cx.args_to_string(
-                                assoc.arg_names,
-                                args,
-                                sig,
-                                assoc.argument_types,
-                            )<span class="question-mark">?</span>,
+                            args: cx.args_to_string(sig, assoc.arguments)<span class="question-mark">?</span>,
                             parameters,
                             return_type: <span class="kw">match </span>assoc.return_type {
-                                <span class="prelude-val">Some</span>(hash) =&gt; cx.link(hash, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
-                                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+                                meta::DocType {
+                                    base: <span class="prelude-val">Some</span>(hash),
+                                    generics,
+                                    ..
+                                } =&gt; <span class="prelude-val">Some</span>(cx.link(<span class="kw-2">*</span>hash, <span class="prelude-val">None</span>, generics)<span class="question-mark">?</span>),
+                                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                             },
                             line_doc,
                             doc,
@@ -373,8 +383,12 @@
                     field,
                     repr,
                     return_type: <span class="kw">match </span>assoc.return_type {
-                        <span class="prelude-val">Some</span>(hash) =&gt; cx.link(hash, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
-                        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+                        meta::DocType {
+                            base: <span class="prelude-val">Some</span>(hash),
+                            generics,
+                            ..
+                        } =&gt; <span class="prelude-val">Some</span>(cx.link(<span class="kw-2">*</span>hash, <span class="prelude-val">None</span>, generics)<span class="question-mark">?</span>),
+                        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                     },
                     doc,
                     deprecated: assoc.deprecated,

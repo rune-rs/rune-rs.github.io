@@ -387,20 +387,6 @@
 <a href="#387" id="387">387</a>
 <a href="#388" id="388">388</a>
 <a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-<a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a>
-<a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a>
-<a href="#398" id="398">398</a>
-<a href="#399" id="399">399</a>
-<a href="#400" id="400">400</a>
-<a href="#401" id="401">401</a>
-<a href="#402" id="402">402</a>
-<a href="#403" id="403">403</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::compile::context::ContextMeta;
@@ -438,11 +424,9 @@
 <span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Function&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) is_async: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) arg_names: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[String]&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) args: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) signature: Signature,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) return_type: <span class="prelude-ty">Option</span>&lt;Hash&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) argument_types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="prelude-ty">Option</span>&lt;Hash&gt;],
+    <span class="kw">pub</span>(<span class="kw">crate</span>) arguments: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[meta::DocArgument]&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) return_type: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>meta::DocType,
 }
 
 <span class="doccomment">/// The kind of an associated function.
@@ -454,7 +438,7 @@
     <span class="doccomment">/// An index function with the given protocol.
     </span>IndexFn(Protocol, usize),
     <span class="doccomment">/// The instance function refers to the given named instance fn.
-    </span>Method(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, <span class="prelude-ty">Option</span>&lt;usize&gt;, Signature),
+    </span>Method(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, Signature),
 }
 
 <span class="doccomment">/// Information on an associated function.
@@ -469,11 +453,8 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AssocFn&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) kind: AssocFnKind&lt;<span class="lifetime">'a</span>&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) is_async: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) return_type: <span class="prelude-ty">Option</span>&lt;Hash&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) argument_types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="prelude-ty">Option</span>&lt;Hash&gt;],
-    <span class="doccomment">/// Literal argument replacements.
-    /// TODO: replace this with structured information that includes type hash so it can be linked if it's available.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) arg_names: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[String]&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) arguments: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>[meta::DocArgument]&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) return_type: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>meta::DocType,
     <span class="doccomment">/// Generic instance parameters for function.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) parameter_types: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[Hash],
     <span class="kw">pub</span>(<span class="kw">crate</span>) deprecated: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
@@ -531,18 +512,16 @@
             <span class="prelude-val">Some</span>(associated.iter().flat_map(<span class="kw">move </span>|hash| {
                 <span class="kw">let </span>data = visitor.data.get(hash)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>(is_async, kind) = <span class="kw">match </span><span class="kw-2">&amp;</span>data.kind {
+                <span class="kw">let </span>(is_async, kind, arguments, return_type) = <span class="kw">match </span><span class="kw-2">&amp;</span>data.kind {
                     <span class="prelude-val">Some</span>(meta::Kind::Function {
                         associated: <span class="prelude-val">None</span>,
                         signature: f,
                         ..
                     }) =&gt; (
                         f.is_async,
-                        AssocFnKind::Method(
-                            data.item.last()<span class="question-mark">?</span>.as_str()<span class="question-mark">?</span>,
-                            f.args,
-                            Signature::Function,
-                        ),
+                        AssocFnKind::Method(data.item.last()<span class="question-mark">?</span>.as_str()<span class="question-mark">?</span>, Signature::Function),
+                        f.arguments.as_deref(),
+                        <span class="kw-2">&amp;</span>f.return_type,
                     ),
                     <span class="prelude-val">Some</span>(meta::Kind::Function {
                         associated: <span class="prelude-val">Some</span>(meta::AssociatedKind::Instance(name)),
@@ -550,7 +529,9 @@
                         ..
                     }) =&gt; (
                         f.is_async,
-                        AssocFnKind::Method(name.as_ref(), f.args, Signature::Instance),
+                        AssocFnKind::Method(name.as_ref(), Signature::Instance),
+                        f.arguments.as_deref(),
+                        <span class="kw-2">&amp;</span>f.return_type,
                     ),
                     <span class="prelude-val">Some</span>(meta::Kind::Variant { .. }) =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Some</span>(Assoc::Variant(AssocVariant {
@@ -564,9 +545,8 @@
                 <span class="prelude-val">Some</span>(Assoc::Fn(AssocFn {
                     kind,
                     is_async,
-                    return_type: <span class="prelude-val">None</span>,
-                    argument_types: <span class="kw-2">&amp;</span>[],
-                    arg_names: <span class="prelude-val">None</span>,
+                    arguments,
+                    return_type,
                     parameter_types: <span class="kw-2">&amp;</span>[],
                     deprecated: data.deprecated.as_deref(),
                     docs: <span class="kw-2">&amp;</span>data.docs,
@@ -600,16 +580,15 @@
                             AssocFnKind::IndexFn(protocol, index)
                         }
                         meta::AssociatedKind::Instance(<span class="kw-2">ref </span>name) =&gt; {
-                            AssocFnKind::Method(name, signature.args, Signature::Instance)
+                            AssocFnKind::Method(name, Signature::Instance)
                         }
                     };
 
                     <span class="prelude-val">Some</span>(Assoc::Fn(AssocFn {
                         kind,
                         is_async: signature.is_async,
-                        return_type: signature.return_type,
-                        argument_types: <span class="kw-2">&amp;</span>signature.argument_types,
-                        arg_names: meta.docs.args(),
+                        arguments: signature.arguments.as_deref(),
+                        return_type: <span class="kw-2">&amp;</span>signature.return_type,
                         parameter_types: <span class="kw-2">&amp;</span>parameter_types[..],
                         deprecated: meta.deprecated.as_deref(),
                         docs: meta.docs.lines(),
@@ -621,14 +600,13 @@
                     ..
                 } =&gt; {
                     <span class="kw">let </span>name = meta.item.as_deref()<span class="question-mark">?</span>.last()<span class="question-mark">?</span>.as_str()<span class="question-mark">?</span>;
-                    <span class="kw">let </span>kind = AssocFnKind::Method(name, signature.args, Signature::Function);
+                    <span class="kw">let </span>kind = AssocFnKind::Method(name, Signature::Function);
 
                     <span class="prelude-val">Some</span>(Assoc::Fn(AssocFn {
                         kind,
                         is_async: signature.is_async,
-                        return_type: signature.return_type,
-                        argument_types: <span class="kw-2">&amp;</span>signature.argument_types,
-                        arg_names: meta.docs.args(),
+                        arguments: signature.arguments.as_deref(),
+                        return_type: <span class="kw-2">&amp;</span>signature.return_type,
                         parameter_types: <span class="kw-2">&amp;</span>[],
                         deprecated: meta.deprecated.as_deref(),
                         docs: meta.docs.lines(),
@@ -725,10 +703,8 @@
             } =&gt; Kind::Function(Function {
                 is_async: f.is_async,
                 signature: Signature::Function,
-                arg_names: meta.docs.args(),
-                args: f.args,
-                return_type: f.return_type,
-                argument_types: <span class="kw-2">&amp;</span>f.argument_types,
+                arguments: f.arguments.as_deref(),
+                return_type: <span class="kw-2">&amp;</span>f.return_type,
             }),
             meta::Kind::Function {
                 associated: <span class="prelude-val">Some</span>(..),
@@ -737,10 +713,8 @@
             } =&gt; Kind::Function(Function {
                 is_async: f.is_async,
                 signature: Signature::Instance,
-                arg_names: meta.docs.args(),
-                args: f.args,
-                return_type: f.return_type,
-                argument_types: <span class="kw-2">&amp;</span>f.argument_types,
+                arguments: f.arguments.as_deref(),
+                return_type: <span class="kw-2">&amp;</span>f.return_type,
             }),
             meta::Kind::Const { .. } =&gt; {
                 <span class="kw">let </span>const_value = <span class="self">self</span>.context.get_const_value(meta.hash)<span class="question-mark">?</span>;
@@ -782,14 +756,12 @@
             ..
         }) =&gt; Kind::Function(Function {
             is_async: f.is_async,
-            arg_names: <span class="prelude-val">None</span>,
-            args: f.args,
             signature: <span class="kw">match </span>associated {
                 <span class="prelude-val">Some</span>(..) =&gt; Signature::Instance,
                 <span class="prelude-val">None </span>=&gt; Signature::Function,
             },
-            return_type: f.return_type,
-            argument_types: <span class="kw-2">&amp;</span>f.argument_types,
+            arguments: f.arguments.as_deref(),
+            return_type: <span class="kw-2">&amp;</span>f.return_type,
         }),
         <span class="prelude-val">Some</span>(meta::Kind::Module) =&gt; Kind::Module,
         <span class="kw">_ </span>=&gt; Kind::Unsupported,

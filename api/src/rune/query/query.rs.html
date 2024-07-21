@@ -1801,6 +1801,37 @@
 <a href="#1801" id="1801">1801</a>
 <a href="#1802" id="1802">1802</a>
 <a href="#1803" id="1803">1803</a>
+<a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
+<a href="#1807" id="1807">1807</a>
+<a href="#1808" id="1808">1808</a>
+<a href="#1809" id="1809">1809</a>
+<a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
+<a href="#1828" id="1828">1828</a>
+<a href="#1829" id="1829">1829</a>
+<a href="#1830" id="1830">1830</a>
+<a href="#1831" id="1831">1831</a>
+<a href="#1832" id="1832">1832</a>
+<a href="#1833" id="1833">1833</a>
+<a href="#1834" id="1834">1834</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
 </span><span class="kw">use </span>core::mem::take;
@@ -3121,6 +3152,35 @@
             })
         }
 
+        <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+        </span><span class="kw">fn </span>to_doc_names&lt;<span class="lifetime">'a</span>&gt;(
+            sources: <span class="kw-2">&amp;</span>Sources,
+            source_id: SourceId,
+            iter: <span class="kw">impl </span>ExactSizeIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>Spanned&gt;,
+        ) -&gt; alloc::Result&lt;Box&lt;[meta::DocArgument]&gt;&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>out = Vec::try_with_capacity(iter.len())<span class="question-mark">?</span>;
+
+            <span class="kw">for </span>(n, span) <span class="kw">in </span>iter.enumerate() {
+                <span class="kw">let </span>name = <span class="kw">match </span>sources.get(source_id) {
+                    <span class="prelude-val">Some</span>(source) =&gt; source.get(span.span().range()),
+                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+                };
+
+                <span class="kw">let </span>name = <span class="kw">match </span>name {
+                    <span class="prelude-val">Some</span>(name) =&gt; meta::DocName::Name(name.try_into()<span class="question-mark">?</span>),
+                    <span class="prelude-val">None </span>=&gt; meta::DocName::Index(n),
+                };
+
+                out.try_push(meta::DocArgument {
+                    name,
+                    base: <span class="prelude-val">None</span>,
+                    generics: Box::default(),
+                })<span class="question-mark">?</span>;
+            }
+
+            Box::try_from(out)
+        }
+
         <span class="kw">let </span>indexing::Entry { item_meta, indexed } = entry;
 
         <span class="kw">if let </span>Used::Used = used {
@@ -3170,11 +3230,13 @@
                         <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
                         </span>is_async: <span class="macro">matches!</span>(f.call, Call::Async | Call::Stream),
                         <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                        </span>args: <span class="prelude-val">Some</span>(f.ast.args()),
+                        </span>arguments: <span class="prelude-val">Some</span>(to_doc_names(
+                            <span class="self">self</span>.sources,
+                            item_meta.location.source_id,
+                            f.ast.args(),
+                        )<span class="question-mark">?</span>),
                         <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                        </span>return_type: <span class="prelude-val">None</span>,
-                        <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                        </span>argument_types: Box::default(),
+                        </span>return_type: meta::DocType::empty(),
                     },
                     parameters: Hash::EMPTY,
                     <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]

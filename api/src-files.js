@@ -10,7 +10,7 @@ var srcIndex = new Map(JSON.parse('[\
 ["bincode",["",[["config",[],["endian.rs","int.rs","legacy.rs","limit.rs","mod.rs","trailing.rs"]],["de",[],["mod.rs","read.rs"]],["ser",[],["mod.rs"]]],["byteorder.rs","error.rs","internal.rs","lib.rs"]]],\
 ["bitflags",["",[],["external.rs","internal.rs","iter.rs","lib.rs","parser.rs","public.rs","traits.rs"]]],\
 ["block_buffer",["",[],["lib.rs","sealed.rs"]]],\
-["bstr",["",[["byteset",[],["mod.rs","scalar.rs"]]],["ascii.rs","bstr.rs","ext_slice.rs","impls.rs","lib.rs","utf8.rs"]]],\
+["bstr",["",[["byteset",[],["mod.rs","scalar.rs"]]],["ascii.rs","bstr.rs","escape_bytes.rs","ext_slice.rs","impls.rs","lib.rs","utf8.rs"]]],\
 ["byteorder",["",[],["lib.rs"]]],\
 ["bytes",["",[["buf",[],["buf_impl.rs","buf_mut.rs","chain.rs","iter.rs","limit.rs","mod.rs","reader.rs","take.rs","uninit_slice.rs","vec_deque.rs","writer.rs"]],["fmt",[],["debug.rs","hex.rs","mod.rs"]]],["bytes.rs","bytes_mut.rs","lib.rs","loom.rs"]]],\
 ["cfg_if",["",[],["lib.rs"]]],\
