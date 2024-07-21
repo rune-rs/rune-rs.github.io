@@ -288,6 +288,24 @@
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
 <a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>rune_alloc::hash_map;
 
 <span class="kw">use </span>core::hash::BuildHasher;
@@ -344,55 +362,55 @@
     }
 
     <span class="attr">#[inline(always)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_with&lt;P&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_with(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         key: Value,
         value: V,
-        caller: <span class="kw-2">&amp;mut </span>P,
-    ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;V&gt;&gt;
-    <span class="kw">where
-        </span>P: <span class="question-mark">?</span>Sized + ProtocolCaller,
-    {
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
+    ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;V&gt;&gt; {
         <span class="kw">let </span>hash = <span class="macro">vm_try!</span>(hash(<span class="kw-2">&amp;</span><span class="self">self</span>.state, <span class="kw-2">&amp;</span>key, caller));
 
-        <span class="kw">let </span>existing =
-            <span class="kw">match </span><span class="self">self
-                </span>.table
-                .find_or_find_insert_slot(caller, hash, eq(<span class="kw-2">&amp;</span>key), hasher(<span class="kw-2">&amp;</span><span class="self">self</span>.state))
-            {
-                <span class="prelude-val">Ok</span>(bucket) =&gt; <span class="prelude-val">Some</span>(mem::replace(<span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut </span>bucket.as_mut().<span class="number">1 </span>}, value)),
-                <span class="prelude-val">Err</span>(ErrorOrInsertSlot::InsertSlot(slot)) =&gt; {
-                    <span class="kw">unsafe </span>{
-                        <span class="self">self</span>.table.insert_in_slot(hash, slot, (key, value));
-                    }
-                    <span class="prelude-val">None
-                </span>}
-                <span class="prelude-val">Err</span>(ErrorOrInsertSlot::Error(error)) =&gt; <span class="kw">return </span>VmResult::err(error),
-            };
+        <span class="kw">let </span>existing = <span class="kw">match </span><span class="self">self</span>.table.find_or_find_insert_slot(
+            caller,
+            hash,
+            KeyEq::new(<span class="kw-2">&amp;</span>key),
+            StateHasher::new(<span class="kw-2">&amp;</span><span class="self">self</span>.state),
+        ) {
+            <span class="prelude-val">Ok</span>(bucket) =&gt; <span class="prelude-val">Some</span>(mem::replace(<span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut </span>bucket.as_mut().<span class="number">1 </span>}, value)),
+            <span class="prelude-val">Err</span>(ErrorOrInsertSlot::InsertSlot(slot)) =&gt; {
+                <span class="kw">unsafe </span>{
+                    <span class="self">self</span>.table.insert_in_slot(hash, slot, (key, value));
+                }
+                <span class="prelude-val">None
+            </span>}
+            <span class="prelude-val">Err</span>(ErrorOrInsertSlot::Error(error)) =&gt; <span class="kw">return </span>VmResult::err(error),
+        };
 
         VmResult::Ok(existing)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get&lt;P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Value, caller: <span class="kw-2">&amp;mut </span>P) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(Value, V)&gt;&gt;
-    <span class="kw">where
-        </span>P: <span class="question-mark">?</span>Sized + ProtocolCaller,
-    {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        key: <span class="kw-2">&amp;</span>Value,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
+    ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(Value, V)&gt;&gt; {
         <span class="kw">if </span><span class="self">self</span>.table.is_empty() {
             <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
         }
 
         <span class="kw">let </span>hash = <span class="macro">vm_try!</span>(hash(<span class="kw-2">&amp;</span><span class="self">self</span>.state, key, caller));
-        VmResult::Ok(<span class="macro">vm_try!</span>(<span class="self">self</span>.table.get(caller, hash, eq(key))))
+        VmResult::Ok(<span class="macro">vm_try!</span>(<span class="self">self</span>.table.get(caller, hash, KeyEq::new(key))))
     }
 
     <span class="attr">#[inline(always)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove_with&lt;P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Value, caller: <span class="kw-2">&amp;mut </span>P) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;V&gt;&gt;
-    <span class="kw">where
-        </span>P: <span class="question-mark">?</span>Sized + ProtocolCaller,
-    {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove_with(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        key: <span class="kw-2">&amp;</span>Value,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
+    ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;V&gt;&gt; {
         <span class="kw">let </span>hash = <span class="macro">vm_try!</span>(hash(<span class="kw-2">&amp;</span><span class="self">self</span>.state, key, caller));
 
-        <span class="kw">match </span><span class="self">self</span>.table.remove_entry(caller, hash, eq(key)) {
+        <span class="kw">match </span><span class="self">self</span>.table.remove_entry(caller, hash, KeyEq::new(key)) {
             <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(value.map(|(<span class="kw">_</span>, value)| value)),
             <span class="prelude-val">Err</span>(error) =&gt; VmResult::Err(error),
         }
@@ -550,7 +568,7 @@
 }
 
 <span class="doccomment">/// Convenience function to hash a value.
-</span><span class="kw">fn </span>hash&lt;S&gt;(state: <span class="kw-2">&amp;</span>S, value: <span class="kw-2">&amp;</span>Value, caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller) -&gt; VmResult&lt;u64&gt;
+</span><span class="kw">fn </span>hash&lt;S&gt;(state: <span class="kw-2">&amp;</span>S, value: <span class="kw-2">&amp;</span>Value, caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller) -&gt; VmResult&lt;u64&gt;
 <span class="kw">where
     </span>S: BuildHasher&lt;Hasher = hash_map::Hasher&gt;,
 {
@@ -559,23 +577,41 @@
     VmResult::Ok(hasher.finish())
 }
 
-<span class="doccomment">/// Construct a hasher for a value in the table.
-</span><span class="kw">fn </span>hasher&lt;P, V, S&gt;(state: <span class="kw-2">&amp;</span>S) -&gt; <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>P, <span class="kw-2">&amp;</span>(Value, V)) -&gt; <span class="prelude-ty">Result</span>&lt;u64, VmError&gt; + <span class="lifetime">'_
-</span><span class="kw">where
-    </span>P: <span class="question-mark">?</span>Sized + ProtocolCaller,
-    S: BuildHasher&lt;Hasher = hash_map::Hasher&gt;,
-{
-    <span class="kw">move </span>|caller, (key, <span class="kw">_</span>): <span class="kw-2">&amp;</span>(Value, V)| hash(state, key, caller).into_result()
+<span class="kw">struct </span>StateHasher&lt;<span class="lifetime">'a</span>&gt; {
+    state: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>hash_map::RandomState,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; StateHasher&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>new(state: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>hash_map::RandomState) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ state }
+    }
+}
+
+<span class="kw">impl</span>&lt;V&gt; alloc::hashbrown::HasherFn&lt;<span class="kw">dyn </span>ProtocolCaller, (Value, V), VmError&gt; <span class="kw">for </span>StateHasher&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller, (key, <span class="kw">_</span>): <span class="kw-2">&amp;</span>(Value, V)) -&gt; <span class="prelude-ty">Result</span>&lt;u64, VmError&gt; {
+        hash(<span class="self">self</span>.state, key, cx).into_result()
+    }
 }
 
 <span class="doccomment">/// Construct an equality function for a value in the table that will compare an
 /// entry with the current key.
-</span><span class="kw">fn </span>eq&lt;P, V&gt;(key: <span class="kw-2">&amp;</span>Value) -&gt; <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>P, <span class="kw-2">&amp;</span>(Value, V)) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmError&gt; + <span class="lifetime">'_
-</span><span class="kw">where
-    </span>P: <span class="question-mark">?</span>Sized + ProtocolCaller,
-{
-    <span class="kw">move </span>|caller: <span class="kw-2">&amp;mut </span>P, (other, <span class="kw">_</span>): <span class="kw-2">&amp;</span>(Value, V)| -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmError&gt; {
-        key.eq_with(other, caller).into_result()
+</span><span class="kw">struct </span>KeyEq&lt;<span class="lifetime">'a</span>&gt; {
+    key: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; KeyEq&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>new(key: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ key }
+    }
+}
+
+<span class="kw">impl</span>&lt;V&gt; alloc::hashbrown::EqFn&lt;<span class="kw">dyn </span>ProtocolCaller, (Value, V), VmError&gt; <span class="kw">for </span>KeyEq&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller, (other, <span class="kw">_</span>): <span class="kw-2">&amp;</span>(Value, V)) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmError&gt; {
+        <span class="self">self</span>.key.eq_with(other, cx).into_result()
     }
 }
 </code></pre></div></section></main></body></html>

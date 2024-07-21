@@ -2536,6 +2536,38 @@
 <a href="#2536" id="2536">2536</a>
 <a href="#2537" id="2537">2537</a>
 <a href="#2538" id="2538">2538</a>
+<a href="#2539" id="2539">2539</a>
+<a href="#2540" id="2540">2540</a>
+<a href="#2541" id="2541">2541</a>
+<a href="#2542" id="2542">2542</a>
+<a href="#2543" id="2543">2543</a>
+<a href="#2544" id="2544">2544</a>
+<a href="#2545" id="2545">2545</a>
+<a href="#2546" id="2546">2546</a>
+<a href="#2547" id="2547">2547</a>
+<a href="#2548" id="2548">2548</a>
+<a href="#2549" id="2549">2549</a>
+<a href="#2550" id="2550">2550</a>
+<a href="#2551" id="2551">2551</a>
+<a href="#2552" id="2552">2552</a>
+<a href="#2553" id="2553">2553</a>
+<a href="#2554" id="2554">2554</a>
+<a href="#2555" id="2555">2555</a>
+<a href="#2556" id="2556">2556</a>
+<a href="#2557" id="2557">2557</a>
+<a href="#2558" id="2558">2558</a>
+<a href="#2559" id="2559">2559</a>
+<a href="#2560" id="2560">2560</a>
+<a href="#2561" id="2561">2561</a>
+<a href="#2562" id="2562">2562</a>
+<a href="#2563" id="2563">2563</a>
+<a href="#2564" id="2564">2564</a>
+<a href="#2565" id="2565">2565</a>
+<a href="#2566" id="2566">2566</a>
+<a href="#2567" id="2567">2567</a>
+<a href="#2568" id="2568">2568</a>
+<a href="#2569" id="2569">2569</a>
+<a href="#2570" id="2570">2570</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>serde;
 
 <span class="kw">use </span>core::any;
@@ -2554,9 +2586,9 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::vm::CallResultOnly;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
     AccessError, AccessErrorKind, AnyObj, AnyObjError, BorrowMut, BorrowRef, Bytes, ConstValue,
-    ControlFlow, EnvProtocolCaller, Format, Formatter, FromValue, FullTypeOf, Function, Future,
-    Generator, GeneratorState, IntoOutput, Iterator, MaybeTypeOf, Mut, Object, OwnedTuple,
-    Protocol, ProtocolCaller, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo,
+    ControlFlow, DynGuardedArgs, EnvProtocolCaller, Format, Formatter, FromValue, FullTypeOf,
+    Function, Future, Generator, GeneratorState, IntoOutput, Iterator, MaybeTypeOf, Mut, Object,
+    OwnedTuple, Protocol, ProtocolCaller, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo,
     RangeToInclusive, Ref, RuntimeError, Shared, SharedPointerGuard, Snapshot, Stream, ToValue,
     Type, TypeInfo, Variant, Vec, Vm, VmErrorKind, VmIntegerRepr, VmResult,
 };
@@ -2978,6 +3010,15 @@
     Value(Shared&lt;ValueKind&gt;),
 }
 
+<span class="kw">impl </span>fmt::Pointer <span class="kw">for </span>ValueRepr {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Empty =&gt; <span class="macro">write!</span>(f, <span class="string">"0x0"</span>),
+            <span class="self">Self</span>::Value(value) =&gt; <span class="macro">write!</span>(f, <span class="string">"{:p}"</span>, value),
+        }
+    }
+}
+
 <span class="doccomment">/// An entry on the stack.
 </span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>Value {
@@ -3187,7 +3228,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>string_display_with(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         f: <span class="kw-2">&amp;mut </span>Formatter,
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_kind_ref()) {
             ValueKind::Char(c) =&gt; {
@@ -3215,10 +3256,15 @@
                 <span class="macro">vm_try!</span>(f.push_str(string));
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="kw">let </span>result =
-                    <span class="macro">vm_try!</span>(caller.call_protocol_fn(Protocol::STRING_DISPLAY, <span class="self">self</span>.clone(), (f,),));
+                <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((f,));
 
-                <span class="kw">return </span>VmResult::Ok(<span class="macro">vm_try!</span>(&lt;()&gt;::from_value(result)));
+                <span class="kw">let </span>result = <span class="macro">vm_try!</span>(caller.call_protocol_fn(
+                    Protocol::STRING_DISPLAY,
+                    <span class="self">self</span>.clone(),
+                    <span class="kw-2">&amp;mut </span>args
+                ));
+
+                <span class="kw">return </span>&lt;()&gt;::from_value(result);
             }
         }
 
@@ -3241,7 +3287,7 @@
         <span class="self">self</span>.clone_with(<span class="kw-2">&amp;mut </span>EnvProtocolCaller)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clone_with(<span class="kw-2">&amp;</span><span class="self">self</span>, caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller) -&gt; VmResult&lt;Value&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clone_with(<span class="kw-2">&amp;</span><span class="self">self</span>, caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller) -&gt; VmResult&lt;Value&gt; {
         <span class="kw">let </span>kind = <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_kind_ref()) {
             ValueKind::EmptyTuple =&gt; ValueKind::EmptyTuple,
             ValueKind::Bool(value) =&gt; ValueKind::Bool(<span class="kw-2">*</span>value),
@@ -3284,7 +3330,7 @@
                 <span class="kw">return </span>VmResult::Ok(<span class="macro">vm_try!</span>(caller.call_protocol_fn(
                     Protocol::CLONE,
                     <span class="self">self</span>.clone(),
-                    ()
+                    <span class="kw-2">&amp;mut </span>()
                 )));
             }
         };
@@ -3312,7 +3358,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>string_debug_with(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         f: <span class="kw-2">&amp;mut </span>Formatter,
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="kw">match </span><span class="self">self</span>.repr {
             ValueRepr::Empty =&gt; {
@@ -3421,14 +3467,20 @@
             }
             <span class="kw">_ </span>=&gt; {
                 <span class="comment">// reborrow f to avoid moving it
-                </span><span class="kw">let </span>result =
-                    caller.call_protocol_fn(Protocol::STRING_DEBUG, <span class="self">self</span>.clone(), (<span class="kw-2">&amp;mut *</span>f,));
+                </span><span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;mut *</span>f,));
 
-                <span class="kw">if let </span>VmResult::Ok(result) = result {
-                    <span class="macro">vm_try!</span>(&lt;()&gt;::from_value(result));
-                } <span class="kw">else </span>{
-                    <span class="kw">let </span>type_info = <span class="macro">vm_try!</span>(value.borrow_ref()).type_info();
-                    <span class="macro">vm_write!</span>(f, <span class="string">"&lt;{} object at {:p}&gt;"</span>, type_info, value);
+                <span class="kw">match </span><span class="macro">vm_try!</span>(caller.try_call_protocol_fn(
+                    Protocol::STRING_DEBUG,
+                    <span class="self">self</span>.clone(),
+                    <span class="kw-2">&amp;mut </span>args
+                )) {
+                    CallResultOnly::Ok(value) =&gt; {
+                        <span class="macro">vm_try!</span>(&lt;()&gt;::from_value(value));
+                    }
+                    CallResultOnly::Unsupported(value) =&gt; {
+                        <span class="kw">let </span>type_info = <span class="macro">vm_try!</span>(value.borrow_kind_ref()).type_info();
+                        <span class="macro">vm_write!</span>(f, <span class="string">"&lt;{} object at {:p}&gt;"</span>, type_info, value.repr);
+                    }
                 }
             }
         };
@@ -3449,8 +3501,8 @@
         <span class="self">self</span>.into_iter_with(<span class="kw-2">&amp;mut </span>EnvProtocolCaller)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_iter_with(<span class="self">self</span>, caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller) -&gt; VmResult&lt;Iterator&gt; {
-        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(caller.call_protocol_fn(Protocol::INTO_ITER, <span class="self">self</span>, ()));
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_iter_with(<span class="self">self</span>, caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller) -&gt; VmResult&lt;Iterator&gt; {
+        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(caller.call_protocol_fn(Protocol::INTO_ITER, <span class="self">self</span>, <span class="kw-2">&amp;mut </span>()));
         Iterator::from_value(value)
     }
 
@@ -3917,7 +3969,8 @@
             target =&gt; <span class="macro">vm_try!</span>(Value::try_from(target)),
         };
 
-        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(EnvProtocolCaller.call_protocol_fn(Protocol::INTO_FUTURE, target, ()));
+        <span class="kw">let </span>value =
+            <span class="macro">vm_try!</span>(EnvProtocolCaller.call_protocol_fn(Protocol::INTO_FUTURE, target, <span class="kw-2">&amp;mut </span>()));
         VmResult::Ok(<span class="macro">vm_try!</span>(Future::from_value(value)))
     }
 
@@ -4073,7 +4126,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>partial_eq_with(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         b: <span class="kw-2">&amp;</span>Value,
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;bool&gt; {
         {
             <span class="kw">let </span>a = <span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_kind_ref());
@@ -4165,9 +4218,11 @@
             }
         }
 
-        <span class="kw">if let </span>CallResultOnly::Ok(value) =
-            <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(Protocol::PARTIAL_EQ, <span class="self">self</span>.clone(), (b.clone(),)))
-        {
+        <span class="kw">if let </span>CallResultOnly::Ok(value) = <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(
+            Protocol::PARTIAL_EQ,
+            <span class="self">self</span>.clone(),
+            <span class="kw-2">&amp;mut </span><span class="prelude-val">Some</span>((b.clone(),))
+        )) {
             <span class="kw">return </span>&lt;<span class="kw">_</span>&gt;::from_value(value);
         }
 
@@ -4188,7 +4243,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>hash_with(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hasher: <span class="kw-2">&amp;mut </span>Hasher,
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_kind_ref()) {
             ValueKind::Integer(value) =&gt; {
@@ -4228,8 +4283,10 @@
             <span class="kw">_ </span>=&gt; {}
         }
 
+        <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((hasher,));
+
         <span class="kw">if let </span>CallResultOnly::Ok(value) =
-            <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(Protocol::HASH, <span class="self">self</span>.clone(), (hasher,)))
+            <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(Protocol::HASH, <span class="self">self</span>.clone(), <span class="kw-2">&amp;mut </span>args))
         {
             <span class="kw">return </span>&lt;<span class="kw">_</span>&gt;::from_value(value);
         }
@@ -4257,7 +4314,7 @@
     <span class="doccomment">/// Perform a total equality test between two values.
     ///
     /// This is the basis for the eq operation (`==`).
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eq_with(<span class="kw-2">&amp;</span><span class="self">self</span>, b: <span class="kw-2">&amp;</span>Value, caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller) -&gt; VmResult&lt;bool&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eq_with(<span class="kw-2">&amp;</span><span class="self">self</span>, b: <span class="kw-2">&amp;</span>Value, caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller) -&gt; VmResult&lt;bool&gt; {
         <span class="kw">match </span>(
             <span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_kind_ref()),
             <span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(b.borrow_kind_ref()),
@@ -4349,9 +4406,11 @@
             <span class="kw">_ </span>=&gt; {}
         }
 
-        <span class="kw">if let </span>CallResultOnly::Ok(value) =
-            <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(Protocol::EQ, <span class="self">self</span>.clone(), (b.clone(),)))
-        {
+        <span class="kw">if let </span>CallResultOnly::Ok(value) = <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(
+            Protocol::EQ,
+            <span class="self">self</span>.clone(),
+            <span class="kw-2">&amp;mut </span><span class="prelude-val">Some</span>((b.clone(),))
+        )) {
             <span class="kw">return </span>&lt;<span class="kw">_</span>&gt;::from_value(value);
         }
 
@@ -4382,7 +4441,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>partial_cmp_with(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         b: <span class="kw-2">&amp;</span>Value,
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Ordering&gt;&gt; {
         <span class="kw">match </span>(
             <span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_kind_ref()),
@@ -4472,9 +4531,11 @@
             <span class="kw">_ </span>=&gt; {}
         }
 
-        <span class="kw">if let </span>CallResultOnly::Ok(value) =
-            <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(Protocol::PARTIAL_CMP, <span class="self">self</span>.clone(), (b.clone(),)))
-        {
+        <span class="kw">if let </span>CallResultOnly::Ok(value) = <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(
+            Protocol::PARTIAL_CMP,
+            <span class="self">self</span>.clone(),
+            <span class="kw-2">&amp;mut </span><span class="prelude-val">Some</span>((b.clone(),))
+        )) {
             <span class="kw">return </span>&lt;<span class="kw">_</span>&gt;::from_value(value);
         }
 
@@ -4505,7 +4566,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>cmp_with(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         b: <span class="kw-2">&amp;</span>Value,
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;Ordering&gt; {
         <span class="kw">match </span>(
             <span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_kind_ref()),
@@ -4597,9 +4658,11 @@
             <span class="kw">_ </span>=&gt; {}
         }
 
-        <span class="kw">if let </span>CallResultOnly::Ok(value) =
-            <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(Protocol::CMP, <span class="self">self</span>.clone(), (b.clone(),)))
-        {
+        <span class="kw">if let </span>CallResultOnly::Ok(value) = <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(
+            Protocol::CMP,
+            <span class="self">self</span>.clone(),
+            <span class="kw-2">&amp;mut </span><span class="prelude-val">Some</span>((b.clone(),))
+        )) {
             <span class="kw">return </span>&lt;<span class="kw">_</span>&gt;::from_value(value);
         }
 
@@ -4677,12 +4740,13 @@
         <span class="kw">if </span><span class="self">self</span>.string_debug(<span class="kw-2">&amp;mut </span>o).is_err() {
             <span class="kw">match </span><span class="self">self</span>.type_info() {
                 <span class="prelude-val">Ok</span>(type_info) =&gt; {
-                    <span class="macro">write!</span>(f, <span class="string">"&lt;{} object at {:p}&gt;"</span>, type_info, <span class="self">self</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(f, <span class="string">"&lt;{} object at {:p}&gt;"</span>, type_info, <span class="self">self</span>.repr)<span class="question-mark">?</span>;
                 }
                 <span class="prelude-val">Err</span>(e) =&gt; {
-                    <span class="macro">write!</span>(f, <span class="string">"&lt;unknown object at {:p}: {}&gt;"</span>, <span class="self">self</span>, e)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(f, <span class="string">"&lt;unknown object at {:p}: {}&gt;"</span>, <span class="self">self</span>.repr, e)<span class="question-mark">?</span>;
                 }
             }
+
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 

@@ -562,9 +562,6 @@
 <a href="#562" id="562">562</a>
 <a href="#563" id="563">563</a>
 <a href="#564" id="564">564</a>
-<a href="#565" id="565">565</a>
-<a href="#566" id="566">566</a>
-<a href="#567" id="567">567</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>iter;
 
 <span class="kw">use </span>core::cmp;
@@ -787,7 +784,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>string_debug_with(
         this: <span class="kw-2">&amp;</span>[Value],
         f: <span class="kw-2">&amp;mut </span>Formatter,
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>it = this.iter().peekable();
         <span class="macro">vm_write!</span>(f, <span class="string">"["</span>);
@@ -807,7 +804,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>partial_eq_with(
         a: <span class="kw-2">&amp;</span>[Value],
         b: Value,
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;bool&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>b = <span class="macro">vm_try!</span>(b.into_iter_with(caller));
 
@@ -828,15 +825,12 @@
         VmResult::Ok(<span class="bool-val">true</span>)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eq_with&lt;P&gt;(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>eq_with(
         a: <span class="kw-2">&amp;</span>[Value],
         b: <span class="kw-2">&amp;</span>[Value],
-        eq: <span class="kw">fn</span>(<span class="kw-2">&amp;</span>Value, <span class="kw-2">&amp;</span>Value, <span class="kw-2">&amp;mut </span>P) -&gt; VmResult&lt;bool&gt;,
-        caller: <span class="kw-2">&amp;mut </span>P,
-    ) -&gt; VmResult&lt;bool&gt;
-    <span class="kw">where
-        </span>P: ProtocolCaller,
-    {
+        eq: <span class="kw">fn</span>(<span class="kw-2">&amp;</span>Value, <span class="kw-2">&amp;</span>Value, <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller) -&gt; VmResult&lt;bool&gt;,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
+    ) -&gt; VmResult&lt;bool&gt; {
         <span class="kw">if </span>a.len() != b.len() {
             <span class="kw">return </span>VmResult::Ok(<span class="bool-val">false</span>);
         }
@@ -853,7 +847,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>partial_cmp_with(
         a: <span class="kw-2">&amp;</span>[Value],
         b: <span class="kw-2">&amp;</span>[Value],
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Ordering&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>b = b.iter();
 
@@ -878,7 +872,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>cmp_with(
         a: <span class="kw-2">&amp;</span>[Value],
         b: <span class="kw-2">&amp;</span>[Value],
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;Ordering&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>b = b.iter();
 
@@ -952,7 +946,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>hash_with(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hasher: <span class="kw-2">&amp;mut </span>Hasher,
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>ProtocolCaller,
+        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">for </span>value <span class="kw">in </span><span class="self">self</span>.inner.iter() {
             <span class="macro">vm_try!</span>(value.hash_with(hasher, caller));

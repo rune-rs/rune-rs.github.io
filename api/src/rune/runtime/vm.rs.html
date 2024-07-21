@@ -3678,6 +3678,8 @@
 <a href="#3678" id="3678">3678</a>
 <a href="#3679" id="3679">3679</a>
 <a href="#3680" id="3680">3680</a>
+<a href="#3681" id="3681">3681</a>
+<a href="#3682" id="3682">3682</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
@@ -3694,10 +3696,10 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::future::SelectFuture;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::unit::{UnitFn, UnitStorage};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    <span class="self">self</span>, Args, Awaited, BorrowMut, Bytes, Call, ControlFlow, EmptyStruct, Format, FormatSpec,
-    Formatter, FromValue, Function, Future, Generator, GuardedArgs, Inst, InstAddress,
-    InstAssignOp, InstOp, InstRange, InstTarget, InstValue, InstVariant, Object, Output,
-    OwnedTuple, Panic, Protocol, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo,
+    <span class="self">self</span>, Args, Awaited, BorrowMut, Bytes, Call, ControlFlow, DynArgs, DynGuardedArgs, EmptyStruct,
+    Format, FormatSpec, Formatter, FromValue, Function, Future, Generator, GuardedArgs, Inst,
+    InstAddress, InstAssignOp, InstOp, InstRange, InstTarget, InstValue, InstVariant, Object,
+    Output, OwnedTuple, Panic, Protocol, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo,
     RangeToInclusive, RuntimeContext, Select, Stack, Stream, Struct, Type, TypeCheck, TypeOf, Unit,
     Value, ValueKind, Variant, VariantData, Vec, VmError, VmErrorKind, VmExecution, VmHalt,
     VmIntegerRepr, VmResult, VmSendExecution,
@@ -3705,22 +3707,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{budget, ProtocolCaller};
 
 <span class="kw">use super</span>::{VmDiagnostics, VmDiagnosticsObj};
-
-<span class="macro">macro_rules!</span> populate {
-    (<span class="macro-nonterminal">$populate</span>:ident, <span class="macro-nonterminal">$args</span>:expr) =&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>args = <span class="prelude-val">Some</span>(<span class="macro-nonterminal">$args</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>_guard = <span class="prelude-val">None</span>;
-
-        <span class="kw">let </span><span class="macro-nonterminal">$populate </span>= <span class="kw-2">&amp;mut </span>|stack: <span class="kw-2">&amp;mut </span>Stack| {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(args) = args.take() {
-                <span class="comment">// Safety: We hold onto the guard for the duration of this call.
-                </span>_guard = <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ <span class="macro">vm_try!</span>(args.unsafe_into_stack(stack)) });
-            }
-
-            VmResult::Ok(())
-        };
-    };
-}
 
 <span class="doccomment">/// Indicating the kind of isolation that is present for a frame.
 </span><span class="attr">#[derive(Debug, Clone, Copy)]
@@ -4319,14 +4305,13 @@
         isolated: Isolated,
         target: Value,
         hash: <span class="kw">impl </span>ToTypeHash,
-        args: <span class="kw">impl </span>GuardedArgs,
+        args: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>DynArgs,
         out: Output,
     ) -&gt; VmResult&lt;CallResult&lt;()&gt;&gt; {
         <span class="kw">let </span>count = args.count().wrapping_add(<span class="number">1</span>);
         <span class="kw">let </span>type_hash = <span class="macro">vm_try!</span>(target.type_hash());
         <span class="kw">let </span>hash = Hash::associated_function(type_hash, hash.to_type_hash());
-        <span class="macro">populate!</span>(populate, args);
-        <span class="self">self</span>.call_hash_with(isolated, hash, target, populate, count, out)
+        <span class="self">self</span>.call_hash_with(isolated, hash, target, args, count, out)
     }
 
     <span class="doccomment">/// Helper to call a field function.
@@ -4335,13 +4320,12 @@
         protocol: Protocol,
         target: Value,
         name: <span class="kw">impl </span>IntoHash,
-        args: <span class="kw">impl </span>GuardedArgs,
+        args: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>DynArgs,
         out: Output,
     ) -&gt; VmResult&lt;CallResult&lt;()&gt;&gt; {
         <span class="kw">let </span>count = args.count().wrapping_add(<span class="number">1</span>);
         <span class="kw">let </span>hash = Hash::field_function(protocol, <span class="macro">vm_try!</span>(target.type_hash()), name);
-        <span class="macro">populate!</span>(populate, args);
-        <span class="self">self</span>.call_hash_with(Isolated::None, hash, target, populate, count, out)
+        <span class="self">self</span>.call_hash_with(Isolated::None, hash, target, args, count, out)
     }
 
     <span class="doccomment">/// Helper to call an index function.
@@ -4350,13 +4334,12 @@
         protocol: Protocol,
         target: Value,
         index: usize,
-        args: <span class="kw">impl </span>GuardedArgs,
+        args: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>DynArgs,
         out: Output,
     ) -&gt; VmResult&lt;CallResult&lt;()&gt;&gt; {
         <span class="kw">let </span>count = args.count().wrapping_add(<span class="number">1</span>);
         <span class="kw">let </span>hash = Hash::index_function(protocol, <span class="macro">vm_try!</span>(target.type_hash()), Hash::index(index));
-        <span class="macro">populate!</span>(populate, args);
-        <span class="self">self</span>.call_hash_with(Isolated::None, hash, target, populate, count, out)
+        <span class="self">self</span>.call_hash_with(Isolated::None, hash, target, args, count, out)
     }
 
     <span class="kw">fn </span>called_function_hook(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; VmResult&lt;()&gt; {
@@ -4374,7 +4357,7 @@
         isolated: Isolated,
         hash: Hash,
         target: Value,
-        populate: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>FnMut(<span class="kw-2">&amp;mut </span>Stack) -&gt; VmResult&lt;()&gt;,
+        args: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>DynArgs,
         count: usize,
         out: Output,
     ) -&gt; VmResult&lt;CallResult&lt;()&gt;&gt; {
@@ -4390,7 +4373,7 @@
             <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
             <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
             <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
-            <span class="macro">vm_try!</span>(populate(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack));
+            <span class="macro">vm_try!</span>(args.push_to_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack));
 
             <span class="kw">let </span>result = <span class="self">self</span>.call_offset_fn(offset, call, addr, count, isolated, out);
 
@@ -4406,7 +4389,7 @@
             <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
             <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
             <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
-            <span class="macro">vm_try!</span>(populate(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack));
+            <span class="macro">vm_try!</span>(args.push_to_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack));
 
             <span class="kw">let </span>result = handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, addr, count, out);
             <span class="self">self</span>.stack.truncate(addr);
@@ -4762,7 +4745,7 @@
 
         <span class="kw">let </span>hash = index.hash();
 
-        <span class="kw">let </span>result = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(Protocol::GET, target, hash, (), out));
+        <span class="kw">let </span>result = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(Protocol::GET, target, hash, <span class="kw-2">&amp;mut </span>(), out));
 
         VmResult::Ok(result)
     }
@@ -4809,8 +4792,9 @@
         }
 
         <span class="kw">let </span>hash = field.hash();
+        <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((value,));
         <span class="kw">let </span>result =
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(Protocol::SET, target, hash, (value,), Output::discard()));
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(Protocol::SET, target, hash, <span class="kw-2">&amp;mut </span>args, Output::discard()));
         VmResult::Ok(result)
     }
 
@@ -5078,11 +5062,13 @@
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span>fallback {
             TargetFallback::Value(lhs, rhs) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;</span>rhs,));
+
                 <span class="kw">if let </span>CallResult::Unsupported(lhs) = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(
                     Isolated::None,
                     lhs,
                     protocol,
-                    (<span class="kw-2">&amp;</span>rhs,),
+                    <span class="kw-2">&amp;mut </span>args,
                     Output::discard()
                 )) {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
@@ -5095,11 +5081,13 @@
                 VmResult::Ok(())
             }
             TargetFallback::Field(lhs, hash, rhs) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;</span>rhs,));
+
                 <span class="kw">if let </span>CallResult::Unsupported(lhs) = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(
                     protocol,
                     lhs.clone(),
                     hash,
-                    (rhs,),
+                    <span class="kw-2">&amp;mut </span>args,
                     Output::discard()
                 )) {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedObjectSlotIndexGet {
@@ -5110,11 +5098,13 @@
                 VmResult::Ok(())
             }
             TargetFallback::Index(lhs, index, rhs) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;</span>rhs,));
+
                 <span class="kw">if let </span>CallResult::Unsupported(lhs) = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_index_fn(
                     protocol,
                     lhs.clone(),
                     index,
-                    (<span class="kw-2">&amp;</span>rhs,),
+                    <span class="kw-2">&amp;mut </span>args,
                     Output::discard()
                 )) {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedTupleIndexGet {
@@ -5161,8 +5151,10 @@
         <span class="kw">let </span>lhs = lhs.clone();
         <span class="kw">let </span>rhs = rhs.clone();
 
+        <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;</span>rhs,));
+
         <span class="kw">if let </span>CallResult::Unsupported(lhs) =
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(Isolated::None, lhs, protocol, (<span class="kw-2">&amp;</span>rhs,), out))
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(Isolated::None, lhs, protocol, <span class="kw-2">&amp;mut </span>args, out))
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                 op: protocol.name,
@@ -5207,8 +5199,10 @@
             <span class="kw">_ </span>=&gt; {}
         };
 
+        <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;</span>rhs,));
+
         <span class="kw">if let </span>CallResult::Unsupported(lhs) =
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(Isolated::None, lhs, protocol, (<span class="kw-2">&amp;</span>rhs,), out))
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(Isolated::None, lhs, protocol, <span class="kw-2">&amp;mut </span>args, out))
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                 op: protocol.name,
@@ -5291,8 +5285,10 @@
             <span class="kw">_ </span>=&gt; {}
         }
 
+        <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;</span>rhs,));
+
         <span class="kw">if let </span>CallResult::Unsupported(lhs) =
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(Isolated::None, lhs, protocol, (<span class="kw-2">&amp;</span>rhs,), out))
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(Isolated::None, lhs, protocol, <span class="kw-2">&amp;mut </span>args, out))
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                 op: protocol.name,
@@ -5901,11 +5897,13 @@
         <span class="kw">let </span>index = index.clone();
         <span class="kw">let </span>value = value.clone();
 
+        <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;</span>index, <span class="kw-2">&amp;</span>value));
+
         <span class="kw">if let </span>CallResult::Unsupported(target) = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(
             Isolated::None,
             target,
             Protocol::INDEX_SET,
-            (<span class="kw-2">&amp;</span>index, <span class="kw-2">&amp;</span>value),
+            <span class="kw-2">&amp;mut </span>args,
             Output::discard()
         )) {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedIndexSet {
@@ -6062,11 +6060,13 @@
             <span class="kw">let </span>target = target.clone();
             <span class="kw">let </span>index = index.clone();
 
+            <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;</span>index,));
+
             <span class="kw">if let </span>CallResult::Unsupported(target) = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_instance_fn(
                 Isolated::None,
                 target,
                 Protocol::INDEX_GET,
-                (<span class="kw-2">&amp;</span>index,),
+                <span class="kw-2">&amp;mut </span>args,
                 out
             )) {
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedIndexGet {
@@ -6120,7 +6120,7 @@
         <span class="kw">let </span>value = value.clone();
 
         <span class="kw">if let </span>CallResult::Unsupported(value) =
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_index_fn(Protocol::GET, value, index, (), out))
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_index_fn(Protocol::GET, value, index, <span class="kw-2">&amp;mut </span>(), out))
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedTupleIndexGet {
                 target: <span class="macro">vm_try!</span>(value.type_info()),
@@ -6386,7 +6386,7 @@
                 value.clone()
             };
 
-            <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.try_call_protocol_fn(Protocol::TRY, value, ())) {
+            <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.try_call_protocol_fn(Protocol::TRY, value, <span class="kw-2">&amp;mut </span>())) {
                 CallResultOnly::Ok(value) =&gt; <span class="macro">vm_try!</span>(ControlFlow::from_value(value)),
                 CallResultOnly::Unsupported(target) =&gt; {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedTryOperand {
@@ -6552,7 +6552,11 @@
 
             <span class="kw">let </span>value = value.clone();
 
-            <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.try_call_protocol_fn(Protocol::IS_VARIANT, value, (index,))) {
+            <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.try_call_protocol_fn(
+                Protocol::IS_VARIANT,
+                value,
+                <span class="kw-2">&amp;mut </span><span class="prelude-val">Some</span>((index,))
+            )) {
                 CallResultOnly::Ok(value) =&gt; <span class="macro">vm_try!</span>(bool::from_value(value)),
                 CallResultOnly::Unsupported(..) =&gt; <span class="bool-val">false</span>,
             }
