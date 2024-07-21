@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AssociatedKind","Fields","Kind"],"struct":["FieldMeta","FieldsNamed","Import","MetaRef","Signature","SourceMeta"]};
+window.SIDEBAR_ITEMS = {"enum":["AssociatedKind","Fields","Kind"],"struct":["DocType","FieldMeta","FieldsNamed","Import","MetaRef","Signature","SourceMeta"]};

@@ -136,6 +136,21 @@
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/// Helper to borrow out a [ResolveContext][crate::parse::ResolveContext].
 </span><span class="macro">macro_rules!</span> resolve_context {
     (<span class="macro-nonterminal">$q</span>:expr) =&gt; {
@@ -148,9 +163,12 @@
 
 <span class="doccomment">/// Build an implementation of `TypeOf` basic of a static type.
 </span><span class="macro">macro_rules!</span> impl_static_type {
-    (<span class="kw">impl </span>&lt;$(<span class="macro-nonterminal">$p</span>:ident),<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$ty</span>:ty =&gt; <span class="macro-nonterminal">$static_type</span>:expr $(, <span class="kw">where </span>$(<span class="macro-nonterminal">$</span><span class="kw">where</span>:<span class="macro-nonterminal">tt</span>)+)<span class="question-mark">?</span>) =&gt; {
-        <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$p</span>,)<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$crate::runtime::TypeOf </span><span class="kw">for </span><span class="macro-nonterminal">$ty </span>$(<span class="kw">where </span>$(<span class="macro-nonterminal">$</span><span class="kw">where</span>)+)* {
-            <span class="attr">#[<span class="macro-nonterminal">inline</span>]
+    (<span class="kw">impl </span>&lt;$(<span class="macro-nonterminal">$p</span>:ident),<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$ty</span>:ty =&gt; <span class="macro-nonterminal">$static_type</span>:expr) =&gt; {
+        <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$p</span>,)<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$crate::runtime::TypeOf </span><span class="kw">for </span><span class="macro-nonterminal">$ty
+        </span><span class="kw">where
+            </span>$(<span class="macro-nonterminal">$p</span>: <span class="macro-nonterminal">$crate::runtime::MaybeTypeOf</span>,)*
+        {
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>type_hash() -&gt; <span class="macro-nonterminal">$crate::Hash </span>{
                 <span class="macro-nonterminal">$static_type</span>.hash
             }
@@ -161,10 +179,22 @@
             }
         }
 
-        <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$p</span>,)<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$crate::runtime::MaybeTypeOf </span><span class="kw">for </span><span class="macro-nonterminal">$ty </span>$(<span class="kw">where </span>$(<span class="macro-nonterminal">$</span><span class="kw">where</span>)+)* {
-            <span class="attr">#[<span class="macro-nonterminal">inline</span>]
+        <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$p</span>,)<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$crate::runtime::MaybeTypeOf </span><span class="kw">for </span><span class="macro-nonterminal">$ty
+        </span><span class="kw">where
+            </span>$(<span class="macro-nonterminal">$p</span>: <span class="macro-nonterminal">$crate::runtime::MaybeTypeOf</span>,)*
+        {
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>maybe_type_of() -&gt; <span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$crate::runtime::FullTypeOf</span>&gt; {
                 <span class="prelude-val">Some</span>(&lt;<span class="macro-nonterminal">$ty </span><span class="kw">as </span><span class="macro-nonterminal">$crate::runtime::TypeOf</span>&gt;::type_of())
+            }
+
+            <span class="attr">#[inline]
+            </span><span class="kw">fn </span>maybe_visit_generics&lt;__F, __E&gt;(<span class="attr">#[allow(unused)] </span>f: <span class="kw-2">&amp;mut </span>__F) -&gt; <span class="prelude-ty">Result</span>&lt;(), __E&gt;
+            <span class="kw">where
+                </span>__F: FnMut(<span class="prelude-ty">Option</span>&lt;<span class="macro-nonterminal">$crate::runtime::FullTypeOf</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), __E&gt;
+            {
+                $(f(&lt;<span class="macro-nonterminal">$p </span><span class="kw">as </span><span class="macro-nonterminal">$crate::runtime::MaybeTypeOf</span>&gt;::maybe_type_of())<span class="question-mark">?</span>;)*
+                <span class="prelude-val">Ok</span>(())
             }
         }
     };
