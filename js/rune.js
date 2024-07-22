@@ -436,8 +436,8 @@ var rune = (function (exports) {
       imports.wbg.__wbg_queueMicrotask_481971b0d87f3dd4 = function(arg0) {
           queueMicrotask(getObject(arg0));
       };
-      imports.wbg.__wbindgen_closure_wrapper4917 = function(arg0, arg1, arg2) {
-          const ret = makeMutClosure(arg0, arg1, 659, __wbg_adapter_24);
+      imports.wbg.__wbindgen_closure_wrapper4921 = function(arg0, arg1, arg2) {
+          const ret = makeMutClosure(arg0, arg1, 660, __wbg_adapter_24);
           return addHeapObject(ret);
       };
 
@@ -493,7 +493,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-c58ceff7.wasm";
+                  let path = "/js/assets/rune_wasm-de235ded.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
