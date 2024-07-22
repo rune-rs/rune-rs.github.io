@@ -1249,6 +1249,18 @@
 <a href="#1249" id="1249">1249</a>
 <a href="#1250" id="1250">1250</a>
 <a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>enum_;
 <span class="kw">mod </span>js;
 <span class="kw">mod </span>markdown;
@@ -1671,7 +1683,7 @@
         <span class="kw">match </span><span class="kw-2">*</span>ty {
             meta::DocType {
                 base, <span class="kw-2">ref </span>generics, ..
-            } <span class="kw">if </span>base == static_type::TUPLE_TYPE.hash &amp;&amp; generics.is_empty() =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            } <span class="kw">if </span>static_type::TUPLE == base &amp;&amp; generics.is_empty() =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             meta::DocType {
                 base, <span class="kw-2">ref </span>generics, ..
             } =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.link(base, <span class="prelude-val">None</span>, generics)<span class="question-mark">?</span>)),
@@ -1842,17 +1854,20 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         };
 
-        <span class="kw">if </span>hash == static_type::TUPLE_TYPE.hash {
+        <span class="kw">if </span>static_type::TUPLE == hash &amp;&amp; text.is_none() {
             <span class="macro">write!</span>(o, <span class="string">"("</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.write_generics(o, generics)<span class="question-mark">?</span>;
             <span class="macro">write!</span>(o, <span class="string">")"</span>)<span class="question-mark">?</span>;
-        } <span class="kw">else </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>it = <span class="self">self
-                </span>.context
-                .meta_by_hash(hash)<span class="question-mark">?
-                </span>.into_iter()
-                .flat_map(|m| <span class="prelude-val">Some</span>((m, into_item_kind(m)<span class="question-mark">?</span>)));
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
 
+        <span class="kw">let </span><span class="kw-2">mut </span>it = <span class="self">self
+            </span>.context
+            .meta_by_hash(hash)<span class="question-mark">?
+            </span>.into_iter()
+            .flat_map(|m| <span class="prelude-val">Some</span>((m, into_item_kind(m)<span class="question-mark">?</span>)));
+
+        <span class="kw">let </span>outcome = <span class="lifetime">'out</span>: {
             <span class="kw">let </span><span class="prelude-val">Some</span>((meta, kind)) = it.next() <span class="kw">else </span>{
                 <span class="macro">tracing::warn!</span>(<span class="question-mark">?</span>hash, <span class="string">"No link for hash"</span>);
 
@@ -1860,29 +1875,38 @@
                     <span class="macro">tracing::warn!</span>(<span class="string">"Candidate: {:?}"</span>, meta.kind);
                 }
 
-                <span class="macro">write!</span>(o, <span class="string">"{hash}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                <span class="kw">break </span><span class="lifetime">'out </span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, text);
             };
 
-            <span class="kw">let </span>item = meta.item.context(<span class="string">"Missing item link meta"</span>)<span class="question-mark">?</span>;
-
-            <span class="kw">let </span>name = <span class="kw">match </span>text {
-                <span class="prelude-val">Some</span>(text) =&gt; text,
-                <span class="prelude-val">None </span>=&gt; item
-                    .last()
-                    .and_then(|c| c.as_str())
-                    .context(<span class="string">"missing name"</span>)<span class="question-mark">?</span>,
+            <span class="kw">let </span><span class="prelude-val">Some</span>(item) = meta.item <span class="kw">else </span>{
+                <span class="kw">break </span><span class="lifetime">'out </span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(kind), text);
             };
 
-            <span class="kw">let </span>path = <span class="self">self</span>.item_path(item, kind)<span class="question-mark">?</span>;
+            <span class="kw">let </span>text = <span class="kw">match </span>text {
+                <span class="prelude-val">Some</span>(text) =&gt; <span class="prelude-val">Some</span>(text),
+                <span class="prelude-val">None </span>=&gt; item.last().and_then(|c| c.as_str()),
+            };
 
-            <span class="macro">write!</span>(o, <span class="string">"&lt;a class=\"{kind}\" href=\"{path}\"&gt;{name}&lt;/a&gt;"</span>)<span class="question-mark">?</span>;
+            (<span class="prelude-val">Some</span>(<span class="self">self</span>.item_path(item, kind)<span class="question-mark">?</span>), <span class="prelude-val">Some</span>(kind), text)
+        };
 
-            <span class="kw">if </span>!generics.is_empty() {
-                <span class="macro">write!</span>(o, <span class="string">"&amp;lt;"</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.write_generics(o, generics)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(o, <span class="string">"&amp;gt;"</span>)<span class="question-mark">?</span>;
-            }
+        <span class="kw">let </span>(path, kind, text) = outcome;
+
+        <span class="kw">let </span>text: <span class="kw-2">&amp;</span><span class="kw">dyn </span>fmt::Display = <span class="kw">match </span><span class="kw-2">&amp;</span>text {
+            <span class="prelude-val">Some</span>(text) =&gt; text,
+            <span class="prelude-val">None </span>=&gt; <span class="kw-2">&amp;</span>hash,
+        };
+
+        <span class="kw">if let </span>(<span class="prelude-val">Some</span>(kind), <span class="prelude-val">Some</span>(path)) = (kind, path) {
+            <span class="macro">write!</span>(o, <span class="string">"&lt;a class=\"{kind}\" href=\"{path}\"&gt;{text}&lt;/a&gt;"</span>)<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            <span class="macro">write!</span>(o, <span class="string">"{text}"</span>)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">if </span>!generics.is_empty() {
+            <span class="macro">write!</span>(o, <span class="string">"&amp;lt;"</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.write_generics(o, generics)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(o, <span class="string">"&amp;gt;"</span>)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
