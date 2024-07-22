@@ -77,22 +77,51 @@
 <a href="#77" id="77">77</a>
 <a href="#78" id="78">78</a>
 <a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::io::Write;
 <span class="kw">use </span>std::path::Path;
+<span class="kw">use </span>std::path::PathBuf;
 
 <span class="kw">use </span>anyhow::{Context, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span>clap::Parser;
 
 <span class="kw">use </span><span class="kw">crate</span>::cli::{visitor, AssetKind, CommandBase, Config, Entry, ExitCode, Io, SharedFlags};
 <span class="kw">use </span><span class="kw">crate</span>::compile::FileSourceLoader;
 <span class="kw">use crate</span>::{Diagnostics, Options, Source, Sources};
 
-<span class="attr">#[derive(Parser, Debug)]
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Flags {
-    <span class="doccomment">/// Exit with a non-zero exit-code even for warnings
-    </span><span class="attr">#[arg(long)]
-    </span>warnings_are_errors: bool,
+<span class="kw">mod </span>cli {
+    <span class="kw">use </span>std::path::PathBuf;
+    <span class="kw">use </span>std::vec::Vec;
+
+    <span class="kw">use </span>clap::Parser;
+
+    <span class="attr">#[derive(Parser, Debug)]
+    #[command(rename_all = <span class="string">"kebab-case"</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Flags {
+        <span class="doccomment">/// Exit with a non-zero exit-code even for warnings
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) warnings_are_errors: bool,
+        <span class="doccomment">/// Explicit paths to check.
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) check_path: Vec&lt;PathBuf&gt;,
+    }
 }
+
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">use </span>cli::Flags;
 
 <span class="kw">impl </span>CommandBase <span class="kw">for </span>Flags {
     <span class="attr">#[inline]
@@ -109,6 +138,11 @@
     </span><span class="kw">fn </span>describe(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
         <span class="string">"Checking"
     </span>}
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>paths(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[PathBuf] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.check_path
+    }
 }
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>run(

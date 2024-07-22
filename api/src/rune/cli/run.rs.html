@@ -423,69 +423,97 @@
 <a href="#423" id="423">423</a>
 <a href="#424" id="424">424</a>
 <a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::io::Write;
+<span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::time::Instant;
 
 <span class="kw">use </span>anyhow::{anyhow, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span>clap::Parser;
 
 <span class="kw">use </span><span class="kw">crate</span>::cli::{AssetKind, CommandBase, Config, ExitCode, Io, SharedFlags};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{UnitStorage, VmError, VmExecution, VmResult};
 <span class="kw">use crate</span>::{Context, Sources, Unit, Value, Vm};
 
-<span class="attr">#[derive(Parser, Debug)]
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Flags {
-    <span class="doccomment">/// Provide detailed tracing for each instruction executed.
-    </span><span class="attr">#[arg(short, long)]
-    </span>trace: bool,
-    <span class="doccomment">/// When tracing is enabled, do not include source references if they are
-    /// available.
-    </span><span class="attr">#[arg(long)]
-    </span>without_source: bool,
-    <span class="doccomment">/// Time how long the script took to execute.
-    </span><span class="attr">#[arg(long)]
-    </span>time: bool,
-    <span class="doccomment">/// Perform a default dump.
-    </span><span class="attr">#[arg(short, long)]
-    </span>dump: bool,
-    <span class="doccomment">/// Dump return value.
-    </span><span class="attr">#[arg(long)]
-    </span>dump_return: bool,
-    <span class="doccomment">/// Dump everything that is available, this is very verbose.
-    </span><span class="attr">#[arg(long)]
-    </span>dump_all: bool,
-    <span class="doccomment">/// Dump default information about unit.
-    </span><span class="attr">#[arg(long)]
-    </span>dump_unit: bool,
-    <span class="doccomment">/// Dump constants from the unit.
-    </span><span class="attr">#[arg(long)]
-    </span>dump_constants: bool,
-    <span class="doccomment">/// Dump unit instructions.
-    </span><span class="attr">#[arg(long)]
-    </span>emit_instructions: bool,
-    <span class="doccomment">/// Dump the state of the stack after completion.
-    ///
-    /// If compiled with `--trace` will dump it after each instruction.
-    </span><span class="attr">#[arg(long)]
-    </span>dump_stack: bool,
-    <span class="doccomment">/// Dump dynamic functions.
-    </span><span class="attr">#[arg(long)]
-    </span>dump_functions: bool,
-    <span class="doccomment">/// Dump dynamic types.
-    </span><span class="attr">#[arg(long)]
-    </span>dump_types: bool,
-    <span class="doccomment">/// Dump native functions.
-    </span><span class="attr">#[arg(long)]
-    </span>dump_native_functions: bool,
-    <span class="doccomment">/// Dump native types.
-    </span><span class="attr">#[arg(long)]
-    </span>dump_native_types: bool,
-    <span class="doccomment">/// When tracing, limit the number of instructions to run with `limit`. This
-    /// implies `--trace`.
-    </span><span class="attr">#[arg(long)]
-    </span>trace_limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+<span class="kw">mod </span>cli {
+    <span class="kw">use </span>std::path::PathBuf;
+    <span class="kw">use </span>std::vec::Vec;
+
+    <span class="kw">use </span>clap::Parser;
+
+    <span class="attr">#[derive(Parser, Debug)]
+    #[command(rename_all = <span class="string">"kebab-case"</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Flags {
+        <span class="doccomment">/// Provide detailed tracing for each instruction executed.
+        </span><span class="attr">#[arg(short, long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) trace: bool,
+        <span class="doccomment">/// When tracing is enabled, do not include source references if they are
+        /// available.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) without_source: bool,
+        <span class="doccomment">/// Time how long the script took to execute.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) time: bool,
+        <span class="doccomment">/// Perform a default dump.
+        </span><span class="attr">#[arg(short, long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) dump: bool,
+        <span class="doccomment">/// Dump return value.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) dump_return: bool,
+        <span class="doccomment">/// Dump everything that is available, this is very verbose.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) dump_all: bool,
+        <span class="doccomment">/// Dump default information about unit.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) dump_unit: bool,
+        <span class="doccomment">/// Dump constants from the unit.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) dump_constants: bool,
+        <span class="doccomment">/// Dump unit instructions.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) emit_instructions: bool,
+        <span class="doccomment">/// Dump the state of the stack after completion.
+        ///
+        /// If compiled with `--trace` will dump it after each instruction.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) dump_stack: bool,
+        <span class="doccomment">/// Dump dynamic functions.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) dump_functions: bool,
+        <span class="doccomment">/// Dump dynamic types.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) dump_types: bool,
+        <span class="doccomment">/// Dump native functions.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) dump_native_functions: bool,
+        <span class="doccomment">/// Dump native types.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) dump_native_types: bool,
+        <span class="doccomment">/// When tracing, limit the number of instructions to run with `limit`. This
+        /// implies `--trace`.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) trace_limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+        <span class="doccomment">/// Explicit paths to run.
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) run_path: Vec&lt;PathBuf&gt;,
+    }
 }
+
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">use </span>cli::Flags;
 
 <span class="kw">impl </span>CommandBase <span class="kw">for </span>Flags {
     <span class="attr">#[inline]
@@ -525,6 +553,10 @@
         <span class="kw">if </span><span class="self">self</span>.trace_limit.is_some() {
             <span class="self">self</span>.trace = <span class="bool-val">true</span>;
         }
+    }
+
+    <span class="kw">fn </span>paths(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[PathBuf] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.run_path
     }
 }
 

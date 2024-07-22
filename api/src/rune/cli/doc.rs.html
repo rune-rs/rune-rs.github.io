@@ -131,13 +131,28 @@
 <a href="#131" id="131">131</a>
 <a href="#132" id="132">132</a>
 <a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::io::Write;
 <span class="kw">use </span>std::path::PathBuf;
 
 <span class="kw">use </span><span class="kw">crate</span>::doc::Artifacts;
 
 <span class="kw">use </span>anyhow::{Context, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span>clap::Parser;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::cli::naming::Naming;
@@ -145,18 +160,30 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::{FileSourceLoader, ItemBuf};
 <span class="kw">use crate</span>::{Diagnostics, Options, Source, Sources};
 
-<span class="attr">#[derive(Parser, Debug)]
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Flags {
-    <span class="doccomment">/// Exit with a non-zero exit-code even for warnings
-    </span><span class="attr">#[arg(long)]
-    </span>warnings_are_errors: bool,
-    <span class="doccomment">/// Output directory to write documentation to.
-    </span><span class="attr">#[arg(long)]
-    </span>output: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
-    <span class="doccomment">/// Open the generated documentation in a browser.
-    </span><span class="attr">#[arg(long)]
-    </span>open: bool,
+<span class="kw">mod </span>cli {
+    <span class="kw">use </span>std::path::PathBuf;
+    <span class="kw">use </span>std::vec::Vec;
+
+    <span class="kw">use </span>clap::Parser;
+
+    <span class="attr">#[derive(Parser, Debug)]
+    #[command(rename_all = <span class="string">"kebab-case"</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Flags {
+        <span class="doccomment">/// Exit with a non-zero exit-code even for warnings
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) warnings_are_errors: bool,
+        <span class="doccomment">/// Output directory to write documentation to.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) output: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+        <span class="doccomment">/// Open the generated documentation in a browser.
+        </span><span class="attr">#[arg(long)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) open: bool,
+        <span class="doccomment">/// Explicit paths to format.
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) doc_path: Vec&lt;PathBuf&gt;,
+    }
 }
+
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">use </span>cli::Flags;
 
 <span class="kw">impl </span>CommandBase <span class="kw">for </span>Flags {
     <span class="attr">#[inline]
@@ -168,6 +195,11 @@
     </span><span class="kw">fn </span>describe(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
         <span class="string">"Documenting"
     </span>}
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>paths(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[PathBuf] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.doc_path
+    }
 }
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>run&lt;<span class="lifetime">'p</span>, I&gt;(
@@ -251,7 +283,7 @@
 
     <span class="kw">let </span><span class="kw-2">mut </span>artifacts = Artifacts::new();
 
-    <span class="kw">crate</span>::doc::build(<span class="string">"root"</span>, <span class="kw-2">&amp;mut </span>artifacts, <span class="kw-2">&amp;</span>context, <span class="kw-2">&amp;</span>visitors)<span class="question-mark">?</span>;
+    <span class="kw">crate</span>::doc::build(<span class="string">"root"</span>, <span class="kw-2">&amp;mut </span>artifacts, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>context), <span class="kw-2">&amp;</span>visitors)<span class="question-mark">?</span>;
 
     <span class="kw">for </span>asset <span class="kw">in </span>artifacts.assets() {
         asset.build(<span class="kw-2">&amp;</span>root)<span class="question-mark">?</span>;

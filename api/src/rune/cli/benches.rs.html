@@ -182,12 +182,26 @@
 <a href="#182" id="182">182</a>
 <a href="#183" id="183">183</a>
 <a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt;
 <span class="kw">use </span>std::io::Write;
+<span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::time::Instant;
-
-<span class="kw">use </span>clap::Parser;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
 <span class="kw">use </span><span class="kw">crate</span>::cli::{AssetKind, CommandBase, Config, ExitCode, Io, SharedFlags};
@@ -198,16 +212,27 @@
 <span class="kw">use </span><span class="kw">crate</span>::support::Result;
 <span class="kw">use crate</span>::{Context, Hash, Sources, Vm};
 
-<span class="attr">#[derive(Parser, Debug)]
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Flags {
-    <span class="doccomment">/// Rounds of warmup to perform
-    </span><span class="attr">#[arg(long, default_value = <span class="string">"100"</span>)]
-    </span>warmup: u32,
+<span class="kw">mod </span>cli {
+    <span class="kw">use </span>std::path::PathBuf;
+    <span class="kw">use </span>std::vec::Vec;
 
-    <span class="doccomment">/// Iterations to run of the benchmark
-    </span><span class="attr">#[arg(long, default_value = <span class="string">"100"</span>)]
-    </span>iterations: u32,
+    <span class="kw">use </span>clap::Parser;
+
+    <span class="attr">#[derive(Parser, Debug)]
+    #[command(rename_all = <span class="string">"kebab-case"</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Flags {
+        <span class="doccomment">/// Rounds of warmup to perform
+        </span><span class="attr">#[arg(long, default_value = <span class="string">"100"</span>)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) warmup: u32,
+        <span class="doccomment">/// Iterations to run of the benchmark
+        </span><span class="attr">#[arg(long, default_value = <span class="string">"100"</span>)]
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) iterations: u32,
+        <span class="doccomment">/// Explicit paths to benchmark.
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) bench_path: Vec&lt;PathBuf&gt;,
+    }
 }
+
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">use </span>cli::Flags;
 
 <span class="kw">impl </span>CommandBase <span class="kw">for </span>Flags {
     <span class="attr">#[inline]
@@ -223,6 +248,11 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>propagate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, c: <span class="kw-2">&amp;mut </span>Config, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>SharedFlags) {
         c.test = <span class="bool-val">true</span>;
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>paths(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[PathBuf] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.bench_path
     }
 }
 

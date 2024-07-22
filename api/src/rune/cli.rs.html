@@ -911,6 +911,47 @@
 <a href="#911" id="911">911</a>
 <a href="#912" id="912">912</a>
 <a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helper to build customized commandline interfaces using custom rune
 //! contexts.
 //!
@@ -936,12 +977,13 @@
 <span class="kw">use </span>std::io::{<span class="self">self</span>, IsTerminal, Write};
 <span class="kw">use </span>std::path::{Path, PathBuf};
 
+<span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::workspace::{<span class="self">self</span>, WorkspaceFilter};
 
 <span class="kw">use </span>anyhow::{bail, Context <span class="kw">as _</span>, Error, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span>clap::{Parser, Subcommand};
+<span class="kw">use </span>clap::{Parser, Subcommand, ValueEnum};
 <span class="kw">use </span>tracing_subscriber::filter::EnvFilter;
 
 <span class="kw">use </span><span class="kw">crate</span>::compile::{ItemBuf, ParseOptionError};
@@ -1109,18 +1151,17 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(ExitCode::Success);
         }
 
-        <span class="kw">let </span>choice = <span class="kw">match </span>args.color.as_str() {
-            <span class="string">"always" </span>=&gt; ColorChoice::Always,
-            <span class="string">"ansi" </span>=&gt; ColorChoice::AlwaysAnsi,
-            <span class="string">"auto" </span>=&gt; {
+        <span class="kw">let </span>choice = <span class="kw">match </span>args.color {
+            ColorArgument::Always =&gt; ColorChoice::Always,
+            ColorArgument::Ansi =&gt; ColorChoice::AlwaysAnsi,
+            ColorArgument::Auto =&gt; {
                 <span class="kw">if </span>std::io::stdin().is_terminal() {
                     ColorChoice::Auto
                 } <span class="kw">else </span>{
                     ColorChoice::Never
                 }
             }
-            <span class="string">"never" </span>=&gt; ColorChoice::Never,
-            <span class="kw">_ </span>=&gt; ColorChoice::Auto,
+            ColorArgument::Never =&gt; ColorChoice::Never,
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>stdout = StandardStream::stdout(choice);
@@ -1150,6 +1191,7 @@
 }
 
 <span class="doccomment">/// A single entrypoint that can be built or processed.
+</span><span class="attr">#[derive(TryClone)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>EntryPoint&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// A plain path entrypoint.
     </span>Path(PathBuf),
@@ -1167,12 +1209,32 @@
     }
 }
 
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>EntryPoint&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            EntryPoint::Path(path) =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"path in {}"</span>, path.display())
+            }
+            EntryPoint::Package(package) =&gt; {
+                <span class="macro">write!</span>(
+                    f,
+                    <span class="string">"package `{}` in {} ({})"</span>,
+                    package.package.name,
+                    package.found.path.display(),
+                    package.found.kind
+                )
+            }
+        }
+    }
+}
+
 <span class="kw">struct </span>Io&lt;<span class="lifetime">'a</span>&gt; {
     stdout: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>StandardStream,
     stderr: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>StandardStream,
 }
 
 <span class="attr">#[derive(Parser, Debug, Clone)]
+#[command(rename_all = <span class="string">"kebab-case"</span>)]
 </span><span class="kw">struct </span>CommandShared&lt;T&gt;
 <span class="kw">where
     </span>T: clap::Args,
@@ -1198,7 +1260,7 @@
             options.bytecode(<span class="bool-val">false</span>);
         }
 
-        <span class="kw">for </span>option <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.shared.compiler_options {
+        <span class="kw">for </span>option <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.shared.compiler_option {
             options.parse_option(option)<span class="question-mark">?</span>;
         }
 
@@ -1263,12 +1325,12 @@
 }
 
 <span class="attr">#[derive(Parser, Debug)]
+#[command(rename_all = <span class="string">"kebab-case"</span>)]
 </span><span class="kw">struct </span>HashFlags {
     <span class="doccomment">/// Generate a random hash.
     </span><span class="attr">#[arg(long)]
     </span>random: bool,
     <span class="doccomment">/// Items to generate hashes for.
-    </span><span class="attr">#[arg(name = <span class="string">"item"</span>)]
     </span>item: Vec&lt;String&gt;,
 }
 
@@ -1300,6 +1362,12 @@
     <span class="doccomment">/// Propagate related flags from command and config.
     </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>propagate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Config, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>SharedFlags) {}
+
+    <span class="doccomment">/// Extra paths to run.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">fn </span>paths(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[PathBuf] {
+        <span class="kw-2">&amp;</span>[]
+    }
 }
 
 <span class="attr">#[derive(Subcommand, Debug)]
@@ -1455,6 +1523,19 @@
     }
 }
 
+<span class="attr">#[derive(Default, Debug, Clone, Copy, ValueEnum)]
+</span><span class="kw">enum </span>ColorArgument {
+    <span class="attr">#[default]
+    </span><span class="doccomment">/// Automatically enable coloring if the output is a terminal.
+    </span>Auto,
+    <span class="doccomment">/// Force ANSI coloring.
+    </span>Ansi,
+    <span class="doccomment">/// Always color using the platform-specific coloring implementation.
+    </span>Always,
+    <span class="doccomment">/// Never color output.
+    </span>Never,
+}
+
 <span class="attr">#[derive(Parser, Debug)]
 #[command(name = <span class="string">"rune"</span>, about = <span class="prelude-val">None</span>)]
 </span><span class="kw">struct </span>Args {
@@ -1463,15 +1544,8 @@
     </span>version: bool,
 
     <span class="doccomment">/// Control if output is colored or not.
-    ///
-    /// Valid options are:
-    /// * `auto` - try to detect automatically.
-    /// * `ansi` - unconditionally emit ansi control codes.
-    /// * `always` - always enabled.
-    ///
-    /// Anything else will disable coloring.
     </span><span class="attr">#[arg(short = <span class="string">'C'</span>, long, default_value = <span class="string">"auto"</span>)]
-    </span>color: String,
+    </span>color: ColorArgument,
 
     <span class="doccomment">/// The command to execute
     </span><span class="attr">#[command(subcommand)]
@@ -1479,6 +1553,7 @@
 }
 
 <span class="attr">#[derive(Parser, Debug, Clone)]
+#[command(rename_all = <span class="string">"kebab-case"</span>)]
 </span><span class="kw">struct </span>SharedFlags {
     <span class="doccomment">/// Enable experimental features.
     ///
@@ -1516,38 +1591,40 @@
     /// macros[=&lt;true/false&gt;] - Enable or disable macros (experimental).
     ///
     /// bytecode[=&lt;true/false&gt;] - Enable or disable bytecode caching (experimental).
-    </span><span class="attr">#[arg(name = <span class="string">"option"</span>, short = <span class="string">'O'</span>, number_of_values = <span class="number">1</span>)]
-    </span>compiler_options: Vec&lt;String&gt;,
+    </span><span class="attr">#[arg(short = <span class="string">'O'</span>, number_of_values = <span class="number">1</span>)]
+    </span>compiler_option: Vec&lt;String&gt;,
 
     <span class="doccomment">/// Run with the following binary from a loaded manifest. This requires a
     /// `Rune.toml` manifest.
-    </span><span class="attr">#[arg(long = <span class="string">"bin"</span>)]
+    </span><span class="attr">#[arg(long)]
     </span>bin: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     <span class="doccomment">/// Run with the following test from a loaded manifest. This requires a
     /// `Rune.toml` manifest.
-    </span><span class="attr">#[arg(long = <span class="string">"test"</span>)]
+    </span><span class="attr">#[arg(long)]
     </span>test: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     <span class="doccomment">/// Run with the following example from a loaded manifest. This requires a
     /// `Rune.toml` manifest.
-    </span><span class="attr">#[arg(long = <span class="string">"example"</span>)]
+    </span><span class="attr">#[arg(long)]
     </span>example: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     <span class="doccomment">/// Run with the following benchmark by name from a loaded manifest. This
     /// requires a `Rune.toml` manifest.
-    </span><span class="attr">#[arg(long = <span class="string">"bench"</span>)]
+    </span><span class="attr">#[arg(long)]
     </span>bench: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     <span class="doccomment">/// Build paths to include in the command.
     ///
     /// By default, the tool searches for:
+    ///
     /// * A `Rune.toml` file in a parent directory, in which case this treated
     ///   as a workspace.
+    ///
     /// * In order: `main.rn`, `lib.rn`, `src/main.rn`, `src/lib.rn`,
     ///   `script/main.rn`, and `script/lib.rn`.
-    </span><span class="attr">#[arg(name = <span class="string">"paths"</span>)]
-    </span>paths: Vec&lt;PathBuf&gt;,
+    </span><span class="attr">#[arg(long)]
+    </span>path: Vec&lt;PathBuf&gt;,
 }
 
 <span class="kw">const </span>SPECIAL_FILES: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str] = <span class="kw-2">&amp;</span>[
@@ -1601,8 +1678,13 @@
 }
 
 <span class="kw">fn </span>populate_config(io: <span class="kw-2">&amp;mut </span>Io&lt;<span class="lifetime">'_</span>&gt;, c: <span class="kw-2">&amp;mut </span>Config, cmd: CommandSharedRef&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    c.found_paths
-        .try_extend(cmd.shared.paths.iter().map(|p| p.as_path().into()))<span class="question-mark">?</span>;
+    c.found_paths.try_extend(
+        cmd.shared
+            .path
+            .iter()
+            .map(|p| p.as_path().into())
+            .chain(cmd.command.paths().iter().cloned()),
+    )<span class="question-mark">?</span>;
 
     <span class="kw">if </span>!c.found_paths.is_empty() &amp;&amp; !cmd.shared.workspace {
         <span class="kw">return </span><span class="prelude-val">Ok</span>(());
