@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value.rs`."><title>value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (506985649 2024-07-20)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value.rs`."><title>value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (92c6c0380 2024-07-21)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2568,14 +2568,6 @@
 <a href="#2568" id="2568">2568</a>
 <a href="#2569" id="2569">2569</a>
 <a href="#2570" id="2570">2570</a>
-<a href="#2571" id="2571">2571</a>
-<a href="#2572" id="2572">2572</a>
-<a href="#2573" id="2573">2573</a>
-<a href="#2574" id="2574">2574</a>
-<a href="#2575" id="2575">2575</a>
-<a href="#2576" id="2576">2576</a>
-<a href="#2577" id="2577">2577</a>
-<a href="#2578" id="2578">2578</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>serde;
 
 <span class="kw">use </span>core::any;
@@ -2590,13 +2582,13 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
-<span class="kw">use </span><span class="kw">crate</span>::compile::ItemBuf;
+<span class="kw">use </span><span class="kw">crate</span>::compile::{meta, ItemBuf};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::vm::CallResultOnly;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
     AccessError, AccessErrorKind, AnyObj, AnyObjError, BorrowMut, BorrowRef, Bytes, ConstValue,
-    ControlFlow, DynGuardedArgs, EnvProtocolCaller, Format, Formatter, FromValue, FullTypeOf,
-    Function, Future, Generator, GeneratorState, IntoOutput, Iterator, MaybeTypeOf, Mut, Object,
-    OwnedTuple, Protocol, ProtocolCaller, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo,
+    ControlFlow, DynGuardedArgs, EnvProtocolCaller, Format, Formatter, FromValue, Function, Future,
+    Generator, GeneratorState, IntoOutput, Iterator, MaybeTypeOf, Mut, Object, OwnedTuple,
+    Protocol, ProtocolCaller, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo,
     RangeToInclusive, Ref, RuntimeError, Shared, SharedPointerGuard, Snapshot, Stream, ToValue,
     Type, TypeInfo, Variant, Vec, Vm, VmErrorKind, VmIntegerRepr, VmResult,
 };
@@ -4895,16 +4887,8 @@
 
 <span class="kw">impl </span>MaybeTypeOf <span class="kw">for </span>Value {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>maybe_type_of() -&gt; <span class="prelude-ty">Option</span>&lt;FullTypeOf&gt; {
-        <span class="prelude-val">None
-    </span>}
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>maybe_visit_generics&lt;F, E&gt;(<span class="kw">_</span>: <span class="kw-2">&amp;mut </span>F) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt;
-    <span class="kw">where
-        </span>F: FnMut(<span class="prelude-ty">Option</span>&lt;FullTypeOf&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), E&gt;,
-    {
-        <span class="prelude-val">Ok</span>(())
+    </span><span class="kw">fn </span>maybe_type_of() -&gt; alloc::Result&lt;meta::DocType&gt; {
+        <span class="prelude-val">Ok</span>(meta::DocType::empty())
     }
 }
 
