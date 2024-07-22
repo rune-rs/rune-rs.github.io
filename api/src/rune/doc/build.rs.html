@@ -1674,8 +1674,7 @@
             } <span class="kw">if </span>base == static_type::TUPLE_TYPE.hash &amp;&amp; generics.is_empty() =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             meta::DocType {
                 base, <span class="kw-2">ref </span>generics, ..
-            } <span class="kw">if </span>!base.is_empty() =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.link(base, <span class="prelude-val">None</span>, generics)<span class="question-mark">?</span>)),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            } =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.link(base, <span class="prelude-val">None</span>, generics)<span class="question-mark">?</span>)),
         }
     }
 
@@ -1814,6 +1813,12 @@
         <span class="prelude-val">Ok</span>(s)
     }
 
+    <span class="doccomment">/// Write a placeholder for the `any` type.
+    </span><span class="kw">fn </span>write_any(<span class="kw-2">&amp;</span><span class="self">self</span>, o: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>TryWrite) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="macro">write!</span>(o, <span class="string">"&lt;span class=\"any\"&gt;any&lt;/span&gt;"</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="doccomment">/// Convert a hash into a link.
     </span><span class="kw">fn </span>write_link(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -1831,6 +1836,11 @@
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             }
         }
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(hash) = hash.as_non_empty() <span class="kw">else </span>{
+            <span class="self">self</span>.write_any(o)<span class="question-mark">?</span>;
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        };
 
         <span class="kw">if </span>hash == static_type::TUPLE_TYPE.hash {
             <span class="macro">write!</span>(o, <span class="string">"("</span>)<span class="question-mark">?</span>;
@@ -1869,9 +1879,9 @@
             <span class="macro">write!</span>(o, <span class="string">"&lt;a class=\"{kind}\" href=\"{path}\"&gt;{name}&lt;/a&gt;"</span>)<span class="question-mark">?</span>;
 
             <span class="kw">if </span>!generics.is_empty() {
-                <span class="macro">write!</span>(o, <span class="string">"&lt;"</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(o, <span class="string">"&amp;lt;"</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_generics(o, generics)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(o, <span class="string">"&gt;"</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(o, <span class="string">"&amp;gt;"</span>)<span class="question-mark">?</span>;
             }
         }
 
@@ -1882,14 +1892,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>it = generics.iter().peekable();
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>(ty) = it.next() {
-            <span class="kw">match </span>ty.base.as_non_empty() {
-                <span class="prelude-val">Some</span>(hash) =&gt; {
-                    <span class="self">self</span>.write_link(o, hash, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ty.generics)<span class="question-mark">?</span>;
-                }
-                <span class="prelude-val">None </span>=&gt; {
-                    <span class="macro">write!</span>(o, <span class="string">"any"</span>)<span class="question-mark">?</span>;
-                }
-            }
+            <span class="self">self</span>.write_link(o, ty.base, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ty.generics)<span class="question-mark">?</span>;
 
             <span class="kw">if </span>it.peek().is_some() {
                 <span class="macro">write!</span>(o, <span class="string">", "</span>)<span class="question-mark">?</span>;
@@ -1933,11 +1936,8 @@
                 }
             } <span class="kw">else </span>{
                 <span class="macro">write!</span>(string, <span class="string">"{}"</span>, arg.name)<span class="question-mark">?</span>;
-
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(hash) = arg.base.as_non_empty() {
-                    string.try_push_str(<span class="string">": "</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.write_link(<span class="kw-2">&amp;mut </span>string, hash, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>arg.generics)<span class="question-mark">?</span>;
-                }
+                string.try_push_str(<span class="string">": "</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.write_link(<span class="kw-2">&amp;mut </span>string, arg.base, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>arg.generics)<span class="question-mark">?</span>;
             }
 
             <span class="kw">if </span>it.peek().is_some() {
