@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Component","ComponentRef"],"struct":["Item","ItemBuf"],"trait":["IntoComponent"]};
