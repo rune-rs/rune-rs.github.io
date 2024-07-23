@@ -133,6 +133,16 @@
 <a href="#133" id="133">133</a>
 <a href="#134" id="134">134</a>
 <a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>::rust_alloc::boxed::Box;
@@ -174,6 +184,8 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) v2: bool,
     <span class="doccomment">/// Build sources as function bodies.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) function_body: bool,
+    <span class="doccomment">/// When running tests, include std tests.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) test_std: bool,
 }
 
 <span class="kw">impl </span>Options {
@@ -184,32 +196,39 @@
     /// It can be used to consistenly parse a collection of options by other
     /// programs as well.
     </span><span class="kw">pub fn </span>parse_option(<span class="kw-2">&amp;mut </span><span class="self">self</span>, option: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), ParseOptionError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>it = option.split(<span class="string">'='</span>);
+        <span class="kw">let </span><span class="prelude-val">Some</span>((head, tail)) = option.split_once(<span class="string">'='</span>) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParseOptionError {
+                option: option.into(),
+            });
+        };
 
-        <span class="kw">match </span>it.next() {
-            <span class="prelude-val">Some</span>(<span class="string">"memoize-instance-fn"</span>) =&gt; {
-                <span class="self">self</span>.memoize_instance_fn = it.next() == <span class="prelude-val">Some</span>(<span class="string">"true"</span>);
+        <span class="kw">match </span>head {
+            <span class="string">"memoize-instance-fn" </span>=&gt; {
+                <span class="self">self</span>.memoize_instance_fn = tail == <span class="string">"true"</span>;
             }
-            <span class="prelude-val">Some</span>(<span class="string">"debug-info"</span>) =&gt; {
-                <span class="self">self</span>.debug_info = it.next() == <span class="prelude-val">Some</span>(<span class="string">"true"</span>);
+            <span class="string">"debug-info" </span>=&gt; {
+                <span class="self">self</span>.debug_info = tail == <span class="string">"true"</span>;
             }
-            <span class="prelude-val">Some</span>(<span class="string">"link-checks"</span>) =&gt; {
-                <span class="self">self</span>.link_checks = it.next() == <span class="prelude-val">Some</span>(<span class="string">"true"</span>);
+            <span class="string">"link-checks" </span>=&gt; {
+                <span class="self">self</span>.link_checks = tail == <span class="string">"true"</span>;
             }
-            <span class="prelude-val">Some</span>(<span class="string">"macros"</span>) =&gt; {
-                <span class="self">self</span>.macros = it.next() == <span class="prelude-val">Some</span>(<span class="string">"true"</span>);
+            <span class="string">"macros" </span>=&gt; {
+                <span class="self">self</span>.macros = tail == <span class="string">"true"</span>;
             }
-            <span class="prelude-val">Some</span>(<span class="string">"bytecode"</span>) =&gt; {
-                <span class="self">self</span>.bytecode = it.next() == <span class="prelude-val">Some</span>(<span class="string">"true"</span>);
+            <span class="string">"bytecode" </span>=&gt; {
+                <span class="self">self</span>.bytecode = tail == <span class="string">"true"</span>;
             }
-            <span class="prelude-val">Some</span>(<span class="string">"test"</span>) =&gt; {
-                <span class="self">self</span>.cfg_test = it.next() == <span class="prelude-val">Some</span>(<span class="string">"true"</span>);
+            <span class="string">"test" </span>=&gt; {
+                <span class="self">self</span>.cfg_test = tail == <span class="string">"true"</span>;
             }
-            <span class="prelude-val">Some</span>(<span class="string">"v2"</span>) =&gt; {
-                <span class="self">self</span>.v2 = it.next() == <span class="prelude-val">Some</span>(<span class="string">"true"</span>);
+            <span class="string">"v2" </span>=&gt; {
+                <span class="self">self</span>.v2 = tail == <span class="string">"true"</span>;
             }
-            <span class="prelude-val">Some</span>(<span class="string">"function-body"</span>) =&gt; {
-                <span class="self">self</span>.function_body = it.next() == <span class="prelude-val">Some</span>(<span class="string">"true"</span>);
+            <span class="string">"function-body" </span>=&gt; {
+                <span class="self">self</span>.function_body = tail == <span class="string">"true"</span>;
+            }
+            <span class="string">"test-std" </span>=&gt; {
+                <span class="self">self</span>.test_std = tail == <span class="string">"true"</span>;
             }
             <span class="kw">_ </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ParseOptionError {
@@ -265,6 +284,7 @@
             cfg_test: <span class="bool-val">false</span>,
             v2: <span class="bool-val">false</span>,
             function_body: <span class="bool-val">false</span>,
+            test_std: <span class="bool-val">false</span>,
         }
     }
 }
