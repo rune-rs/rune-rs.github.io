@@ -560,19 +560,13 @@
 <a href="#560" id="560">560</a>
 <a href="#561" id="561">561</a>
 <a href="#562" id="562">562</a>
-<a href="#563" id="563">563</a>
-<a href="#564" id="564">564</a>
-<a href="#565" id="565">565</a>
-<a href="#566" id="566">566</a>
-<a href="#567" id="567">567</a>
-<a href="#568" id="568">568</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt;
 <span class="kw">use </span>std::io::Write;
 <span class="kw">use </span>std::slice;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::time::Instant;
 
-<span class="kw">use </span>anyhow::{bail, Context, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>anyhow::{Context, <span class="prelude-ty">Result</span>};
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -583,8 +577,9 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::compile::FileSourceLoader;
 <span class="kw">use </span><span class="kw">crate</span>::doc::TestParams;
+<span class="kw">use </span><span class="kw">crate</span>::item::ComponentRef;
 <span class="kw">use </span><span class="kw">crate</span>::modules::capture_io::CaptureIo;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{UnitFn, Value, ValueKind, Vm, VmError, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Value, ValueKind, Vm, VmError, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::termcolor::{Color, ColorSpec, WriteColor};
 <span class="kw">use crate</span>::{Diagnostics, Hash, Item, ItemBuf, Source, Sources, Unit};
 
@@ -701,14 +696,20 @@
         <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
     };
 
-    <span class="kw">for </span>entry <span class="kw">in </span>entries {
-        <span class="kw">let </span>item = naming.item(<span class="kw-2">&amp;</span>entry)<span class="question-mark">?</span>;
+    <span class="kw">for </span>e <span class="kw">in </span>entries {
+        <span class="kw">let </span><span class="kw-2">mut </span>options = options.clone();
+
+        <span class="kw">if </span>e.is_argument() {
+            options.function_body = <span class="bool-val">true</span>;
+        }
+
+        <span class="kw">let </span>item = naming.item(<span class="kw-2">&amp;</span>e)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>sources = Sources::new();
 
-        <span class="kw">let </span>source = <span class="kw">match </span>Source::from_path(entry.path()) {
+        <span class="kw">let </span>source = <span class="kw">match </span>Source::from_path(e.path()) {
             <span class="prelude-val">Ok</span>(source) =&gt; source,
-            <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(error).context(entry.path().display().try_to_string()<span class="question-mark">?</span>),
+            <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(error).context(e.path().display().try_to_string()<span class="question-mark">?</span>),
         };
 
         sources.insert(source)<span class="question-mark">?</span>;
@@ -726,7 +727,7 @@
         <span class="kw">let </span>unit = <span class="kw">crate</span>::prepare(<span class="kw-2">&amp;mut </span>sources)
             .with_context(<span class="kw-2">&amp;</span>context)
             .with_diagnostics(<span class="kw-2">&amp;mut </span>diagnostics)
-            .with_options(options)
+            .with_options(<span class="kw-2">&amp;</span>options)
             .with_visitor(<span class="kw-2">&amp;mut </span>doc_visitor)<span class="question-mark">?
             </span>.with_visitor(<span class="kw-2">&amp;mut </span>functions)<span class="question-mark">?
             </span>.with_source_loader(<span class="kw-2">&amp;mut </span>source_loader)
@@ -759,7 +760,7 @@
 
         batches.try_push(Batch {
             kind: BatchKind::LibTests,
-            entry: <span class="prelude-val">Some</span>(entry.try_clone()<span class="question-mark">?</span>),
+            entry: <span class="prelude-val">Some</span>(e.try_clone()<span class="question-mark">?</span>),
             cases,
         })<span class="question-mark">?</span>;
 
@@ -772,7 +773,7 @@
             artifacts,
             shared,
             flags,
-            options,
+            <span class="kw-2">&amp;</span>options,
             <span class="kw-2">&amp;</span>context,
             <span class="kw-2">&amp;mut </span>build_errors,
             <span class="kw-2">&amp;mut </span>filter,
@@ -780,7 +781,7 @@
 
         batches.try_push(Batch {
             kind: BatchKind::DocTests,
-            entry: <span class="prelude-val">Some</span>(entry),
+            entry: <span class="prelude-val">Some</span>(e),
             cases,
         })<span class="question-mark">?</span>;
     }
@@ -951,21 +952,8 @@
             <span class="kw">let </span>unit = Arc::new(unit<span class="question-mark">?</span>);
             <span class="kw">let </span>sources = Arc::new(sources);
 
-            <span class="kw">let </span><span class="prelude-val">Some</span>((hash, <span class="kw">_</span>)) = unit.iter_functions().find(|(<span class="kw">_</span>, f)| {
-                <span class="macro">matches!</span>(
-                    f,
-                    UnitFn::Offset {
-                        args: <span class="number">0</span>,
-                        offset: <span class="number">0</span>,
-                        ..
-                    }
-                )
-            }) <span class="kw">else </span>{
-                <span class="macro">bail!</span>(<span class="string">"Compiling source did not result in a function at offset 0"</span>);
-            };
-
             cases.try_push(TestCase::new(
-                hash,
+                Hash::type_hash([ComponentRef::Id(<span class="number">0</span>)]),
                 test.item.try_clone()<span class="question-mark">?</span>,
                 unit.clone(),
                 sources.clone(),

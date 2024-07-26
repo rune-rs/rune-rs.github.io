@@ -952,6 +952,41 @@
 <a href="#952" id="952">952</a>
 <a href="#953" id="953">953</a>
 <a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helper to build customized commandline interfaces using custom rune
 //! contexts.
 //!
@@ -980,6 +1015,7 @@
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::item::ComponentRef;
 <span class="kw">use </span><span class="kw">crate</span>::workspace::{<span class="self">self</span>, WorkspaceFilter};
 
 <span class="kw">use </span>anyhow::{bail, Context <span class="kw">as _</span>, Error, <span class="prelude-ty">Result</span>};
@@ -1194,7 +1230,7 @@
 </span><span class="attr">#[derive(TryClone)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>EntryPoint&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// A plain path entrypoint.
-    </span>Path(PathBuf),
+    </span>Path(PathBuf, bool),
     <span class="doccomment">/// A package entrypoint.
     </span>Package(workspace::FoundPackage&lt;<span class="lifetime">'a</span>&gt;),
 }
@@ -1203,8 +1239,16 @@
     <span class="doccomment">/// Path to entrypoint.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>path(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Path {
         <span class="kw">match </span><span class="self">self </span>{
-            EntryPoint::Path(path) =&gt; path,
+            EntryPoint::Path(path, <span class="kw">_</span>) =&gt; path,
             EntryPoint::Package(p) =&gt; <span class="kw-2">&amp;</span>p.found.path,
+        }
+    }
+
+    <span class="doccomment">/// If a path is an additional argument.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_argument(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">match </span><span class="self">self </span>{
+            EntryPoint::Path(<span class="kw">_</span>, explicit) =&gt; <span class="kw-2">*</span>explicit,
+            EntryPoint::Package(..) =&gt; <span class="bool-val">false</span>,
         }
     }
 }
@@ -1212,8 +1256,11 @@
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>EntryPoint&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
-            EntryPoint::Path(path) =&gt; {
+            EntryPoint::Path(path, <span class="bool-val">false</span>) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"path in {}"</span>, path.display())
+            }
+            EntryPoint::Path(path, <span class="bool-val">true</span>) =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"path in {} (argument)"</span>, path.display())
             }
             EntryPoint::Package(package) =&gt; {
                 <span class="macro">write!</span>(
@@ -1435,7 +1482,7 @@
 
 <span class="kw">enum </span>BuildPath&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// A plain path entry.
-    </span>Path(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Path),
+    </span>Path(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Path, bool),
     <span class="doccomment">/// An entry from the specified package.
     </span>Package(workspace::FoundPackage&lt;<span class="lifetime">'a</span>&gt;),
 }
@@ -1451,7 +1498,7 @@
     <span class="doccomment">/// Manifest root directory.
     </span>manifest_root: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
     <span class="doccomment">/// Immediate found paths.
-    </span>found_paths: alloc::Vec&lt;PathBuf&gt;,
+    </span>found_paths: alloc::Vec&lt;(PathBuf, bool)&gt;,
 }
 
 <span class="kw">impl </span>Config {
@@ -1460,7 +1507,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>build_paths = alloc::Vec::new();
 
         <span class="kw">if </span>!<span class="self">self</span>.found_paths.is_empty() {
-            build_paths.try_extend(<span class="self">self</span>.found_paths.iter().map(|p| BuildPath::Path(p)))<span class="question-mark">?</span>;
+            build_paths.try_extend(<span class="self">self</span>.found_paths.iter().map(|(p, e)| BuildPath::Path(p, <span class="kw-2">*</span>e)))<span class="question-mark">?</span>;
 
             <span class="kw">if </span>!cmd.shared.workspace {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(build_paths);
@@ -1678,13 +1725,11 @@
 }
 
 <span class="kw">fn </span>populate_config(io: <span class="kw-2">&amp;mut </span>Io&lt;<span class="lifetime">'_</span>&gt;, c: <span class="kw-2">&amp;mut </span>Config, cmd: CommandSharedRef&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    c.found_paths.try_extend(
-        cmd.shared
-            .path
-            .iter()
-            .map(|p| p.as_path().into())
-            .chain(cmd.command.paths().iter().cloned()),
-    )<span class="question-mark">?</span>;
+    c.found_paths
+        .try_extend(cmd.shared.path.iter().map(|p| (p.clone(), <span class="bool-val">false</span>)))<span class="question-mark">?</span>;
+
+    c.found_paths
+        .try_extend(cmd.command.paths().iter().map(|p| (p.clone(), <span class="bool-val">true</span>)))<span class="question-mark">?</span>;
 
     <span class="kw">if </span>!c.found_paths.is_empty() &amp;&amp; !cmd.shared.workspace {
         <span class="kw">return </span><span class="prelude-val">Ok</span>(());
@@ -1695,7 +1740,7 @@
             <span class="kw">let </span>path = Path::new(file);
 
             <span class="kw">if </span>path.is_file() {
-                c.found_paths.try_push(path.into())<span class="question-mark">?</span>;
+                c.found_paths.try_push((path.try_to_owned()<span class="question-mark">?</span>, <span class="bool-val">false</span>))<span class="question-mark">?</span>;
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
         }
@@ -1756,9 +1801,9 @@
 
         <span class="kw">for </span>build_path <span class="kw">in </span>build_paths {
             <span class="kw">match </span>build_path {
-                BuildPath::Path(path) =&gt; {
+                BuildPath::Path(path, explicit) =&gt; {
                     <span class="kw">for </span>path <span class="kw">in </span>loader::recurse_paths(recursive, path.try_to_owned()<span class="question-mark">?</span>) {
-                        entrys.try_push(EntryPoint::Path(path<span class="question-mark">?</span>))<span class="question-mark">?</span>;
+                        entrys.try_push(EntryPoint::Path(path<span class="question-mark">?</span>, explicit))<span class="question-mark">?</span>;
                     }
                 }
                 BuildPath::Package(p) =&gt; {
@@ -1810,6 +1855,12 @@
             <span class="kw">let </span>options = f.options()<span class="question-mark">?</span>;
 
             <span class="kw">for </span>e <span class="kw">in </span>entries {
+                <span class="kw">let </span><span class="kw-2">mut </span>options = options.clone();
+
+                <span class="kw">if </span>e.is_argument() {
+                    options.function_body = <span class="bool-val">true</span>;
+                }
+
                 <span class="kw">match </span>check::run(io, entry, c, <span class="kw-2">&amp;</span>f.command, <span class="kw-2">&amp;</span>f.shared, <span class="kw-2">&amp;</span>options, e.path())<span class="question-mark">? </span>{
                     ExitCode::Success =&gt; (),
                     other =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(other),
@@ -1836,6 +1887,12 @@
             <span class="kw">let </span>options = f.options()<span class="question-mark">?</span>;
 
             <span class="kw">for </span>e <span class="kw">in </span>entries {
+                <span class="kw">let </span><span class="kw-2">mut </span>options = options.clone();
+
+                <span class="kw">if </span>e.is_argument() {
+                    options.function_body = <span class="bool-val">true</span>;
+                }
+
                 <span class="kw">let </span>capture_io = <span class="kw">crate</span>::modules::capture_io::CaptureIo::new();
                 <span class="kw">let </span>context = f.shared.context(entry, c, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>capture_io))<span class="question-mark">?</span>;
 
@@ -1869,6 +1926,12 @@
             <span class="kw">let </span>context = f.shared.context(entry, c, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
             <span class="kw">for </span>e <span class="kw">in </span>entries {
+                <span class="kw">let </span><span class="kw-2">mut </span>options = options.clone();
+
+                <span class="kw">if </span>e.is_argument() {
+                    options.function_body = <span class="bool-val">true</span>;
+                }
+
                 <span class="kw">let </span>load = loader::load(
                     io,
                     <span class="kw-2">&amp;</span>context,
@@ -1878,7 +1941,14 @@
                     visitor::Attribute::None,
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">match </span>run::run(io, c, <span class="kw-2">&amp;</span>f.command, <span class="kw-2">&amp;</span>context, load.unit, <span class="kw-2">&amp;</span>load.sources).<span class="kw">await</span><span class="question-mark">? </span>{
+                <span class="kw">let </span>entry = <span class="kw">if </span>e.is_argument() {
+                    Hash::type_hash([ComponentRef::Id(<span class="number">0</span>)])
+                } <span class="kw">else </span>{
+                    Hash::type_hash([<span class="string">"main"</span>])
+                };
+
+                <span class="kw">match </span>run::run(io, c, <span class="kw-2">&amp;</span>f.command, <span class="kw-2">&amp;</span>context, load.unit, <span class="kw-2">&amp;</span>load.sources, entry).<span class="kw">await</span><span class="question-mark">?
+                </span>{
                     ExitCode::Success =&gt; (),
                     other =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(other),
                 }
