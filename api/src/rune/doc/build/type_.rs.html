@@ -295,7 +295,10 @@
 <a href="#295" id="295">295</a>
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::{Context, <span class="prelude-ty">Result</span>};
+<a href="#298" id="298">298</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::replace;
+
+<span class="kw">use </span>anyhow::{Context, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>relative_path::RelativePathBuf;
 <span class="kw">use </span>serde::Serialize;
 
@@ -359,8 +362,6 @@
     Vec&lt;IndexEntry&lt;<span class="lifetime">'m</span>&gt;&gt;,
     Vec&lt;Trait&lt;<span class="lifetime">'m</span>&gt;&gt;,
 )&gt; {
-    <span class="kw">let </span>meta_item = meta.item.context(<span class="string">"Missing meta item"</span>)<span class="question-mark">?</span>;
-
     <span class="kw">let </span>(variants, protocols, methods) = associated_for_hash(cx, meta.hash, meta, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="kw-2">mut </span>index = Vec::new();
@@ -374,7 +375,7 @@
                     .state
                     .path
                     .with_file_name(<span class="macro">format!</span>(<span class="string">"{name}#method.{}"</span>, m.name)),
-                item: Cow::Owned(meta_item.join([m.name])<span class="question-mark">?</span>),
+                item: Cow::Owned(meta.item.join([m.name])<span class="question-mark">?</span>),
                 kind: IndexKind::Method,
                 doc: m.line_doc.try_clone()<span class="question-mark">?</span>,
             })<span class="question-mark">?</span>;
@@ -386,7 +387,7 @@
                     .state
                     .path
                     .with_file_name(<span class="macro">format!</span>(<span class="string">"{name}#variant.{}"</span>, m.name)),
-                item: Cow::Owned(meta_item.join([m.name])<span class="question-mark">?</span>),
+                item: Cow::Owned(meta.item.join([m.name])<span class="question-mark">?</span>),
                 kind: IndexKind::Variant,
                 doc: m.line_doc.try_clone()<span class="question-mark">?</span>,
             })<span class="question-mark">?</span>;
@@ -399,7 +400,7 @@
         <span class="kw">let </span>item = <span class="lifetime">'item</span>: {
             <span class="kw">for </span>meta <span class="kw">in </span>cx.context.meta_by_hash(hash)<span class="question-mark">? </span>{
                 <span class="kw">match </span>meta.kind {
-                    Kind::Trait =&gt; <span class="kw">break </span><span class="lifetime">'item </span>meta.item.context(<span class="string">"Missing trait item"</span>)<span class="question-mark">?</span>,
+                    Kind::Trait =&gt; <span class="kw">break </span><span class="lifetime">'item </span>meta.item,
                     <span class="kw">_ </span>=&gt; <span class="kw">continue</span>,
                 }
             }
@@ -441,101 +442,103 @@
     <span class="kw">let </span><span class="kw-2">mut </span>protocols = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>methods = Vec::new();
 
-    <span class="kw">for </span>assoc <span class="kw">in </span>cx.context.associated(hash) {
-        <span class="kw">match </span>assoc {
-            Assoc::Variant(variant) =&gt; {
-                <span class="kw">let </span>line_doc =
-                    cx.render_line_docs(meta, variant.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>;
+    <span class="kw">for </span>hash <span class="kw">in </span>cx.context.associated(hash) {
+        <span class="kw">for </span>assoc <span class="kw">in </span>cx.context.associated_meta(hash) {
+            <span class="kw">match </span>assoc {
+                Assoc::Variant(variant) =&gt; {
+                    <span class="kw">let </span>line_doc =
+                        cx.render_line_docs(meta, variant.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>doc = cx.render_docs(meta, variant.docs, capture_tests)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>doc = cx.render_docs(meta, variant.docs, capture_tests)<span class="question-mark">?</span>;
 
-                variants.try_push(Variant {
-                    name: variant.name,
-                    line_doc,
-                    doc,
-                })<span class="question-mark">?</span>;
-            }
-            Assoc::Fn(assoc) =&gt; {
-                <span class="kw">let </span>value;
+                    variants.try_push(Variant {
+                        name: variant.name,
+                        line_doc,
+                        doc,
+                    })<span class="question-mark">?</span>;
+                }
+                Assoc::Fn(assoc) =&gt; {
+                    <span class="kw">let </span>value;
 
-                <span class="kw">let </span>(protocol, value, field) = <span class="kw">match </span>assoc.kind {
-                    AssocFnKind::Protocol(protocol) =&gt; (protocol, <span class="string">"value"</span>, <span class="prelude-val">None</span>),
-                    AssocFnKind::FieldFn(protocol, field) =&gt; {
-                        value = <span class="macro">format!</span>(<span class="string">"value.{field}"</span>);
-                        (protocol, value.as_str(), <span class="prelude-val">Some</span>(field))
-                    }
-                    AssocFnKind::IndexFn(protocol, index) =&gt; {
-                        value = <span class="macro">format!</span>(<span class="string">"value.{index}"</span>);
-                        (protocol, value.as_str(), <span class="prelude-val">None</span>)
-                    }
-                    AssocFnKind::Method(name, sig) =&gt; {
-                        <span class="kw">let </span>line_doc =
-                            cx.render_line_docs(meta, assoc.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>;
-
-                        cx.state.item.push(name)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>doc = cx.render_docs(meta, assoc.docs, capture_tests)<span class="question-mark">?</span>;
-                        cx.state.item.pop()<span class="question-mark">?</span>;
-
-                        <span class="kw">let </span>parameters = <span class="kw">if </span>!assoc.parameter_types.is_empty() {
-                            <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
-                            <span class="kw">let </span><span class="kw-2">mut </span>it = assoc.parameter_types.iter().peekable();
-
-                            <span class="kw">while let </span><span class="prelude-val">Some</span>(hash) = it.next() {
-                                cx.write_link(<span class="kw-2">&amp;mut </span>s, <span class="kw-2">*</span>hash, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
-
-                                <span class="kw">if </span>it.peek().is_some() {
-                                    <span class="macro">write!</span>(s, <span class="string">", "</span>)<span class="question-mark">?</span>;
-                                }
+                    <span class="kw">let </span>(protocol, value, field) = <span class="kw">match </span>assoc.kind {
+                        AssocFnKind::Protocol(protocol) =&gt; (protocol, <span class="string">"value"</span>, <span class="prelude-val">None</span>),
+                        AssocFnKind::FieldFn(protocol, field) =&gt; {
+                            value = <span class="macro">format!</span>(<span class="string">"value.{field}"</span>);
+                            (protocol, value.as_str(), <span class="prelude-val">Some</span>(field))
+                        }
+                        AssocFnKind::IndexFn(protocol, index) =&gt; {
+                            value = <span class="macro">format!</span>(<span class="string">"value.{index}"</span>);
+                            (protocol, value.as_str(), <span class="prelude-val">None</span>)
+                        }
+                        AssocFnKind::Method(item, name, sig) =&gt; {
+                            <span class="comment">// NB: Regular associated functions are documented by the trait itself.
+                            </span><span class="kw">if </span>assoc.trait_hash.is_some() {
+                                <span class="kw">continue</span>;
                             }
 
-                            <span class="prelude-val">Some</span>(s)
-                        } <span class="kw">else </span>{
-                            <span class="prelude-val">None
-                        </span>};
+                            <span class="kw">let </span>line_doc =
+                                cx.render_line_docs(meta, assoc.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>;
 
-                        <span class="kw">let </span>method = Method {
-                            is_async: assoc.is_async,
-                            deprecated: assoc.deprecated,
-                            name,
-                            args: cx.args_to_string(sig, assoc.arguments)<span class="question-mark">?</span>,
-                            parameters,
-                            return_type: cx.return_type(assoc.return_type)<span class="question-mark">?</span>,
-                            line_doc,
-                            doc,
-                        };
+                            <span class="kw">let </span>old = replace(<span class="kw-2">&amp;mut </span>cx.state.item, item);
+                            <span class="kw">let </span>doc = cx.render_docs(meta, assoc.docs, capture_tests)<span class="question-mark">?</span>;
+                            cx.state.item = old;
 
-                        methods.try_push(method)<span class="question-mark">?</span>;
-                        <span class="kw">continue</span>;
-                    }
-                };
+                            <span class="kw">let </span>parameters = <span class="kw">if </span>!assoc.parameter_types.is_empty() {
+                                <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
+                                <span class="kw">let </span><span class="kw-2">mut </span>it = assoc.parameter_types.iter().peekable();
 
-                <span class="comment">// NB: Regular associated functions are documented by the trait itself.
-                </span><span class="kw">if </span>assoc.trait_hash.is_some() {
-                    <span class="kw">continue</span>;
+                                <span class="kw">while let </span><span class="prelude-val">Some</span>(hash) = it.next() {
+                                    cx.write_link(<span class="kw-2">&amp;mut </span>s, <span class="kw-2">*</span>hash, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+
+                                    <span class="kw">if </span>it.peek().is_some() {
+                                        <span class="macro">write!</span>(s, <span class="string">", "</span>)<span class="question-mark">?</span>;
+                                    }
+                                }
+
+                                <span class="prelude-val">Some</span>(s)
+                            } <span class="kw">else </span>{
+                                <span class="prelude-val">None
+                            </span>};
+
+                            <span class="kw">let </span>method = Method {
+                                is_async: assoc.is_async,
+                                deprecated: assoc.deprecated,
+                                name,
+                                args: cx.args_to_string(sig, assoc.arguments)<span class="question-mark">?</span>,
+                                parameters,
+                                return_type: cx.return_type(assoc.return_type)<span class="question-mark">?</span>,
+                                line_doc,
+                                doc,
+                            };
+
+                            methods.try_push(method)<span class="question-mark">?</span>;
+                            <span class="kw">continue</span>;
+                        }
+                    };
+
+                    <span class="kw">let </span>doc = <span class="kw">if </span>assoc.docs.is_empty() {
+                        cx.render_docs(meta, protocol.doc, <span class="bool-val">false</span>)<span class="question-mark">?
+                    </span>} <span class="kw">else </span>{
+                        cx.render_docs(meta, assoc.docs, capture_tests)<span class="question-mark">?
+                    </span>};
+
+                    <span class="kw">let </span>repr = <span class="kw">if let </span><span class="prelude-val">Some</span>(repr) = protocol.repr {
+                        <span class="prelude-val">Some</span>(cx.render_code([repr.replace(<span class="string">"$value"</span>, value.as_ref())])<span class="question-mark">?</span>)
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">None
+                    </span>};
+
+                    <span class="kw">let </span>protocol = Protocol {
+                        name: protocol.name,
+                        field,
+                        repr,
+                        return_type: cx.return_type(assoc.return_type)<span class="question-mark">?</span>,
+                        doc,
+                        deprecated: assoc.deprecated,
+                    };
+
+                    protocols.try_push(protocol)<span class="question-mark">?</span>;
                 }
-
-                <span class="kw">let </span>doc = <span class="kw">if </span>assoc.docs.is_empty() {
-                    cx.render_docs(meta, protocol.doc, <span class="bool-val">false</span>)<span class="question-mark">?
-                </span>} <span class="kw">else </span>{
-                    cx.render_docs(meta, assoc.docs, capture_tests)<span class="question-mark">?
-                </span>};
-
-                <span class="kw">let </span>repr = <span class="kw">if let </span><span class="prelude-val">Some</span>(repr) = protocol.repr {
-                    <span class="prelude-val">Some</span>(cx.render_code([repr.replace(<span class="string">"$value"</span>, value.as_ref())])<span class="question-mark">?</span>)
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">None
-                </span>};
-
-                <span class="kw">let </span>protocol = Protocol {
-                    name: protocol.name,
-                    field,
-                    repr,
-                    return_type: cx.return_type(assoc.return_type)<span class="question-mark">?</span>,
-                    doc,
-                    deprecated: assoc.deprecated,
-                };
-
-                protocols.try_push(protocol)<span class="question-mark">?</span>;
             }
         }
     }
@@ -570,8 +573,7 @@
     <span class="kw">let </span>module = cx.module_path_html(meta, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>(protocols, methods, <span class="kw">_</span>, index, traits) = build_assoc_fns(cx, meta)<span class="question-mark">?</span>;
-    <span class="kw">let </span>item = meta.item.context(<span class="string">"Missing type item"</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>name = item.last().context(<span class="string">"Missing module name"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>name = meta.item.last().context(<span class="string">"Missing module name"</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>doc = cx.render_docs(meta, meta.docs, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
 
@@ -582,7 +584,7 @@
             what_class,
             module,
             name,
-            item,
+            item: meta.item,
             methods,
             protocols,
             traits,

@@ -168,6 +168,10 @@
 <a href="#168" id="168">168</a>
 <a href="#169" id="169">169</a>
 <a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::hash_map::{<span class="self">self</span>, HashMap};
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -211,11 +215,7 @@
 
 <span class="kw">impl </span>Visitor {
     <span class="doccomment">/// Construct a visitor with the given base component.
-    </span><span class="kw">pub fn </span>new&lt;I&gt;(base: I) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt;
-    <span class="kw">where
-        </span>I: IntoIterator,
-        I::Item: IntoComponent,
-    {
+    </span><span class="kw">pub fn </span>new(base: <span class="kw">impl </span>IntoIterator&lt;Item: IntoComponent&gt;) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">Self </span>{
             base: base.into_iter().try_collect::&lt;ItemBuf&gt;()<span class="question-mark">?</span>,
             names: Names::default(),
@@ -224,13 +224,23 @@
             associated: HashMap::new(),
         };
 
-        <span class="kw">let </span>hash = Hash::type_hash(<span class="kw-2">&amp;</span>this.base);
         this.names.insert(<span class="kw-2">&amp;</span>this.base)<span class="question-mark">?</span>;
-        this.data.try_insert(
-            hash,
-            VisitorData::new(this.base.try_clone()<span class="question-mark">?</span>, hash, <span class="prelude-val">Some</span>(meta::Kind::Module)),
-        )<span class="question-mark">?</span>;
-        this.item_to_hash.try_insert(this.base.try_clone()<span class="question-mark">?</span>, hash)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>it = this.base.iter();
+
+        <span class="kw">while </span>!it.as_item().is_empty() {
+            <span class="kw">let </span>hash = Hash::type_hash(it.as_item());
+
+            this.data.try_insert(
+                hash,
+                VisitorData::new(it.as_item().try_to_owned()<span class="question-mark">?</span>, hash, <span class="prelude-val">Some</span>(meta::Kind::Module)),
+            )<span class="question-mark">?</span>;
+
+            this.item_to_hash
+                .try_insert(it.as_item().try_to_owned()<span class="question-mark">?</span>, hash)<span class="question-mark">?</span>;
+            it.next_back();
+        }
+
         <span class="prelude-val">Ok</span>(this)
     }
 
@@ -244,6 +254,22 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>VisitorData&gt; {
         <span class="self">self</span>.data.get(<span class="kw-2">&amp;</span>hash)
     }
+
+    <span class="kw">fn </span>get_or_insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, item: <span class="kw-2">&amp;</span>Item) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>VisitorData, MetaError&gt; {
+        <span class="kw">let </span>item = <span class="self">self</span>.base.join(item)<span class="question-mark">?</span>;
+        <span class="kw">let </span>hash = Hash::type_hash(<span class="kw-2">&amp;</span>item);
+
+        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>item, <span class="question-mark">?</span>hash, <span class="string">"getting"</span>);
+
+        <span class="kw">let </span>data = <span class="kw">match </span><span class="self">self</span>.data.entry(hash) {
+            hash_map::Entry::Occupied(e) =&gt; e.into_mut(),
+            hash_map::Entry::Vacant(e) =&gt; {
+                e.try_insert(VisitorData::new(item.try_to_owned()<span class="question-mark">?</span>, hash, <span class="prelude-val">None</span>))<span class="question-mark">?
+            </span>}
+        };
+
+        <span class="prelude-val">Ok</span>(data)
+    }
 }
 
 <span class="kw">impl </span>CompileVisitor <span class="kw">for </span>Visitor {
@@ -254,22 +280,19 @@
         }
 
         <span class="kw">let </span>item = <span class="self">self</span>.base.join(meta.item)<span class="question-mark">?</span>;
-        <span class="macro">tracing::trace!</span>(base = <span class="question-mark">?</span><span class="self">self</span>.base, meta = <span class="question-mark">?</span>meta.item, <span class="question-mark">?</span>item, <span class="string">"register meta"</span>);
+        <span class="kw">let </span>hash = Hash::type_hash(<span class="kw-2">&amp;</span>item);
+
+        <span class="macro">tracing::trace!</span>(base = <span class="question-mark">?</span><span class="self">self</span>.base, meta = <span class="question-mark">?</span>meta.item, <span class="question-mark">?</span>item, <span class="question-mark">?</span>hash, <span class="string">"register meta"</span>);
 
         <span class="self">self</span>.names.insert(<span class="kw-2">&amp;</span>item)<span class="question-mark">?</span>;
-        <span class="self">self</span>.item_to_hash
-            .try_insert(item.try_to_owned()<span class="question-mark">?</span>, meta.hash)<span class="question-mark">?</span>;
+        <span class="self">self</span>.item_to_hash.try_insert(item.try_to_owned()<span class="question-mark">?</span>, hash)<span class="question-mark">?</span>;
 
-        <span class="kw">match </span><span class="self">self</span>.data.entry(meta.hash) {
+        <span class="kw">match </span><span class="self">self</span>.data.entry(hash) {
             hash_map::Entry::Occupied(e) =&gt; {
                 e.into_mut().kind = <span class="prelude-val">Some</span>(meta.kind.try_clone()<span class="question-mark">?</span>);
             }
             hash_map::Entry::Vacant(e) =&gt; {
-                e.try_insert(VisitorData::new(
-                    item,
-                    meta.hash,
-                    <span class="prelude-val">Some</span>(meta.kind.try_clone()<span class="question-mark">?</span>),
-                ))<span class="question-mark">?</span>;
+                e.try_insert(VisitorData::new(item, hash, <span class="prelude-val">Some</span>(meta.kind.try_clone()<span class="question-mark">?</span>)))<span class="question-mark">?</span>;
             }
         }
 
@@ -277,7 +300,7 @@
             <span class="self">self</span>.associated
                 .entry(container)
                 .or_try_default()<span class="question-mark">?
-                </span>.try_push(meta.hash)<span class="question-mark">?</span>;
+                </span>.try_push(hash)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -287,28 +310,14 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _location: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Located,
         item: <span class="kw-2">&amp;</span>Item,
-        hash: Hash,
+        <span class="kw">_</span>: Hash,
         string: <span class="kw-2">&amp;</span>str,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MetaError&gt; {
-        <span class="comment">// Documentation comments are literal source lines, so they're newline
-        // terminated. Since we perform our own internal newlines conversion
-        // these need to be trimmed - at least between each doc item.
-        </span><span class="kw">fn </span>newlines(c: char) -&gt; bool {
-            <span class="macro">matches!</span>(c, <span class="string">'\n' </span>| <span class="string">'\r'</span>)
-        }
-
-        <span class="kw">let </span>item = <span class="self">self</span>.base.join(item)<span class="question-mark">?</span>;
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>item, <span class="string">"visiting comment"</span>);
-
-        <span class="kw">let </span>data = <span class="kw">match </span><span class="self">self</span>.data.entry(hash) {
-            hash_map::Entry::Occupied(e) =&gt; e.into_mut(),
-            hash_map::Entry::Vacant(e) =&gt; {
-                e.try_insert(VisitorData::new(item.try_to_owned()<span class="question-mark">?</span>, hash, <span class="prelude-val">None</span>))<span class="question-mark">?
-            </span>}
-        };
+        <span class="kw">let </span>data = <span class="self">self</span>.get_or_insert(item)<span class="question-mark">?</span>;
 
         data.docs
             .try_push(string.trim_end_matches(newlines).try_to_owned()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -316,26 +325,25 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _location: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Located,
         item: <span class="kw-2">&amp;</span>Item,
-        hash: Hash,
+        <span class="kw">_</span>: Hash,
         field: <span class="kw-2">&amp;</span>str,
         string: <span class="kw-2">&amp;</span>str,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MetaError&gt; {
-        <span class="kw">let </span>item = <span class="self">self</span>.base.join(item)<span class="question-mark">?</span>;
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>item, <span class="string">"visiting field comment"</span>);
-
-        <span class="kw">let </span>data = <span class="kw">match </span><span class="self">self</span>.data.entry(hash) {
-            hash_map::Entry::Occupied(e) =&gt; e.into_mut(),
-            hash_map::Entry::Vacant(e) =&gt; {
-                e.try_insert(VisitorData::new(item.try_to_owned()<span class="question-mark">?</span>, hash, <span class="prelude-val">None</span>))<span class="question-mark">?
-            </span>}
-        };
+        <span class="kw">let </span>data = <span class="self">self</span>.get_or_insert(item)<span class="question-mark">?</span>;
 
         data.field_docs
             .entry(field.try_into()<span class="question-mark">?</span>)
             .or_try_default()<span class="question-mark">?
-            </span>.try_push(string.try_to_owned()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+            </span>.try_push(string.trim_end_matches(newlines).try_to_owned()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
+}
+
+<span class="comment">// Documentation comments are literal source lines, so they're newline
+// terminated. Since we perform our own internal newlines conversion
+// these need to be trimmed - at least between each doc item.
+</span><span class="kw">fn </span>newlines(c: char) -&gt; bool {
+    <span class="macro">matches!</span>(c, <span class="string">'\n' </span>| <span class="string">'\r'</span>)
 }
 </code></pre></div></section></main></body></html>

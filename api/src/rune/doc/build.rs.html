@@ -1293,18 +1293,6 @@
 <a href="#1293" id="1293">1293</a>
 <a href="#1294" id="1294">1294</a>
 <a href="#1295" id="1295">1295</a>
-<a href="#1296" id="1296">1296</a>
-<a href="#1297" id="1297">1297</a>
-<a href="#1298" id="1298">1298</a>
-<a href="#1299" id="1299">1299</a>
-<a href="#1300" id="1300">1300</a>
-<a href="#1301" id="1301">1301</a>
-<a href="#1302" id="1302">1302</a>
-<a href="#1303" id="1303">1303</a>
-<a href="#1304" id="1304">1304</a>
-<a href="#1305" id="1305">1305</a>
-<a href="#1306" id="1306">1306</a>
-<a href="#1307" id="1307">1307</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>js;
 <span class="kw">mod </span>markdown;
 <span class="kw">mod </span>type_;
@@ -1334,7 +1322,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::item::ComponentRef;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::static_type;
 <span class="kw">use </span><span class="kw">crate</span>::std::borrow::ToOwned;
-<span class="kw">use crate</span>::{Hash, Item, ItemBuf};
+<span class="kw">use crate</span>::{Hash, Item};
 
 <span class="comment">// InspiredGitHub
 // Solarized (dark)
@@ -1347,12 +1335,12 @@
 <span class="kw">const </span>RUNEDOC_CSS: <span class="kw-2">&amp;</span>str = <span class="string">"runedoc.css"</span>;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Builder&lt;<span class="lifetime">'m</span>&gt; {
-    state: State,
+    state: State&lt;<span class="lifetime">'m</span>&gt;,
     builder: rust_alloc::boxed::Box&lt;<span class="kw">dyn </span>FnOnce(<span class="kw-2">&amp;</span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; + <span class="lifetime">'m</span>&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'m</span>&gt; Builder&lt;<span class="lifetime">'m</span>&gt; {
-    <span class="kw">fn </span>new&lt;B&gt;(cx: <span class="kw-2">&amp;</span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, builder: B) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt;
+    <span class="kw">fn </span>new&lt;B&gt;(cx: <span class="kw-2">&amp;</span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'m</span>&gt;, builder: B) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt;
     <span class="kw">where
         </span>B: FnOnce(<span class="kw-2">&amp;</span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; + <span class="lifetime">'m</span>,
     {
@@ -1442,11 +1430,13 @@
 
     <span class="kw">for </span>item <span class="kw">in </span>context.iter_modules() {
         <span class="kw">let </span>item = item<span class="question-mark">?</span>;
+
         <span class="kw">let </span>meta = context
             .meta(<span class="kw-2">&amp;</span>item)<span class="question-mark">?
             </span>.into_iter()
             .find(|m| <span class="macro">matches!</span>(<span class="kw-2">&amp;</span>m.kind, Kind::Module))
             .with_context(|| <span class="macro">anyhow!</span>(<span class="string">"Missing meta for {item}"</span>))<span class="question-mark">?</span>;
+
         initial.try_push_back((Build::Module, meta))<span class="question-mark">?</span>;
     }
 
@@ -1520,8 +1510,7 @@
             Build::Module =&gt; {
                 cx.set_path(meta)<span class="question-mark">?</span>;
                 builders.try_push(module(<span class="kw-2">&amp;mut </span>cx, meta, <span class="kw-2">&amp;mut </span>queue)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>item = meta.item.context(<span class="string">"Missing item"</span>)<span class="question-mark">?</span>;
-                modules.try_push((item, cx.state.path.clone()))<span class="question-mark">?</span>;
+                modules.try_push((meta.item, cx.state.path.clone()))<span class="question-mark">?</span>;
             }
         }
     }
@@ -1636,14 +1625,15 @@
 }
 
 <span class="attr">#[derive(Default, TryClone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>State {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>State&lt;<span class="lifetime">'m</span>&gt; {
     <span class="attr">#[try_clone(with = RelativePathBuf::clone)]
     </span>path: RelativePathBuf,
-    item: ItemBuf,
+    <span class="attr">#[try_clone(copy)]
+    </span>item: <span class="kw-2">&amp;</span><span class="lifetime">'m </span>Item,
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'m</span>&gt; {
-    state: State,
+    state: State&lt;<span class="lifetime">'m</span>&gt;,
     <span class="doccomment">/// A collection of all items visited.
     </span>index: Vec&lt;IndexEntry&lt;<span class="lifetime">'m</span>&gt;&gt;,
     name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
@@ -1675,18 +1665,16 @@
             kind =&gt; <span class="macro">bail!</span>(<span class="string">"Cannot set path for {kind:?}"</span>),
         };
 
-        <span class="kw">let </span>item = meta.item.context(<span class="string">"Missing meta item"</span>)<span class="question-mark">?</span>;
-
         <span class="self">self</span>.state.path = RelativePathBuf::new();
-        <span class="self">self</span>.state.item = item.try_to_owned()<span class="question-mark">?</span>;
+        <span class="self">self</span>.state.item = meta.item;
 
-        build_item_path(<span class="self">self</span>.name, item, item_kind, <span class="kw-2">&amp;mut </span><span class="self">self</span>.state.path)<span class="question-mark">?</span>;
+        build_item_path(<span class="self">self</span>.name, meta.item, item_kind, <span class="kw-2">&amp;mut </span><span class="self">self</span>.state.path)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>doc = <span class="self">self</span>.render_line_docs(meta, meta.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>;
 
         <span class="self">self</span>.index.try_push(IndexEntry {
             path: <span class="self">self</span>.state.path.clone(),
-            item: Cow::Borrowed(item),
+            item: Cow::Borrowed(meta.item),
             kind: IndexKind::Item(item_kind),
             doc,
         })<span class="question-mark">?</span>;
@@ -1815,7 +1803,7 @@
 
         <span class="kw">for </span>(content, params) <span class="kw">in </span>tests {
             <span class="self">self</span>.tests.try_push(Test {
-                item: <span class="self">self</span>.state.item.try_clone()<span class="question-mark">?</span>,
+                item: <span class="self">self</span>.state.item.try_to_owned()<span class="question-mark">?</span>,
                 content,
                 params,
             })<span class="question-mark">?</span>;
@@ -1834,13 +1822,21 @@
 
     <span class="doccomment">/// Build backlinks for the current item.
     </span><span class="kw">fn </span>module_path_html(<span class="kw-2">&amp;</span><span class="self">self</span>, meta: Meta&lt;<span class="lifetime">'_</span>&gt;, is_module: bool) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>module = Vec::new();
-        <span class="kw">let </span>item = meta.item.context(<span class="string">"Missing module item"</span>)<span class="question-mark">?</span>;
+        <span class="kw">fn </span>unqualified_component&lt;<span class="lifetime">'a</span>&gt;(c: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ComponentRef&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>fmt::Display {
+            <span class="kw">match </span>c {
+                ComponentRef::Crate(name) =&gt; name,
+                ComponentRef::Str(name) =&gt; name,
+                c =&gt; c,
+            }
+        }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>iter = item.iter();
+        <span class="kw">let </span><span class="kw-2">mut </span>module = Vec::new();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = meta.item.iter();
 
         <span class="kw">while </span>iter.next_back().is_some() {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = iter.as_item().last() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = iter.as_item().last() {
+                <span class="kw">let </span>name: <span class="kw-2">&amp;</span><span class="kw">dyn </span>fmt::Display = unqualified_component(<span class="kw-2">&amp;</span>c);
                 <span class="kw">let </span>url = <span class="self">self</span>.item_path(iter.as_item(), ItemKind::Module)<span class="question-mark">?</span>;
                 module.try_push(<span class="macro">try_format!</span>(<span class="string">"&lt;a class=\"module\" href=\"{url}\"&gt;{name}&lt;/a&gt;"</span>))<span class="question-mark">?</span>;
             }
@@ -1849,7 +1845,8 @@
         module.reverse();
 
         <span class="kw">if </span>is_module {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = item.last() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = meta.item.last() {
+                <span class="kw">let </span>name: <span class="kw-2">&amp;</span><span class="kw">dyn </span>fmt::Display = unqualified_component(<span class="kw-2">&amp;</span>c);
                 module.try_push(<span class="macro">try_format!</span>(<span class="string">"&lt;span class=\"module\"&gt;{name}&lt;/span&gt;"</span>))<span class="question-mark">?</span>;
             }
         }
@@ -1932,16 +1929,12 @@
                 <span class="kw">break </span><span class="lifetime">'out </span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, text);
             };
 
-            <span class="kw">let </span><span class="prelude-val">Some</span>(item) = meta.item <span class="kw">else </span>{
-                <span class="kw">break </span><span class="lifetime">'out </span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(kind), text);
-            };
-
             <span class="kw">let </span>text = <span class="kw">match </span>text {
                 <span class="prelude-val">Some</span>(text) =&gt; <span class="prelude-val">Some</span>(text),
-                <span class="prelude-val">None </span>=&gt; item.last().and_then(|c| c.as_str()),
+                <span class="prelude-val">None </span>=&gt; meta.item.last().and_then(|c| c.as_str()),
             };
 
-            (<span class="prelude-val">Some</span>(<span class="self">self</span>.item_path(item, kind)<span class="question-mark">?</span>), <span class="prelude-val">Some</span>(kind), text)
+            (<span class="prelude-val">Some</span>(<span class="self">self</span>.item_path(meta.item, kind)<span class="question-mark">?</span>), <span class="prelude-val">Some</span>(kind), text)
         };
 
         <span class="kw">let </span>(path, kind, text) = outcome;
@@ -2070,14 +2063,10 @@
         <span class="kw">let </span>link = link.trim_matches(|c| <span class="macro">matches!</span>(c, <span class="string">'`'</span>));
         <span class="kw">let </span>(link, flavor) = flavor(link);
 
-        <span class="kw">let </span><span class="prelude-val">Some</span>(item) = meta.item <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        };
-
         <span class="kw">let </span>item = <span class="kw">if </span><span class="macro">matches!</span>(meta.kind, Kind::Module) {
-            item.join([link])<span class="question-mark">?
+            meta.item.join([link])<span class="question-mark">?
         </span>} <span class="kw">else </span>{
-            <span class="kw">let </span><span class="prelude-val">Some</span>(parent) = item.parent() <span class="kw">else </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(parent) = meta.item.parent() <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
             };
 
@@ -2225,7 +2214,7 @@
     <span class="attr">#[derive(Serialize)]
     </span><span class="kw">struct </span>Type&lt;<span class="lifetime">'a</span>&gt; {
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_item"</span>)]
-        </span>item: ItemBuf,
+        </span>item: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Item,
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_component_ref"</span>)]
         </span>name: ComponentRef&lt;<span class="lifetime">'a</span>&gt;,
         path: RelativePathBuf,
@@ -2236,7 +2225,7 @@
     </span><span class="kw">struct </span>Struct&lt;<span class="lifetime">'a</span>&gt; {
         path: RelativePathBuf,
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_item"</span>)]
-        </span>item: ItemBuf,
+        </span>item: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Item,
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_component_ref"</span>)]
         </span>name: ComponentRef&lt;<span class="lifetime">'a</span>&gt;,
         doc: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -2246,7 +2235,7 @@
     </span><span class="kw">struct </span>Enum&lt;<span class="lifetime">'a</span>&gt; {
         path: RelativePathBuf,
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_item"</span>)]
-        </span>item: ItemBuf,
+        </span>item: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Item,
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_component_ref"</span>)]
         </span>name: ComponentRef&lt;<span class="lifetime">'a</span>&gt;,
         doc: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -2268,7 +2257,7 @@
         deprecated: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
         path: RelativePathBuf,
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_item"</span>)]
-        </span>item: ItemBuf,
+        </span>item: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Item,
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_component_ref"</span>)]
         </span>name: ComponentRef&lt;<span class="lifetime">'a</span>&gt;,
         args: String,
@@ -2288,14 +2277,12 @@
     <span class="attr">#[derive(Serialize)]
     </span><span class="kw">struct </span>Trait&lt;<span class="lifetime">'a</span>&gt; {
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_item"</span>)]
-        </span>item: ItemBuf,
+        </span>item: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Item,
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_component_ref"</span>)]
         </span>name: ComponentRef&lt;<span class="lifetime">'a</span>&gt;,
         path: RelativePathBuf,
         doc: <span class="prelude-ty">Option</span>&lt;String&gt;,
     }
-
-    <span class="kw">let </span>meta_item = meta.item.context(<span class="string">"Missing item"</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="kw-2">mut </span>types = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>structs = Vec::new();
@@ -2305,19 +2292,17 @@
     <span class="kw">let </span><span class="kw-2">mut </span>modules = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>traits = Vec::new();
 
-    <span class="kw">for </span>(<span class="kw">_</span>, name) <span class="kw">in </span>cx.context.iter_components(meta_item)<span class="question-mark">? </span>{
-        <span class="kw">let </span>item = meta_item.join([name])<span class="question-mark">?</span>;
+    <span class="kw">for </span>(<span class="kw">_</span>, name) <span class="kw">in </span>cx.context.iter_components(meta.item)<span class="question-mark">? </span>{
+        <span class="kw">let </span>lookup_item = meta.item.join([name])<span class="question-mark">?</span>;
 
-        <span class="kw">for </span>m <span class="kw">in </span>cx.context.meta(<span class="kw-2">&amp;</span>item)<span class="question-mark">? </span>{
+        <span class="kw">for </span>m <span class="kw">in </span>cx.context.meta(<span class="kw-2">&amp;</span>lookup_item)<span class="question-mark">? </span>{
             <span class="kw">match </span>m.kind {
                 Kind::Type { .. } =&gt; {
                     queue.try_push_front((Build::Type, m))<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>path = cx.item_path(<span class="kw-2">&amp;</span>item, ItemKind::Type)<span class="question-mark">?</span>;
-
                     types.try_push(Type {
-                        item: item.try_clone()<span class="question-mark">?</span>,
-                        path,
+                        path: cx.item_path(m.item, ItemKind::Type)<span class="question-mark">?</span>,
+                        item: m.item,
                         name,
                         doc: cx.render_line_docs(m, m.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>,
                     })<span class="question-mark">?</span>;
@@ -2325,11 +2310,9 @@
                 Kind::Struct { .. } =&gt; {
                     queue.try_push_front((Build::Struct, m))<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>path = cx.item_path(<span class="kw-2">&amp;</span>item, ItemKind::Struct)<span class="question-mark">?</span>;
-
                     structs.try_push(Struct {
-                        item: item.try_clone()<span class="question-mark">?</span>,
-                        path,
+                        path: cx.item_path(m.item, ItemKind::Struct)<span class="question-mark">?</span>,
+                        item: m.item,
                         name,
                         doc: cx.render_line_docs(m, m.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>,
                     })<span class="question-mark">?</span>;
@@ -2337,23 +2320,19 @@
                 Kind::Enum { .. } =&gt; {
                     queue.try_push_front((Build::Enum, m))<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>path = cx.item_path(<span class="kw-2">&amp;</span>item, ItemKind::Enum)<span class="question-mark">?</span>;
-
                     enums.try_push(Enum {
-                        item: item.try_clone()<span class="question-mark">?</span>,
-                        path,
+                        path: cx.item_path(m.item, ItemKind::Enum)<span class="question-mark">?</span>,
+                        item: m.item,
                         name,
                         doc: cx.render_line_docs(m, m.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>,
                     })<span class="question-mark">?</span>;
                 }
                 Kind::Macro =&gt; {
-                    <span class="kw">let </span>item = m.item.context(<span class="string">"Missing macro item"</span>)<span class="question-mark">?</span>;
-
                     queue.try_push_front((Build::Macro, m))<span class="question-mark">?</span>;
 
                     macros.try_push(Macro {
-                        path: cx.item_path(item, ItemKind::Macro)<span class="question-mark">?</span>,
-                        item,
+                        path: cx.item_path(m.item, ItemKind::Macro)<span class="question-mark">?</span>,
+                        item: m.item,
                         name,
                         doc: cx.render_line_docs(m, m.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>,
                     })<span class="question-mark">?</span>;
@@ -2368,25 +2347,23 @@
                     functions.try_push(Function {
                         is_async: f.is_async,
                         deprecated: meta.deprecated,
-                        path: cx.item_path(<span class="kw-2">&amp;</span>item, ItemKind::Function)<span class="question-mark">?</span>,
-                        item: item.try_clone()<span class="question-mark">?</span>,
+                        path: cx.item_path(m.item, ItemKind::Function)<span class="question-mark">?</span>,
+                        item: m.item,
                         name,
                         args: cx.args_to_string(f.signature, f.arguments)<span class="question-mark">?</span>,
                         doc: cx.render_line_docs(m, m.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>,
                     })<span class="question-mark">?</span>;
                 }
                 Kind::Module =&gt; {
-                    <span class="kw">let </span>item = m.item.context(<span class="string">"Missing module item"</span>)<span class="question-mark">?</span>;
-
                     <span class="comment">// Skip over crate items, since they are added separately.
-                    </span><span class="kw">if </span>meta_item.is_empty() &amp;&amp; item.as_crate().is_some() {
+                    </span><span class="kw">if </span>meta.item.is_empty() &amp;&amp; m.item.as_crate().is_some() {
                         <span class="kw">continue</span>;
                     }
 
                     queue.try_push_front((Build::Module, m))<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>path = cx.item_path(item, ItemKind::Module)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>name = item.last().context(<span class="string">"missing name of module"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>path = cx.item_path(m.item, ItemKind::Module)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>name = m.item.last().context(<span class="string">"missing name of module"</span>)<span class="question-mark">?</span>;
 
                     <span class="comment">// Prevent multiple entries of a module, with no documentation
                     </span>modules.retain(|module: <span class="kw-2">&amp;</span>Module&lt;<span class="lifetime">'_</span>&gt;| {
@@ -2394,7 +2371,7 @@
                     });
 
                     modules.try_push(Module {
-                        item,
+                        item: m.item,
                         name,
                         path,
                         doc: cx.render_line_docs(m, m.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>,
@@ -2403,11 +2380,9 @@
                 Kind::Trait { .. } =&gt; {
                     queue.try_push_front((Build::Trait, m))<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>path = cx.item_path(<span class="kw-2">&amp;</span>item, ItemKind::Trait)<span class="question-mark">?</span>;
-
                     traits.try_push(Trait {
-                        item: item.try_clone()<span class="question-mark">?</span>,
-                        path,
+                        path: cx.item_path(m.item, ItemKind::Trait)<span class="question-mark">?</span>,
+                        item: m.item,
                         name,
                         doc: cx.render_line_docs(m, m.docs.get(..<span class="number">1</span>).unwrap_or_default())<span class="question-mark">?</span>,
                     })<span class="question-mark">?</span>;
@@ -2424,7 +2399,7 @@
     <span class="prelude-val">Ok</span>(Builder::new(cx, <span class="kw">move </span>|cx| {
         cx.module_template.render(<span class="kw-2">&amp;</span>Params {
             shared: cx.shared()<span class="question-mark">?</span>,
-            item: meta_item,
+            item: meta.item,
             module: cx.module_path_html(meta, <span class="bool-val">true</span>)<span class="question-mark">?</span>,
             doc,
             types,
@@ -2454,14 +2429,13 @@
     }
 
     <span class="kw">let </span>doc = cx.render_docs(meta, meta.docs, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>item = meta.item.context(<span class="string">"Missing item"</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>name = item.last().context(<span class="string">"Missing macro name"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>name = meta.item.last().context(<span class="string">"Missing macro name"</span>)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(Builder::new(cx, <span class="kw">move </span>|cx| {
         cx.macro_template.render(<span class="kw-2">&amp;</span>Params {
             shared: cx.shared()<span class="question-mark">?</span>,
             module: cx.module_path_html(meta, <span class="bool-val">false</span>)<span class="question-mark">?</span>,
-            item,
+            item: meta.item,
             name,
             doc,
         })
@@ -2477,6 +2451,8 @@
         </span>shared: Shared&lt;<span class="lifetime">'a</span>&gt;,
         module: String,
         is_async: bool,
+        is_test: bool,
+        is_bench: bool,
         deprecated: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt;,
         <span class="attr">#[serde(serialize_with = <span class="string">"serialize_item"</span>)]
         </span>item: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Item,
@@ -2501,17 +2477,17 @@
 
     <span class="kw">let </span>return_type = cx.return_type(f.return_type)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>item = meta.item.context(<span class="string">"Missing item"</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>deprecated = meta.deprecated;
-    <span class="kw">let </span>name = item.last().context(<span class="string">"Missing item name"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>name = meta.item.last().context(<span class="string">"Missing item name"</span>)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(Builder::new(cx, <span class="kw">move </span>|cx| {
         cx.function_template.render(<span class="kw-2">&amp;</span>Params {
             shared: cx.shared()<span class="question-mark">?</span>,
             module: cx.module_path_html(meta, <span class="bool-val">false</span>)<span class="question-mark">?</span>,
             is_async: f.is_async,
-            deprecated,
-            item,
+            is_test: f.is_test,
+            is_bench: f.is_bench,
+            deprecated: meta.deprecated,
+            item: meta.item,
             name,
             args: cx.args_to_string(f.signature, f.arguments)<span class="question-mark">?</span>,
             doc,
@@ -2525,7 +2501,7 @@
 <span class="kw">where
     </span>S: Serializer,
 {
-    serializer.collect_str(item)
+    serializer.collect_str(<span class="kw-2">&amp;</span>item.unqalified())
 }
 
 <span class="doccomment">/// Helper to serialize a component ref.
