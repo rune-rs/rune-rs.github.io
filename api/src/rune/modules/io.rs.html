@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/modules/io.rs`."><title>io.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5ca6ca2a1f83705a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (cefe1dcef 2024-07-22)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/modules/io.rs`."><title>io.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5ca6ca2a1f83705a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (7120fdac7 2024-07-25)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -214,6 +214,9 @@
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
 <a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! I/O functions.
 
 </span><span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
@@ -226,7 +229,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::macros::{quote, FormatArgs, MacroContext, TokenStream};
 <span class="kw">use </span><span class="kw">crate</span>::parse::Parser;
 <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::runtime::{Formatter, InstAddress, Output, Panic, Stack, VmResult};
+</span><span class="kw">use </span><span class="kw">crate</span>::runtime::{Formatter, InstAddress, Memory, Output, Panic, VmResult};
 <span class="kw">use crate</span>::{ContextError, Module};
 
 <span class="doccomment">/// I/O functions.
@@ -236,21 +239,21 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>module = Module::from_meta(<span class="self">self</span>::module_meta)<span class="question-mark">?</span>.with_unique(<span class="string">"std::io"</span>);
 
-    module.item_mut().docs([
-        <span class="string">"The std::io module contains a number of common things"</span>,
-        <span class="string">"you’ll need when doing input and output."</span>,
-        <span class="string">"The most core parts of this module are the [print()], [println()], "</span>,
-        <span class="string">"and [dbg()] functions which are used to hook up printing for a Rune project."</span>,
-        <span class="string">""</span>,
-        <span class="string">"With complete names:"</span>,
-        <span class="string">"* `::std::io::print`"</span>,
-        <span class="string">"* `::std::io::println`"</span>,
-        <span class="string">"* `::std::io::dbg`"</span>,
-        <span class="string">""</span>,
-        <span class="string">"Their definitions can be omitted from the built-in standard library, and"</span>,
-        <span class="string">"can then easily be defined by third party modules allowing for printing"</span>,
-        <span class="string">"to be hooked up to whatever system you want."</span>,
-    ])<span class="question-mark">?</span>;
+    module.item_mut().docs(<span class="macro">docstring!</span> {
+        <span class="doccomment">/// The std::io module contains a number of common things
+        /// you’ll need when doing input and output.
+        /// The most core parts of this module are the [print()], [println()],
+        /// and [dbg()] functions which are used to hook up printing for a Rune project.
+        ///
+        /// With complete names:
+        /// * `::std::io::print`
+        /// * `::std::io::println`
+        /// * `::std::io::dbg`
+        ///
+        /// Their definitions can be omitted from the built-in standard library, and
+        /// can then easily be defined by third party modules allowing for printing
+        /// to be hooked up to whatever system you want.
+    </span>})<span class="question-mark">?</span>;
 
     <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
     </span>module.ty::&lt;io::Error&gt;()<span class="question-mark">?</span>;
@@ -262,25 +265,28 @@
         module.function_meta(print_impl)<span class="question-mark">?</span>;
         module.function_meta(println_impl)<span class="question-mark">?</span>;
 
-        module.raw_function(<span class="string">"dbg"</span>, dbg_impl).build()<span class="question-mark">?</span>.docs([
-            <span class="string">"Debug to output."</span>,
-            <span class="string">""</span>,
-            <span class="string">"This is the actual output hook, and if you install rune modules without"</span>,
-            <span class="string">"`I/O` enabled this will not be defined. It is then up to someone else to"</span>,
-            <span class="string">"provide an implementation."</span>,
-            <span class="string">""</span>,
-            <span class="string">"# Examples"</span>,
-            <span class="string">""</span>,
-            <span class="string">"```rune"</span>,
-            <span class="string">"let number = 10;"</span>,
-            <span class="string">"let number = number * 4;"</span>,
-            <span class="string">""</span>,
-            <span class="string">"let who = \"World\";"</span>,
-            <span class="string">"let string = format!(\"Hello {}\", who);"</span>,
-            <span class="string">""</span>,
-            <span class="string">"dbg(number, string);"</span>,
-            <span class="string">"```"</span>,
-        ])<span class="question-mark">?</span>;
+        module
+            .raw_function(<span class="string">"dbg"</span>, dbg_impl)
+            .build()<span class="question-mark">?
+            </span>.docs(<span class="macro">docstring!</span> {
+                <span class="doccomment">/// Debug to output.
+                ///
+                /// This is the actual output hook, and if you install rune modules without
+                /// `I/O` enabled this will not be defined. It is then up to someone else to
+                /// provide an implementation.
+                ///
+                /// # Examples
+                ///
+                /// ```rune
+                /// let number = 10;
+                /// let number = number * 4;
+                ///
+                /// let who = "World";
+                /// let string = format!("Hello {who}");
+                ///
+                /// dbg(number, string);
+                /// ```
+            </span>})<span class="question-mark">?</span>;
     }
 
     <span class="comment">// These are unconditionally included, but using them might cause a
@@ -299,7 +305,7 @@
 }
 
 <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-</span><span class="kw">fn </span>dbg_impl(stack: <span class="kw-2">&amp;mut </span>Stack, addr: InstAddress, args: usize, out: Output) -&gt; VmResult&lt;()&gt; {
+</span><span class="kw">fn </span>dbg_impl(stack: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Memory, addr: InstAddress, args: usize, out: Output) -&gt; VmResult&lt;()&gt; {
     <span class="kw">let </span>stdout = io::stdout();
     <span class="kw">let </span><span class="kw-2">mut </span>stdout = stdout.lock();
 

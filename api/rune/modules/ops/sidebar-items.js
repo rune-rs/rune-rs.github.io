@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["module"]};
+window.SIDEBAR_ITEMS = {"fn":["module"],"mod":["generator"]};

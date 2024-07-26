@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/context.rs`."><title>context.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5ca6ca2a1f83705a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (cefe1dcef 2024-07-22)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/context.rs`."><title>context.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5ca6ca2a1f83705a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (7120fdac7 2024-07-25)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -976,6 +976,287 @@
 <a href="#976" id="976">976</a>
 <a href="#977" id="977">977</a>
 <a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
+<a href="#1153" id="1153">1153</a>
+<a href="#1154" id="1154">1154</a>
+<a href="#1155" id="1155">1155</a>
+<a href="#1156" id="1156">1156</a>
+<a href="#1157" id="1157">1157</a>
+<a href="#1158" id="1158">1158</a>
+<a href="#1159" id="1159">1159</a>
+<a href="#1160" id="1160">1160</a>
+<a href="#1161" id="1161">1161</a>
+<a href="#1162" id="1162">1162</a>
+<a href="#1163" id="1163">1163</a>
+<a href="#1164" id="1164">1164</a>
+<a href="#1165" id="1165">1165</a>
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
+<a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
+<a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>::rust_alloc::sync::Arc;
@@ -983,23 +1264,181 @@
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, BTreeSet, Box, HashMap, HashSet, String, Vec};
-<span class="kw">use </span><span class="kw">crate</span>::compile::meta;
-<span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::compile::Docs;
 <span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::compile::MetaInfo;
-<span class="kw">use </span><span class="kw">crate</span>::compile::{ContextError, Names};
+<span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, ContextError, Names};
+<span class="kw">use </span><span class="kw">crate</span>::compile::{meta, Docs};
+<span class="kw">use </span><span class="kw">crate</span>::function::{Function, Plain};
+<span class="kw">use </span><span class="kw">crate</span>::function_meta::{AssociatedName, ToInstance};
 <span class="kw">use </span><span class="kw">crate</span>::hash;
 <span class="kw">use </span><span class="kw">crate</span>::item::{ComponentRef, IntoComponent};
+<span class="kw">use </span><span class="kw">crate</span>::macros::{MacroContext, TokenStream};
 <span class="kw">use </span><span class="kw">crate</span>::module::{
-    Fields, Module, ModuleAssociated, ModuleAssociatedKind, ModuleItem, ModuleType,
+    DocFunction, Fields, Module, ModuleAssociated, ModuleAssociatedKind, ModuleFunction,
+    ModuleItem, ModuleItemCommon, ModuleReexport, ModuleTrait, ModuleTraitImpl, ModuleType,
     TypeSpecification,
 };
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    AttributeMacroHandler, ConstValue, FunctionHandler, MacroHandler, Protocol, RuntimeContext,
-    StaticType, TypeCheck, TypeInfo, VariantRtti,
+    ConstValue, FunctionHandler, InstAddress, Memory, Output, Protocol, RuntimeContext, StaticType,
+    TypeCheck, TypeInfo, VariantRtti, VmResult,
 };
 <span class="kw">use crate</span>::{Hash, Item, ItemBuf};
+
+<span class="doccomment">/// A (type erased) macro handler.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>MacroHandler =
+    <span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>MacroContext, <span class="kw-2">&amp;</span>TokenStream) -&gt; compile::Result&lt;TokenStream&gt; + Send + Sync;
+
+<span class="doccomment">/// Invoked when types implement a trait.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>TraitHandler =
+    <span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>TraitContext&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; + Send + Sync;
+
+<span class="doccomment">/// A (type erased) attribute macro handler.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>AttributeMacroHandler = <span class="kw">dyn </span>Fn(<span class="kw-2">&amp;mut </span>MacroContext, <span class="kw-2">&amp;</span>TokenStream, <span class="kw-2">&amp;</span>TokenStream) -&gt; compile::Result&lt;TokenStream&gt;
+    + Send
+    + Sync;
+
+<span class="doccomment">/// Type used to install traits.
+</span><span class="kw">pub struct </span>TraitContext&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="doccomment">/// The context the trait function are being installed into.
+    </span>cx: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Context,
+    <span class="doccomment">/// The item being installed.
+    </span>item: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Item,
+    <span class="doccomment">/// The hash of the item being installed.
+    </span>hash: Hash,
+    <span class="doccomment">/// Type info of the type being installed.
+    </span>type_info: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>TypeInfo,
+    <span class="doccomment">/// The trait being implemented for.
+    </span>trait_item: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Item,
+    <span class="doccomment">/// Hash of the trait being impleemnted.
+    </span>trait_hash: Hash,
+}
+
+<span class="kw">impl </span>TraitContext&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="doccomment">/// Return the item the trait is being installed for.
+    </span><span class="kw">pub fn </span>item(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Item {
+        <span class="self">self</span>.item
+    }
+
+    <span class="doccomment">/// Return the hash the trait is being installed for.
+    </span><span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
+        <span class="self">self</span>.hash
+    }
+
+    <span class="doccomment">/// Find the given protocol function for the current type.
+    ///
+    /// This requires that the function is defined.
+    </span><span class="kw">pub fn </span>find(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw">impl </span>ToInstance) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;FunctionHandler&gt;, ContextError&gt; {
+        <span class="kw">let </span>name = name.to_instance()<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>hash = name
+            .kind
+            .hash(<span class="self">self</span>.hash)
+            .with_function_parameters(name.function_parameters);
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.cx.functions.get(<span class="kw-2">&amp;</span>hash) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ContextError::MissingTraitFunction {
+                name: name.kind.try_to_string()<span class="question-mark">?</span>,
+                item: <span class="self">self</span>.item.try_to_owned()<span class="question-mark">?</span>,
+                hash,
+                trait_item: <span class="self">self</span>.trait_item.try_to_owned()<span class="question-mark">?</span>,
+                trait_hash: <span class="self">self</span>.trait_hash,
+            });
+        };
+
+        <span class="prelude-val">Ok</span>(handler.clone())
+    }
+
+    <span class="doccomment">/// Try to find the given associated function.
+    ///
+    /// This does not require that the function is defined.
+    </span><span class="kw">pub fn </span>try_find(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        name: <span class="kw">impl </span>ToInstance,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Arc&lt;FunctionHandler&gt;&gt;, ContextError&gt; {
+        <span class="kw">let </span>name = name.to_instance()<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>hash = name
+            .kind
+            .hash(<span class="self">self</span>.hash)
+            .with_function_parameters(name.function_parameters);
+
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.cx.functions.get(<span class="kw-2">&amp;</span>hash).cloned())
+    }
+
+    <span class="doccomment">/// Define a new associated function for the current type.
+    </span><span class="kw">pub fn </span>function&lt;F, A&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        name: <span class="kw">impl </span>ToInstance,
+        handler: F,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;FunctionHandler&gt;, ContextError&gt;
+    <span class="kw">where
+        </span>F: Function&lt;A, Plain&gt;,
+    {
+        <span class="self">self</span>.raw_function(name, <span class="kw">move </span>|memory, addr, len, out| {
+            handler.fn_call(memory, addr, len, out)
+        })
+    }
+
+    <span class="doccomment">/// Define a new associated raw function for the current type.
+    </span><span class="kw">pub fn </span>raw_function&lt;F&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        name: <span class="kw">impl </span>ToInstance,
+        handler: F,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;FunctionHandler&gt;, ContextError&gt;
+    <span class="kw">where
+        </span>F: <span class="lifetime">'static </span>+ Fn(<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Memory, InstAddress, usize, Output) -&gt; VmResult&lt;()&gt; + Send + Sync,
+    {
+        <span class="kw">let </span>handler: Arc&lt;FunctionHandler&gt; = Arc::new(handler);
+        <span class="self">self</span>.function_handler(name, <span class="kw-2">&amp;</span>handler)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(handler)
+    }
+
+    <span class="doccomment">/// Define a new associated function for the current type using a raw
+    /// handler.
+    </span><span class="kw">pub fn </span>function_handler(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        name: <span class="kw">impl </span>ToInstance,
+        handler: <span class="kw-2">&amp;</span>Arc&lt;FunctionHandler&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
+        <span class="kw">let </span>name = name.to_instance()<span class="question-mark">?</span>;
+        <span class="self">self</span>.function_inner(name, handler)
+    }
+
+    <span class="kw">fn </span>function_inner(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        name: AssociatedName,
+        handler: <span class="kw-2">&amp;</span>Arc&lt;FunctionHandler&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
+        <span class="kw">let </span>function = ModuleFunction {
+            handler: handler.clone(),
+            trait_hash: <span class="prelude-val">Some</span>(<span class="self">self</span>.trait_hash),
+            doc: DocFunction {
+                <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+                </span>is_async: <span class="bool-val">false</span>,
+                <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+                </span>args: <span class="prelude-val">None</span>,
+                <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+                </span>argument_types: Box::default(),
+                <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+                </span>return_type: meta::DocType::empty(),
+            },
+        };
+
+        <span class="kw">let </span>assoc = ModuleAssociated {
+            container: <span class="self">self</span>.hash,
+            container_type_info: <span class="self">self</span>.type_info.try_clone()<span class="question-mark">?</span>,
+            name,
+            common: ModuleItemCommon {
+                docs: Docs::EMPTY,
+                deprecated: <span class="prelude-val">None</span>,
+            },
+            kind: ModuleAssociatedKind::Function(function),
+        };
+
+        <span class="self">self</span>.cx.install_associated(<span class="kw-2">&amp;</span>assoc)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+}
 
 <span class="doccomment">/// Context metadata.
 </span><span class="attr">#[derive(Debug)]
@@ -1069,7 +1508,7 @@
     <span class="doccomment">/// Registered metadata, in the order that it was registered.
     </span>meta: Vec&lt;ContextMeta&gt;,
     <span class="doccomment">/// Item metadata in the context.
-    </span>hash_to_meta: HashMap&lt;Hash, Vec&lt;usize&gt;&gt;,
+    </span>hash_to_meta: hash::Map&lt;Vec&lt;usize&gt;&gt;,
     <span class="doccomment">/// Store item to hash mapping.
     </span>item_to_hash: HashMap&lt;ItemBuf, BTreeSet&lt;Hash&gt;&gt;,
     <span class="doccomment">/// Registered native function handlers.
@@ -1078,13 +1517,18 @@
     </span>deprecations: hash::Map&lt;String&gt;,
     <span class="doccomment">/// Information on associated types.
     </span><span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-    </span>associated: HashMap&lt;Hash, Vec&lt;Hash&gt;&gt;,
+    </span>associated: hash::Map&lt;Vec&lt;Hash&gt;&gt;,
+    <span class="doccomment">/// Traits implemented by the given hash.
+    </span><span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+    </span>implemented_traits: hash::Map&lt;Vec&lt;Hash&gt;&gt;,
     <span class="doccomment">/// Registered native macro handlers.
-    </span>macros: HashMap&lt;Hash, Arc&lt;MacroHandler&gt;&gt;,
+    </span>macros: hash::Map&lt;Arc&lt;MacroHandler&gt;&gt;,
+    <span class="doccomment">/// Handlers for realising traits.
+    </span>traits: hash::Map&lt;<span class="prelude-ty">Option</span>&lt;Arc&lt;TraitHandler&gt;&gt;&gt;,
     <span class="doccomment">/// Registered native attribute macro handlers.
-    </span>attribute_macros: HashMap&lt;Hash, Arc&lt;AttributeMacroHandler&gt;&gt;,
+    </span>attribute_macros: hash::Map&lt;Arc&lt;AttributeMacroHandler&gt;&gt;,
     <span class="doccomment">/// Registered types.
-    </span>types: HashMap&lt;Hash, ContextType&gt;,
+    </span>types: hash::Map&lt;ContextType&gt;,
     <span class="doccomment">/// Registered internal enums.
     </span>internal_enums: HashSet&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>StaticType&gt;,
     <span class="doccomment">/// All available names in the context.
@@ -1117,6 +1561,8 @@
     /// * `::std::io::println`
     </span><span class="kw">pub fn </span>with_config(<span class="attr">#[allow(unused)] </span>stdio: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ContextError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">Self</span>::new();
+
+        this.install(<span class="kw">crate</span>::modules::iter::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         <span class="comment">// This must go first, because it includes types which are used in other modules.
         </span>this.install(<span class="kw">crate</span>::modules::core::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
 
@@ -1128,24 +1574,31 @@
         this.install(<span class="kw">crate</span>::modules::hash::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::cmp::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::collections::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
+        </span>this.install(<span class="kw">crate</span>::modules::collections::hash_map::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
+        </span>this.install(<span class="kw">crate</span>::modules::collections::hash_set::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
+        </span>this.install(<span class="kw">crate</span>::modules::collections::vec_deque::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::f64::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::tuple::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::fmt::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::future::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::i64::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::io::module(stdio)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-        this.install(<span class="kw">crate</span>::modules::iter::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::macros::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::macros::builtin::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::mem::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::object::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::ops::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        this.install(<span class="kw">crate</span>::modules::ops::generator::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::option::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::result::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::stream::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::string::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::test::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.install(<span class="kw">crate</span>::modules::vec::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        this.install(<span class="kw">crate</span>::modules::slice::module()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         this.has_default_modules = <span class="bool-val">true</span>;
         <span class="prelude-val">Ok</span>(this)
     }
@@ -1206,12 +1659,24 @@
             <span class="self">self</span>.install_type(module, ty)<span class="question-mark">?</span>;
         }
 
+        <span class="kw">for </span>t <span class="kw">in </span><span class="kw-2">&amp;</span>module.traits {
+            <span class="self">self</span>.install_trait(t)<span class="question-mark">?</span>;
+        }
+
         <span class="kw">for </span>item <span class="kw">in </span><span class="kw-2">&amp;</span>module.items {
             <span class="self">self</span>.install_item(module, item)<span class="question-mark">?</span>;
         }
 
         <span class="kw">for </span>assoc <span class="kw">in </span><span class="kw-2">&amp;</span>module.associated {
             <span class="self">self</span>.install_associated(assoc)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">for </span>t <span class="kw">in </span><span class="kw-2">&amp;</span>module.trait_impls {
+            <span class="self">self</span>.install_trait_impl(module, t)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">for </span>r <span class="kw">in </span><span class="kw-2">&amp;</span>module.reexports {
+            <span class="self">self</span>.install_reexport(r)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -1311,6 +1776,17 @@
             .copied()
     }
 
+    <span class="doccomment">/// Get all traits implemented for the given hash.
+    </span><span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>traits(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Hash&gt; + <span class="lifetime">'_ </span>{
+        <span class="self">self</span>.implemented_traits
+            .get(<span class="kw-2">&amp;</span>hash)
+            .map(Vec::as_slice)
+            .unwrap_or_default()
+            .iter()
+            .copied()
+    }
+
     <span class="doccomment">/// Lookup the given macro handler.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lookup_macro(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;MacroHandler&gt;&gt; {
         <span class="self">self</span>.macros.get(<span class="kw-2">&amp;</span>hash)
@@ -1346,6 +1822,23 @@
         <span class="self">self</span>.has_default_modules
     }
 
+    <span class="doccomment">/// Try to find an existing module.
+    </span><span class="kw">fn </span>find_existing_module(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="kw">let </span>indexes = <span class="self">self</span>.hash_to_meta.get(<span class="kw-2">&amp;</span>hash)<span class="question-mark">?</span>;
+
+        <span class="kw">for </span><span class="kw-2">&amp;</span>index <span class="kw">in </span>indexes {
+            <span class="kw">let </span><span class="prelude-val">Some</span>(m) = <span class="self">self</span>.meta.get(index) <span class="kw">else </span>{
+                <span class="kw">continue</span>;
+            };
+
+            <span class="kw">if </span><span class="macro">matches!</span>(m.kind, meta::Kind::Module) {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(index);
+            }
+        }
+
+        <span class="prelude-val">None
+    </span>}
+
     <span class="doccomment">/// Install the given meta.
     </span><span class="kw">fn </span>install_meta(<span class="kw-2">&amp;mut </span><span class="self">self</span>, meta: ContextMeta) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(item) = <span class="kw-2">&amp;</span>meta.item {
@@ -1364,12 +1857,16 @@
         }
 
         <span class="kw">let </span>hash = meta.hash;
+
         <span class="kw">let </span>index = <span class="self">self</span>.meta.len();
+
         <span class="self">self</span>.meta.try_push(meta)<span class="question-mark">?</span>;
+
         <span class="self">self</span>.hash_to_meta
             .entry(hash)
             .or_try_default()<span class="question-mark">?
             </span>.try_push(index)<span class="question-mark">?</span>;
+
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1381,21 +1878,32 @@
 
         <span class="attr">#[allow(unused)]
         </span><span class="kw">while let </span><span class="prelude-val">Some</span>((item, common)) = current.take() {
-            <span class="self">self</span>.install_meta(ContextMeta {
-                hash: Hash::type_hash(item),
-                item: <span class="prelude-val">Some</span>(item.try_to_owned()<span class="question-mark">?</span>),
-                kind: meta::Kind::Module,
+            <span class="kw">let </span>hash = Hash::type_hash(item);
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = <span class="self">self</span>.find_existing_module(hash) {
                 <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                </span>deprecated: common
-                    .map(|c| c.deprecated.as_ref().try_cloned())
-                    .transpose()<span class="question-mark">?
-                    </span>.flatten(),
-                <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                </span>docs: common
-                    .map(|c| c.docs.try_clone())
-                    .transpose()<span class="question-mark">?
-                    </span>.unwrap_or_default(),
-            })<span class="question-mark">?</span>;
+                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(common) = common {
+                    <span class="kw">let </span>meta = <span class="kw-2">&amp;mut </span><span class="self">self</span>.meta[index];
+                    meta.deprecated = common.deprecated.try_clone()<span class="question-mark">?</span>;
+                    meta.docs = common.docs.try_clone()<span class="question-mark">?</span>;
+                }
+            } <span class="kw">else </span>{
+                <span class="self">self</span>.install_meta(ContextMeta {
+                    hash,
+                    item: <span class="prelude-val">Some</span>(item.try_to_owned()<span class="question-mark">?</span>),
+                    kind: meta::Kind::Module,
+                    <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+                    </span>deprecated: common
+                        .map(|c| c.deprecated.as_ref().try_cloned())
+                        .transpose()<span class="question-mark">?
+                        </span>.flatten(),
+                    <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+                    </span>docs: common
+                        .map(|c| c.docs.try_clone())
+                        .transpose()<span class="question-mark">?
+                        </span>.unwrap_or_default(),
+                })<span class="question-mark">?</span>;
+            }
 
             current = item.parent().map(|item| (item, <span class="prelude-val">None</span>));
         }
@@ -1552,6 +2060,126 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="kw">fn </span>install_trait(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: <span class="kw-2">&amp;</span>ModuleTrait) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.traits.try_insert(t.hash, t.handler.clone())<span class="question-mark">?</span>.is_some() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ContextError::ConflictingTrait {
+                item: t.item.try_clone()<span class="question-mark">?</span>,
+                hash: t.hash,
+            });
+        }
+
+        <span class="self">self</span>.install_meta(ContextMeta {
+            hash: t.hash,
+            item: <span class="prelude-val">Some</span>(t.item.try_clone()<span class="question-mark">?</span>),
+            kind: meta::Kind::Trait,
+            <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+            </span>deprecated: t.common.deprecated.try_clone()<span class="question-mark">?</span>,
+            <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+            </span>docs: t.common.docs.try_clone()<span class="question-mark">?</span>,
+        })<span class="question-mark">?</span>;
+
+        <span class="kw">for </span>f <span class="kw">in </span><span class="kw-2">&amp;</span>t.functions {
+            <span class="kw">let </span>signature = meta::Signature::from_context(<span class="kw-2">&amp;</span>f.doc, <span class="kw-2">&amp;</span>f.common)<span class="question-mark">?</span>;
+
+            <span class="kw">let </span>kind = meta::Kind::Function {
+                associated: <span class="prelude-val">Some</span>(f.name.kind.try_clone()<span class="question-mark">?</span>),
+                trait_hash: <span class="prelude-val">None</span>,
+                signature,
+                is_test: <span class="bool-val">false</span>,
+                is_bench: <span class="bool-val">false</span>,
+                parameters: Hash::EMPTY.with_function_parameters(f.name.function_parameters),
+                <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+                </span>container: <span class="prelude-val">Some</span>(t.hash),
+                <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+                </span>parameter_types: f.name.parameter_types.try_clone()<span class="question-mark">?</span>,
+            };
+
+            <span class="kw">let </span>hash = f
+                .name
+                .kind
+                .hash(t.hash)
+                .with_function_parameters(f.name.function_parameters);
+
+            <span class="kw">let </span>item = <span class="kw">if let </span>meta::AssociatedKind::Instance(name) = <span class="kw-2">&amp;</span>f.name.kind {
+                <span class="kw">let </span>item = t.item.extended(name.as_ref())<span class="question-mark">?</span>;
+                <span class="kw">let </span>hash = Hash::type_hash(<span class="kw-2">&amp;</span>item);
+                <span class="prelude-val">Some</span>((hash, item))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>};
+
+            <span class="self">self</span>.install_meta(ContextMeta {
+                hash,
+                item: item.map(|(<span class="kw">_</span>, item)| item),
+                kind,
+                <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+                </span>deprecated: f.common.deprecated.try_clone()<span class="question-mark">?</span>,
+                <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+                </span>docs: f.common.docs.try_clone()<span class="question-mark">?</span>,
+            })<span class="question-mark">?</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>install_trait_impl(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        module: <span class="kw-2">&amp;</span>Module,
+        i: <span class="kw-2">&amp;</span>ModuleTraitImpl,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
+        <span class="kw">let </span>item = module.item.join(<span class="kw-2">&amp;</span>i.item)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>!<span class="self">self</span>.types.contains_key(<span class="kw-2">&amp;</span>i.hash) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ContextError::MissingType {
+                item,
+                type_info: i.type_info.try_clone()<span class="question-mark">?</span>,
+            });
+        };
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.traits.get(<span class="kw-2">&amp;</span>i.trait_hash).cloned() <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ContextError::MissingTrait {
+                item: i.trait_item.try_clone()<span class="question-mark">?</span>,
+                hash: i.hash,
+                impl_item: item,
+                impl_hash: i.hash,
+            });
+        };
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = handler {
+            handler(<span class="kw-2">&amp;mut </span>TraitContext {
+                cx: <span class="self">self</span>,
+                item: <span class="kw-2">&amp;</span>item,
+                hash: i.hash,
+                type_info: <span class="kw-2">&amp;</span>i.type_info,
+                trait_item: <span class="kw-2">&amp;</span>i.trait_item,
+                trait_hash: i.trait_hash,
+            })<span class="question-mark">?</span>;
+        }
+
+        <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+        </span><span class="self">self</span>.implemented_traits
+            .entry(i.hash)
+            .or_try_default()<span class="question-mark">?
+            </span>.try_push(i.trait_hash)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>install_reexport(<span class="kw-2">&amp;mut </span><span class="self">self</span>, r: <span class="kw-2">&amp;</span>ModuleReexport) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
+        <span class="self">self</span>.install_meta(ContextMeta {
+            hash: r.hash,
+            item: <span class="prelude-val">Some</span>(r.item.try_clone()<span class="question-mark">?</span>),
+            kind: meta::Kind::Alias(meta::Alias {
+                to: r.to.try_clone()<span class="question-mark">?</span>,
+            }),
+            <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+            </span>deprecated: <span class="prelude-val">None</span>,
+            <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
+            </span>docs: Docs::EMPTY,
+        })<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="kw">fn </span>install_type_info(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: ContextType) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
         <span class="kw">let </span>item_hash = Hash::type_hash(<span class="kw-2">&amp;</span>ty.item).with_type_parameters(ty.type_parameters);
 
@@ -1602,23 +2230,13 @@
                     ConstValue::String(item.try_to_string()<span class="question-mark">?</span>),
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>signature = meta::Signature {
-                    <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                    </span>is_async: f.is_async,
-                    <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                    </span>arguments: context_to_arguments(
-                        f.args,
-                        f.argument_types.as_ref(),
-                        module_item.common.docs.args(),
-                    )<span class="question-mark">?</span>,
-                    <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                    </span>return_type: f.return_type.try_clone()<span class="question-mark">?</span>,
-                };
+                <span class="kw">let </span>signature = meta::Signature::from_context(<span class="kw-2">&amp;</span>f.doc, <span class="kw-2">&amp;</span>module_item.common)<span class="question-mark">?</span>;
 
                 <span class="self">self</span>.insert_native_fn(hash, <span class="kw-2">&amp;</span>f.handler, module_item.common.deprecated.as_deref())<span class="question-mark">?</span>;
 
                 meta::Kind::Function {
                     associated: <span class="prelude-val">None</span>,
+                    trait_hash: f.trait_hash,
                     signature,
                     is_test: <span class="bool-val">false</span>,
                     is_bench: <span class="bool-val">false</span>,
@@ -1755,9 +2373,7 @@
             });
         };
 
-        <span class="comment">// NB: `assoc.container.hash` already contains the type hash, so it
-        // should not be mixed in again.
-        </span><span class="kw">let </span>hash = assoc
+        <span class="kw">let </span>hash = assoc
             .name
             .kind
             .hash(assoc.container)
@@ -1791,18 +2407,7 @@
                 meta::Kind::Const
             }
             ModuleAssociatedKind::Function(f) =&gt; {
-                <span class="kw">let </span>signature = meta::Signature {
-                    <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                    </span>is_async: f.is_async,
-                    <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                    </span>arguments: context_to_arguments(
-                        f.args,
-                        f.argument_types.as_ref(),
-                        assoc.common.docs.args(),
-                    )<span class="question-mark">?</span>,
-                    <span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-                    </span>return_type: f.return_type.try_clone()<span class="question-mark">?</span>,
-                };
+                <span class="kw">let </span>signature = meta::Signature::from_context(<span class="kw-2">&amp;</span>f.doc, <span class="kw-2">&amp;</span>assoc.common)<span class="question-mark">?</span>;
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>((hash, item)) = <span class="kw-2">&amp;</span>item {
                     <span class="self">self</span>.constants.try_insert(
@@ -1817,6 +2422,7 @@
 
                 meta::Kind::Function {
                     associated: <span class="prelude-val">Some</span>(assoc.name.kind.try_clone()<span class="question-mark">?</span>),
+                    trait_hash: f.trait_hash,
                     signature,
                     is_test: <span class="bool-val">false</span>,
                     is_bench: <span class="bool-val">false</span>,
@@ -1855,9 +2461,11 @@
         }
 
         <span class="self">self</span>.functions.try_insert(hash, handler.clone())<span class="question-mark">?</span>;
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(msg) = deprecation {
             <span class="self">self</span>.deprecations.try_insert(hash, msg.try_to_owned()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         }
+
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1904,52 +2512,6 @@
         }
         Fields::Empty =&gt; <span class="prelude-val">Ok</span>(Box::default()),
     }
-}
-
-<span class="attr">#[cfg(feature = <span class="string">"doc"</span>)]
-</span><span class="kw">fn </span>context_to_arguments(
-    args: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    types: <span class="kw-2">&amp;</span>[meta::DocType],
-    names: <span class="kw-2">&amp;</span>[String],
-) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;Box&lt;[meta::DocArgument]&gt;&gt;&gt; {
-    <span class="kw">use </span>core::iter;
-
-    <span class="kw">let </span><span class="prelude-val">Some</span>(args) = args <span class="kw">else </span>{
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-    };
-
-    <span class="kw">let </span>len = args.max(types.len()).max(names.len()).max(names.len());
-    <span class="kw">let </span><span class="kw-2">mut </span>out = Vec::try_with_capacity(len)<span class="question-mark">?</span>;
-
-    <span class="kw">let </span><span class="kw-2">mut </span>types = types.iter();
-
-    <span class="kw">let </span>names = names
-        .iter()
-        .map(|name| <span class="prelude-val">Some</span>(name.as_str()))
-        .chain(iter::repeat(<span class="prelude-val">None</span>));
-
-    <span class="kw">for </span>(n, name) <span class="kw">in </span>(<span class="number">0</span>..len).zip(names) {
-        <span class="kw">let </span>empty;
-
-        <span class="kw">let </span>ty = <span class="kw">match </span>types.next() {
-            <span class="prelude-val">Some</span>(ty) =&gt; ty,
-            <span class="prelude-val">None </span>=&gt; {
-                empty = meta::DocType::empty();
-                <span class="kw-2">&amp;</span>empty
-            }
-        };
-
-        out.try_push(meta::DocArgument {
-            name: <span class="kw">match </span>name {
-                <span class="prelude-val">Some</span>(name) =&gt; meta::DocName::Name(Box::try_from(name)<span class="question-mark">?</span>),
-                <span class="prelude-val">None </span>=&gt; meta::DocName::Index(n),
-            },
-            base: ty.base,
-            generics: ty.generics.try_clone()<span class="question-mark">?</span>,
-        })<span class="question-mark">?</span>;
-    }
-
-    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Box::try_from(out)<span class="question-mark">?</span>))
 }
 
 <span class="attr">#[cfg(test)]

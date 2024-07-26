@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/modules/vec.rs`."><title>vec.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5ca6ca2a1f83705a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (cefe1dcef 2024-07-22)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/modules/vec.rs`."><title>vec.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5ca6ca2a1f83705a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (7120fdac7 2024-07-25)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -657,20 +657,15 @@
 <a href="#657" id="657">657</a>
 <a href="#658" id="658">658</a>
 <a href="#659" id="659">659</a>
-<a href="#660" id="660">660</a>
-<a href="#661" id="661">661</a>
-<a href="#662" id="662">662</a>
-<a href="#663" id="663">663</a>
-<a href="#664" id="664">664</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The [`Vec`] dynamic vector.
 
 </span><span class="kw">use </span>core::cmp::Ordering;
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::slice::Iter;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    EnvProtocolCaller, Formatter, Function, Hasher, Iterator, Ref, TypeOf, Value, Vec, VmErrorKind,
-    VmResult,
+    EnvProtocolCaller, Formatter, Function, Hasher, Ref, TypeOf, Value, Vec, VmErrorKind, VmResult,
 };
 <span class="kw">use crate</span>::{ContextError, Module};
 
@@ -709,21 +704,21 @@
 </span><span class="kw">pub fn </span>module() -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>m = Module::from_meta(<span class="self">self</span>::module_meta)<span class="question-mark">?</span>;
 
-    m.ty::&lt;Vec&gt;()<span class="question-mark">?</span>.docs([
-        <span class="string">"A dynamic vector."</span>,
-        <span class="string">""</span>,
-        <span class="string">"This is the type that is constructed in rune when an array expression such as `[1, 2, 3]` is used."</span>,
-        <span class="string">""</span>,
-        <span class="string">"# Comparisons"</span>,
-        <span class="string">""</span>,
-        <span class="string">"Shorter sequences are considered smaller than longer ones, and vice versa."</span>,
-        <span class="string">""</span>,
-        <span class="string">"```rune"</span>,
-        <span class="string">"assert!([1, 2, 3] &lt; [1, 2, 3, 4]);"</span>,
-        <span class="string">"assert!([1, 2, 3] &lt; [1, 2, 4]);"</span>,
-        <span class="string">"assert!([1, 2, 4] &gt; [1, 2, 3]);"</span>,
-        <span class="string">"```"</span>,
-    ])<span class="question-mark">?</span>;
+    m.ty::&lt;Vec&gt;()<span class="question-mark">?</span>.docs(<span class="macro">docstring!</span> {
+        <span class="doccomment">/// A dynamic vector.
+        ///
+        /// This is the type that is constructed in rune when an array expression such as `[1, 2, 3]` is used.
+        ///
+        /// # Comparisons
+        ///
+        /// Shorter sequences are considered smaller than longer ones, and vice versa.
+        ///
+        /// ```rune
+        /// assert!([1, 2, 3] &lt; [1, 2, 3, 4]);
+        /// assert!([1, 2, 3] &lt; [1, 2, 4]);
+        /// assert!([1, 2, 4] &gt; [1, 2, 3]);
+        /// ```
+    </span>})<span class="question-mark">?</span>;
 
     m.function_meta(vec_new)<span class="question-mark">?</span>;
     m.function_meta(vec_with_capacity)<span class="question-mark">?</span>;
@@ -733,22 +728,33 @@
     m.function_meta(get)<span class="question-mark">?</span>;
     m.function_meta(clear)<span class="question-mark">?</span>;
     m.function_meta(extend)<span class="question-mark">?</span>;
-    m.function_meta(iter)<span class="question-mark">?</span>;
+    m.function_meta(Vec::rune_iter__meta)<span class="question-mark">?</span>;
     m.function_meta(pop)<span class="question-mark">?</span>;
     m.function_meta(push)<span class="question-mark">?</span>;
     m.function_meta(remove)<span class="question-mark">?</span>;
     m.function_meta(insert)<span class="question-mark">?</span>;
-    m.function_meta(clone)<span class="question-mark">?</span>;
     m.function_meta(sort_by)<span class="question-mark">?</span>;
     m.function_meta(sort)<span class="question-mark">?</span>;
-    m.function_meta(into_iter)<span class="question-mark">?</span>;
+    m.function_meta(into_iter__meta)<span class="question-mark">?</span>;
     m.function_meta(index_set)<span class="question-mark">?</span>;
     m.function_meta(index_get)<span class="question-mark">?</span>;
     m.function_meta(string_debug)<span class="question-mark">?</span>;
-    m.function_meta(partial_eq)<span class="question-mark">?</span>;
-    m.function_meta(eq)<span class="question-mark">?</span>;
-    m.function_meta(partial_cmp)<span class="question-mark">?</span>;
-    m.function_meta(cmp)<span class="question-mark">?</span>;
+
+    m.function_meta(clone__meta)<span class="question-mark">?</span>;
+    m.implement_trait::&lt;Vec&gt;(<span class="macro">rune::item!</span>(::std::clone::Clone))<span class="question-mark">?</span>;
+
+    m.function_meta(partial_eq__meta)<span class="question-mark">?</span>;
+    m.implement_trait::&lt;Vec&gt;(<span class="macro">rune::item!</span>(::std::cmp::PartialEq))<span class="question-mark">?</span>;
+
+    m.function_meta(eq__meta)<span class="question-mark">?</span>;
+    m.implement_trait::&lt;Vec&gt;(<span class="macro">rune::item!</span>(::std::cmp::Eq))<span class="question-mark">?</span>;
+
+    m.function_meta(partial_cmp__meta)<span class="question-mark">?</span>;
+    m.implement_trait::&lt;Vec&gt;(<span class="macro">rune::item!</span>(::std::cmp::PartialOrd))<span class="question-mark">?</span>;
+
+    m.function_meta(cmp__meta)<span class="question-mark">?</span>;
+    m.implement_trait::&lt;Vec&gt;(<span class="macro">rune::item!</span>(::std::cmp::Ord))<span class="question-mark">?</span>;
+
     m.function_meta(hash)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(m)
 }
@@ -1012,22 +1018,6 @@
     this.extend(value)
 }
 
-<span class="doccomment">/// Iterate over the collection.
-///
-/// # Examples
-///
-/// ```rune
-/// let vec = [1, 2, 3, 4];
-/// let it = vec.iter();
-///
-/// assert_eq!(Some(1), it.next());
-/// assert_eq!(Some(4), it.next_back());
-/// ```
-</span><span class="attr">#[rune::function(instance)]
-</span><span class="kw">fn </span>iter(this: Ref&lt;Vec&gt;) -&gt; Iterator {
-    Vec::iter_ref(Ref::map(this, |vec| <span class="kw-2">&amp;**</span>vec))
-}
-
 <span class="doccomment">/// Removes the last element from a vector and returns it, or [`None`] if it is
 /// empty.
 ///
@@ -1150,7 +1140,7 @@
 /// assert_eq!(a, [1, 2, 3]);
 /// assert_eq!(b, [1, 2, 3, 4]);
 /// ```
-</span><span class="attr">#[rune::function(instance)]
+</span><span class="attr">#[rune::function(keep, instance, protocol = CLONE)]
 </span><span class="kw">fn </span>clone(this: <span class="kw-2">&amp;</span>Vec) -&gt; VmResult&lt;Vec&gt; {
     VmResult::Ok(<span class="macro">vm_try!</span>(this.try_clone()))
 }
@@ -1169,9 +1159,9 @@
 ///
 /// assert_eq!(out, [1, 2, 3]);
 /// ```
-</span><span class="attr">#[rune::function(instance, protocol = INTO_ITER)]
-</span><span class="kw">fn </span>into_iter(this: Ref&lt;Vec&gt;) -&gt; Iterator {
-    Vec::iter_ref(Ref::map(this, |vec| <span class="kw-2">&amp;**</span>vec))
+</span><span class="attr">#[rune::function(keep, instance, protocol = INTO_ITER)]
+</span><span class="kw">fn </span>into_iter(this: Ref&lt;Vec&gt;) -&gt; Iter {
+    Vec::rune_iter(this)
 }
 
 <span class="doccomment">/// Returns a reference to an element or subslice depending on the type of
@@ -1258,7 +1248,7 @@
 /// assert!(vec == (1..=3));
 /// assert!(vec != [2, 3, 4]);
 /// ```
-</span><span class="attr">#[rune::function(instance, protocol = PARTIAL_EQ)]
+</span><span class="attr">#[rune::function(keep, instance, protocol = PARTIAL_EQ)]
 </span><span class="kw">fn </span>partial_eq(this: <span class="kw-2">&amp;</span>Vec, other: Value) -&gt; VmResult&lt;bool&gt; {
     Vec::partial_eq_with(this, other, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
 }
@@ -1275,7 +1265,7 @@
 /// assert!(eq(vec, [1, 2, 3]));
 /// assert!(!eq(vec, [2, 3, 4]));
 /// ```
-</span><span class="attr">#[rune::function(instance, protocol = EQ)]
+</span><span class="attr">#[rune::function(keep, instance, protocol = EQ)]
 </span><span class="kw">fn </span>eq(this: <span class="kw-2">&amp;</span>Vec, other: <span class="kw-2">&amp;</span>Vec) -&gt; VmResult&lt;bool&gt; {
     Vec::eq_with(this, other, Value::eq_with, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
 }
@@ -1290,7 +1280,7 @@
 /// assert!(vec &gt; [0, 2, 3]);
 /// assert!(vec &lt; [2, 2, 3]);
 /// ```
-</span><span class="attr">#[rune::function(instance, protocol = PARTIAL_CMP)]
+</span><span class="attr">#[rune::function(keep, instance, protocol = PARTIAL_CMP)]
 </span><span class="kw">fn </span>partial_cmp(this: <span class="kw-2">&amp;</span>Vec, other: <span class="kw-2">&amp;</span>Vec) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Ordering&gt;&gt; {
     Vec::partial_cmp_with(this, other, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
 }
@@ -1308,7 +1298,7 @@
 /// assert_eq!(cmp(vec, [0, 2, 3]), Ordering::Greater);
 /// assert_eq!(cmp(vec, [2, 2, 3]), Ordering::Less);
 /// ```
-</span><span class="attr">#[rune::function(instance, protocol = CMP)]
+</span><span class="attr">#[rune::function(keep, instance, protocol = CMP)]
 </span><span class="kw">fn </span>cmp(this: <span class="kw-2">&amp;</span>Vec, other: <span class="kw-2">&amp;</span>Vec) -&gt; VmResult&lt;Ordering&gt; {
     Vec::cmp_with(this, other, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
 }
