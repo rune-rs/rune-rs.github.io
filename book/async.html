@@ -181,26 +181,24 @@ how it applies to Rune as a dynamic programming language.</p>
 <p>Asynchronous code allows us to run multiple tasks concurrently, and work with
 the result of those tasks.</p>
 <p>A typical example would be if we want to perform multiple HTTP requests at once:</p>
-<pre><code class="language-rune">pub async fn main() {
-    let a = http::get("https://google.com");
-    let b = http::get("https://amazon.com");
+<pre><code class="language-rune">let a = http::get("https://google.com");
+let b = http::get("https://amazon.com");
 
-    loop {
-        let res = select {
-            res = a =&gt; res?,
-            res = b =&gt; res?,
-        };
+loop {
+    let res = select {
+        res = a =&gt; res?,
+        res = b =&gt; res?,
+    };
 
-        match res {
-            () =&gt; break,
-            result =&gt; {
-                println!("{}", result.status());
-            }
+    match res {
+        () =&gt; break,
+        result =&gt; {
+            println!("{}", result.status());
         }
     }
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_http.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/async/async_http.rn
 200 OK
 200 OK
 </code></pre>
@@ -226,17 +224,15 @@ async fn request(timeout) {
     Ok(())
 }
 
-pub async fn main() {
-    if let Err(Timeout) = request(1000).await {
-        println("Request timed out!");
-    }
+if let Err(Timeout) = request(1000).await {
+    println!("Request timed out!");
+}
 
-    if let Err(Timeout) = request(4000).await {
-        println("Request timed out!");
-    }
+if let Err(Timeout) = request(4000).await {
+    println!("Request timed out!");
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_http_timeout.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/async/async_http_timeout.rn
 200 OK
 Request timed out!
 </code></pre>
@@ -266,16 +262,14 @@ async fn request(timeout) {
     Ok(result)
 }
 
-pub async fn main() {
-    for result in future::join([request(1000), request(4000)]).await {
-        match result {
-            Ok(result) =&gt; println!("Result: {}", result.status()),
-            Err(Timeout) =&gt; println("Request timed out!"),
-        }
+for result in future::join([request(1000), request(4000)]).await {
+    match result {
+        Ok(result) =&gt; println!("Result: {}", result.status()),
+        Err(Timeout) =&gt; println!("Request timed out!"),
     }
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_http_concurrent.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/async/async_http_concurrent.rn
 Result: 200 OK
 Request timed out!
 </code></pre>
@@ -288,13 +282,11 @@ produce a future.</p>
     }
 }
 
-pub async fn main() {
-    let future = do_request("https://google.com");
-    let status = future().await?;
-    println!("Status: {}", status);
-}
+let future = do_request("https://google.com");
+let status = future().await?;
+println!("Status: {status}");
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_closure.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/async/async_closure.rn
 Status: 200 OK
 </code></pre>
 <h2 id="async-blocks"><a class="header" href="#async-blocks"><code>async</code> blocks</a></h2>
@@ -306,13 +298,11 @@ can capture variables the same way as closures do, but take no arguments.</p>
     }
 }
 
-pub async fn main() {
-    let future = do_request("https://google.com");
-    let status = future.await?;
-    println!("Status: {}", status);
-}
+let future = do_request("https://google.com");
+let status = future.await?;
+println!("Status: {status}");
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_blocks.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/async/async_blocks.rn
 Status: 200 OK
 </code></pre>
 

@@ -177,9 +177,9 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) memoize_instance_fn: bool,
     <span class="doccomment">/// Include debug information when compiling.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) debug_info: bool,
-    <span class="doccomment">/// Support (experimental) macros.
+    <span class="doccomment">/// Support macros.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) macros: bool,
-    <span class="doccomment">/// Support (experimental) bytecode caching.
+    <span class="doccomment">/// Support bytecode caching.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) bytecode: bool,
     <span class="doccomment">/// Compile for and enable test features
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) cfg_test: bool,
@@ -187,8 +187,8 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) v2: bool,
     <span class="doccomment">/// Build sources as function bodies.
     ///
-    /// The function to run will be located at `$0`, which can be constructed
-    /// with `Hash::type_hash([ComponentRef::Id(0)])`.
+    /// The function to run will be named 0, which can be constructed with
+    /// `Hash::EMPTY`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) function_body: bool,
     <span class="doccomment">/// When running tests, include std tests.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) test_std: bool,
@@ -202,39 +202,39 @@
     /// It can be used to consistenly parse a collection of options by other
     /// programs as well.
     </span><span class="kw">pub fn </span>parse_option(<span class="kw-2">&amp;mut </span><span class="self">self</span>, option: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), ParseOptionError&gt; {
-        <span class="kw">let </span><span class="prelude-val">Some</span>((head, tail)) = option.split_once(<span class="string">'='</span>) <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ParseOptionError {
-                option: option.into(),
-            });
+        <span class="kw">let </span>(head, tail) = <span class="kw">if let </span><span class="prelude-val">Some</span>((head, tail)) = option.split_once(<span class="string">'='</span>) {
+            (head, <span class="prelude-val">Some</span>(tail))
+        } <span class="kw">else </span>{
+            (option, <span class="prelude-val">None</span>)
         };
 
         <span class="kw">match </span>head {
             <span class="string">"memoize-instance-fn" </span>=&gt; {
-                <span class="self">self</span>.memoize_instance_fn = tail == <span class="string">"true"</span>;
+                <span class="self">self</span>.memoize_instance_fn = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
             }
             <span class="string">"debug-info" </span>=&gt; {
-                <span class="self">self</span>.debug_info = tail == <span class="string">"true"</span>;
+                <span class="self">self</span>.debug_info = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
             }
             <span class="string">"link-checks" </span>=&gt; {
-                <span class="self">self</span>.link_checks = tail == <span class="string">"true"</span>;
+                <span class="self">self</span>.link_checks = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
             }
             <span class="string">"macros" </span>=&gt; {
-                <span class="self">self</span>.macros = tail == <span class="string">"true"</span>;
+                <span class="self">self</span>.macros = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
             }
             <span class="string">"bytecode" </span>=&gt; {
-                <span class="self">self</span>.bytecode = tail == <span class="string">"true"</span>;
+                <span class="self">self</span>.bytecode = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
             }
             <span class="string">"test" </span>=&gt; {
-                <span class="self">self</span>.cfg_test = tail == <span class="string">"true"</span>;
+                <span class="self">self</span>.cfg_test = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
             }
             <span class="string">"v2" </span>=&gt; {
-                <span class="self">self</span>.v2 = tail == <span class="string">"true"</span>;
+                <span class="self">self</span>.v2 = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
             }
             <span class="string">"function-body" </span>=&gt; {
-                <span class="self">self</span>.function_body = tail == <span class="string">"true"</span>;
+                <span class="self">self</span>.function_body = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
             }
             <span class="string">"test-std" </span>=&gt; {
-                <span class="self">self</span>.test_std = tail == <span class="string">"true"</span>;
+                <span class="self">self</span>.test_std = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
             }
             <span class="kw">_ </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ParseOptionError {

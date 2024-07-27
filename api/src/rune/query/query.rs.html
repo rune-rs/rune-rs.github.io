@@ -1883,6 +1883,7 @@
 <a href="#1883" id="1883">1883</a>
 <a href="#1884" id="1884">1884</a>
 <a href="#1885" id="1885">1885</a>
+<a href="#1886" id="1886">1886</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
 </span><span class="kw">use </span>core::mem::take;
@@ -2357,16 +2358,17 @@
     <span class="doccomment">/// Insert module and associated metadata.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_root_mod(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        item_id: NonZeroId,
         source_id: SourceId,
         span: Span,
-    ) -&gt; compile::Result&lt;ModId&gt; {
+    ) -&gt; compile::Result&lt;(NonZeroId, ModId)&gt; {
+        <span class="kw">let </span>item_id = <span class="self">self</span>.gen.next();
+
         <span class="kw">let </span>location = Location::new(source_id, span);
 
         <span class="kw">let </span>module = <span class="self">self</span>.pool.alloc_module(ModMeta {
             <span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
             </span>location,
-            item: ItemId::default(),
+            item: ItemId::ROOT,
             visibility: Visibility::Public,
             parent: <span class="prelude-val">None</span>,
         })<span class="question-mark">?</span>;
@@ -2376,14 +2378,14 @@
             ItemMeta {
                 id: item_id,
                 location,
-                item: ItemId::default(),
+                item: ItemId::ROOT,
                 visibility: Visibility::Public,
                 module,
             },
         )<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.insert_name(ItemId::default()).with_span(span)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(module)
+        <span class="self">self</span>.insert_name(ItemId::ROOT).with_span(span)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((item_id, module))
     }
 
     <span class="doccomment">/// Inserts an item that *has* to be unique, else cause an error.
@@ -2860,7 +2862,7 @@
                     impl_item.item
                 }
                 ast::PathSegment::SelfValue(..) =&gt; <span class="self">self</span>.pool.module(module).item,
-                ast::PathSegment::Crate(..) =&gt; ItemId::default(),
+                ast::PathSegment::Crate(..) =&gt; ItemId::ROOT,
                 ast::PathSegment::Generics(..) =&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                         segment.span(),

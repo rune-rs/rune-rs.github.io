@@ -63,21 +63,7 @@
 <a href="#63" id="63">63</a>
 <a href="#64" id="64">64</a>
 <a href="#65" id="65">65</a>
-<a href="#66" id="66">66</a>
-<a href="#67" id="67">67</a>
-<a href="#68" id="68">68</a>
-<a href="#69" id="69">69</a>
-<a href="#70" id="70">70</a>
-<a href="#71" id="71">71</a>
-<a href="#72" id="72">72</a>
-<a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>core::hash::{<span class="self">self</span>, Hash <span class="kw">as _</span>, Hasher <span class="kw">as _</span>};
+</pre></div><pre class="rust"><code><span class="kw">use </span>core::hash::{Hash <span class="kw">as _</span>, Hasher <span class="kw">as _</span>};
 
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::alloc;
@@ -98,12 +84,6 @@
     </span><span class="attr">#[doc(hidden)]
     #[cfg(feature = <span class="string">"alloc"</span>)]
     </span><span class="kw">fn </span>to_item(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;ItemBuf&gt;&gt;;
-
-    <span class="doccomment">/// Hash the current value in-place.
-    </span><span class="attr">#[doc(hidden)]
-    </span><span class="kw">fn </span>hash_type&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, hasher: <span class="kw-2">&amp;mut </span>H)
-    <span class="kw">where
-        </span>H: hash::Hasher;
 }
 
 <span class="kw">impl</span>&lt;I&gt; ToTypeHash <span class="kw">for </span>I
@@ -112,8 +92,20 @@
 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>to_type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
+        <span class="kw">let </span><span class="kw-2">mut </span>it = <span class="self">self</span>.into_iter();
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(first) = it.next() <span class="kw">else </span>{
+            <span class="kw">return </span>Hash::EMPTY;
+        };
+
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = Hash::new_hasher();
-        <span class="self">self</span>.hash_type(<span class="kw-2">&amp;mut </span>hasher);
+
+        TYPE.hash(<span class="kw-2">&amp;mut </span>hasher);
+
+        <span class="kw">for </span>c <span class="kw">in </span>[first].into_iter().chain(it) {
+            c.hash_component(<span class="kw-2">&amp;mut </span>hasher);
+        }
+
         Hash::new(hasher.finish())
     }
 
@@ -121,18 +113,6 @@
     #[cfg(feature = <span class="string">"alloc"</span>)]
     </span><span class="kw">fn </span>to_item(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;ItemBuf&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(ItemBuf::with_item(<span class="kw-2">*</span><span class="self">self</span>)<span class="question-mark">?</span>))
-    }
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>hash_type&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, hasher: <span class="kw-2">&amp;mut </span>H)
-    <span class="kw">where
-        </span>H: hash::Hasher,
-    {
-        TYPE.hash(hasher);
-
-        <span class="kw">for </span>c <span class="kw">in </span><span class="kw-2">*</span><span class="self">self </span>{
-            c.hash_component(hasher);
-        }
     }
 }
 
@@ -146,14 +126,6 @@
     #[cfg(feature = <span class="string">"alloc"</span>)]
     </span><span class="kw">fn </span>to_item(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;ItemBuf&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-    }
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>hash_type&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, hasher: <span class="kw-2">&amp;mut </span>H)
-    <span class="kw">where
-        </span>H: hash::Hasher,
-    {
-        <span class="self">self</span>.hash(hasher);
     }
 }
 </code></pre></div></section></main></body></html>

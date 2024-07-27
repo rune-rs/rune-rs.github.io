@@ -320,11 +320,11 @@
                             <span class="kw">let </span>item = <span class="self">self</span>.q.pool.module_item(mod_item);
                             <span class="macro">tracing::trace!</span>(<span class="string">"Load file: {}"</span>, item);
 
-                            <span class="kw">let </span>root = <span class="kw">match </span>kind {
+                            <span class="kw">let </span>(root, is_module) = <span class="kw">match </span>kind {
                                 LoadFileKind::Root =&gt; {
-                                    source.path().map(|p| p.try_to_owned()).transpose()<span class="question-mark">?
-                                </span>}
-                                LoadFileKind::Module { root } =&gt; root,
+                                    (source.path().map(|p| p.try_to_owned()).transpose()<span class="question-mark">?</span>, <span class="bool-val">false</span>)
+                                }
+                                LoadFileKind::Module { root } =&gt; (root, <span class="bool-val">true</span>),
                             };
 
                             <span class="kw">let </span>items = Items::new(item, mod_item_id, <span class="self">self</span>.q.gen)<span class="question-mark">?</span>;
@@ -346,7 +346,7 @@
                                 };
                             }
 
-                            <span class="kw">if </span><span class="self">self</span>.q.options.function_body {
+                            <span class="kw">if </span><span class="self">self</span>.q.options.function_body &amp;&amp; !is_module {
                                 <span class="kw">let </span>ast = <span class="kw">crate</span>::parse::parse_all::&lt;ast::EmptyBlock&gt;(
                                     source.as_str(),
                                     source_id,

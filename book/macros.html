@@ -174,12 +174,14 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="macros"><a class="header" href="#macros">Macros</a></h1>
-<p>Rune has (experimental) support for macros. These are functions which expand
-into code, and can be used by library writers to "extend the compiler".</p>
+<p>Rune has support for macros. These are functions which expand into code, and can
+be used by library writers to "extend the compiler".</p>
 <p>For now, the following type of macros are support:</p>
 <ul>
 <li>Function-like macros expanding to items (functions, type declarations, ..).</li>
-<li>Function-like macros expanding to expression (statements, blocks, async blocks, ..).</li>
+<li>Function-like macros expanding to expression (statements, blocks, async
+blocks, ..).</li>
+<li>Attribute macros expanding around a function.</li>
 </ul>
 <p>Macros can currently only be defined natively. This is to get around the rather
 tricky issue that the code of a macro has to be runnable during compilation.
@@ -198,14 +200,15 @@ that can be invoked on expressions.</p>
 <a href="https://docs.rs/quote/1/quote/">famed counterpart in the Rust world</a>. A major difference with Rune <code>quote!</code> is
 that we need to pass in the <code>MacroContext</code> when invoking it. This is a detail
 which will be covered in one of the advanced sections.</p>
-<pre><code class="language-rust noplaypen">use rune::ast;
-use rune::compile;
-use rune::macros::{quote, MacroContext, TokenStream};
-use rune::parse::Parser;
+<pre><code class="language-rust noplaypen">use crate as rune;
+use crate::ast;
+use crate::compile;
+use crate::macros::{quote, MacroContext, TokenStream};
+use crate::parse::Parser;
 
-/// Implementation for the `stringy_math!` macro.
+/// Implementation of the `stringy_math!` macro.
 #[rune::macro_]
-pub(crate) fn stringy_math(
+pub fn stringy_math(
     cx: &amp;mut MacroContext&lt;'_, '_, '_&gt;,
     stream: &amp;TokenStream,
 ) -&gt; compile::Result&lt;TokenStream&gt; {
@@ -231,23 +234,18 @@ pub(crate) fn stringy_math(
 }</code></pre>
 <p>A macro is added to a <a href="https://docs.rs/rune/0/rune/module/struct.Module.html"><code>Module</code></a> using the <a href="https://docs.rs/rune/0/rune/module/struct.Module.html#method.macro_"><code>Module::macro_</code></a> function.</p>
 <pre><code class="language-rust noplaypen">pub fn module() -&gt; Result&lt;rune::Module, rune::ContextError&gt; {
-    let mut module = rune::Module::new(["std", "experiments"]);
-    module.macro_meta(stringy_math_macro::stringy_math)?;
+    let mut module = rune::Module::new(["test", "macros"]);
+    module.macro_meta(stringy_math)?;
     Ok(module)
 }</code></pre>
 <p>With this module installed, we can now take <code>stringy_math!</code> for a spin.</p>
-<pre><code class="language-rune">use ::std::experiments::stringy_math;
+<pre><code class="language-rune">use ::test::macros::stringy_math;
 
 pub fn main() {
-    let output = stringy_math!(add 10 sub 2 div 3 mul 100);
-    println!("{}", output);
+    stringy_math!(add 10 sub 2 div 3 mul 100)
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/macros/stringy_math.rn -O macros=true --experimental
-200
-</code></pre>
-<p>To access the <code>std::experimental</code>, you have to specify the <code>--experimental</code>
-option to the Rune CLI.</p>
+<p>Running this would return <code>200</code>.</p>
 
                     </main>
 

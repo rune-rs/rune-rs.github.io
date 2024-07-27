@@ -286,26 +286,24 @@ recommended that you run and tinker them yourself as you encounter them.</p>
 <p>The first thing you need to learn about in Rune is the <code>dbg</code> function. This is
 used to "debug" values provided to it in order to understand them. Anything can
 be provided to it, and it will do its best to describe it.</p>
-<pre><code class="language-rune">pub fn main() {
-    let a = [1, 2, 3];
-    let b = '今';
-    let closure = || println("Hello");
-
-    dbg(a);
-    dbg(b);
-    dbg(function);
-    dbg(drop);
-    dbg(closure);
-}
-
-fn function() {
+<pre><code class="language-rune">fn function() {
     42
 }
+
+let a = [1, 2, 3];
+let b = '今';
+let closure = || println!("Hello");
+
+dbg!(a);
+dbg!(b);
+dbg!(function);
+dbg!(drop);
+dbg!(closure);
 </code></pre>
 <blockquote>
 <p><strong>Note</strong>: by convention Rune uses files ending in .rn.</p>
 </blockquote>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/getting_started/dbg.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/getting_started/dbg.rn
 [1, 2, 3]
 '今'
 dynamic function (at: 0x1a)
@@ -322,11 +320,9 @@ degree as <code>dbg</code>. However for our purposes we will be using <code>rune
 all of these modules installed. This is also what was used to run the above
 code.</p>
 <p>So for a more formal introduction, here is the official Rune <code>"Hello World"</code>:</p>
-<pre><code class="language-rune">pub fn main() {
-    println!("Hello World");
-}
+<pre><code class="language-rune">println!("Hello World");
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/getting_started/hello_world.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/getting_started/hello_world.rn
 Hello World
 </code></pre>
 <p>So now you know how to run Rune scripts. Well done! Let's move on to the next
@@ -352,13 +348,14 @@ special even, since it's part of the <em>prelude</em>, allowing us to use it wit
 importing it. But what about <code>range</code>?</p>
 <p>If we wanted to use <code>range</code> we would have to import it first with a <code>use</code>
 statement:</p>
-<pre><code class="language-rune">use std::iter::range;
+<pre><code class="language-rune">use std::iter::once;
 
-pub fn main() {
-    dbg!(range(0, 10));
-}
+let it = once(0);
+
+dbg!(it.next());
+dbg!(it.next());
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/items_imports/example_import.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/items_imports/example_import.rn
 std::iter::Range
 </code></pre>
 <p>Trying to use an item which doesn't exist results in a compile error:</p>
@@ -366,7 +363,7 @@ std::iter::Range
     let foo = Foo::new();
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/items_imports/missing_item.rn.fail
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/items_imports/missing_item.rn.fail
 error: compile error
   ┌─ scripts/book/items_imports/missing_item.rn.fail:2:15
   │
@@ -393,16 +390,11 @@ mod bar {
     }
 }
 
-#[test]
-fn inline_modules() {
-    assert_eq!(foo::number() + bar::number(), 3);
-}
-
 pub fn main() {
-    dbg(foo::number() + bar::number());
+    dbg!(foo::number() + bar::number());
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/items_imports/inline_modules.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/items_imports/inline_modules.rn
 3
 </code></pre>
 <p>And this is the equivalent modules loaded from the filesystem. These are three
@@ -410,14 +402,7 @@ separate files:</p>
 <pre><code class="language-rune">mod foo;
 mod bar;
 
-#[test]
-fn test_modules() {
-    assert_eq!(foo::number() + bar::number(), 3);
-}
-
-pub fn main() {
-    dbg(foo::number() + bar::number());
-}
+dbg!(foo::number() + bar::number());
 </code></pre>
 <pre><code class="language-rune">// file: ./foo/mod.rn
 pub fn number() {
@@ -429,7 +414,7 @@ pub fn number() {
     1
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/items_imports/modules.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/items_imports/modules.rn
 3
 </code></pre>
 <h1 id="disambiguating-imports"><a class="header" href="#disambiguating-imports">Disambiguating imports</a></h1>
@@ -458,16 +443,9 @@ pub fn number() {
     1
 }
 
-#[test]
-fn item_keywords() {
-    assert_eq!(self::second::number(), 7);
-}
-
-pub fn main() {
-    dbg(self::second::number());
-}
+dbg!(self::second::number());
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/items_imports/item_keywords.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/items_imports/item_keywords.rn
 7
 </code></pre>
 <h1 id="visibility"><a class="header" href="#visibility">Visibility</a></h1>
@@ -507,10 +485,10 @@ again.</p>
 which is used in every example, <code>main</code>. This is not a special function, but is
 simply what the Rune cli looks for when deciding what to execute.</p>
 <pre><code class="language-rune">pub fn main() {
-    println("Hello World");
+    println!("Hello World");
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/functions/main_function.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/functions/main_function.rn
 Hello World
 </code></pre>
 <p>In Rune, you don't have to specify the return type of a function. Given that
@@ -529,7 +507,7 @@ pub fn main() {
     println!("{}", foo(false));
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/functions/return_value.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/functions/return_value.rn
 Hello
 1
 </code></pre>
@@ -596,87 +574,71 @@ what the function returns by default unless a <code>return</code> is specified.<
     "something else"
 }
 
-#[test]
-fn test_control_flow() {
-    assert_eq!(foo(0), "less than one");
-    assert_eq!(foo(10), "something else");
-}
-
-pub fn main() {
-    println!("{}", foo(0)); // =&gt; outputs: "less than one"
-    println!("{}", foo(10)); // =&gt; outputs: "something else"
-}
+println!("{}", foo(0)); // =&gt; outputs: "less than one"
+println!("{}", foo(10)); // =&gt; outputs: "something else"
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/control_flow/numbers_game.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/control_flow/numbers_game.rn
 less than one
 something else
 </code></pre>
 <h2 id="if-expressions"><a class="header" href="#if-expressions"><code>if</code> expressions</a></h2>
 <p>If expressions allow you to provide a condition with one or more code branches.
 If the condition is <code>true</code>, the provided block of code will run.</p>
-<pre><code class="language-rune">pub fn main() {
-    let number = 3;
+<pre><code class="language-rune">let number = 3;
 
-    if number &lt; 5 {
-        println!("The number is smaller than 5");
-    }
+if number &lt; 5 {
+    println!("The number is smaller than 5");
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/control_flow/conditional.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/control_flow/conditional.rn
 The number *is* smaller than 5
 </code></pre>
 <p>Optionally, we can add another branch under <code>else</code>, which will execute in case
 the condition is false.</p>
-<pre><code class="language-rune">pub fn main() {
-    let number = 3;
+<pre><code class="language-rune">let number = 3;
 
-    if number &lt; 5 {
-        println!("the number is smaller than 5");
-    } else {
-        println!("the number is 5 or bigger");
-    }
+if number &lt; 5 {
+    println!("the number is smaller than 5");
+} else {
+    println!("the number is 5 or bigger");
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/control_flow/conditional_else.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/control_flow/conditional_else.rn
 the number is smaller than 5
 </code></pre>
 <p>We can also add an arbitrary number of <code>else if</code> branches, which allow us to
 specify many different conditions.</p>
-<pre><code class="language-rune">pub fn main() {
-    let number = 3;
+<pre><code class="language-rune">let number = 3;
 
-    if number &lt; 5 {
-        println!("the number is smaller than 5");
-    } else if number == 5 {
-        println!("the number is exactly 5");
-    } else {
-        println!("the number is bigger than 5");
-    }
+if number &lt; 5 {
+    println!("the number is smaller than 5");
+} else if number == 5 {
+    println!("the number is exactly 5");
+} else {
+    println!("the number is bigger than 5");
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/control_flow/conditional_else_ifs.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/control_flow/conditional_else_ifs.rn
 the number is smaller than 5
 </code></pre>
 <p>Do note however that if you have <em>many</em> conditions, it might be cleaner to use
 a <code>match</code>.</p>
 <p>This will be covered in a later section, but here is a sneak peek:</p>
-<pre><code class="language-rune">pub fn main() {
-    let number = 3;
+<pre><code class="language-rune">let number = 3;
 
-    match number {
-        n if n &lt; 5 =&gt; {
-            println!("the number is smaller than 5");
-        }
-        5 =&gt; {
-            println!("the number is exactly 5");
-        }
-        n =&gt; {
-            println!("the number is bigger than 5");
-        }
+match number {
+    n if n &lt; 5 =&gt; {
+        println!("the number is smaller than 5");
+    }
+    5 =&gt; {
+        println!("the number is exactly 5");
+    }
+    n =&gt; {
+        println!("the number is bigger than 5");
     }
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/control_flow/first_match.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/control_flow/first_match.rn
 the number is smaller than 5
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="variables-and-memory"><a class="header" href="#variables-and-memory">Variables and memory</a></h1>
@@ -689,7 +651,7 @@ variables in Rune are mutable and can be changed at any time.</p>
     println!("The value of x is: {}", x);
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/variables/variables.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/variables/variables.rn
 The value of x is: 5
 The value of x is: 6
 </code></pre>
@@ -718,7 +680,7 @@ variables:</p>
     println!("{}", object.field);
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/variables/shared_ownership.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/variables/shared_ownership.rn
 1
 2
 </code></pre>
@@ -738,7 +700,7 @@ take its argument and free it.</p>
     println!("field: {}", object.field);
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/variables/take_argument.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/variables/take_argument.rn
 field: 1
 == ! (cannot read, value is moved (at 14)) (469µs)
 error: virtual machine error
@@ -764,7 +726,7 @@ to functions which need to move the value, like <code>drop</code>.</p>
     }
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/variables/is_readable.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/variables/is_readable.rn
 field: 1
 object is no longer readable 😢
 </code></pre>
@@ -778,21 +740,19 @@ reached, which can be a powerful tool for accomplishing programming tasks.</p>
 <code>break</code> keyword.</p>
 <p>When Rune encounters a break, it will immediately jump out of the loop it is
 currently in and continue running right after it.</p>
-<pre><code class="language-rune">pub fn main() {
-    let value = 0;
+<pre><code class="language-rune">let value = 0;
 
-    while value &lt; 100 {
-        if value &gt;= 50 {
-            break;
-        }
-
-        value = value + 1;
+while value &lt; 100 {
+    if value &gt;= 50 {
+        break;
     }
 
-    println!("The value is {}", value); // =&gt; The value is 50
+    value = value + 1;
 }
+
+println!("The value is {}", value); // =&gt; The value is 50
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/loops/while_loop.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/loops/while_loop.rn
 The value is 50
 </code></pre>
 <h2 id="loop-expressions"><a class="header" href="#loop-expressions"><code>loop</code> Expressions</a></h2>
@@ -801,14 +761,12 @@ One that repeats unconditionally forever, until it is exited using another
 control flow operator like a <code>break</code> or a <code>return</code>.</p>
 <pre><code class="language-rune">use time::Duration;
 
-pub async fn main() {
-    loop {
-        println("Hello forever!");
-        time::sleep(Duration::from_secs(1)).await;
-    }
+loop {
+    println!("Hello forever!");
+    time::sleep(Duration::from_secs(1)).await;
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/loops/loop_forever.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/loops/loop_forever.rn
 Hello forever!
 Hello forever!
 Hello forever!
@@ -821,21 +779,19 @@ Hello forever!
 our terminals too much. Well talk more about these in a later section.</p>
 <p>When broken out of, loops produce the value provided as an argument to the
 <code>break</code> keyword. By default, this is simply a unit <code>()</code>.</p>
-<pre><code class="language-rune">pub fn main() {
-    let counter = 0;
+<pre><code class="language-rune">let counter = 0;
 
-    let total = loop {
-        counter = counter + 1;
+let total = loop {
+    counter = counter + 1;
 
-        if counter &gt; 10 {
-            break counter;
-        }
-    };
+    if counter &gt; 10 {
+        break counter;
+    }
+};
 
-    println!("The final count is: {}", total);
-}
+println!("The final count is: {}", total);
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/loops/loop_break.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/loops/loop_break.rn
 The final count is: 11
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="pattern-matching"><a class="header" href="#pattern-matching">Pattern matching</a></h1>
@@ -854,15 +810,13 @@ access to what you need.</p>
     }
 }
 
-pub fn main() {
-    match_input(1);
-    match_input(2);
-    match_input([1, 2, 42, 84]);
-    match_input("one");
-    match_input(#{ field: 42 });
-}
+match_input(1);
+match_input(2);
+match_input([1, 2, 42, 84]);
+match_input("one");
+match_input(#{ field: 42 });
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/pattern_matching/big_match.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/pattern_matching/big_match.rn
 The number one.
 Another number: 2.
 A vector starting with one and two, followed by 42.
@@ -905,21 +859,19 @@ empty <code>{}</code>. The values in the object are patterns themselves.</li>
 <p>Anything that qualifies as a collection can have <code>..</code> as a suffix to match the
 case that there are extra fields or values which are not covered in the pattern.
 This is called a <em>rest pattern</em>.</p>
-<pre><code class="language-rune">pub fn main() {
-    let value = #{ a: 0, b: 1 };
+<pre><code class="language-rune">let value = #{ a: 0, b: 1 };
 
-    let matched = match value {
-        // this doesn't match, because a pattern without a rest pattern in it
-        // must match exactly.
-        #{ a } =&gt; false,
-        // this matches, because it only requires `a` to be present.
-        #{ a, .. } =&gt; true,
-    };
+let matched = match value {
+    // this doesn't match, because a pattern without a rest pattern in it
+    // must match exactly.
+    #{ a } =&gt; false,
+    // this matches, because it only requires `a` to be present.
+    #{ a, .. } =&gt; true,
+};
 
-    assert!(matched, "rest pattern matched");
-}
+assert!(matched, "rest pattern matched");
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/pattern_matching/rest_pattern.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/pattern_matching/rest_pattern.rn
 </code></pre>
 <h2 id="binding-and-ignoring"><a class="header" href="#binding-and-ignoring">Binding and ignoring</a></h2>
 <p>In a pattern, every value can be replaced with a <em>binding</em> or an <em>ignore
@@ -928,15 +880,13 @@ it should ignore that value, causing it to match unconditionally regardless of
 what it is.</p>
 <pre><code class="language-rune">fn test_ignore(vector) {
     match vector {
-        [_, 2] =&gt; println("Second item in vector is 2."),
+        [_, 2] =&gt; println!("Second item in vector is 2."),
     }
 }
 
-pub fn main() {
-    test_ignore([1, 2]);
-}
+test_ignore([1, 2]);
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/pattern_matching/ignore.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/pattern_matching/ignore.rn
 Second item in vector is 2.
 </code></pre>
 <p>In contrast to ignoring, we can also <em>bind</em> the value to a variable that is then
@@ -948,11 +898,9 @@ give us access to it in the match arm.</p>
     }
 }
 
-pub fn main() {
-    test_ignore([1, 2]);
-}
+test_ignore([1, 2]);
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/pattern_matching/bind.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/pattern_matching/bind.rn
 Second item in vector is 2.
 </code></pre>
 <p>Here are some more examples:</p>
@@ -969,13 +917,11 @@ second and third as <code>a</code> and <code>b</code>.</li>
     }
 }
 
-pub fn main() {
-    println!("{}", describe_car(#{"model": "Ford", "make": 2000}));
-    println!("{}", describe_car(#{"model": "Honda", "make": 1980}));
-    println!("{}", describe_car(#{"model": "Volvo", "make": 1910}));
-}
+println!("{}", describe_car(#{"model": "Ford", "make": 2000}));
+println!("{}", describe_car(#{"model": "Honda", "make": 1980}));
+println!("{}", describe_car(#{"model": "Volvo", "make": 1910}));
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/pattern_matching/fast_cars.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/pattern_matching/fast_cars.rn
 Pretty fast!
 Can't tell 😞
 What, where did you get that?
@@ -988,12 +934,10 @@ environment.</p>
 <blockquote>
 <p>Template literals are <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals">a concept borrowed from EcmaScript</a>.</p>
 </blockquote>
-<pre><code class="language-rune">pub fn main() {
-    let age = 30;
-    dbg(`I am ${age} years old!`);
-}
+<pre><code class="language-rune">let age = 30;
+dbg!(`I am ${age} years old!`);
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/template_literals/basic_template.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/template_literals/basic_template.rn
 "I am 30 years old!"
 </code></pre>
 <p>Template strings are accelerated by the Vm, each argument uses a <em>display
@@ -1026,18 +970,16 @@ pub fn module() -&gt; Result&lt;Module, ContextError&gt; {
 }</code></pre>
 <p>This is what allows status codes to be formatted into template strings, any
 types which do not implement this protocol will fail to run.</p>
-<pre><code class="language-rune">pub fn main() {
-    let vec = [1, 2, 3];
-    dbg(`${vec}`);
-}
+<pre><code class="language-rune">let vec = [1, 2, 3];
+dbg!(`${vec}`);
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/template_literals/not_a_template.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/template_literals/not_a_template.rn
 == ! (`Vec` does not implement the `string_display` protocol (at 5)) (77.7µs)
 error: virtual machine error
   ┌─ scripts/book/template_literals/not_a_template.rn:3:9
   │
-3 │     dbg(`${vec}`);
-  │         ^^^^^^^^ `Vec` does not implement the `string_display` protocol
+3 │     dbg!(`${vec}`);
+  │          ^^^^^^^^ `Vec` does not implement the `string_display` protocol
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="instance-functions"><a class="header" href="#instance-functions">Instance functions</a></h1>
 <p>Instance functions are functions that are associated to a specific type of
@@ -1054,12 +996,10 @@ impl Foo {
     }
 }
 
-pub fn main() {
-    let foo = Foo::new();
-    foo.bar();
-}
+let foo = Foo::new();
+foo.bar();
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/instance_functions/missing_instance_fn.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/instance_functions/missing_instance_fn.rn
 error: virtual machine error
    ┌─ scripts/book/instance_functions/missing_instance_fn.rn:11:5
    │
@@ -1415,30 +1355,25 @@ missing. All the relevant associated functions are also provided, such as
 scope-separated identifier, like <code>std::f64</code>. This particular item identifies
 a type.</p>
 <p>These items can be used to perform basic type checking using the <code>is</code> and <code>is not</code> operations, like this:</p>
-<pre><code class="language-rune">#[test]
-fn types() {
-    assert!(() is Tuple, "tuples should be tuples");
-    assert!((1, 2) is Tuple, "tuples should be tuples");
-    assert!(true is bool, "bools should be bools");
-    assert!('a' is char, "chars should be chars");
-    assert!(b'a' is u8, "bytes should be bytes");
-    assert!(42 is i64, "integers should be integers");
-    assert!(42.1 is f64, "floats should be floats");
-    assert!("hello" is String, "strings should be strings");
-    assert!("x" is not char, "strings are not chars");
-    assert!(#{"hello": "world"} is Object, "objects should be objects");
-    assert!(["hello", "world"] is Vec, "vectors should be vectors");
-}
+<pre><code class="language-rune">assert!(() is Tuple, "tuples should be tuples");
+assert!((1, 2) is Tuple, "tuples should be tuples");
+assert!(true is bool, "bools should be bools");
+assert!('a' is char, "chars should be chars");
+assert!(b'a' is u8, "bytes should be bytes");
+assert!(42 is i64, "integers should be integers");
+assert!(42.1 is f64, "floats should be floats");
+assert!("hello" is String, "strings should be strings");
+assert!("x" is not char, "strings are not chars");
+assert!(#{"hello": "world"} is Object, "objects should be objects");
+assert!(["hello", "world"] is Vec, "vectors should be vectors");
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/types/types.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/types/types.rn
 </code></pre>
 <p>Conversely, the type check would fail if you're providing a value which is not
 of that type.</p>
-<pre><code class="language-rune">pub fn main() {
-    assert!(["hello", "world"] is String, "vectors should be strings");
-}
+<pre><code class="language-rune">assert!(["hello", "world"] is String, "vectors should be strings");
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/types/bad_type_check.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/types/bad_type_check.rn
 == ! (panicked `assertion failed: vectors should be strings` (at 12)) (133.3µs)
 error: virtual machine error
   ┌─ scripts/book/types/bad_type_check.rn:2:5
@@ -1458,13 +1393,11 @@ make decisions depending on what type a value has.</p>
     }
 }
 
-pub fn main() {
-    println!("{}", dynamic_type("Hello"));
-    println!("{}", dynamic_type([1, 2, 3, 4]));
-    println!("{}", dynamic_type(42));
-}
+println!("{}", dynamic_type("Hello"));
+println!("{}", dynamic_type([1, 2, 3, 4]));
+println!("{}", dynamic_type(42));
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/types/type_check.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/types/type_check.rn
 n is a String
 n is a vector
 n is unknown
@@ -1480,13 +1413,11 @@ are different types or variants in an enum.</p>
     }
 }
 
-pub fn main() {
-    println!("{}", dynamic_type("Hello"));
-    println!("{}", dynamic_type([1, 2, 3, 4]));
-    println!("{}", dynamic_type(42));
-}
+println!("{}", dynamic_type("Hello"));
+println!("{}", dynamic_type([1, 2, 3, 4]));
+println!("{}", dynamic_type(42));
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/types/type_check_patterns.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/types/type_check_patterns.rn
 n is a String
 n is a vector
 n is unknown
@@ -1508,30 +1439,26 @@ distinct <em>copies</em> of the underlying value.</p>
 </ul>
 <p>You can see that these bytes are <code>Copy</code> when assigning them to a different
 variable, because a separate copy of the value will be used automatically.</p>
-<pre><code class="language-rune">pub fn main() {
-    let a = 1;
-    let b = a;
-    a = 2;
-    println!("{}", a);
-    println!("{}", b);
-}
+<pre><code class="language-rune">let a = 1;
+let b = a;
+a = 2;
+println!("{a}");
+println!("{b}");
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/primitives/copy.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/primitives/copy.rn
 2
 1
 </code></pre>
 <p>Other types like <em>strings</em> are stored by reference. Assigning them to a
 different variable will only <em>copy their reference</em>, but they still point to the
 same underlying data.</p>
-<pre><code class="language-rune">pub fn main() {
-    let a = String::from("Hello");
-    let b = a;
-    a.push_str(" World");
-    println(a);
-    println(b);
-}
+<pre><code class="language-rune">let a = String::from("Hello");
+let b = a;
+a.push_str(" World");
+println!("{a}");
+println!("{b}");
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/primitives/primitives.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/primitives/primitives.rn
 Hello World
 Hello World
 </code></pre>
@@ -1549,7 +1476,7 @@ vector isn't typed, and can store <em>any</em> Rune values.</p>
     }
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/vectors/vectors.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/vectors/vectors.rn
 Hello
 42
 Hello
@@ -1566,7 +1493,7 @@ protocol. It is also possible to create and use an iterator manually using
     }
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/vectors/vectors_rev.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/vectors/vectors_rev.rn
 42
 Hello
 </code></pre>
@@ -1670,26 +1597,24 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
 <div style="break-before: page; page-break-before: always;"></div><h1 id="objects"><a class="header" href="#objects">Objects</a></h1>
 <p>Objects are anonymous maps, which support defining and using arbitrary string
 keys.</p>
-<pre><code class="language-rune">pub fn main() {
-    let values = #{};
-    values["first"] = "bar";
-    values["second"] = 42;
+<pre><code class="language-rune">let values = #{};
+values["first"] = "bar";
+values["second"] = 42;
 
-    dbg(values["first"]);
-    dbg(values.second); // items be accessed like struct fields.
+dbg!(values["first"]);
+dbg!(values.second); // items be accessed like struct fields.
 
-    if let Some(key) = values.get("not a key") {
-        dbg(key);
-    } else {
-        println("key did not exist");
-    }
+if let Some(key) = values.get("not a key") {
+    dbg!(key);
+} else {
+    println!("key did not exist");
+}
 
-    for entry in values {
-        dbg(entry);
-    }
+for entry in values {
+    dbg!(entry);
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/objects/objects.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/objects/objects.rn
 "bar"
 42
 key did not exist
@@ -1713,13 +1638,11 @@ we can natively handle data with unknown structure.</p>
     Ok(commits)
 }
 
-pub async fn main() {
-    for commit in get_commits("rune-rs/rune", Some(5)).await? {
-        println!("{}", commit);
-    }
+for commit in get_commits("rune-rs/rune", Some(5)).await? {
+    println!("{commit}");
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/objects/json.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/objects/json.rn
 9c4bdaf194410d8b2f5d7f9f52eb3e64709d3414
 06419f2580e7a18838f483321055fc06c0d75c4c
 cba225dad143779a0a9543cfb05cde9710083af5
@@ -1785,16 +1708,14 @@ Some("World")
 <p>Tuples in Rune are fixed-size sequences of values. Similarly to a vector, tuples
 can contain any sequence of values. But there's no way to change the size of a
 tuple.</p>
-<pre><code class="language-rune">pub fn main() {
-    let values = ("Now", "You", "See", "Me");
-    dbg(values);
+<pre><code class="language-rune">let values = ("Now", "You", "See", "Me");
+dbg!(values);
 
-    values.2 = "Don't";
-    values.3 = "!";
-    dbg(values);
-}
+values.2 = "Don't";
+values.3 = "!";
+dbg!(values);
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/tuples/tuple_masquerade.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/tuples/tuple_masquerade.rn
 ("Now", "You", "See", "Me")
 ("Now", "You", "Don\'t", "!")
 </code></pre>
@@ -1803,26 +1724,22 @@ tuple.</p>
     (1, "test")
 }
 
-pub fn main() {
-    dbg(foo());
-}
+dbg!(foo());
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/tuples/basic_tuples.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/tuples/basic_tuples.rn
 (1, "test")
 </code></pre>
 <p>Tuples can also be pattern matched:</p>
-<pre><code class="language-rune">pub fn main() {
-    match ("test", 1) {
-        ("test", n) =&gt; {
-            dbg("the first part was a number:", n);
-        }
-        _ =&gt; {
-            dbg("matched something we did not understand");
-        }
+<pre><code class="language-rune">match ("test", 1) {
+    ("test", n) =&gt; {
+        dbg!("the first part was a number:", n);
+    }
+    _ =&gt; {
+        dbg!("matched something we did not understand");
     }
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/tuples/tuple_patterns.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/tuples/tuple_patterns.rn
 "the first part was a number:"
 1
 </code></pre>
@@ -1884,13 +1801,11 @@ impl Person {
     }
 }
 
-pub fn main() {
-    let person = Person { name: "John-John Tedro" };
+let person = Person { name: "John-John Tedro" };
 
-    person.greet();
-}
+person.greet();
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/dynamic_types/greeting.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/dynamic_types/greeting.rn
 Greetings from John-John Tedro, and good luck with this section!
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="structs"><a class="header" href="#structs">Structs</a></h1>
@@ -1911,22 +1826,20 @@ impl User {
 
     fn describe(self) {
         if self.active {
-            println(`${self.username} is active`);
+            println!("{} is active.", self.username);
         } else {
-            println(`${self.username} is inactive`);
+            println!("{} is inactive.", self.username);
         }
     }
 }
 
-pub fn main() {
-    let user = User { username: "setbac", active: false };
+let user = User { username: "setbac", active: false };
 
-    user.describe();
-    user.set_active(true);
-    user.describe();
-}
+user.describe();
+user.set_active(true);
+user.describe();
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/structs/user_database.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/structs/user_database.rn
 setbac is inactive
 setbac is active
 </code></pre>
@@ -1942,24 +1855,22 @@ impl User {
     fn describe(self) {
         match self {
             User { username: "setbac", .. } =&gt; {
-                println("Yep, it's setbac.");
+                println!("Yep, it's setbac.");
             }
             User { username, .. } =&gt; {
-                println(`Other user: ${username}.`);
+                println!("Other user: {username}.");
             }
         }
     }
 }
 
-pub fn main() {
-    let user = User { username: "setbac", active: false };
+let user = User { username: "setbac", active: false };
 
-    user.describe();
-    user.username = "newt";
-    user.describe();
-}
+user.describe();
+user.username = "newt";
+user.describe();
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/structs/struct_matching.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/structs/struct_matching.rn
 Yep, it's setbac.
 Other user: newt.
 </code></pre>
@@ -1973,25 +1884,21 @@ important for Rune to support them to have a level of feature parity with Rust.<
 <p>Rune has native support for <code>Option</code>, the same enum available in Rust that
 allows you to represent data that can either be present with <code>Option::Some</code>, or
 absent with <code>Option::None</code>.</p>
-<pre><code class="language-rune">use std::iter::range;
-
-fn count_numbers(limit) {
+<pre><code class="language-rune">fn count_numbers(limit) {
     let limit = limit.unwrap_or(10);
 
-    for n in range(0, limit) {
+    for n in 0..limit {
         println!("Count: {}", n);
     }
 }
 
-pub fn main() {
-    println("First count!");
-    count_numbers(None);
+println!("First count!");
+count_numbers(None);
 
-    println("Second count!");
-    count_numbers(Some(2));
-}
+println!("Second count!");
+count_numbers(Some(2));
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/enums/count_numbers.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/enums/count_numbers.rn
 First count!
 Count: 0
 Count: 1
@@ -2186,17 +2093,15 @@ variant.</p>
     Some((div, a % b))
 }
 
-pub fn main() {
-    if let Some((div, m)) = checked_div_mod(5, 2) {
-        println!("Result: {}, {}", div, m);
-    }
+if let Some((div, m)) = checked_div_mod(5, 2) {
+    println!("Result: {}, {}", div, m);
+}
 
-    if let Some((div, m)) = checked_div_mod(5, 0) {
-        println!("Result: {}, {}", div, m);
-    }
+if let Some((div, m)) = checked_div_mod(5, 0) {
+    println!("Result: {}, {}", div, m);
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/try_operator/basic_try.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/try_operator/basic_try.rn
 Result: 2, 1
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="generators"><a class="header" href="#generators">Generators</a></h1>
@@ -2218,19 +2123,17 @@ numbers.</p>
     }
 }
 
-pub fn main() {
-    let g = fib();
+let g = fib();
 
-    while let Some(n) = g.next() {
-        println!("{}", n);
+while let Some(n) = g.next() {
+    println!("{n}");
 
-        if n &gt; 100 {
-            break;
-        }
+    if n &gt; 100 {
+        break;
     }
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/generators/fib_generator.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/generators/fib_generator.rn
 0
 1
 1
@@ -2263,14 +2166,12 @@ allowing the calling procedure to send values to the generator.</p>
     assert_eq!(collected, ["John", (1, 2, 3)]);
 }
 
-pub fn main() {
-    let printer = printer();
-    printer.resume(());
-    printer.resume("John");
-    printer.resume((1, 2, 3));
-}
+let printer = printer();
+printer.resume(());
+printer.resume("John");
+printer.resume((1, 2, 3));
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/generators/send_values.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/generators/send_values.rn
 "John"
 (1, 2, 3)
 </code></pre>
@@ -2281,24 +2182,22 @@ At that point it runs the block prior to the first yield, we can see this by
 instrumenting our code a little.</p>
 <pre><code class="language-rune">fn printer() {
     loop {
-        println("waiting for value...");
+        println!("waiting for value...");
         let out = yield;
-        println!("{:?}", out);
+        println!("{out:?}");
     }
 }
 
-pub fn main() {
-    let printer = printer();
+let printer = printer();
 
-    println("firing off the printer...");
-    printer.resume(());
-    println("ready to go!");
+println!("firing off the printer...");
+printer.resume(());
+println!("ready to go!");
 
-    printer.resume("John");
-    printer.resume((1, 2, 3));
-}
+printer.resume("John");
+printer.resume((1, 2, 3));
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/generators/bootup.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/generators/bootup.rn
 firing off the printer...
 waiting for value...
 ready to go!
@@ -2318,13 +2217,11 @@ possible states a generator can suspend itself into.</p>
     2
 }
 
-pub fn main() {
-    let printer = print_once();
-    dbg(printer.resume(()));
-    dbg(printer.resume("John"));
-}
+let printer = print_once();
+dbg!(printer.resume(()));
+dbg!(printer.resume("John"));
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/generators/states.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/generators/states.rn
 Yielded(1)
 "John"
 Complete(2)
@@ -2339,16 +2236,14 @@ error.</p>
     yield 1
 }
 
-pub fn main() {
-    let printer = print_once();
-    dbg(printer);
-    dbg(printer.resume(()));
-    dbg(printer.resume("John"));
-    dbg(printer);
-    dbg(printer.resume(()));
-}
+let printer = print_once();
+dbg!(printer);
+dbg!(printer.resume(()));
+dbg!(printer.resume("John"));
+dbg!(printer);
+dbg!(printer.resume(()));
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/generators/error.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/generators/error.rn
 Generator { completed: false }
 Yielded(1)
 Complete("John")
@@ -2356,8 +2251,8 @@ Generator { completed: true }
 error: virtual machine error
    ┌─ scripts/book/generators/error.rn:11:9
    │
-11 │     dbg(printer.resume(()));
-   │         ^^^^^^^^^^^^^^^^^^ cannot resume a generator that has completed
+11 │     dbg!(printer.resume(()));
+   │          ^^^^^^^^^^^^^^^^^^ cannot resume a generator that has completed
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="closures"><a class="header" href="#closures">Closures</a></h1>
 <p>We've gone over functions before, and while incredibly useful there's a few more
@@ -2382,18 +2277,10 @@ fn sub(a, b) {
     a - b
 }
 
-#[test]
-fn test_function_pointer() {
-    assert_eq!(do_thing(add), 3);
-    assert_eq!(do_thing(sub), -1);
-}
-
-pub fn main() {
-    println!("Result: {}", do_thing(add));
-    println!("Result: {}", do_thing(sub));
-}
+println!("Result: {}", do_thing(add));
+println!("Result: {}", do_thing(sub));
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/closures/function_pointers.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/closures/function_pointers.rn
 Result: 3
 Result: -1
 </code></pre>
@@ -2405,20 +2292,11 @@ them to be used when the function is being called.</p>
     op(1, 2)
 }
 
-#[test]
-fn test_basic_closure() {
-    let n = 1;
-    assert_eq!(work(|a, b| n + a + b), 4);
-    assert_eq!(work(|a, b| n + a * b), 3);
-}
-
-pub fn main() {
-    let n = 1;
-    println!("Result: {}", work(|a, b| n + a + b));
-    println!("Result: {}", work(|a, b| n + a * b));
-}
+let n = 1;
+println!("Result: {}", work(|a, b| n + a + b));
+println!("Result: {}", work(|a, b| n + a * b));
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/closures/basic_closure.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/closures/basic_closure.rn
 Result: 4
 Result: 3
 </code></pre>
@@ -2496,7 +2374,7 @@ pub fn main() {
     assert!(!is_readable(n));
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/closures/closure_move.rn.fail
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/closures/closure_move.rn.fail
 error: compile error
   ┌─ scripts/book/closures/closure_move.rn.fail:7:33
   │
@@ -2519,26 +2397,24 @@ how it applies to Rune as a dynamic programming language.</p>
 <p>Asynchronous code allows us to run multiple tasks concurrently, and work with
 the result of those tasks.</p>
 <p>A typical example would be if we want to perform multiple HTTP requests at once:</p>
-<pre><code class="language-rune">pub async fn main() {
-    let a = http::get("https://google.com");
-    let b = http::get("https://amazon.com");
+<pre><code class="language-rune">let a = http::get("https://google.com");
+let b = http::get("https://amazon.com");
 
-    loop {
-        let res = select {
-            res = a =&gt; res?,
-            res = b =&gt; res?,
-        };
+loop {
+    let res = select {
+        res = a =&gt; res?,
+        res = b =&gt; res?,
+    };
 
-        match res {
-            () =&gt; break,
-            result =&gt; {
-                println!("{}", result.status());
-            }
+    match res {
+        () =&gt; break,
+        result =&gt; {
+            println!("{}", result.status());
         }
     }
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_http.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/async/async_http.rn
 200 OK
 200 OK
 </code></pre>
@@ -2564,17 +2440,15 @@ async fn request(timeout) {
     Ok(())
 }
 
-pub async fn main() {
-    if let Err(Timeout) = request(1000).await {
-        println("Request timed out!");
-    }
+if let Err(Timeout) = request(1000).await {
+    println!("Request timed out!");
+}
 
-    if let Err(Timeout) = request(4000).await {
-        println("Request timed out!");
-    }
+if let Err(Timeout) = request(4000).await {
+    println!("Request timed out!");
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_http_timeout.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/async/async_http_timeout.rn
 200 OK
 Request timed out!
 </code></pre>
@@ -2604,16 +2478,14 @@ async fn request(timeout) {
     Ok(result)
 }
 
-pub async fn main() {
-    for result in future::join([request(1000), request(4000)]).await {
-        match result {
-            Ok(result) =&gt; println!("Result: {}", result.status()),
-            Err(Timeout) =&gt; println("Request timed out!"),
-        }
+for result in future::join([request(1000), request(4000)]).await {
+    match result {
+        Ok(result) =&gt; println!("Result: {}", result.status()),
+        Err(Timeout) =&gt; println!("Request timed out!"),
     }
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_http_concurrent.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/async/async_http_concurrent.rn
 Result: 200 OK
 Request timed out!
 </code></pre>
@@ -2626,13 +2498,11 @@ produce a future.</p>
     }
 }
 
-pub async fn main() {
-    let future = do_request("https://google.com");
-    let status = future().await?;
-    println!("Status: {}", status);
-}
+let future = do_request("https://google.com");
+let status = future().await?;
+println!("Status: {status}");
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_closure.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/async/async_closure.rn
 Status: 200 OK
 </code></pre>
 <h2 id="async-blocks"><a class="header" href="#async-blocks"><code>async</code> blocks</a></h2>
@@ -2644,13 +2514,11 @@ can capture variables the same way as closures do, but take no arguments.</p>
     }
 }
 
-pub async fn main() {
-    let future = do_request("https://google.com");
-    let status = future.await?;
-    println!("Status: {}", status);
-}
+let future = do_request("https://google.com");
+let status = future.await?;
+println!("Status: {status}");
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/async/async_blocks.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/async/async_blocks.rn
 Status: 200 OK
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="streams"><a class="header" href="#streams">Streams</a></h1>
@@ -2670,15 +2538,13 @@ the generator.</p>
     }
 }
 
-pub async fn main() {
-    let requests = send_requests(["https://google.com", "https://amazon.com"]);
+let requests = send_requests(["https://google.com", "https://amazon.com"]);
 
-    while let Some(status) = requests.next().await.transpose()? {
-        println!("{}", status);
-    }
+while let Some(status) = requests.next().await.transpose()? {
+    println!("{}", status);
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/streams/basic_stream.rn
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/streams/basic_stream.rn
 200 OK
 200 OK
 </code></pre>
@@ -2840,12 +2706,14 @@ async fn main() -&gt; Result&lt;()&gt; {
     Ok(())
 }</code></pre></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="macros"><a class="header" href="#macros">Macros</a></h1>
-<p>Rune has (experimental) support for macros. These are functions which expand
-into code, and can be used by library writers to "extend the compiler".</p>
+<p>Rune has support for macros. These are functions which expand into code, and can
+be used by library writers to "extend the compiler".</p>
 <p>For now, the following type of macros are support:</p>
 <ul>
 <li>Function-like macros expanding to items (functions, type declarations, ..).</li>
-<li>Function-like macros expanding to expression (statements, blocks, async blocks, ..).</li>
+<li>Function-like macros expanding to expression (statements, blocks, async
+blocks, ..).</li>
+<li>Attribute macros expanding around a function.</li>
 </ul>
 <p>Macros can currently only be defined natively. This is to get around the rather
 tricky issue that the code of a macro has to be runnable during compilation.
@@ -2864,14 +2732,15 @@ that can be invoked on expressions.</p>
 <a href="https://docs.rs/quote/1/quote/">famed counterpart in the Rust world</a>. A major difference with Rune <code>quote!</code> is
 that we need to pass in the <code>MacroContext</code> when invoking it. This is a detail
 which will be covered in one of the advanced sections.</p>
-<pre><code class="language-rust noplaypen">use rune::ast;
-use rune::compile;
-use rune::macros::{quote, MacroContext, TokenStream};
-use rune::parse::Parser;
+<pre><code class="language-rust noplaypen">use crate as rune;
+use crate::ast;
+use crate::compile;
+use crate::macros::{quote, MacroContext, TokenStream};
+use crate::parse::Parser;
 
-/// Implementation for the `stringy_math!` macro.
+/// Implementation of the `stringy_math!` macro.
 #[rune::macro_]
-pub(crate) fn stringy_math(
+pub fn stringy_math(
     cx: &amp;mut MacroContext&lt;'_, '_, '_&gt;,
     stream: &amp;TokenStream,
 ) -&gt; compile::Result&lt;TokenStream&gt; {
@@ -2897,23 +2766,18 @@ pub(crate) fn stringy_math(
 }</code></pre>
 <p>A macro is added to a <a href="https://docs.rs/rune/0/rune/module/struct.Module.html"><code>Module</code></a> using the <a href="https://docs.rs/rune/0/rune/module/struct.Module.html#method.macro_"><code>Module::macro_</code></a> function.</p>
 <pre><code class="language-rust noplaypen">pub fn module() -&gt; Result&lt;rune::Module, rune::ContextError&gt; {
-    let mut module = rune::Module::new(["std", "experiments"]);
-    module.macro_meta(stringy_math_macro::stringy_math)?;
+    let mut module = rune::Module::new(["test", "macros"]);
+    module.macro_meta(stringy_math)?;
     Ok(module)
 }</code></pre>
 <p>With this module installed, we can now take <code>stringy_math!</code> for a spin.</p>
-<pre><code class="language-rune">use ::std::experiments::stringy_math;
+<pre><code class="language-rune">use ::test::macros::stringy_math;
 
 pub fn main() {
-    let output = stringy_math!(add 10 sub 2 div 3 mul 100);
-    println!("{}", output);
+    stringy_math!(add 10 sub 2 div 3 mul 100)
 }
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/macros/stringy_math.rn -O macros=true --experimental
-200
-</code></pre>
-<p>To access the <code>std::experimental</code>, you have to specify the <code>--experimental</code>
-option to the Rune CLI.</p>
+<p>Running this would return <code>200</code>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="advanced"><a class="header" href="#advanced">Advanced</a></h1>
 <p>This chapter is dedicated to the advanced topics of Rune. Here we will discuss
 the advanced and internal details of the language. This chapter is primarily
@@ -3030,11 +2894,9 @@ execution of the future.</p>
 things are stored. <em>The stack</em> and <em>the heap</em>. It has no registers.</p>
 <p>Instructions in the virtual machine operate off the stack. Let's take a look at
 the add operation with <code>--trace</code> and <code>--dump-stack</code>.</p>
-<pre><code class="language-rune">pub fn main() {
-    1 + 3
-}
+<pre><code class="language-rune">1 + 3
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/the_stack/add.rn --trace --dump-stack
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/the_stack/add.rn --trace --dump-stack
 fn main() (0xe7fc1d6083100dcd):
   0000 = integer 1
     0+0 = 1
@@ -3104,12 +2966,10 @@ malicious code.</p>
     a + b
 }
 
-pub fn main() {
-    let a = 3;
-    foo(1, 2) + a
-}
+let a = 3;
+foo(1, 2) + a
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/the_stack/call_and_add.rn --trace --dump-stack
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/the_stack/call_and_add.rn --trace --dump-stack
 fn main() (0xe7fc1d6083100dcd):
   0005 = integer 3
     0+0 = 3
@@ -3236,23 +3096,21 @@ implementations of the <a href="https://github.com/rune-rs/rune/blob/main/crates
 <p>This stage uses the <a href="https://github.com/rune-rs/rune/blob/main/crates/rune/src/query.rs"><code>Query</code></a> system to look up metadata about external items,
 and any external item queried for is subsequently queued up to be built.</p>
 <p>Consider the following unit:</p>
-<pre><code class="language-rune">pub fn main() {
-    return foo();
+<pre><code class="language-rune">return foo();
 
-    fn foo() {
-        2
-    }
+fn foo() {
+    2
+}
 
-    fn bar() {
-        3
-    }
+fn bar() {
+    3
 }
 </code></pre>
 <p>Let's dump all dynamic functions in it:</p>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/compiler_guide/dead_code.rn --dump-functions
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/compiler_guide/dead_code.rn --dump-functions --warnings
 # dynamic functions
-0xe7fc1d6083100dcd = main()
-0x20c6d8dd92b51018 = main::$0::foo()
+0x0 = {root}()
+0x481411c4bd0a5f6 = foo()
 ---
 == 2 (59.8µs)
 </code></pre>
@@ -3296,12 +3154,10 @@ given item (like <code>main::$0::$0</code>). And when we invoke the closure, we 
 <em>call</em> to this procedure.</p>
 <p>We can see this call by dumping all the dynamic functions in the following
 script:</p>
-<pre><code class="language-rune">pub fn main() {
-    let callable = || 42;
-    callable();
-}
+<pre><code class="language-rune">let callable = || 42;
+dbg!(callable());
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/compiler_guide/closures.rn --emit-instructions --dump-functions
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/compiler_guide/closures.rn --emit-instructions --dump-functions
 # instructions
 fn main() (0x1c69d5964e831fc1):
   0000 = load-fn hash=0xbef6d5f6276cd45e // closure `3`

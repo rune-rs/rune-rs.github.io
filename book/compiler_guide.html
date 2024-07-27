@@ -211,23 +211,21 @@ implementations of the <a href="https://github.com/rune-rs/rune/blob/main/crates
 <p>This stage uses the <a href="https://github.com/rune-rs/rune/blob/main/crates/rune/src/query.rs"><code>Query</code></a> system to look up metadata about external items,
 and any external item queried for is subsequently queued up to be built.</p>
 <p>Consider the following unit:</p>
-<pre><code class="language-rune">pub fn main() {
-    return foo();
+<pre><code class="language-rune">return foo();
 
-    fn foo() {
-        2
-    }
+fn foo() {
+    2
+}
 
-    fn bar() {
-        3
-    }
+fn bar() {
+    3
 }
 </code></pre>
 <p>Let's dump all dynamic functions in it:</p>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/compiler_guide/dead_code.rn --dump-functions
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/compiler_guide/dead_code.rn --dump-functions --warnings
 # dynamic functions
-0xe7fc1d6083100dcd = main()
-0x20c6d8dd92b51018 = main::$0::foo()
+0x0 = {root}()
+0x481411c4bd0a5f6 = foo()
 ---
 == 2 (59.8µs)
 </code></pre>
@@ -271,12 +269,10 @@ given item (like <code>main::$0::$0</code>). And when we invoke the closure, we 
 <em>call</em> to this procedure.</p>
 <p>We can see this call by dumping all the dynamic functions in the following
 script:</p>
-<pre><code class="language-rune">pub fn main() {
-    let callable = || 42;
-    callable();
-}
+<pre><code class="language-rune">let callable = || 42;
+dbg!(callable());
 </code></pre>
-<pre><code class="language-text">$&gt; cargo run --bin rune -- run scripts/book/compiler_guide/closures.rn --emit-instructions --dump-functions
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/compiler_guide/closures.rn --emit-instructions --dump-functions
 # instructions
 fn main() (0x1c69d5964e831fc1):
   0000 = load-fn hash=0xbef6d5f6276cd45e // closure `3`

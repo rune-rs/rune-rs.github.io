@@ -2054,13 +2054,6 @@
 <a href="#2054" id="2054">2054</a>
 <a href="#2055" id="2055">2055</a>
 <a href="#2056" id="2056">2056</a>
-<a href="#2057" id="2057">2057</a>
-<a href="#2058" id="2058">2058</a>
-<a href="#2059" id="2059">2059</a>
-<a href="#2060" id="2060">2060</a>
-<a href="#2061" id="2061">2061</a>
-<a href="#2062" id="2062">2062</a>
-<a href="#2063" id="2063">2063</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::num::NonZeroUsize;
 
 <span class="kw">use </span>core::mem::{replace, take};
@@ -2484,51 +2477,45 @@
     }
 
     <span class="doccomment">/// Handle a filesystem module.
-    </span><span class="kw">fn </span>handle_file_mod(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        item_mod: <span class="kw-2">&amp;mut </span>ast::ItemMod,
-        docs: <span class="kw-2">&amp;</span>[Doc],
-    ) -&gt; compile::Result&lt;()&gt; {
-        <span class="kw">let </span>name = item_mod.name.resolve(<span class="macro">resolve_context!</span>(<span class="self">self</span>.q))<span class="question-mark">?</span>;
+    </span><span class="kw">fn </span>handle_file_mod(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ast: <span class="kw-2">&amp;mut </span>ast::ItemMod, docs: <span class="kw-2">&amp;</span>[Doc]) -&gt; compile::Result&lt;()&gt; {
+        <span class="kw">let </span>name = ast.name.resolve(<span class="macro">resolve_context!</span>(<span class="self">self</span>.q))<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>visibility = ast_to_visibility(<span class="kw-2">&amp;</span>item_mod.visibility)<span class="question-mark">?</span>;
+        <span class="kw">let </span>visibility = ast_to_visibility(<span class="kw-2">&amp;</span>ast.visibility)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>guard = <span class="self">self</span>.items.push_name(name.as_ref())<span class="question-mark">?</span>;
         <span class="kw">let </span>idx_item = <span class="self">self</span>.item.replace();
 
-        <span class="kw">let </span>mod_item_id = <span class="self">self</span>.items.id().with_span(<span class="kw-2">&amp;*</span>item_mod)<span class="question-mark">?</span>;
+        <span class="kw">let </span>mod_item_id = <span class="self">self</span>.items.id().with_span(<span class="kw-2">&amp;*</span>ast)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>mod_item = <span class="self">self</span>.q.insert_mod(
             <span class="kw-2">&amp;</span><span class="self">self</span>.items,
-            <span class="kw-2">&amp;</span>DynLocation::new(<span class="self">self</span>.source_id, spanned::from_fn(|| item_mod.name_span())),
+            <span class="kw-2">&amp;</span>DynLocation::new(<span class="self">self</span>.source_id, spanned::from_fn(|| ast.name_span())),
             <span class="self">self</span>.item.module,
             visibility,
             docs,
         )<span class="question-mark">?</span>;
 
         <span class="self">self</span>.item = idx_item;
-        <span class="self">self</span>.items.pop(guard).with_span(<span class="kw-2">&amp;*</span>item_mod)<span class="question-mark">?</span>;
+        <span class="self">self</span>.items.pop(guard).with_span(<span class="kw-2">&amp;*</span>ast)<span class="question-mark">?</span>;
 
-        item_mod.id.set(mod_item_id);
+        ast.id.set(mod_item_id);
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(root) = <span class="kw-2">&amp;</span><span class="self">self</span>.root <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
-                <span class="kw-2">&amp;*</span>item_mod,
+                <span class="kw-2">&amp;*</span>ast,
                 ErrorKind::UnsupportedModuleSource,
             ));
         };
 
-        <span class="kw">let </span>source =
-            <span class="self">self</span>.q
-                .source_loader
-                .load(root, <span class="self">self</span>.q.pool.module_item(mod_item), <span class="kw-2">&amp;*</span>item_mod)<span class="question-mark">?</span>;
+        <span class="kw">let </span>source = <span class="self">self
+            </span>.q
+            .source_loader
+            .load(root, <span class="self">self</span>.q.pool.module_item(mod_item), <span class="kw-2">&amp;*</span>ast)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(loaded) = <span class="self">self</span>.loaded.as_mut() {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(_existing) =
-                loaded.try_insert(mod_item, (<span class="self">self</span>.source_id, item_mod.span()))<span class="question-mark">?
-            </span>{
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(_existing) = loaded.try_insert(mod_item, (<span class="self">self</span>.source_id, ast.span()))<span class="question-mark">? </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
-                    <span class="kw-2">&amp;*</span>item_mod,
+                    <span class="kw-2">&amp;*</span>ast,
                     ErrorKind::ModAlreadyLoaded {
                         item: <span class="self">self</span>.q.pool.module_item(mod_item).try_to_owned()<span class="question-mark">?</span>,
                         <span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
@@ -2542,8 +2529,8 @@
 
         <span class="self">self</span>.q
             .visitor
-            .visit_mod(<span class="kw-2">&amp;</span>DynLocation::new(source_id, <span class="kw-2">&amp;*</span>item_mod))
-            .with_span(<span class="kw-2">&amp;*</span>item_mod)<span class="question-mark">?</span>;
+            .visit_mod(<span class="kw-2">&amp;</span>DynLocation::new(source_id, <span class="kw-2">&amp;*</span>ast))
+            .with_span(<span class="kw-2">&amp;*</span>ast)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = <span class="self">self</span>.queue.as_mut() {
             queue.try_push_back(Task::LoadFile {
@@ -2734,7 +2721,6 @@
     <span class="kw-2">mut </span>ast: ast::EmptyBlock,
     span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
 ) -&gt; compile::Result&lt;()&gt; {
-    <span class="kw">let </span>guard = idx.items.push_id()<span class="question-mark">?</span>;
     <span class="kw">let </span>idx_item = idx.item.replace();
 
     <span class="kw">let </span>item_meta = idx.q.insert_new_item(
@@ -2750,7 +2736,7 @@
     statements(idx, <span class="kw-2">&amp;mut </span>ast.statements)<span class="question-mark">?</span>;
 
     idx.item = idx_item;
-    idx.items.pop(guard).with_span(span)<span class="question-mark">?</span>;
+
     <span class="kw">let </span>layer = idx.scopes.pop().with_span(span)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>call = <span class="kw">match </span>(layer.awaits.is_empty(), layer.yields.is_empty()) {
