@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/stack.rs`."><title>stack.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5ca6ca2a1f83705a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (7c2012d0e 2024-07-26)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/stack.rs`."><title>stack.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5ca6ca2a1f83705a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (fbccf5053 2024-07-27)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -522,6 +522,46 @@
 <a href="#522" id="522">522</a>
 <a href="#523" id="523">523</a>
 <a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::array;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
@@ -581,7 +621,6 @@
     ///
     /// ```
     /// use rune::vm_try;
-    /// use rune::Module;
     /// use rune::runtime::{Output, Memory, ToValue, VmResult, InstAddress};
     ///
     /// fn sum(stack: &amp;mut dyn Memory, addr: InstAddress, args: usize, out: Output) -&gt; VmResult&lt;()&gt; {
@@ -596,6 +635,25 @@
     /// }
     /// ```
     </span><span class="kw">fn </span>slice_at(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: InstAddress, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>[Value], SliceError&gt;;
+
+    <span class="doccomment">/// Access the given slice mutably.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rune::vm_try;
+    /// use rune::runtime::{Output, Memory, InstAddress, Value, VmResult};
+    ///
+    /// fn drop_values(stack: &amp;mut dyn Memory, addr: InstAddress, args: usize, out: Output) -&gt; VmResult&lt;()&gt; {
+    ///     for value in vm_try!(stack.slice_at_mut(addr, args)) {
+    ///         *value = Value::empty();
+    ///     }
+    ///
+    ///     out.store(stack, ());
+    ///     VmResult::Ok(())
+    /// }
+    /// ```
+    </span><span class="kw">fn </span>slice_at_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>[Value], SliceError&gt;;
 
     <span class="doccomment">/// Get a value mutable at the given index from the stack bottom.
     ///
@@ -636,6 +694,11 @@
     }
 
     <span class="attr">#[inline]
+    </span><span class="kw">fn </span>slice_at_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>[Value], SliceError&gt; {
+        (<span class="kw-2">**</span><span class="self">self</span>).slice_at_mut(addr, len)
+    }
+
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>at_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>Value, StackError&gt; {
         (<span class="kw-2">**</span><span class="self">self</span>).at_mut(addr)
     }
@@ -650,6 +713,27 @@
         <span class="kw">let </span>start = addr.offset();
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(values) = start.checked_add(len).and_then(|end| <span class="self">self</span>.get(start..end)) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(SliceError {
+                addr,
+                len,
+                stack: N,
+            });
+        };
+
+        <span class="prelude-val">Ok</span>(values)
+    }
+
+    <span class="kw">fn </span>slice_at_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>[Value], SliceError&gt; {
+        <span class="kw">if </span>len == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="kw-2">&amp;mut </span>[]);
+        }
+
+        <span class="kw">let </span>start = addr.offset();
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(values) = start
+            .checked_add(len)
+            .and_then(|end| <span class="self">self</span>.get_mut(start..end))
+        <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(SliceError {
                 addr,
                 len,
@@ -858,15 +942,6 @@
         <span class="self">self</span>.stack.drain(<span class="self">self</span>.top..)
     }
 
-    <span class="doccomment">/// Get the slice at the given address with the given static length.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>array_at&lt;<span class="kw">const </span>N: usize&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        addr: InstAddress,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;[<span class="kw-2">&amp;</span>Value; N], SliceError&gt; {
-        <span class="kw">let </span>slice = <span class="self">self</span>.slice_at(addr, N)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(array::from_fn(|i| <span class="kw-2">&amp;</span>slice[i]))
-    }
-
     <span class="doccomment">/// Clear the current stack.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.stack.clear();
@@ -947,10 +1022,10 @@
         // values. It is also guaranteed to be non-overlapping.
         </span><span class="kw">unsafe </span>{
             <span class="kw">let </span>ptr = <span class="self">self</span>.stack.as_mut_ptr();
-            <span class="kw">let </span>from = slice::from_raw_parts(ptr.add(start), len);
+            <span class="kw">let </span>from = slice::from_raw_parts_mut(ptr.add(start), len);
 
-            <span class="kw">for </span>(value, n) <span class="kw">in </span>from.iter().zip(old_len..) {
-                ptr.add(n).write(value.clone());
+            <span class="kw">for </span>(value, n) <span class="kw">in </span>from.iter_mut().zip(old_len..) {
+                ptr.add(n).write(replace(value, Value::empty()));
             }
 
             <span class="self">self</span>.stack.set_len(new_len);
@@ -976,6 +1051,11 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>slice_at(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: InstAddress, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>[Value], SliceError&gt; {
         Stack::slice_at(<span class="self">self</span>, addr, len)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>slice_at_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>[Value], SliceError&gt; {
+        Stack::slice_at_mut(<span class="self">self</span>, addr, len)
     }
 
     <span class="attr">#[inline]

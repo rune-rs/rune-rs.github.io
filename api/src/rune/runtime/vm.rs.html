@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5ca6ca2a1f83705a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (7c2012d0e 2024-07-26)" data-channel="nightly" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5ca6ca2a1f83705a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (fbccf5053 2024-07-27)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3680,6 +3680,28 @@
 <a href="#3680" id="3680">3680</a>
 <a href="#3681" id="3681">3681</a>
 <a href="#3682" id="3682">3682</a>
+<a href="#3683" id="3683">3683</a>
+<a href="#3684" id="3684">3684</a>
+<a href="#3685" id="3685">3685</a>
+<a href="#3686" id="3686">3686</a>
+<a href="#3687" id="3687">3687</a>
+<a href="#3688" id="3688">3688</a>
+<a href="#3689" id="3689">3689</a>
+<a href="#3690" id="3690">3690</a>
+<a href="#3691" id="3691">3691</a>
+<a href="#3692" id="3692">3692</a>
+<a href="#3693" id="3693">3693</a>
+<a href="#3694" id="3694">3694</a>
+<a href="#3695" id="3695">3695</a>
+<a href="#3696" id="3696">3696</a>
+<a href="#3697" id="3697">3697</a>
+<a href="#3698" id="3698">3698</a>
+<a href="#3699" id="3699">3699</a>
+<a href="#3700" id="3700">3700</a>
+<a href="#3701" id="3701">3701</a>
+<a href="#3702" id="3702">3702</a>
+<a href="#3703" id="3703">3703</a>
+<a href="#3704" id="3704">3704</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
@@ -3707,6 +3729,16 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{budget, ProtocolCaller};
 
 <span class="kw">use super</span>::{VmDiagnostics, VmDiagnosticsObj};
+
+<span class="doccomment">/// Helper to take a value, replacing the old one with empty.
+</span><span class="attr">#[inline(always)]
+</span><span class="kw">fn </span>take(value: <span class="kw-2">&amp;mut </span>Value) -&gt; Value {
+    replace(value, Value::empty())
+}
+
+<span class="kw">fn </span>consume(value: <span class="kw-2">&amp;mut </span>Value) {
+    <span class="kw-2">*</span>value = Value::empty();
+}
 
 <span class="doccomment">/// Indicating the kind of isolation that is present for a frame.
 </span><span class="attr">#[derive(Debug, Clone, Copy)]
@@ -4929,13 +4961,15 @@
         args: usize,
         out: Output,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmErrorKind&gt; {
-        <span class="kw">let </span>iter = <span class="self">self</span>.stack.slice_at(addr, args)<span class="question-mark">?</span>;
+        <span class="kw">let </span>values = <span class="self">self</span>.stack.slice_at_mut(addr, args)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(at) = out.as_addr() {
-            <span class="kw">let </span>stack = iter.iter().cloned().try_collect::&lt;Stack&gt;()<span class="question-mark">?</span>;
+            <span class="kw">let </span>stack = values.iter_mut().map(take).try_collect::&lt;Stack&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>vm = <span class="self">Self</span>::with_stack(<span class="self">self</span>.context.clone(), <span class="self">self</span>.unit.clone(), stack);
             vm.ip = offset;
             <span class="kw-2">*</span><span class="self">self</span>.stack.at_mut(at)<span class="question-mark">? </span>= Value::try_from(Generator::new(vm))<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            values.iter_mut().for_each(consume);
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -4949,13 +4983,15 @@
         args: usize,
         out: Output,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmErrorKind&gt; {
-        <span class="kw">let </span>stack = <span class="self">self</span>.stack.slice_at(addr, args)<span class="question-mark">?</span>;
+        <span class="kw">let </span>values = <span class="self">self</span>.stack.slice_at_mut(addr, args)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(at) = out.as_addr() {
-            <span class="kw">let </span>stack = stack.iter().cloned().try_collect::&lt;Stack&gt;()<span class="question-mark">?</span>;
+            <span class="kw">let </span>stack = values.iter_mut().map(take).try_collect::&lt;Stack&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>vm = <span class="self">Self</span>::with_stack(<span class="self">self</span>.context.clone(), <span class="self">self</span>.unit.clone(), stack);
             vm.ip = offset;
             <span class="kw-2">*</span><span class="self">self</span>.stack.at_mut(at)<span class="question-mark">? </span>= Value::try_from(Stream::new(vm))<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            values.iter_mut().for_each(consume);
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -4969,15 +5005,17 @@
         args: usize,
         out: Output,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmErrorKind&gt; {
-        <span class="kw">let </span>stack = <span class="self">self</span>.stack.slice_at(addr, args)<span class="question-mark">?</span>;
+        <span class="kw">let </span>values = <span class="self">self</span>.stack.slice_at_mut(addr, args)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(at) = out.as_addr() {
-            <span class="kw">let </span>stack = stack.iter().cloned().try_collect::&lt;Stack&gt;()<span class="question-mark">?</span>;
+            <span class="kw">let </span>stack = values.iter_mut().map(take).try_collect::&lt;Stack&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>vm = <span class="self">Self</span>::with_stack(<span class="self">self</span>.context.clone(), <span class="self">self</span>.unit.clone(), stack);
             vm.ip = offset;
             <span class="kw">let </span><span class="kw-2">mut </span>execution = vm.into_execution();
             <span class="kw">let </span>future = Future::new(<span class="kw">async move </span>{ execution.async_complete().<span class="kw">await </span>})<span class="question-mark">?</span>;
             <span class="kw-2">*</span><span class="self">self</span>.stack.at_mut(at)<span class="question-mark">? </span>= Value::try_from(future)<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            values.iter_mut().for_each(consume);
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -5438,8 +5476,8 @@
     <span class="doccomment">/// Construct a new vec.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_vec(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, count: usize, out: Output) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at(addr, count));
-        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(vec.iter().cloned().try_collect::&lt;alloc::Vec&lt;Value&gt;&gt;());
+        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, count));
+        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(vec.iter_mut().map(take).try_collect::&lt;alloc::Vec&lt;Value&gt;&gt;());
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || ValueKind::Vec(Vec::from(vec))));
         VmResult::Ok(())
     }
@@ -5447,8 +5485,12 @@
     <span class="doccomment">/// Construct a new tuple.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_tuple(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, count: usize, out: Output) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at(addr, count));
-        <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(tuple.iter().cloned().try_collect::&lt;alloc::Vec&lt;Value&gt;&gt;());
+        <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, count));
+
+        <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(tuple
+            .iter_mut()
+            .map(take)
+            .try_collect::&lt;alloc::Vec&lt;Value&gt;&gt;());
 
         <span class="macro">vm_try!</span>(
             out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || VmResult::Ok(ValueKind::Tuple(<span class="macro">vm_try!</span>(
@@ -5461,10 +5503,10 @@
 
     <span class="doccomment">/// Construct a new tuple with a fixed number of arguments.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_tuple_n(<span class="kw-2">&amp;mut </span><span class="self">self</span>, args: <span class="kw-2">&amp;</span>[InstAddress], out: Output) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>tuple = <span class="macro">vm_try!</span>(alloc::Vec::&lt;Value&gt;::try_with_capacity(args.len()));
+    </span><span class="kw">fn </span>op_tuple_n(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: <span class="kw-2">&amp;</span>[InstAddress], out: Output) -&gt; VmResult&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>tuple = <span class="macro">vm_try!</span>(alloc::Vec::&lt;Value&gt;::try_with_capacity(addr.len()));
 
-        <span class="kw">for </span><span class="kw-2">&amp;</span>arg <span class="kw">in </span>args {
+        <span class="kw">for </span><span class="kw-2">&amp;</span>arg <span class="kw">in </span>addr {
             <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(arg)).clone();
             <span class="macro">vm_try!</span>(tuple.try_push(value));
         }
@@ -6183,11 +6225,11 @@
             .ok_or(VmErrorKind::MissingStaticObjectKeys { slot }));
 
         <span class="kw">let </span><span class="kw-2">mut </span>object = <span class="macro">vm_try!</span>(Object::with_capacity(keys.len()));
-        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at(addr, keys.len()));
+        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, keys.len()));
 
         <span class="kw">for </span>(key, value) <span class="kw">in </span>keys.iter().zip(values) {
             <span class="kw">let </span>key = <span class="macro">vm_try!</span>(String::try_from(key.as_str()));
-            <span class="macro">vm_try!</span>(object.insert(key, value.clone()));
+            <span class="macro">vm_try!</span>(object.insert(key, take(value)));
         }
 
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, ValueKind::Object(object)));
@@ -6196,29 +6238,31 @@
 
     <span class="doccomment">/// Operation to allocate an object.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, range: InstRange, out: Output) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>op_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: InstRange, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="kw">match </span>range {
-            InstRange::RangeFrom =&gt; {
-                <span class="kw">let </span>[s] = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.array_at(addr));
+            InstRange::RangeFrom { start } =&gt; {
+                <span class="kw">let </span>s = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(start)).clone();
                 <span class="macro">vm_try!</span>(Value::try_from(RangeFrom::new(s.clone())))
             }
             InstRange::RangeFull =&gt; {
                 <span class="macro">vm_try!</span>(Value::try_from(RangeFull::new()))
             }
-            InstRange::RangeInclusive =&gt; {
-                <span class="kw">let </span>[s, e] = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.array_at(addr));
+            InstRange::RangeInclusive { start, end } =&gt; {
+                <span class="kw">let </span>s = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(start)).clone();
+                <span class="kw">let </span>e = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(end)).clone();
                 <span class="macro">vm_try!</span>(Value::try_from(RangeInclusive::new(s.clone(), e.clone())))
             }
-            InstRange::RangeToInclusive =&gt; {
-                <span class="kw">let </span>[e] = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.array_at(addr));
+            InstRange::RangeToInclusive { end } =&gt; {
+                <span class="kw">let </span>e = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(end)).clone();
                 <span class="macro">vm_try!</span>(Value::try_from(RangeToInclusive::new(e.clone())))
             }
-            InstRange::RangeTo =&gt; {
-                <span class="kw">let </span>[e] = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.array_at(addr));
+            InstRange::RangeTo { end } =&gt; {
+                <span class="kw">let </span>e = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(end)).clone();
                 <span class="macro">vm_try!</span>(Value::try_from(RangeTo::new(e.clone())))
             }
-            InstRange::Range =&gt; {
-                <span class="kw">let </span>[s, e] = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.array_at(addr));
+            InstRange::Range { start, end } =&gt; {
+                <span class="kw">let </span>s = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(start)).clone();
+                <span class="kw">let </span>e = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(end)).clone();
                 <span class="macro">vm_try!</span>(Value::try_from(Range::new(s.clone(), e.clone())))
             }
         };
@@ -6263,12 +6307,12 @@
             .lookup_rtti(hash)
             .ok_or(VmErrorKind::MissingRtti { hash }));
 
-        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at(addr, keys.len()));
         <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vm_try!</span>(Object::with_capacity(keys.len()));
+        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, keys.len()));
 
         <span class="kw">for </span>(key, value) <span class="kw">in </span>keys.iter().zip(values) {
             <span class="kw">let </span>key = <span class="macro">vm_try!</span>(String::try_from(key.as_str()));
-            <span class="macro">vm_try!</span>(data.insert(key, value.clone()));
+            <span class="macro">vm_try!</span>(data.insert(key, take(value)));
         }
 
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || ValueKind::Struct(Struct {
@@ -6281,7 +6325,7 @@
 
     <span class="doccomment">/// Operation to allocate an object variant.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_object_variant(
+    </span><span class="kw">fn </span>op_struct_variant(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         addr: InstAddress,
         hash: Hash,
@@ -6299,11 +6343,11 @@
             .ok_or(VmErrorKind::MissingVariantRtti { hash }));
 
         <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vm_try!</span>(Object::with_capacity(keys.len()));
-        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at(addr, keys.len()));
+        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, keys.len()));
 
         <span class="kw">for </span>(key, value) <span class="kw">in </span>keys.iter().zip(values) {
             <span class="kw">let </span>key = <span class="macro">vm_try!</span>(String::try_from(key.as_str()));
-            <span class="macro">vm_try!</span>(data.insert(key, value.clone()));
+            <span class="macro">vm_try!</span>(data.insert(key, take(value)));
         }
 
         <span class="macro">vm_try!</span>(
@@ -6775,8 +6819,8 @@
                     .lookup_rtti(hash)
                     .ok_or(VmErrorKind::MissingRtti { hash }));
 
-                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at(addr, args));
-                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(tuple.iter().cloned().try_collect());
+                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, args));
+                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(tuple.iter_mut().map(take).try_collect());
 
                 <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || {
                     Value::tuple_struct(rtti.clone(), tuple)
@@ -6793,8 +6837,8 @@
                     .lookup_variant_rtti(hash)
                     .ok_or(VmErrorKind::MissingVariantRtti { hash }));
 
-                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at(addr, args));
-                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(tuple.iter().cloned().try_collect());
+                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, args));
+                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(tuple.iter_mut().map(take).try_collect());
 
                 <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || Value::tuple_variant(
                     rtti.clone(),
@@ -7136,17 +7180,17 @@
                 Inst::Tuple { addr, count, out } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_tuple(addr, count, out));
                 }
-                Inst::Tuple1 { args, out } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_tuple_n(<span class="kw-2">&amp;</span>args[..], out));
+                Inst::Tuple1 { addr, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_tuple_n(<span class="kw-2">&amp;</span>addr[..], out));
                 }
-                Inst::Tuple2 { args, out } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_tuple_n(<span class="kw-2">&amp;</span>args[..], out));
+                Inst::Tuple2 { addr, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_tuple_n(<span class="kw-2">&amp;</span>addr[..], out));
                 }
-                Inst::Tuple3 { args, out } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_tuple_n(<span class="kw-2">&amp;</span>args[..], out));
+                Inst::Tuple3 { addr, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_tuple_n(<span class="kw-2">&amp;</span>addr[..], out));
                 }
-                Inst::Tuple4 { args, out } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_tuple_n(<span class="kw-2">&amp;</span>args[..], out));
+                Inst::Tuple4 { addr, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_tuple_n(<span class="kw-2">&amp;</span>addr[..], out));
                 }
                 Inst::Environment { addr, count, out } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_environment(addr, count, out));
@@ -7154,8 +7198,8 @@
                 Inst::Object { addr, slot, out } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_object(addr, slot, out));
                 }
-                Inst::Range { addr, range, out } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_range(addr, range, out));
+                Inst::Range { range, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_range(range, out));
                 }
                 Inst::EmptyStruct { hash, out } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_empty_struct(hash, out));
@@ -7174,7 +7218,7 @@
                     slot,
                     out,
                 } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_object_variant(addr, hash, slot, out));
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_struct_variant(addr, hash, slot, out));
                 }
                 Inst::String { slot, out } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_string(slot, out));
