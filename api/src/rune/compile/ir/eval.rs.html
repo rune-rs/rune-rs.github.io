@@ -417,6 +417,28 @@
 <a href="#417" id="417">417</a>
 <a href="#418" id="418">418</a>
 <a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::ops::{Add, Mul, Shl, Shr, Sub};
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
@@ -426,7 +448,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::ir::{<span class="self">self</span>};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::query::Used;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Object, OwnedTuple, Value, ValueKind};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Inline, Mutable, Object, OwnedTuple, Value, ValueBorrowRef};
 
 <span class="doccomment">/// The outcome of a constant evaluation.
 </span><span class="kw">pub enum </span>EvalOutcome {
@@ -469,7 +491,7 @@
         .scopes
         .mut_target(<span class="kw-2">&amp;</span>ir.target, <span class="kw">move </span>|t| ir.op.assign(ir, t, value))<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(Value::unit().with_span(ir)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(Value::unit())
 }
 
 <span class="kw">fn </span>eval_ir_binary(
@@ -490,76 +512,91 @@
     <span class="kw">let </span>a = eval_ir(<span class="kw-2">&amp;</span>ir.lhs, interp, used)<span class="question-mark">?</span>;
     <span class="kw">let </span>b = eval_ir(<span class="kw-2">&amp;</span>ir.rhs, interp, used)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>a = a.borrow_kind_ref().with_span(ir)<span class="question-mark">?</span>;
-    <span class="kw">let </span>b = b.borrow_kind_ref().with_span(ir)<span class="question-mark">?</span>;
+    <span class="kw">let </span>a = a.borrow_ref().with_span(ir)<span class="question-mark">?</span>;
+    <span class="kw">let </span>b = b.borrow_ref().with_span(ir)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>kind = <span class="lifetime">'out</span>: {
-        <span class="kw">match </span>(<span class="kw-2">&amp;*</span>a, <span class="kw-2">&amp;*</span>b) {
-            (ValueKind::Integer(a), ValueKind::Integer(b)) =&gt; <span class="kw">match </span>ir.op {
-                ir::IrBinaryOp::Add =&gt; {
-                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(a.add(b));
-                }
-                ir::IrBinaryOp::Sub =&gt; {
-                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(a.sub(b));
-                }
-                ir::IrBinaryOp::Mul =&gt; {
-                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(a.mul(b));
-                }
-                ir::IrBinaryOp::Div =&gt; {
-                    <span class="kw">let </span>number = a
-                        .checked_div(<span class="kw-2">*</span>b)
-                        .ok_or_else(|| compile::Error::msg(span, <span class="string">"division by zero"</span>))<span class="question-mark">?</span>;
-                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(number);
-                }
-                ir::IrBinaryOp::Shl =&gt; {
-                    <span class="kw">let </span>b = u32::try_from(<span class="kw-2">*</span>b).map_err(|<span class="kw">_</span>| {
-                        compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">"cannot be converted to shift operand"</span>)
-                    })<span class="question-mark">?</span>;
+    <span class="kw">match </span>(a, b) {
+        (ValueBorrowRef::Inline(a), ValueBorrowRef::Inline(b)) =&gt; {
+            <span class="kw">let </span>out = <span class="lifetime">'out</span>: {
+                <span class="kw">match </span>(a, b) {
+                    (Inline::Integer(a), Inline::Integer(b)) =&gt; <span class="kw">match </span>ir.op {
+                        ir::IrBinaryOp::Add =&gt; {
+                            <span class="kw">break </span><span class="lifetime">'out </span>Inline::Integer(a.add(b));
+                        }
+                        ir::IrBinaryOp::Sub =&gt; {
+                            <span class="kw">break </span><span class="lifetime">'out </span>Inline::Integer(a.sub(b));
+                        }
+                        ir::IrBinaryOp::Mul =&gt; {
+                            <span class="kw">break </span><span class="lifetime">'out </span>Inline::Integer(a.mul(b));
+                        }
+                        ir::IrBinaryOp::Div =&gt; {
+                            <span class="kw">let </span>number = a
+                                .checked_div(<span class="kw-2">*</span>b)
+                                .ok_or_else(|| compile::Error::msg(span, <span class="string">"division by zero"</span>))<span class="question-mark">?</span>;
+                            <span class="kw">break </span><span class="lifetime">'out </span>Inline::Integer(number);
+                        }
+                        ir::IrBinaryOp::Shl =&gt; {
+                            <span class="kw">let </span>b = u32::try_from(<span class="kw-2">*</span>b).map_err(|<span class="kw">_</span>| {
+                                compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">"cannot be converted to shift operand"</span>)
+                            })<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>n = a.shl(b);
-                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(n);
-                }
-                ir::IrBinaryOp::Shr =&gt; {
-                    <span class="kw">let </span>b = u32::try_from(<span class="kw-2">*</span>b).map_err(|<span class="kw">_</span>| {
-                        compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">"cannot be converted to shift operand"</span>)
-                    })<span class="question-mark">?</span>;
+                            <span class="kw">let </span>n = a.shl(b);
+                            <span class="kw">break </span><span class="lifetime">'out </span>Inline::Integer(n);
+                        }
+                        ir::IrBinaryOp::Shr =&gt; {
+                            <span class="kw">let </span>b = u32::try_from(<span class="kw-2">*</span>b).map_err(|<span class="kw">_</span>| {
+                                compile::Error::msg(<span class="kw-2">&amp;</span>ir.rhs, <span class="string">"cannot be converted to shift operand"</span>)
+                            })<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>n = a.shr(b);
-                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Integer(n);
+                            <span class="kw">let </span>n = a.shr(b);
+                            <span class="kw">break </span><span class="lifetime">'out </span>Inline::Integer(n);
+                        }
+                        ir::IrBinaryOp::Lt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Bool(a &lt; b),
+                        ir::IrBinaryOp::Lte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Bool(a &lt;= b),
+                        ir::IrBinaryOp::Eq =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Bool(a == b),
+                        ir::IrBinaryOp::Gt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Bool(a &gt; b),
+                        ir::IrBinaryOp::Gte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Bool(a &gt;= b),
+                    },
+                    (Inline::Float(a), Inline::Float(b)) =&gt; {
+                        <span class="attr">#[allow(clippy::float_cmp)]
+                        </span><span class="kw">match </span>ir.op {
+                            ir::IrBinaryOp::Add =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Float(a + b),
+                            ir::IrBinaryOp::Sub =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Float(a - b),
+                            ir::IrBinaryOp::Mul =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Float(a * b),
+                            ir::IrBinaryOp::Div =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Float(a / b),
+                            ir::IrBinaryOp::Lt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Bool(a &lt; b),
+                            ir::IrBinaryOp::Lte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Bool(a &lt;= b),
+                            ir::IrBinaryOp::Eq =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Bool(a == b),
+                            ir::IrBinaryOp::Gt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Bool(a &gt; b),
+                            ir::IrBinaryOp::Gte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>Inline::Bool(a &gt;= b),
+                            <span class="kw">_ </span>=&gt; (),
+                        };
+                    }
+                    <span class="kw">_ </span>=&gt; {}
                 }
-                ir::IrBinaryOp::Lt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &lt; b),
-                ir::IrBinaryOp::Lte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &lt;= b),
-                ir::IrBinaryOp::Eq =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a == b),
-                ir::IrBinaryOp::Gt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &gt; b),
-                ir::IrBinaryOp::Gte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &gt;= b),
-            },
-            (ValueKind::Float(a), ValueKind::Float(b)) =&gt; {
-                <span class="attr">#[allow(clippy::float_cmp)]
-                </span><span class="kw">match </span>ir.op {
-                    ir::IrBinaryOp::Add =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Float(a + b),
-                    ir::IrBinaryOp::Sub =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Float(a - b),
-                    ir::IrBinaryOp::Mul =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Float(a * b),
-                    ir::IrBinaryOp::Div =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Float(a / b),
-                    ir::IrBinaryOp::Lt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &lt; b),
-                    ir::IrBinaryOp::Lte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &lt;= b),
-                    ir::IrBinaryOp::Eq =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a == b),
-                    ir::IrBinaryOp::Gt =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &gt; b),
-                    ir::IrBinaryOp::Gte =&gt; <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::Bool(a &gt;= b),
-                    <span class="kw">_ </span>=&gt; (),
-                };
-            }
-            (ValueKind::String(a), ValueKind::String(b)) =&gt; {
-                <span class="kw">if let </span>ir::IrBinaryOp::Add = ir.op {
-                    <span class="kw">break </span><span class="lifetime">'out </span>ValueKind::String(add_strings(a, b).with_span(span)<span class="question-mark">?</span>);
-                }
-            }
-            <span class="kw">_ </span>=&gt; (),
+
+                <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(span));
+            };
+
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(Value::from(out));
         }
+        (ValueBorrowRef::Mutable(a), ValueBorrowRef::Mutable(b)) =&gt; {
+            <span class="kw">let </span>out = <span class="lifetime">'out</span>: {
+                <span class="kw">if let </span>(Mutable::String(a), Mutable::String(b)) = (<span class="kw-2">&amp;*</span>a, <span class="kw-2">&amp;*</span>b) {
+                    <span class="kw">if let </span>ir::IrBinaryOp::Add = ir.op {
+                        <span class="kw">break </span><span class="lifetime">'out </span>Mutable::String(add_strings(a, b).with_span(span)<span class="question-mark">?</span>);
+                    }
+                }
 
-        <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(span));
-    };
+                <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(span));
+            };
 
-    <span class="prelude-val">Ok</span>(Value::try_from(kind).with_span(span)<span class="question-mark">?</span>)
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(Value::try_from(out).with_span(span)<span class="question-mark">?</span>);
+        }
+        <span class="kw">_ </span>=&gt; (),
+    }
+
+    <span class="prelude-val">Err</span>(EvalOutcome::not_const(span))
 }
 
 <span class="kw">fn </span>eval_ir_branches(
@@ -589,7 +626,7 @@
         <span class="kw">return </span>eval_ir_scope(branch, interp, used);
     }
 
-    <span class="prelude-val">Ok</span>(Value::unit().with_span(ir)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(Value::unit())
 }
 
 <span class="kw">fn </span>eval_ir_call(
@@ -622,7 +659,7 @@
         </span>}
     };
 
-    <span class="prelude-val">Ok</span>(Value::try_from(value).with_span(ir)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(Value::from(value))
 }
 
 <span class="kw">fn </span>eval_ir_decl(
@@ -633,7 +670,7 @@
     interp.budget.take(ir)<span class="question-mark">?</span>;
     <span class="kw">let </span>value = eval_ir(<span class="kw-2">&amp;</span>ir.value, interp, used)<span class="question-mark">?</span>;
     interp.scopes.decl(<span class="kw-2">&amp;</span>ir.name, value).with_span(ir)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(Value::unit().with_span(ir)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(Value::unit())
 }
 
 <span class="kw">fn </span>eval_ir_loop(
@@ -684,7 +721,7 @@
 
         <span class="prelude-val">Ok</span>(value)
     } <span class="kw">else </span>{
-        <span class="prelude-val">Ok</span>(Value::unit().with_span(ir)<span class="question-mark">?</span>)
+        <span class="prelude-val">Ok</span>(Value::unit())
     }
 }
 
@@ -718,8 +755,8 @@
     <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(last) = <span class="kw-2">&amp;</span>ir.last {
         eval_ir(last, interp, used)<span class="question-mark">?
     </span>} <span class="kw">else </span>{
-        Value::unit().with_span(ir)<span class="question-mark">?
-    </span>};
+        Value::unit()
+    };
 
     interp.scopes.pop(guard).with_span(ir)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(value)
@@ -733,7 +770,7 @@
     interp.budget.take(ir)<span class="question-mark">?</span>;
     <span class="kw">let </span>value = eval_ir(<span class="kw-2">&amp;</span>ir.value, interp, used)<span class="question-mark">?</span>;
     interp.scopes.set_target(<span class="kw-2">&amp;</span>ir.target, value)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(Value::unit().with_span(ir)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(Value::unit())
 }
 
 <span class="kw">fn </span>eval_ir_template(
@@ -752,25 +789,32 @@
             }
             ir::IrTemplateComponent::Ir(ir) =&gt; {
                 <span class="kw">let </span>const_value = eval_ir(ir, interp, used)<span class="question-mark">?</span>;
-                <span class="kw">let </span>kind = const_value.borrow_kind_ref().with_span(ir)<span class="question-mark">?</span>;
+                <span class="kw">let </span>value = const_value.borrow_ref().with_span(ir)<span class="question-mark">?</span>;
 
-                <span class="kw">match </span><span class="kw-2">&amp;*</span>kind {
-                    ValueKind::Integer(integer) =&gt; {
-                        <span class="macro">write!</span>(buf, <span class="string">"{integer}"</span>)<span class="question-mark">?</span>;
-                    }
-                    ValueKind::Float(float) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>buffer = ryu::Buffer::new();
-                        buf.try_push_str(buffer.format(<span class="kw-2">*</span>float))<span class="question-mark">?</span>;
-                    }
-                    ValueKind::Bool(b) =&gt; {
-                        <span class="macro">write!</span>(buf, <span class="string">"{b}"</span>)<span class="question-mark">?</span>;
-                    }
-                    ValueKind::String(s) =&gt; {
-                        buf.try_push_str(s)<span class="question-mark">?</span>;
-                    }
-                    <span class="kw">_ </span>=&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
-                    }
+                <span class="kw">match </span>value {
+                    ValueBorrowRef::Inline(value) =&gt; <span class="kw">match </span>value {
+                        Inline::Integer(integer) =&gt; {
+                            <span class="macro">write!</span>(buf, <span class="string">"{integer}"</span>)<span class="question-mark">?</span>;
+                        }
+                        Inline::Float(float) =&gt; {
+                            <span class="kw">let </span><span class="kw-2">mut </span>buffer = ryu::Buffer::new();
+                            buf.try_push_str(buffer.format(<span class="kw-2">*</span>float))<span class="question-mark">?</span>;
+                        }
+                        Inline::Bool(b) =&gt; {
+                            <span class="macro">write!</span>(buf, <span class="string">"{b}"</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">_ </span>=&gt; {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
+                        }
+                    },
+                    ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
+                        Mutable::String(s) =&gt; {
+                            buf.try_push_str(s)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">_ </span>=&gt; {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
+                        }
+                    },
                 }
             }
         }

@@ -347,6 +347,7 @@
 <a href="#347" id="347">347</a>
 <a href="#348" id="348">348</a>
 <a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::ops;
@@ -354,7 +355,8 @@
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    EnvProtocolCaller, FromValue, ProtocolCaller, ToValue, Value, ValueKind, VmErrorKind, VmResult,
+    EnvProtocolCaller, FromValue, Inline, ProtocolCaller, ToValue, Value, ValueRef, VmErrorKind,
+    VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -444,22 +446,22 @@
     </span><span class="attr">#[rune::function(keep)]
     </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
         <span class="kw">let </span>value = <span class="kw">match </span>(
-            <span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.start.borrow_kind_ref()),
-            <span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.end.borrow_kind_ref()),
+            <span class="kw-2">&amp;</span><span class="macro">vm_try!</span>(<span class="self">self</span>.start.value_ref()),
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.end.value_ref()),
         ) {
-            (ValueKind::Byte(start), ValueKind::Byte(end)) =&gt; {
+            (ValueRef::Inline(Inline::Byte(start)), ValueRef::Inline(Inline::Byte(end))) =&gt; {
                 <span class="macro">vm_try!</span>(rune::to_value(RangeIter::new(<span class="kw-2">*</span>start..<span class="kw-2">*</span>end)))
             }
-            (ValueKind::Char(start), ValueKind::Char(end)) =&gt; {
+            (ValueRef::Inline(Inline::Char(start)), ValueRef::Inline(Inline::Char(end))) =&gt; {
                 <span class="macro">vm_try!</span>(rune::to_value(RangeIter::new(<span class="kw-2">*</span>start..<span class="kw-2">*</span>end)))
             }
-            (ValueKind::Integer(start), ValueKind::Integer(end)) =&gt; {
+            (ValueRef::Inline(Inline::Integer(start)), ValueRef::Inline(Inline::Integer(end))) =&gt; {
                 <span class="macro">vm_try!</span>(rune::to_value(RangeIter::new(<span class="kw-2">*</span>start..<span class="kw-2">*</span>end)))
             }
             (start, end) =&gt; {
                 <span class="kw">return </span>VmResult::err(VmErrorKind::UnsupportedIterRange {
-                    start: start.type_info(),
-                    end: end.type_info(),
+                    start: <span class="macro">vm_try!</span>(start.type_info()),
+                    end: <span class="macro">vm_try!</span>(end.type_info()),
                 })
             }
         };

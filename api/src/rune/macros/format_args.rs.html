@@ -706,6 +706,8 @@
 <a href="#706" id="706">706</a>
 <a href="#707" id="707">707</a>
 <a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::str;
 
 <span class="kw">use crate as </span>rune;
@@ -716,7 +718,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::macros::{quote, MacroContext, Quote, ToTokens, TokenStream};
 <span class="kw">use </span><span class="kw">crate</span>::parse::{Parse, Parser, Peek, Peeker};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::format;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::ValueKind;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Inline, Mutable, OwnedValue};
 
 <span class="doccomment">/// A format specification: A format string followed by arguments to be
 /// formatted in accordance with that string.
@@ -757,7 +759,9 @@
             }
         }
 
-        <span class="kw">let </span>ValueKind::String(format) = format.take_kind().with_span(<span class="kw-2">&amp;</span><span class="self">self</span>.format)<span class="question-mark">? </span><span class="kw">else </span>{
+        <span class="kw">let </span>format = format.take_value().with_span(<span class="kw-2">&amp;</span><span class="self">self</span>.format)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>OwnedValue::Mutable(Mutable::String(format)) = format <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.format,
                 <span class="string">"format argument must be a string"</span>,
@@ -1286,8 +1290,8 @@
 
             <span class="kw">let </span>value = cx.eval(expr)<span class="question-mark">?</span>;
 
-            <span class="kw">let </span>number = <span class="kw">match </span><span class="kw-2">*</span>value.borrow_kind_ref().with_span(expr)<span class="question-mark">? </span>{
-                ValueKind::Integer(n) =&gt; n.to_usize(),
+            <span class="kw">let </span>number = <span class="kw">match </span>value.as_inline().with_span(expr)<span class="question-mark">? </span>{
+                <span class="prelude-val">Some</span>(Inline::Integer(n)) =&gt; n.to_usize(),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             };
 

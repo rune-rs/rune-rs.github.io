@@ -1055,6 +1055,10 @@
 <a href="#1055" id="1055">1055</a>
 <a href="#1056" id="1056">1056</a>
 <a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future::Future;
 
@@ -1066,9 +1070,9 @@
 <span class="kw">use </span><span class="kw">crate</span>::function;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::vm::Isolated;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Args, Call, ConstValue, FromValue, FunctionHandler, InstAddress, Output, OwnedTuple, Rtti,
-    RuntimeContext, Stack, Unit, Value, ValueKind, VariantRtti, Vm, VmCall, VmErrorKind, VmHalt,
-    VmResult,
+    Args, Call, ConstValue, FromValue, FunctionHandler, InstAddress, Mutable, Output, OwnedTuple,
+    Rtti, RuntimeContext, Stack, Unit, Value, ValueRef, VariantRtti, Vm, VmCall, VmErrorKind,
+    VmHalt, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::shared::AssertSend;
 <span class="kw">use </span><span class="kw">crate</span>::Any;
@@ -1627,8 +1631,12 @@
             <span class="kw">let </span>value: Value = <span class="macro">vm_try!</span>(<span class="self">self</span>.call(args));
 
             <span class="kw">let </span>value = <span class="lifetime">'out</span>: {
-                <span class="kw">if let </span>ValueKind::Future(future) = <span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(value.borrow_kind_mut()) {
-                    <span class="kw">break </span><span class="lifetime">'out </span><span class="macro">vm_try!</span>(future.<span class="kw">await</span>);
+                <span class="kw">if let </span>ValueRef::Mutable(value) = <span class="macro">vm_try!</span>(value.value_ref()) {
+                    <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="macro">vm_try!</span>(value.borrow_mut());
+
+                    <span class="kw">if let </span>Mutable::Future(future) = <span class="kw-2">&amp;mut *</span>value {
+                        <span class="kw">break </span><span class="lifetime">'out </span><span class="macro">vm_try!</span>(future.<span class="kw">await</span>);
+                    }
                 }
 
                 value

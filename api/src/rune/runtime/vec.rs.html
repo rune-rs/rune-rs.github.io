@@ -570,6 +570,18 @@
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp;
 <span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
@@ -585,8 +597,8 @@
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::runtime::Hasher;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Formatter, FromValue, ProtocolCaller, RawRef, Ref, ToValue, UnsafeToRef, Value, ValueKind,
-    VmErrorKind, VmResult,
+    Formatter, FromValue, Mutable, ProtocolCaller, RawRef, Ref, ToValue, UnsafeToRef, Value,
+    ValueBorrowRef, VmErrorKind, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -694,6 +706,16 @@
         };
 
         <span class="kw-2">*</span>v = value;
+        VmResult::Ok(())
+    }
+
+    <span class="doccomment">/// Resizes the `Vec` in-place so that `len` is equal to `new_len`.
+    ///
+    /// If `new_len` is greater than `len`, the `Vec` is extended by the
+    /// difference, with each additional slot filled with `value`. If `new_len`
+    /// is less than `len`, the `Vec` is simply truncated.
+    </span><span class="kw">pub fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_len: usize, value: Value) -&gt; VmResult&lt;()&gt; {
+        <span class="macro">vm_try!</span>(<span class="self">self</span>.inner.try_resize(new_len, value));
         VmResult::Ok(())
     }
 
@@ -914,31 +936,33 @@
     /// types, such as vectors and tuples.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>index_get(this: <span class="kw-2">&amp;</span>[Value], index: Value) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
         <span class="kw">let </span>slice: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[Value]&gt; = <span class="lifetime">'out</span>: {
-            <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(index.borrow_kind_ref()) {
-                ValueKind::RangeFrom(range) =&gt; {
-                    <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
-                    <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..);
+            <span class="kw">if let </span>ValueBorrowRef::Mutable(value) = <span class="macro">vm_try!</span>(index.borrow_ref()) {
+                <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
+                    Mutable::RangeFrom(range) =&gt; {
+                        <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
+                        <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..);
+                    }
+                    Mutable::RangeFull(..) =&gt; <span class="kw">break </span><span class="lifetime">'out </span>this.get(..),
+                    Mutable::RangeInclusive(range) =&gt; {
+                        <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
+                        <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
+                        <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..=end);
+                    }
+                    Mutable::RangeToInclusive(range) =&gt; {
+                        <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
+                        <span class="kw">break </span><span class="lifetime">'out </span>this.get(..=end);
+                    }
+                    Mutable::RangeTo(range) =&gt; {
+                        <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
+                        <span class="kw">break </span><span class="lifetime">'out </span>this.get(..end);
+                    }
+                    Mutable::Range(range) =&gt; {
+                        <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
+                        <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
+                        <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..end);
+                    }
+                    <span class="kw">_ </span>=&gt; {}
                 }
-                ValueKind::RangeFull(..) =&gt; <span class="kw">break </span><span class="lifetime">'out </span>this.get(..),
-                ValueKind::RangeInclusive(range) =&gt; {
-                    <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
-                    <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
-                    <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..=end);
-                }
-                ValueKind::RangeToInclusive(range) =&gt; {
-                    <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
-                    <span class="kw">break </span><span class="lifetime">'out </span>this.get(..=end);
-                }
-                ValueKind::RangeTo(range) =&gt; {
-                    <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
-                    <span class="kw">break </span><span class="lifetime">'out </span>this.get(..end);
-                }
-                ValueKind::Range(range) =&gt; {
-                    <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
-                    <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
-                    <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..end);
-                }
-                <span class="kw">_ </span>=&gt; {}
             };
 
             <span class="kw">let </span>index = <span class="macro">vm_try!</span>(usize::from_value(index));

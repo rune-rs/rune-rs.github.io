@@ -1870,7 +1870,6 @@
 <a href="#1870" id="1870">1870</a>
 <a href="#1871" id="1871">1871</a>
 <a href="#1872" id="1872">1872</a>
-<a href="#1873" id="1873">1873</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::num::NonZeroUsize;
 
@@ -1879,9 +1878,8 @@
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use crate as </span>rune;
-<span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Call, FormatSpec, Memory, Type, Value, ValueKind, VmError, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Call, FormatSpec, Memory, Mutable, Type, Value, VmError, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Hash;
 
 <span class="doccomment">/// Pre-canned panic reasons.
@@ -1931,7 +1929,7 @@
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>TypeCheck {
     <span class="doccomment">/// Matches a unit type.
-    </span>EmptyTuple,
+    </span>Unit,
     <span class="doccomment">/// Matches an anonymous tuple.
     </span>Tuple,
     <span class="doccomment">/// Matches an anonymous object.
@@ -1952,7 +1950,7 @@
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>TypeCheck {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, fmt: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::EmptyTuple =&gt; <span class="macro">write!</span>(fmt, <span class="string">"Unit"</span>),
+            <span class="self">Self</span>::Unit =&gt; <span class="macro">write!</span>(fmt, <span class="string">"Unit"</span>),
             <span class="self">Self</span>::Tuple =&gt; <span class="macro">write!</span>(fmt, <span class="string">"Tuple"</span>),
             <span class="self">Self</span>::Object =&gt; <span class="macro">write!</span>(fmt, <span class="string">"Object"</span>),
             <span class="self">Self</span>::Vec =&gt; <span class="macro">write!</span>(fmt, <span class="string">"Vec"</span>),
@@ -2976,7 +2974,7 @@
     <span class="doccomment">/// Construct an instruction to push a unit.
     </span><span class="kw">pub fn </span>unit(out: Output) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Store {
-            value: InstValue::EmptyTuple,
+            value: InstValue::Unit,
             out,
         }
     }
@@ -3181,8 +3179,8 @@
     }
 }
 
-<span class="kw">impl </span>IntoOutput <span class="kw">for </span>ValueKind {
-    <span class="kw">type </span>Output = ValueKind;
+<span class="kw">impl </span>IntoOutput <span class="kw">for </span>Mutable {
+    <span class="kw">type </span>Output = Mutable;
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; VmResult&lt;<span class="self">Self</span>::Output&gt; {
@@ -3588,7 +3586,7 @@
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>InstValue {
     <span class="doccomment">/// An empty tuple.
-    </span>EmptyTuple,
+    </span>Unit,
     <span class="doccomment">/// A boolean.
     </span><span class="attr">#[musli(packed)]
     </span>Bool(bool),
@@ -3611,15 +3609,15 @@
 
 <span class="kw">impl </span>InstValue {
     <span class="doccomment">/// Convert into a value that can be pushed onto the stack.
-    </span><span class="kw">pub fn </span>into_value(<span class="self">self</span>) -&gt; alloc::Result&lt;Value&gt; {
+    </span><span class="kw">pub fn </span>into_value(<span class="self">self</span>) -&gt; Value {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::EmptyTuple =&gt; Value::unit(),
-            <span class="self">Self</span>::Bool(v) =&gt; Value::try_from(v),
-            <span class="self">Self</span>::Byte(v) =&gt; Value::try_from(v),
-            <span class="self">Self</span>::Char(v) =&gt; Value::try_from(v),
-            <span class="self">Self</span>::Integer(v) =&gt; Value::try_from(v),
-            <span class="self">Self</span>::Float(v) =&gt; Value::try_from(v),
-            <span class="self">Self</span>::Type(v) =&gt; Value::try_from(v),
+            <span class="self">Self</span>::Unit =&gt; Value::unit(),
+            <span class="self">Self</span>::Bool(v) =&gt; Value::from(v),
+            <span class="self">Self</span>::Byte(v) =&gt; Value::from(v),
+            <span class="self">Self</span>::Char(v) =&gt; Value::from(v),
+            <span class="self">Self</span>::Integer(v) =&gt; Value::from(v),
+            <span class="self">Self</span>::Float(v) =&gt; Value::from(v),
+            <span class="self">Self</span>::Type(v) =&gt; Value::from(v),
         }
     }
 }
@@ -3627,7 +3625,7 @@
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>InstValue {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::EmptyTuple =&gt; <span class="macro">write!</span>(f, <span class="string">"()"</span>)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::Unit =&gt; <span class="macro">write!</span>(f, <span class="string">"()"</span>)<span class="question-mark">?</span>,
             <span class="self">Self</span>::Bool(v) =&gt; <span class="macro">write!</span>(f, <span class="string">"{}"</span>, v)<span class="question-mark">?</span>,
             <span class="self">Self</span>::Byte(v) =&gt; {
                 <span class="kw">if </span>v.is_ascii_graphic() {
