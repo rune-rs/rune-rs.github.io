@@ -2409,6 +2409,56 @@
 <a href="#2409" id="2409">2409</a>
 <a href="#2410" id="2410">2410</a>
 <a href="#2411" id="2411">2411</a>
+<a href="#2412" id="2412">2412</a>
+<a href="#2413" id="2413">2413</a>
+<a href="#2414" id="2414">2414</a>
+<a href="#2415" id="2415">2415</a>
+<a href="#2416" id="2416">2416</a>
+<a href="#2417" id="2417">2417</a>
+<a href="#2418" id="2418">2418</a>
+<a href="#2419" id="2419">2419</a>
+<a href="#2420" id="2420">2420</a>
+<a href="#2421" id="2421">2421</a>
+<a href="#2422" id="2422">2422</a>
+<a href="#2423" id="2423">2423</a>
+<a href="#2424" id="2424">2424</a>
+<a href="#2425" id="2425">2425</a>
+<a href="#2426" id="2426">2426</a>
+<a href="#2427" id="2427">2427</a>
+<a href="#2428" id="2428">2428</a>
+<a href="#2429" id="2429">2429</a>
+<a href="#2430" id="2430">2430</a>
+<a href="#2431" id="2431">2431</a>
+<a href="#2432" id="2432">2432</a>
+<a href="#2433" id="2433">2433</a>
+<a href="#2434" id="2434">2434</a>
+<a href="#2435" id="2435">2435</a>
+<a href="#2436" id="2436">2436</a>
+<a href="#2437" id="2437">2437</a>
+<a href="#2438" id="2438">2438</a>
+<a href="#2439" id="2439">2439</a>
+<a href="#2440" id="2440">2440</a>
+<a href="#2441" id="2441">2441</a>
+<a href="#2442" id="2442">2442</a>
+<a href="#2443" id="2443">2443</a>
+<a href="#2444" id="2444">2444</a>
+<a href="#2445" id="2445">2445</a>
+<a href="#2446" id="2446">2446</a>
+<a href="#2447" id="2447">2447</a>
+<a href="#2448" id="2448">2448</a>
+<a href="#2449" id="2449">2449</a>
+<a href="#2450" id="2450">2450</a>
+<a href="#2451" id="2451">2451</a>
+<a href="#2452" id="2452">2452</a>
+<a href="#2453" id="2453">2453</a>
+<a href="#2454" id="2454">2454</a>
+<a href="#2455" id="2455">2455</a>
+<a href="#2456" id="2456">2456</a>
+<a href="#2457" id="2457">2457</a>
+<a href="#2458" id="2458">2458</a>
+<a href="#2459" id="2459">2459</a>
+<a href="#2460" id="2460">2460</a>
+<a href="#2461" id="2461">2461</a>
 </pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
@@ -2521,7 +2571,6 @@
 }
 
 <span class="doccomment">/// An entry on the stack.
-</span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>Value {
     repr: Repr,
 }
@@ -4412,6 +4461,15 @@
     }
 }
 
+<span class="kw">impl </span>IntoOutput <span class="kw">for </span>Inline {
+    <span class="kw">type </span>Output = Inline;
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; VmResult&lt;<span class="self">Self</span>::Output&gt; {
+        VmResult::Ok(<span class="self">self</span>)
+    }
+}
+
 <span class="kw">impl </span>TryFrom&lt;Mutable&gt; <span class="kw">for </span>Value {
     <span class="kw">type </span>Error = alloc::Error;
 
@@ -4420,6 +4478,15 @@
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             repr: Repr::Mutable(Shared::new(value)<span class="question-mark">?</span>),
         })
+    }
+}
+
+<span class="kw">impl </span>IntoOutput <span class="kw">for </span>Mutable {
+    <span class="kw">type </span>Output = Mutable;
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; VmResult&lt;<span class="self">Self</span>::Output&gt; {
+        VmResult::Ok(<span class="self">self</span>)
     }
 }
 
@@ -4475,6 +4542,35 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>maybe_type_of() -&gt; alloc::Result&lt;meta::DocType&gt; {
         <span class="prelude-val">Ok</span>(meta::DocType::empty())
+    }
+}
+
+<span class="kw">impl </span>Clone <span class="kw">for </span>Value {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>repr = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
+            Repr::Empty =&gt; Repr::Empty,
+            Repr::Inline(inline) =&gt; Repr::Inline(<span class="kw-2">*</span>inline),
+            Repr::Mutable(mutable) =&gt; Repr::Mutable(mutable.clone()),
+        };
+
+        <span class="self">Self </span>{ repr }
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>clone_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, source: <span class="kw-2">&amp;</span><span class="self">Self</span>) {
+        <span class="kw">match </span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.repr, <span class="kw-2">&amp;</span>source.repr) {
+            (Repr::Empty, Repr::Empty) =&gt; {}
+            (Repr::Inline(lhs), Repr::Inline(rhs)) =&gt; {
+                <span class="kw-2">*</span>lhs = <span class="kw-2">*</span>rhs;
+            }
+            (Repr::Mutable(lhs), Repr::Mutable(rhs)) =&gt; {
+                lhs.clone_from(rhs);
+            }
+            (lhs, rhs) =&gt; {
+                <span class="kw-2">*</span>lhs = rhs.clone();
+            }
+        }
     }
 }
 
@@ -4813,11 +4909,15 @@
     }
 }
 
-<span class="attr">#[test]
+<span class="doccomment">/// Ensures that `Value` and `Repr` is niche-filled when used in common
+/// combinations.
+</span><span class="attr">#[test]
 </span><span class="kw">fn </span>size_of_value() {
     <span class="kw">use </span>core::mem::size_of;
+
     <span class="macro">assert_eq!</span>(size_of::&lt;Repr&gt;(), size_of::&lt;Inline&gt;());
     <span class="macro">assert_eq!</span>(size_of::&lt;Repr&gt;(), size_of::&lt;Value&gt;());
     <span class="macro">assert_eq!</span>(size_of::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;(), size_of::&lt;Value&gt;());
+    <span class="macro">assert_eq!</span>(size_of::&lt;<span class="prelude-ty">Option</span>&lt;Repr&gt;&gt;(), size_of::&lt;Repr&gt;());
 }
 </code></pre></div></section></main></body></html>
