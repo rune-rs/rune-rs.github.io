@@ -491,9 +491,28 @@
 <a href="#491" id="491">491</a>
 <a href="#492" id="492">492</a>
 <a href="#493" id="493">493</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::ast;
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::ast::{Span, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::v1;
 <span class="kw">use </span><span class="kw">crate</span>::compile::{
@@ -504,10 +523,11 @@
 <span class="kw">use </span><span class="kw">crate</span>::indexing::FunctionAst;
 <span class="kw">use </span><span class="kw">crate</span>::macros::Storage;
 <span class="kw">use </span><span class="kw">crate</span>::parse::Resolve;
-<span class="kw">use </span><span class="kw">crate</span>::query::{Build, BuildEntry, GenericsParameters, Query, Used};
+<span class="kw">use </span><span class="kw">crate</span>::query::{Build, BuildEntry, GenericsParameters, Query, SecondaryBuild, Used};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::unit::UnitEncoder;
 <span class="kw">use </span><span class="kw">crate</span>::shared::{Consts, Gen};
 <span class="kw">use </span><span class="kw">crate</span>::worker::{LoadFileKind, Task, Worker};
+<span class="kw">use crate</span>::{alloc, ast};
 <span class="kw">use crate</span>::{Diagnostics, Sources};
 
 <span class="doccomment">/// Encode the given object into a collection of asm.
@@ -642,11 +662,11 @@
         entry: BuildEntry,
         unit_storage: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>UnitEncoder,
     ) -&gt; compile::Result&lt;()&gt; {
+        <span class="kw">use </span><span class="self">self</span>::v1::assemble;
+
         <span class="kw">let </span>BuildEntry { item_meta, build } = entry;
 
         <span class="kw">let </span>location = item_meta.location;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>asm = <span class="self">self</span>.q.unit.new_assembly(location);
 
         <span class="kw">match </span>build {
             Build::Query =&gt; {
@@ -672,9 +692,9 @@
                 }
             }
             Build::Function(f) =&gt; {
-                <span class="macro">tracing::trace!</span>(<span class="string">"function: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
+                <span class="kw">let </span><span class="kw-2">mut </span>asm = <span class="self">self</span>.q.unit.new_assembly(location);
 
-                <span class="kw">use </span><span class="self">self</span>::v1::assemble;
+                <span class="macro">tracing::trace!</span>(<span class="string">"function: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
                 <span class="comment">// For instance functions, we are required to know the type hash
                 // of the type it is associated with to perform the proper
@@ -710,7 +730,7 @@
 
                 <span class="kw">let </span>(debug_args, span): (<span class="kw">_</span>, <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned) = <span class="kw">match </span><span class="kw-2">&amp;</span>f.ast {
                     FunctionAst::Item(ast) =&gt; {
-                        <span class="kw">let </span>debug_args = format_fn_args(
+                        <span class="kw">let </span>debug_args = format_ast_args(
                             <span class="self">self</span>.q.sources,
                             location,
                             <span class="bool-val">false</span>,
@@ -722,11 +742,13 @@
                 };
 
                 <span class="kw">let </span>arena = hir::Arena::new();
+                <span class="kw">let </span><span class="kw-2">mut </span>secondary_builds = Vec::new();
 
                 <span class="kw">let </span><span class="kw-2">mut </span>cx = hir::lowering::Ctxt::with_query(
                     <span class="kw-2">&amp;</span>arena,
                     <span class="self">self</span>.q.borrow(),
                     item_meta.location.source_id,
+                    <span class="kw-2">&amp;mut </span>secondary_builds,
                 )<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>hir = <span class="kw">match </span><span class="kw-2">&amp;</span>f.ast {
@@ -769,101 +791,86 @@
                         size,
                     )<span class="question-mark">?</span>;
                 }
-            }
-            Build::Closure(closure) =&gt; {
-                <span class="macro">tracing::trace!</span>(<span class="string">"closure: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
-                <span class="kw">use </span><span class="self">self</span>::v1::assemble;
+                <span class="kw">for </span>build <span class="kw">in </span>secondary_builds {
+                    <span class="kw">let </span>item_meta = build.item_meta;
 
-                <span class="kw">let </span>debug_args = format_fn_args(
-                    <span class="self">self</span>.q.sources,
-                    location,
-                    <span class="bool-val">true</span>,
-                    closure.ast.args.as_slice().iter().map(|(a, <span class="kw">_</span>)| a),
-                )<span class="question-mark">?</span>;
+                    <span class="kw">let </span><span class="kw-2">mut </span>asm = <span class="self">self</span>.q.unit.new_assembly(item_meta.location);
 
-                <span class="kw">let </span>captures = <span class="self">self</span>.q.pool.item_type_hash(item_meta.item);
+                    <span class="kw">match </span>build.build {
+                        SecondaryBuild::Closure(c) =&gt; {
+                            <span class="macro">tracing::trace!</span>(<span class="string">"closure: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
-                <span class="kw">let </span>arena = hir::Arena::new();
-                <span class="kw">let </span><span class="kw-2">mut </span>cx = hir::lowering::Ctxt::with_query(
-                    <span class="kw-2">&amp;</span>arena,
-                    <span class="self">self</span>.q.borrow(),
-                    item_meta.location.source_id,
-                )<span class="question-mark">?</span>;
+                            <span class="kw">let </span>debug_args =
+                                format_hir_args(<span class="self">self</span>.q.sources, location, <span class="bool-val">true</span>, c.hir.args.iter())<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>hir = hir::lowering::expr_closure_secondary(<span class="kw-2">&amp;mut </span>cx, <span class="kw-2">&amp;</span>closure.ast, captures)<span class="question-mark">?</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>scopes = <span class="self">self</span>::v1::Scopes::new(location.source_id)<span class="question-mark">?</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>c = <span class="self">self</span>.compiler1(location, <span class="kw-2">&amp;</span>closure.ast, <span class="kw-2">&amp;mut </span>asm, <span class="kw-2">&amp;mut </span>scopes)<span class="question-mark">?</span>;
-                assemble::expr_closure_secondary(<span class="kw-2">&amp;mut </span>c, <span class="kw-2">&amp;</span>hir, <span class="kw-2">&amp;</span>closure.ast)<span class="question-mark">?</span>;
-                <span class="kw">let </span>size = c.scopes.size();
+                            <span class="kw">let </span><span class="kw-2">mut </span>scopes = <span class="self">self</span>::v1::Scopes::new(location.source_id)<span class="question-mark">?</span>;
+                            <span class="kw">let </span><span class="kw-2">mut </span>cx = <span class="self">self</span>.compiler1(location, c.hir, <span class="kw-2">&amp;mut </span>asm, <span class="kw-2">&amp;mut </span>scopes)<span class="question-mark">?</span>;
+                            assemble::expr_closure_secondary(<span class="kw-2">&amp;mut </span>cx, c.hir)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>size = cx.scopes.size();
 
-                <span class="kw">if </span>!c.q.is_used(<span class="kw-2">&amp;</span>item_meta) {
-                    c.q.diagnostics
-                        .not_used(location.source_id, <span class="kw-2">&amp;</span>location.span, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-                } <span class="kw">else </span>{
-                    <span class="kw">let </span>captures =
-                        c.q.get_captures(captures)
-                            .map(|c| c.len())
-                            .filter(|c| <span class="kw-2">*</span>c &gt; <span class="number">0</span>);
+                            <span class="kw">if </span>!<span class="self">self</span>.q.is_used(<span class="kw-2">&amp;</span>item_meta) {
+                                <span class="self">self</span>.q.diagnostics.not_used(
+                                    location.source_id,
+                                    <span class="kw-2">&amp;</span>location.span,
+                                    <span class="prelude-val">None</span>,
+                                )<span class="question-mark">?</span>;
+                            } <span class="kw">else </span>{
+                                <span class="kw">let </span>captures =
+                                    (!c.hir.captures.is_empty()).then_some(c.hir.captures.len());
 
-                    <span class="kw">let </span>args = closure
-                        .ast
-                        .args
-                        .len()
-                        .saturating_add(usize::from(captures.is_some()));
+                                <span class="kw">let </span>args = c
+                                    .hir
+                                    .args
+                                    .len()
+                                    .saturating_add(usize::from(captures.is_some()));
 
-                    <span class="self">self</span>.q.unit.new_function(
-                        location,
-                        <span class="self">self</span>.q.pool.item(item_meta.item),
-                        <span class="prelude-val">None</span>,
-                        args,
-                        captures,
-                        asm,
-                        closure.call,
-                        debug_args,
-                        unit_storage,
-                        size,
-                    )<span class="question-mark">?</span>;
-                }
-            }
-            Build::AsyncBlock(b) =&gt; {
-                <span class="macro">tracing::trace!</span>(<span class="string">"async block: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
+                                <span class="self">self</span>.q.unit.new_function(
+                                    location,
+                                    <span class="self">self</span>.q.pool.item(item_meta.item),
+                                    <span class="prelude-val">None</span>,
+                                    args,
+                                    captures,
+                                    asm,
+                                    c.call,
+                                    debug_args,
+                                    unit_storage,
+                                    size,
+                                )<span class="question-mark">?</span>;
+                            }
+                        }
+                        SecondaryBuild::AsyncBlock(b) =&gt; {
+                            <span class="macro">tracing::trace!</span>(<span class="string">"async block: {}"</span>, <span class="self">self</span>.q.pool.item(item_meta.item));
 
-                <span class="kw">use </span><span class="self">self</span>::v1::assemble;
+                            <span class="kw">let </span><span class="kw-2">mut </span>scopes = <span class="self">self</span>::v1::Scopes::new(location.source_id)<span class="question-mark">?</span>;
+                            <span class="kw">let </span><span class="kw-2">mut </span>cx = <span class="self">self</span>.compiler1(location, b.hir, <span class="kw-2">&amp;mut </span>asm, <span class="kw-2">&amp;mut </span>scopes)<span class="question-mark">?</span>;
+                            assemble::async_block_secondary(<span class="kw-2">&amp;mut </span>cx, b.hir)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>size = cx.scopes.size();
 
-                <span class="kw">let </span>captures = <span class="self">self</span>.q.pool.item_type_hash(item_meta.item);
+                            <span class="kw">if </span>!<span class="self">self</span>.q.is_used(<span class="kw-2">&amp;</span>item_meta) {
+                                <span class="self">self</span>.q.diagnostics.not_used(
+                                    location.source_id,
+                                    <span class="kw-2">&amp;</span>location.span,
+                                    <span class="prelude-val">None</span>,
+                                )<span class="question-mark">?</span>;
+                            } <span class="kw">else </span>{
+                                <span class="kw">let </span>args = b.hir.captures.len();
 
-                <span class="kw">let </span>arena = hir::Arena::new();
-                <span class="kw">let </span><span class="kw-2">mut </span>cx = hir::lowering::Ctxt::with_query(
-                    <span class="kw-2">&amp;</span>arena,
-                    <span class="self">self</span>.q.borrow(),
-                    item_meta.location.source_id,
-                )<span class="question-mark">?</span>;
-                <span class="kw">let </span>hir = hir::lowering::async_block_secondary(<span class="kw-2">&amp;mut </span>cx, <span class="kw-2">&amp;</span>b.ast, captures)<span class="question-mark">?</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>scopes = <span class="self">self</span>::v1::Scopes::new(location.source_id)<span class="question-mark">?</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>c = <span class="self">self</span>.compiler1(location, <span class="kw-2">&amp;</span>b.ast, <span class="kw-2">&amp;mut </span>asm, <span class="kw-2">&amp;mut </span>scopes)<span class="question-mark">?</span>;
-                assemble::async_block_secondary(<span class="kw-2">&amp;mut </span>c, <span class="kw-2">&amp;</span>hir)<span class="question-mark">?</span>;
-                <span class="kw">let </span>size = c.scopes.size();
-
-                <span class="kw">if </span>!<span class="self">self</span>.q.is_used(<span class="kw-2">&amp;</span>item_meta) {
-                    <span class="self">self</span>.q
-                        .diagnostics
-                        .not_used(location.source_id, <span class="kw-2">&amp;</span>location.span, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-                } <span class="kw">else </span>{
-                    <span class="kw">let </span>args = hir.captures.len();
-
-                    <span class="self">self</span>.q.unit.new_function(
-                        location,
-                        <span class="self">self</span>.q.pool.item(item_meta.item),
-                        <span class="prelude-val">None</span>,
-                        args,
-                        <span class="prelude-val">None</span>,
-                        asm,
-                        b.call,
-                        Default::default(),
-                        unit_storage,
-                        size,
-                    )<span class="question-mark">?</span>;
+                                <span class="self">self</span>.q.unit.new_function(
+                                    location,
+                                    <span class="self">self</span>.q.pool.item(item_meta.item),
+                                    <span class="prelude-val">None</span>,
+                                    args,
+                                    <span class="prelude-val">None</span>,
+                                    asm,
+                                    b.call,
+                                    Default::default(),
+                                    unit_storage,
+                                    size,
+                                )<span class="question-mark">?</span>;
+                            }
+                        }
+                    }
                 }
             }
             Build::Unused =&gt; {
@@ -950,7 +957,42 @@
     }
 }
 
-<span class="kw">fn </span>format_fn_args&lt;<span class="lifetime">'a</span>, I&gt;(
+<span class="kw">fn </span>format_hir_args&lt;<span class="lifetime">'hir</span>, I&gt;(
+    sources: <span class="kw-2">&amp;</span>Sources,
+    location: Location,
+    environment: bool,
+    arguments: I,
+) -&gt; compile::Result&lt;Box&lt;[Box&lt;str&gt;]&gt;&gt;
+<span class="kw">where
+    </span>I: IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::FnArg&lt;<span class="lifetime">'hir</span>&gt;&gt;,
+{
+    <span class="kw">let </span><span class="kw-2">mut </span>args = Vec::new();
+
+    <span class="kw">for </span>arg <span class="kw">in </span>arguments {
+        <span class="kw">match </span>arg {
+            hir::FnArg::SelfValue(..) =&gt; {
+                args.try_push(Box::try_from(<span class="string">"self"</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+            }
+            hir::FnArg::Pat(pat) =&gt; {
+                <span class="kw">let </span>span = pat.span();
+
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = sources.source(location.source_id, span) {
+                    args.try_push(Box::try_from(s)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    args.try_push(Box::try_from(<span class="string">"*"</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                }
+            }
+        }
+    }
+
+    <span class="kw">if </span>environment {
+        args.try_push(Box::try_from(<span class="string">"environment"</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+    }
+
+    <span class="prelude-val">Ok</span>(args.try_into_boxed_slice()<span class="question-mark">?</span>)
+}
+
+<span class="kw">fn </span>format_ast_args&lt;<span class="lifetime">'a</span>, I&gt;(
     sources: <span class="kw-2">&amp;</span>Sources,
     location: Location,
     environment: bool,
@@ -960,10 +1002,6 @@
     </span>I: IntoIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ast::FnArg&gt;,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>args = Vec::new();
-
-    <span class="kw">if </span>environment {
-        args.try_push(Box::try_from(<span class="string">"environment"</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-    }
 
     <span class="kw">for </span>arg <span class="kw">in </span>arguments {
         <span class="kw">match </span>arg {
@@ -980,6 +1018,10 @@
                 }
             }
         }
+    }
+
+    <span class="kw">if </span>environment {
+        args.try_push(Box::try_from(<span class="string">"environment"</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(args.try_into_boxed_slice()<span class="question-mark">?</span>)

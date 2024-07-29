@@ -3147,11 +3147,6 @@
 <a href="#3147" id="3147">3147</a>
 <a href="#3148" id="3148">3148</a>
 <a href="#3149" id="3149">3149</a>
-<a href="#3150" id="3150">3150</a>
-<a href="#3151" id="3151">3151</a>
-<a href="#3152" id="3152">3152</a>
-<a href="#3153" id="3153">3153</a>
-<a href="#3154" id="3154">3154</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::take;
 <span class="kw">use </span>core::slice;
@@ -3282,7 +3277,7 @@
 
         <span class="kw">for </span>(ir, name) <span class="kw">in </span>compiled {
             <span class="kw">let </span>value = interpreter.eval_value(<span class="kw-2">&amp;</span>ir, Used::Used)<span class="question-mark">?</span>;
-            interpreter.scopes.decl(name, value).with_span(span)<span class="question-mark">?</span>;
+            interpreter.scopes.decl(<span class="kw-2">*</span>name, value).with_span(span)<span class="question-mark">?</span>;
         }
 
         interpreter.module = query_const_fn.item_meta.module;
@@ -3369,12 +3364,12 @@
 
     <span class="kw">for </span>(arg, needs) <span class="kw">in </span>hir.args.iter().zip(<span class="kw-2">&amp;mut </span>arguments) {
         <span class="kw">match </span>arg {
-            hir::FnArg::SelfValue(span) =&gt; {
+            hir::FnArg::SelfValue(span, name) =&gt; {
                 <span class="kw">if </span>!instance_fn || !first {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::UnsupportedSelf));
                 }
 
-                cx.scopes.define(span, hir::Name::SelfValue, needs)<span class="question-mark">?</span>;
+                cx.scopes.define(span, <span class="kw-2">*</span>name, needs)<span class="question-mark">?</span>;
             }
             hir::FnArg::Pat(pat) =&gt; {
                 <span class="kw">let </span>asm = pattern_panic(cx, pat, <span class="kw">move </span>|cx, false_label| {
@@ -3415,7 +3410,7 @@
         cx.scopes.define(<span class="kw-2">&amp;</span>hir.block, name, needs)<span class="question-mark">?</span>;
     }
 
-    return_(cx, <span class="kw-2">&amp;</span>hir.block, <span class="kw-2">&amp;</span>hir.block, block_without_scope)<span class="question-mark">?</span>.ignore();
+    return_(cx, <span class="kw-2">&amp;</span>hir.block, hir.block, block_without_scope)<span class="question-mark">?</span>.ignore();
 
     linear.free()<span class="question-mark">?</span>;
     cx.scopes.pop_last(<span class="kw-2">&amp;</span>hir.block)<span class="question-mark">?</span>;
@@ -3423,14 +3418,13 @@
 }
 
 <span class="doccomment">/// Assemble the body of a closure function.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument(span = hir)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expr_closure_secondary&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprClosure&lt;<span class="lifetime">'hir</span>&gt;,
-    span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
 ) -&gt; compile::Result&lt;()&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>arguments = cx.scopes.linear(span, hir.args.len())<span class="question-mark">?</span>;
-    <span class="kw">let </span>environment = cx.scopes.linear(span, hir.captures.len())<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>arguments = cx.scopes.linear(hir, hir.args.len())<span class="question-mark">?</span>;
+    <span class="kw">let </span>environment = cx.scopes.linear(hir, hir.captures.len())<span class="question-mark">?</span>;
 
     <span class="kw">if </span>!hir.captures.is_empty() {
         cx.asm.push(
@@ -3439,17 +3433,17 @@
                 count: hir.captures.len(),
                 out: environment.addr().output(),
             },
-            span,
+            hir,
         )<span class="question-mark">?</span>;
 
         <span class="kw">for </span>(capture, needs) <span class="kw">in </span>hir.captures.iter().copied().zip(<span class="kw-2">&amp;</span>environment) {
-            cx.scopes.define(span, capture, needs)<span class="question-mark">?</span>;
+            cx.scopes.define(hir, capture, needs)<span class="question-mark">?</span>;
         }
     }
 
     <span class="kw">for </span>(arg, needs) <span class="kw">in </span>hir.args.iter().zip(<span class="kw-2">&amp;mut </span>arguments) {
         <span class="kw">match </span>arg {
-            hir::FnArg::SelfValue(span) =&gt; {
+            hir::FnArg::SelfValue(span, <span class="kw">_</span>) =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::UnsupportedSelf))
             }
             hir::FnArg::Pat(pat) =&gt; {
@@ -3462,11 +3456,11 @@
         }
     }
 
-    return_(cx, span, <span class="kw-2">&amp;</span>hir.body, expr)<span class="question-mark">?</span>.ignore();
+    return_(cx, hir, hir.body, expr)<span class="question-mark">?</span>.ignore();
 
     environment.free()<span class="question-mark">?</span>;
     arguments.free()<span class="question-mark">?</span>;
-    cx.scopes.pop_last(span)<span class="question-mark">?</span>;
+    cx.scopes.pop_last(hir)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -3575,7 +3569,7 @@
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
     pat: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Pat&lt;<span class="lifetime">'hir</span>&gt;,
-    names: <span class="kw-2">&amp;</span>[hir::Name&lt;<span class="lifetime">'hir</span>&gt;],
+    names: <span class="kw-2">&amp;</span>[hir::Variable],
     false_label: <span class="kw-2">&amp;</span>Label,
     load: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>FnMut(
         <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
@@ -3610,7 +3604,7 @@
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
     pat: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Pat&lt;<span class="lifetime">'hir</span>&gt;,
-    name: hir::Name&lt;<span class="lifetime">'hir</span>&gt;,
+    name: hir::Variable,
     false_label: <span class="kw-2">&amp;</span>Label,
     load: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>FnMut(
         <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
@@ -3683,7 +3677,7 @@
         <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
         <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;,
     ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt;,
-    bindings: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Bindings&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;, <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;&gt;,
+    bindings: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Bindings&lt;hir::Variable, <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;&gt;,
 ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>, Pattern&gt;&gt; {
     <span class="kw">let </span>span = hir;
 
@@ -3709,8 +3703,6 @@
                 <span class="prelude-val">Ok</span>(Asm::new(span, Pattern::Refutable))
             }
             hir::PatPathKind::Ident(name) =&gt; {
-                <span class="kw">let </span>name = hir::Name::Str(name);
-
                 <span class="kw">let </span><span class="prelude-val">Some</span>(binding) = bindings.remove(<span class="kw-2">&amp;</span>name) <span class="kw">else </span>{
                     <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(hir, <span class="macro">format!</span>(<span class="string">"No binding for {name:?}"</span>)));
                 };
@@ -3851,7 +3843,7 @@
         <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
         <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;,
     ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt;,
-    bindings: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Bindings&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;, <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;&gt;,
+    bindings: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Bindings&lt;hir::Variable, <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;&gt;,
 ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>, Pattern&gt;&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>addr = cx.scopes.defer(span).with_name(<span class="string">"loaded pattern sequence"</span>);
     <span class="macro">converge!</span>(load(cx, <span class="kw-2">&amp;mut </span>addr)<span class="question-mark">?</span>, free(addr));
@@ -3950,7 +3942,7 @@
         <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
         <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;,
     ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt;,
-    bindings: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Bindings&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;, <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;&gt;,
+    bindings: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Bindings&lt;hir::Variable, <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;&gt;,
 ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>, Pattern&gt;&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>needs = cx.scopes.defer(span);
     <span class="macro">converge!</span>(load(cx, <span class="kw-2">&amp;mut </span>needs)<span class="question-mark">?</span>, free(needs));
@@ -4027,10 +4019,8 @@
                     free(needs)
                 );
             }
-            hir::Binding::Ident(span, name) =&gt; {
-                <span class="kw">let </span>name = hir::Name::Str(name);
-
-                <span class="kw">let </span><span class="prelude-val">Some</span>(binding) = bindings.remove(<span class="kw-2">&amp;</span>name) <span class="kw">else </span>{
+            hir::Binding::Ident(span, name, id) =&gt; {
+                <span class="kw">let </span><span class="prelude-val">Some</span>(binding) = bindings.remove(id) <span class="kw">else </span>{
                     <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
                         binding,
                         <span class="macro">format!</span>(<span class="string">"No binding for {name:?}"</span>),

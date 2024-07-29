@@ -230,6 +230,32 @@
 <a href="#230" id="230">230</a>
 <a href="#231" id="231">231</a>
 <a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(unused)]
 
 </span><span class="kw">use </span>core::cell::RefCell;
@@ -237,11 +263,13 @@
 <span class="kw">use </span>core::num::NonZeroUsize;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, BTreeSet, HashSet, Vec};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, BTreeSet, HashMap, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::ast::Spanned;
 <span class="kw">use </span><span class="kw">crate</span>::compile::error::{MissingScope, PopError};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, HasSpan};
 <span class="kw">use </span><span class="kw">crate</span>::hir;
+<span class="kw">use </span><span class="kw">crate</span>::parse::NonZeroId;
+<span class="kw">use </span><span class="kw">crate</span>::shared::Gen;
 
 <span class="kw">use </span>rune_macros::instrument;
 
@@ -267,11 +295,11 @@
     <span class="doccomment">///  The kind of the layer.
     </span>kind: LayerKind,
     <span class="doccomment">/// Variables defined in this layer.
-    </span>variables: HashSet&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;&gt;,
+    </span>variables: HashMap&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;, hir::Variable&gt;,
     <span class="doccomment">/// Order of variable definitions.
-    </span>order: Vec&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;&gt;,
+    </span>order: Vec&lt;hir::Variable&gt;,
     <span class="doccomment">/// Captures inside of this layer.
-    </span>captures: BTreeSet&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;&gt;,
+    </span>captures: BTreeSet&lt;(hir::Name&lt;<span class="lifetime">'hir</span>&gt;, hir::Variable)&gt;,
     <span class="doccomment">/// An optional layer label.
     </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str&gt;,
 }
@@ -283,33 +311,37 @@
 
     <span class="doccomment">/// Convert layer into variable drop order.
     </span><span class="attr">#[inline(always)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_drop_order(<span class="self">self</span>) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = hir::Name&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_drop_order(<span class="self">self</span>) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = hir::Variable&gt; {
         <span class="self">self</span>.order.into_iter().rev()
     }
 
     <span class="doccomment">/// Variables captured by the layer.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>captures(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = hir::Name&lt;<span class="lifetime">'hir</span>&gt;&gt; + <span class="lifetime">'_ </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>captures(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+    ) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = (hir::Name&lt;<span class="lifetime">'hir</span>&gt;, hir::Variable)&gt; + <span class="lifetime">'_ </span>{
         <span class="self">self</span>.captures.iter().copied()
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Scopes&lt;<span class="lifetime">'hir</span>&gt; {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Scopes&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>&gt; {
     scope: Scope,
     scopes: Vec&lt;Layer&lt;<span class="lifetime">'hir</span>&gt;&gt;,
+    gen: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Gen,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Scopes&lt;<span class="lifetime">'hir</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>&gt; Scopes&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Root scope.
     </span><span class="kw">pub const </span>ROOT: Scope = Scope(<span class="number">0</span>);
 
     <span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(gen: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Gen) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>scopes = Vec::new();
         scopes.try_push(Layer::default())<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             scope: Scopes::ROOT,
             scopes,
+            gen,
         })
     }
 
@@ -334,7 +366,7 @@
         <span class="kw">let </span>layer = Layer {
             scope,
             parent: <span class="prelude-val">Some</span>(NonZeroUsize::new(<span class="self">self</span>.scope.<span class="number">0</span>.wrapping_add(<span class="number">1</span>)).expect(<span class="string">"ran out of ids"</span>)),
-            variables: HashSet::new(),
+            variables: HashMap::new(),
             order: Vec::new(),
             kind,
             captures: BTreeSet::new(),
@@ -367,22 +399,42 @@
         <span class="prelude-val">Ok</span>(layer)
     }
 
-    <span class="doccomment">/// Define the given variable.
+    <span class="doccomment">/// Insert a variable with the specified id.
     </span><span class="attr">#[tracing::instrument(skip_all, fields(<span class="question-mark">?</span><span class="self">self</span>.scope, <span class="question-mark">?</span>name))]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>define(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         name: hir::Name&lt;<span class="lifetime">'hir</span>&gt;,
+        id: hir::Variable,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
-    ) -&gt; compile::Result&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;&gt; {
+    ) -&gt; compile::Result&lt;hir::Variable&gt; {
         <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span><span class="self">self</span>.scope, <span class="question-mark">?</span>name, <span class="string">"define"</span>);
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = <span class="self">self</span>.scopes.get_mut(<span class="self">self</span>.scope.<span class="number">0</span>) <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(HasSpan::new(span, MissingScope(<span class="self">self</span>.scope.<span class="number">0</span>)).into());
         };
 
-        layer.variables.try_insert(name)<span class="question-mark">?</span>;
-        layer.order.try_push(name)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(name)
+        layer.variables.try_insert(name, id)<span class="question-mark">?</span>;
+        layer.order.try_push(id)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(id)
+    }
+
+    <span class="doccomment">/// Define the given variable.
+    </span><span class="attr">#[tracing::instrument(skip_all, fields(<span class="question-mark">?</span><span class="self">self</span>.scope, <span class="question-mark">?</span>name))]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>define(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        name: hir::Name&lt;<span class="lifetime">'hir</span>&gt;,
+        span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
+    ) -&gt; compile::Result&lt;hir::Variable&gt; {
+        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span><span class="self">self</span>.scope, <span class="question-mark">?</span>name, <span class="string">"define"</span>);
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = <span class="self">self</span>.scopes.get_mut(<span class="self">self</span>.scope.<span class="number">0</span>) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(HasSpan::new(span, MissingScope(<span class="self">self</span>.scope.<span class="number">0</span>)).into());
+        };
+
+        <span class="kw">let </span>id = hir::Variable(<span class="self">self</span>.gen.next());
+        layer.variables.try_insert(name, id)<span class="question-mark">?</span>;
+        layer.order.try_push(id)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(id)
     }
 
     <span class="doccomment">/// Try to lookup the given variable.
@@ -390,20 +442,20 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         name: hir::Name&lt;<span class="lifetime">'hir</span>&gt;,
-    ) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;(hir::Name&lt;<span class="lifetime">'hir</span>&gt;, Scope)&gt;&gt; {
+    ) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;(hir::Variable, Scope)&gt;&gt; {
         <span class="macro">tracing::trace!</span>(<span class="string">"get"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>blocks = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>scope = <span class="self">self</span>.scopes.get(<span class="self">self</span>.scope.<span class="number">0</span>);
 
-        <span class="kw">let </span>scope = <span class="lifetime">'ok</span>: {
+        <span class="kw">let </span>(scope, id) = <span class="lifetime">'ok</span>: {
             <span class="kw">loop </span>{
                 <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = scope.take() <span class="kw">else </span>{
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
                 };
 
-                <span class="kw">if </span>layer.variables.contains(<span class="kw-2">&amp;</span>name) {
-                    <span class="kw">break </span><span class="lifetime">'ok </span>layer.scope;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = layer.variables.get(<span class="kw-2">&amp;</span>name) {
+                    <span class="kw">break </span><span class="lifetime">'ok </span>(layer.scope, <span class="kw-2">*</span>id);
                 }
 
                 <span class="kw">if let </span>LayerKind::Captures { .. } = layer.kind {
@@ -425,10 +477,10 @@
                 <span class="kw">continue</span>;
             };
 
-            layer.captures.try_insert(name)<span class="question-mark">?</span>;
+            layer.captures.try_insert((name, id))<span class="question-mark">?</span>;
         }
 
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((name, scope)))
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((id, scope)))
     }
 
     <span class="doccomment">/// Walk the loop and construct captures for it.
@@ -436,7 +488,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>loop_drop(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-    ) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;hir::Name&lt;<span class="lifetime">'hir</span>&gt;&gt;&gt;&gt; {
+    ) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;hir::Variable&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>captures = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>scope = <span class="self">self</span>.scopes.get(<span class="self">self</span>.scope.<span class="number">0</span>);
 

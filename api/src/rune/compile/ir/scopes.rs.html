@@ -199,16 +199,16 @@
     }
 
     <span class="doccomment">/// Declare a value in the scope.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>decl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>hir::OwnedName, value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;(), ErrorKind&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>decl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: hir::Variable, value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;(), ErrorKind&gt; {
         <span class="kw">let </span>last = <span class="self">self
             </span>.last_mut()
             .ok_or_else(|| ErrorKind::msg(<span class="string">"Expected at least one scope"</span>))<span class="question-mark">?</span>;
-        last.locals.try_insert(name.try_clone()<span class="question-mark">?</span>, value)<span class="question-mark">?</span>;
+        last.locals.try_insert(name, value)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Try to get the value out from the scopes.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_get(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>hir::OwnedName) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Value&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_get(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>hir::Variable) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Value&gt; {
         <span class="kw">for </span>scope <span class="kw">in </span><span class="self">self</span>.scopes.iter().rev() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = scope.locals.get(name) {
                 <span class="kw">return </span><span class="prelude-val">Some</span>(current);
@@ -226,7 +226,7 @@
     <span class="doccomment">/// Get the given variable.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_name(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        name: <span class="kw-2">&amp;</span>hir::OwnedName,
+        name: <span class="kw-2">&amp;</span>hir::Variable,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     ) -&gt; compile::Result&lt;<span class="kw-2">&amp;</span>Value&gt; {
         <span class="kw">for </span>scope <span class="kw">in </span><span class="self">self</span>.scopes.iter().rev() {
@@ -249,7 +249,7 @@
     <span class="doccomment">/// Get the given variable as mutable.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_name_mut(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        name: <span class="kw-2">&amp;</span>hir::OwnedName,
+        name: <span class="kw-2">&amp;</span>hir::Variable,
         span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
     ) -&gt; compile::Result&lt;<span class="kw-2">&amp;mut </span>Value&gt; {
         <span class="kw">for </span>scope <span class="kw">in </span><span class="self">self</span>.scopes.iter_mut().rev() {
@@ -319,7 +319,7 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Scope {
     kind: ScopeKind,
     <span class="doccomment">/// Locals in the current scope.
-    </span>locals: HashMap&lt;hir::OwnedName, Value&gt;,
+    </span>locals: HashMap&lt;hir::Variable, Value&gt;,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Scope {

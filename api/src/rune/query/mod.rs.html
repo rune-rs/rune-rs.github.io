@@ -206,6 +206,37 @@
 <a href="#206" id="206">206</a>
 <a href="#207" id="207">207</a>
 <a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Lazy query system, used to compile and build items on demand and keep track
 //! of what's being used and not.
 
@@ -228,6 +259,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::indexing;
 <span class="kw">use </span><span class="kw">crate</span>::parse::NonZeroId;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::format;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::Call;
 
 <span class="doccomment">/// Indication whether a value is being evaluated because it's being used or not.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
@@ -331,12 +363,42 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) value: ast::Lit,
 }
 
+<span class="attr">#[derive(Debug, TryClone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Closure&lt;<span class="lifetime">'hir</span>&gt; {
+    <span class="doccomment">/// Ast for closure.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprClosure&lt;<span class="lifetime">'hir</span>&gt;,
+    <span class="doccomment">/// Calling convention used for closure.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) call: Call,
+}
+
+<span class="attr">#[derive(Debug, TryClone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AsyncBlock&lt;<span class="lifetime">'hir</span>&gt; {
+    <span class="doccomment">/// Ast for block.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::AsyncBlock&lt;<span class="lifetime">'hir</span>&gt;,
+    <span class="doccomment">/// Calling convention used for async block.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) call: Call,
+}
+
+<span class="doccomment">/// An entry in the build queue.
+</span><span class="attr">#[derive(Debug, TryClone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>SecondaryBuild&lt;<span class="lifetime">'hir</span>&gt; {
+    Closure(Closure&lt;<span class="lifetime">'hir</span>&gt;),
+    AsyncBlock(AsyncBlock&lt;<span class="lifetime">'hir</span>&gt;),
+}
+
+<span class="doccomment">/// An entry in the build queue.
+</span><span class="attr">#[derive(Debug, TryClone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>SecondaryBuildEntry&lt;<span class="lifetime">'hir</span>&gt; {
+    <span class="doccomment">/// The item of the build entry.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) item_meta: ItemMeta,
+    <span class="doccomment">/// The build entry.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) build: SecondaryBuild&lt;<span class="lifetime">'hir</span>&gt;,
+}
+
 <span class="doccomment">/// An entry in the build queue.
 </span><span class="attr">#[derive(Debug, TryClone)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Build {
     Function(indexing::Function),
-    Closure(indexing::Closure),
-    AsyncBlock(indexing::AsyncBlock),
     Unused,
     Import(indexing::Import),
     <span class="doccomment">/// A public re-export.

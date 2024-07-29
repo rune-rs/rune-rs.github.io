@@ -750,77 +750,33 @@
 <a href="#750" id="750">750</a>
 <a href="#751" id="751">751</a>
 <a href="#752" id="752">752</a>
-<a href="#753" id="753">753</a>
-<a href="#754" id="754">754</a>
-<a href="#755" id="755">755</a>
-<a href="#756" id="756">756</a>
-<a href="#757" id="757">757</a>
-<a href="#758" id="758">758</a>
-<a href="#759" id="759">759</a>
-<a href="#760" id="760">760</a>
-<a href="#761" id="761">761</a>
-<a href="#762" id="762">762</a>
-<a href="#763" id="763">763</a>
-<a href="#764" id="764">764</a>
-<a href="#765" id="765">765</a>
-<a href="#766" id="766">766</a>
-<a href="#767" id="767">767</a>
-<a href="#768" id="768">768</a>
-<a href="#769" id="769">769</a>
-<a href="#770" id="770">770</a>
-<a href="#771" id="771">771</a>
-<a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::num::NonZeroUsize;
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Span, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{ItemId, ModId};
 <span class="kw">use </span><span class="kw">crate</span>::parse::NonZeroId;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{format, Type, TypeCheck};
 <span class="kw">use </span><span class="kw">crate</span>::Hash;
 
-<span class="doccomment">/// An owned name.
-</span><span class="attr">#[derive(Debug, TryClone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>OwnedName {
-    SelfValue,
-    Str(String),
-    Id(usize),
-}
+<span class="attr">#[derive(TryClone, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[try_clone(copy)]
+#[repr(transparent)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Variable(<span class="attr">#[try_clone(copy)] </span><span class="kw">pub</span>(<span class="kw">crate</span>) NonZeroId);
 
-<span class="kw">impl </span>OwnedName {
-    <span class="doccomment">/// Get name as reference.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Name&lt;<span class="lifetime">'_</span>&gt; {
-        <span class="kw">match </span><span class="self">self </span>{
-            OwnedName::SelfValue =&gt; Name::SelfValue,
-            OwnedName::Str(name) =&gt; Name::Str(name),
-            OwnedName::Id(id) =&gt; Name::Id(<span class="kw-2">*</span>id),
-        }
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Variable {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="self">self</span>.<span class="number">0</span>.fmt(f)
     }
 }
 
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>OwnedName {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="kw">match </span><span class="self">self </span>{
-            OwnedName::SelfValue =&gt; <span class="string">"self"</span>.fmt(f),
-            OwnedName::Str(name) =&gt; name.fmt(f),
-            OwnedName::Id(id) =&gt; id.fmt(f),
-        }
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Variable {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="self">self</span>.<span class="number">0</span>.fmt(f)
     }
 }
 
@@ -832,28 +788,6 @@
     </span>SelfValue,
     <span class="doccomment">/// Capture of a named variable.
     </span>Str(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str),
-    <span class="doccomment">/// Anonymous variable.
-    </span>Id(usize),
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Name&lt;<span class="lifetime">'hir</span>&gt; {
-    <span class="doccomment">/// Coerce into an owned name.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_owned(<span class="self">self</span>) -&gt; alloc::Result&lt;OwnedName&gt; {
-        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
-            Name::SelfValue =&gt; OwnedName::SelfValue,
-            Name::Str(name) =&gt; OwnedName::Str(name.try_to_owned()<span class="question-mark">?</span>),
-            Name::Id(id) =&gt; OwnedName::Id(id),
-        })
-    }
-
-    <span class="doccomment">/// Test if the name starts with the given test.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>starts_with(<span class="kw-2">&amp;</span><span class="self">self</span>, test: <span class="kw">fn</span>(char) -&gt; bool) -&gt; bool {
-        <span class="kw">let </span>Name::Str(name) = <span class="self">self </span><span class="kw">else </span>{
-            <span class="kw">return </span><span class="bool-val">false</span>;
-        };
-
-        name.starts_with(test)
-    }
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>Name&lt;<span class="lifetime">'_</span>&gt; {
@@ -861,7 +795,6 @@
         <span class="kw">match </span><span class="self">self </span>{
             Name::SelfValue =&gt; <span class="macro">write!</span>(f, <span class="string">"self"</span>),
             Name::Str(name) =&gt; name.fmt(f),
-            Name::Id(id) =&gt; id.fmt(f),
         }
     }
 }
@@ -871,7 +804,6 @@
         <span class="kw">match </span><span class="self">self </span>{
             Name::SelfValue =&gt; <span class="macro">write!</span>(f, <span class="string">"self"</span>),
             Name::Str(name) =&gt; name.fmt(f),
-            Name::Id(id) =&gt; id.fmt(f),
         }
     }
 }
@@ -897,14 +829,14 @@
     </span><span class="attr">#[rune(span)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) pat: Pat&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Names that will be defined by this pattern.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) names: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) names: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
 #[try_clone(copy)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>PatPathKind&lt;<span class="lifetime">'hir</span>&gt; {
     Kind(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>PatSequenceKind),
-    Ident(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str),
+    Ident(Variable),
 }
 
 <span class="doccomment">/// The kind of a [Pat].
@@ -971,14 +903,14 @@
 #[non_exhaustive]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Binding&lt;<span class="lifetime">'hir</span>&gt; {
     Binding(Span, <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str, <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Pat&lt;<span class="lifetime">'hir</span>&gt;),
-    Ident(Span, <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str),
+    Ident(Span, <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str, Variable),
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>&gt; Spanned <span class="kw">for </span>Binding&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="kw">fn </span>span(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Span {
         <span class="kw">match </span><span class="self">self </span>{
             Binding::Binding(span, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="kw-2">*</span>span,
-            Binding::Ident(span, <span class="kw">_</span>) =&gt; <span class="kw-2">*</span>span,
+            Binding::Ident(span, <span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="kw-2">*</span>span,
         }
     }
 }
@@ -987,7 +919,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Binding(<span class="kw">_</span>, key, <span class="kw">_</span>) =&gt; key,
-            <span class="self">Self</span>::Ident(<span class="kw">_</span>, key) =&gt; key,
+            <span class="self">Self</span>::Ident(<span class="kw">_</span>, key, <span class="kw">_</span>) =&gt; key,
         }
     }
 }
@@ -1023,7 +955,7 @@
 #[try_clone(copy)]
 #[non_exhaustive]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ExprKind&lt;<span class="lifetime">'hir</span>&gt; {
-    Variable(Name&lt;<span class="lifetime">'hir</span>&gt;),
+    Variable(Variable),
     Type(Type),
     Fn(Hash),
     Path,
@@ -1118,7 +1050,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Block&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Variables that have been defined by the loop header.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="doccomment">/// A `for` loop over an iterator: `for i in [1, 2, 3] {}`.
@@ -1137,7 +1069,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Block&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Variables that have been defined by the loop header.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="doccomment">/// A let expression `let &lt;name&gt; = &lt;expr&gt;`
@@ -1183,7 +1115,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) block: Block&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Variables that have been defined by the conditional header.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="doccomment">/// A match expression.
@@ -1214,7 +1146,7 @@
     <span class="doccomment">/// Variables that have been defined by this match branch, which needs to be
     /// dropped.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
@@ -1222,7 +1154,7 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Call&lt;<span class="lifetime">'hir</span>&gt; {
     Var {
         <span class="doccomment">/// The name of the variable being called.
-        </span>name: Name&lt;<span class="lifetime">'hir</span>&gt;,
+        </span>name: Variable,
     },
     Associated {
         <span class="doccomment">/// The target expression being called.
@@ -1336,7 +1268,7 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprAsyncBlock&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) hash: Hash,
     <span class="kw">pub</span>(<span class="kw">crate</span>) do_move: bool,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
@@ -1348,7 +1280,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) expr: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     <span class="doccomment">/// Variables that goes out of scope.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
@@ -1358,7 +1290,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>str&gt;,
     <span class="doccomment">/// Variables that goes out of scope.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="doccomment">/// A `select` expression that selects over a collection of futures.
@@ -1385,7 +1317,7 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Variables that need to be dropped by the end of this block.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="doccomment">/// Calling a closure.
@@ -1395,20 +1327,21 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprCallClosure&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) do_move: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) hash: Hash,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="doccomment">/// A closure expression.
-</span><span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
+</span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 #[non_exhaustive]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ExprClosure&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// Arguments to the closure.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) args: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[FnArg&lt;<span class="lifetime">'hir</span>&gt;],
     <span class="doccomment">/// The body of the closure.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: Expr&lt;<span class="lifetime">'hir</span>&gt;,
+    </span><span class="attr">#[rune(span)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) body: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Captures in the closure.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
@@ -1513,7 +1446,7 @@
 #[non_exhaustive]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>FnArg&lt;<span class="lifetime">'hir</span>&gt; {
     <span class="doccomment">/// The `self` parameter.
-    </span>SelfValue(Span),
+    </span>SelfValue(<span class="attr">#[rune(span)] </span>Span, Variable),
     <span class="doccomment">/// Function argument is a pattern binding.
     </span>Pat(<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>PatBinding&lt;<span class="lifetime">'hir</span>&gt;),
 }
@@ -1534,14 +1467,15 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) value: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Expr&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     <span class="doccomment">/// Variables that need to be dropped by the end of this block.
     </span><span class="attr">#[allow(unused)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) drop: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
-<span class="attr">#[derive(Debug, TryClone, Clone, Copy)]
+<span class="attr">#[derive(Debug, TryClone, Clone, Copy, Spanned)]
 #[try_clone(copy)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AsyncBlock&lt;<span class="lifetime">'hir</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) block: Block&lt;<span class="lifetime">'hir</span>&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Name&lt;<span class="lifetime">'hir</span>&gt;],
+    <span class="attr">#[rune(span)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) block: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>Block&lt;<span class="lifetime">'hir</span>&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) captures: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>[Variable],
 }
 
 <span class="doccomment">/// A statement within a block.
