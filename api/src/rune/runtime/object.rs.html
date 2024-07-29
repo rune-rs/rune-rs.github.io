@@ -660,14 +660,6 @@
 <a href="#660" id="660">660</a>
 <a href="#661" id="661">661</a>
 <a href="#662" id="662">662</a>
-<a href="#663" id="663">663</a>
-<a href="#664" id="664">664</a>
-<a href="#665" id="665">665</a>
-<a href="#666" id="666">666</a>
-<a href="#667" id="667">667</a>
-<a href="#668" id="668">668</a>
-<a href="#669" id="669">669</a>
-<a href="#670" id="670">670</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::borrow;
 <span class="kw">use </span>core::cmp;
 <span class="kw">use </span>core::cmp::Ordering;
@@ -1033,29 +1025,21 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>partial_eq_with(
         a: <span class="kw-2">&amp;</span><span class="self">Self</span>,
-        b: Value,
+        b: <span class="kw-2">&amp;</span><span class="self">Self</span>,
         caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;bool&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>b = <span class="macro">vm_try!</span>(b.into_iter());
+        <span class="kw">if </span>a.len() != b.len() {
+            <span class="kw">return </span>VmResult::Ok(<span class="bool-val">false</span>);
+        }
 
         <span class="kw">for </span>(k1, v1) <span class="kw">in </span>a.iter() {
-            <span class="kw">let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(b.next()) <span class="kw">else </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(v2) = b.get(k1) <span class="kw">else </span>{
                 <span class="kw">return </span>VmResult::Ok(<span class="bool-val">false</span>);
             };
-
-            <span class="kw">let </span>(k2, v2) = <span class="macro">vm_try!</span>(&lt;(Ref&lt;String&gt;, Value)&gt;::from_value(value));
-
-            <span class="kw">if </span>k1 != <span class="kw-2">&amp;*</span>k2 {
-                <span class="kw">return </span>VmResult::Ok(<span class="bool-val">false</span>);
-            }
 
             <span class="kw">if </span>!<span class="macro">vm_try!</span>(Value::partial_eq_with(v1, <span class="kw-2">&amp;</span>v2, caller)) {
                 <span class="kw">return </span>VmResult::Ok(<span class="bool-val">false</span>);
             }
-        }
-
-        <span class="kw">if </span><span class="macro">vm_try!</span>(b.next()).is_some() {
-            <span class="kw">return </span>VmResult::Ok(<span class="bool-val">false</span>);
         }
 
         VmResult::Ok(<span class="bool-val">true</span>)

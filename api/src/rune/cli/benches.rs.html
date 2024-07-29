@@ -204,7 +204,9 @@
 <a href="#204" id="204">204</a>
 <a href="#205" id="205">205</a>
 <a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt;
+<span class="kw">use </span>std::hint;
 <span class="kw">use </span>std::io::Write;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>std::sync::Arc;
@@ -232,7 +234,7 @@
         </span><span class="kw">pub</span>(<span class="kw">super</span>) warmup: u32,
         <span class="doccomment">/// Iterations to run of the benchmark
         </span><span class="attr">#[arg(long, default_value = <span class="string">"100"</span>)]
-        </span><span class="kw">pub</span>(<span class="kw">super</span>) iterations: u32,
+        </span><span class="kw">pub</span>(<span class="kw">super</span>) iter: u32,
         <span class="doccomment">/// Explicit paths to benchmark.
         </span><span class="kw">pub</span>(<span class="kw">super</span>) bench_path: Vec&lt;PathBuf&gt;,
     }
@@ -336,18 +338,18 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">for _ in </span><span class="number">0</span>..args.warmup {
         <span class="kw">let </span>value = f.call::&lt;Value&gt;(()).into_result()<span class="question-mark">?</span>;
-        drop(value);
+        drop(hint::black_box(value));
     }
 
-    <span class="kw">let </span>iterations = usize::try_from(args.iterations).expect(<span class="string">"iterations out of bounds"</span>);
+    <span class="kw">let </span>iterations = usize::try_from(args.iter).expect(<span class="string">"iterations out of bounds"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>collected = Vec::try_with_capacity(iterations)<span class="question-mark">?</span>;
 
-    <span class="kw">for _ in </span><span class="number">0</span>..args.iterations {
+    <span class="kw">for _ in </span><span class="number">0</span>..args.iter {
         <span class="kw">let </span>start = Instant::now();
         <span class="kw">let </span>value = f.call::&lt;Value&gt;(()).into_result()<span class="question-mark">?</span>;
         <span class="kw">let </span>duration = Instant::now().duration_since(start);
         collected.try_push(duration.as_nanos() <span class="kw">as </span>i128)<span class="question-mark">?</span>;
-        drop(value);
+        drop(hint::black_box(value));
     }
 
     collected.sort_unstable();
