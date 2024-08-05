@@ -1,0 +1,737 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syntree-0.17.0/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-d10b2a06af903387.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="syntree" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (176e54520 2024-08-04)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9345f17bf569ecba.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<a href="#2" id="2">2</a>
+<a href="#3" id="3">3</a>
+<a href="#4" id="4">4</a>
+<a href="#5" id="5">5</a>
+<a href="#6" id="6">6</a>
+<a href="#7" id="7">7</a>
+<a href="#8" id="8">8</a>
+<a href="#9" id="9">9</a>
+<a href="#10" id="10">10</a>
+<a href="#11" id="11">11</a>
+<a href="#12" id="12">12</a>
+<a href="#13" id="13">13</a>
+<a href="#14" id="14">14</a>
+<a href="#15" id="15">15</a>
+<a href="#16" id="16">16</a>
+<a href="#17" id="17">17</a>
+<a href="#18" id="18">18</a>
+<a href="#19" id="19">19</a>
+<a href="#20" id="20">20</a>
+<a href="#21" id="21">21</a>
+<a href="#22" id="22">22</a>
+<a href="#23" id="23">23</a>
+<a href="#24" id="24">24</a>
+<a href="#25" id="25">25</a>
+<a href="#26" id="26">26</a>
+<a href="#27" id="27">27</a>
+<a href="#28" id="28">28</a>
+<a href="#29" id="29">29</a>
+<a href="#30" id="30">30</a>
+<a href="#31" id="31">31</a>
+<a href="#32" id="32">32</a>
+<a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
+<a href="#41" id="41">41</a>
+<a href="#42" id="42">42</a>
+<a href="#43" id="43">43</a>
+<a href="#44" id="44">44</a>
+<a href="#45" id="45">45</a>
+<a href="#46" id="46">46</a>
+<a href="#47" id="47">47</a>
+<a href="#48" id="48">48</a>
+<a href="#49" id="49">49</a>
+<a href="#50" id="50">50</a>
+<a href="#51" id="51">51</a>
+<a href="#52" id="52">52</a>
+<a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+</pre></div><pre class="rust"><code><span class="doccomment">//! [&lt;img alt="github" src="https://img.shields.io/badge/github-udoprog/syntree-8da0cb?style=for-the-badge&amp;logo=github" height="20"&gt;](https://github.com/udoprog/syntree)
+//! [&lt;img alt="crates.io" src="https://img.shields.io/crates/v/syntree.svg?style=for-the-badge&amp;color=fc8d62&amp;logo=rust" height="20"&gt;](https://crates.io/crates/syntree)
+//! [&lt;img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-syntree-66c2a5?style=for-the-badge&amp;logoColor=white&amp;logo=data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxwYXRoIGZpbGw9IiNmNWY1ZjUiIGQ9Ik00ODguNiAyNTAuMkwzOTIgMjE0VjEwNS41YzAtMTUtOS4zLTI4LjQtMjMuNC0zMy43bC0xMDAtMzcuNWMtOC4xLTMuMS0xNy4xLTMuMS0yNS4zIDBsLTEwMCAzNy41Yy0xNC4xIDUuMy0yMy40IDE4LjctMjMuNCAzMy43VjIxNGwtOTYuNiAzNi4yQzkuMyAyNTUuNSAwIDI2OC45IDAgMjgzLjlWMzk0YzAgMTMuNiA3LjcgMjYuMSAxOS45IDMyLjJsMTAwIDUwYzEwLjEgNS4xIDIyLjEgNS4xIDMyLjIgMGwxMDMuOS01MiAxMDMuOSA1MmMxMC4xIDUuMSAyMi4xIDUuMSAzMi4yIDBsMTAwLTUwYzEyLjItNi4xIDE5LjktMTguNiAxOS45LTMyLjJWMjgzLjljMC0xNS05LjMtMjguNC0yMy40LTMzLjd6TTM1OCAyMTQuOGwtODUgMzEuOXYtNjguMmw4NS0zN3Y3My4zek0xNTQgMTA0LjFsMTAyLTM4LjIgMTAyIDM4LjJ2LjZsLTEwMiA0MS40LTEwMi00MS40di0uNnptODQgMjkxLjFsLTg1IDQyLjV2LTc5LjFsODUtMzguOHY3NS40em0wLTExMmwtMTAyIDQxLjQtMTAyLTQxLjR2LS42bDEwMi0zOC4yIDEwMiAzOC4ydi42em0yNDAgMTEybC04NSA0Mi41di03OS4xbDg1LTM4Ljh2NzUuNHptMC0xMTJsLTEwMiA0MS40LTEwMi00MS40di0uNmwxMDItMzguMiAxMDIgMzguMnYuNnoiPjwvcGF0aD48L3N2Zz4K" height="20"&gt;](https://docs.rs/syntree)
+//!
+//! A memory efficient syntax tree.
+//!
+//! This crate provides a tree structure which always is contiguously stored and
+//! manipulated in memory. It provides similar APIs as [`rowan`] and is intended
+//! to be an efficient replacement for it (read more below).
+//!
+//! Anything can be stored in the tree as long as it implements `Copy`.
+//!
+//! &lt;br&gt;
+//!
+//! ## Usage
+//!
+//! Add `syntree` to your crate:
+//!
+//! ```toml
+//! syntree = "0.17.0"
+//! ```
+//!
+//! If you want a complete sample for how `syntree` can be used for parsing, see
+//! the [calculator example][calculator].
+//!
+//! &lt;br&gt;
+//!
+//! ## Syntax trees
+//!
+//! This crate provides a way to efficiently model [abstract syntax trees]. The
+//! nodes of the tree are typically represented by variants in an enum, but
+//! [could be whatever you want][any-syntax].
+//!
+//! Each tree consists of *nodes* and *tokens*. Siblings are intermediary
+//! elements in the tree which encapsulate zero or more other nodes or tokens,
+//! while tokens are leaf elements representing exact source locations.
+//!
+//! An example tree for the simple expression `256 / 2 + 64 * 2` could be
+//! represented like this:
+//!
+//! ```text
+//! Operation@0..16
+//!   Number@0..3
+//!     Number@0..3 "256"
+//!   Whitespace@3..4 " "
+//!   Operator@4..5
+//!     Div@4..5 "/"
+//!   Whitespace@5..6 " "
+//!   Number@6..7
+//!     Number@6..7 "2"
+//!   Whitespace@7..8 " "
+//!   Operator@8..9
+//!     Plus@8..9 "+"
+//!   Whitespace@9..10 " "
+//!   Operation@10..16
+//!     Number@10..12
+//!       Number@10..12 "64"
+//!     Whitespace@12..13 " "
+//!     Operator@13..14
+//!       Mul@13..14 "*"
+//!     Whitespace@14..15 " "
+//!     Number@15..16
+//!       Number@15..16 "2"
+//! ```
+//!
+//! &gt; Try it for yourself with:
+//! &gt;
+//! &gt; ```sh
+//! &gt; cargo run --example calculator -- "256 / 2 + 64 * 2"
+//! &gt; ```
+//!
+//! The primary difference between `syntree` and [`rowan`] is that *we don't
+//! store the original source* in the syntax tree. Instead, the user of the
+//! library is responsible for providing it as necessary. Like when calling
+//! [`print_with_source`].
+//!
+//! The API for constructing a syntax tree is provided through [`Builder`] which
+//! implements streaming builder methods. Internally the builder is represented
+//! as a contiguous slab of memory. Once a tree is built the structure of the
+//! tree can be queried through the [`Tree`] type.
+//!
+//! Note that [`syntree::tree!`] is only a helper which simplifies building
+//! trees for examples. It corresponds exactly to performing [`open`],
+//! [`close`], and [`token`] calls on [`Builder`] as specified.
+//!
+//! ```
+//! use syntree::{Builder, Span};
+//!
+//! #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+//! enum Syntax {
+//!     Number,
+//!     Lit,
+//!     Nested,
+//! }
+//!
+//! use Syntax::*;
+//!
+//! let mut tree = Builder::new();
+//!
+//! tree.open(Number)?;
+//! tree.token(Lit, 1)?;
+//! tree.token(Lit, 3)?;
+//!
+//! tree.open(Nested)?;
+//! tree.token(Lit, 1)?;
+//! tree.close()?;
+//!
+//! tree.close()?;
+//!
+//! let tree = tree.build()?;
+//!
+//! let expected = syntree::tree! {
+//!     Number =&gt; {
+//!         (Lit, 1),
+//!         (Lit, 3),
+//!         Nested =&gt; {
+//!             (Lit, 1)
+//!         }
+//!     }
+//! };
+//!
+//! assert_eq!(tree, expected);
+//!
+//! let number = tree.first().ok_or("missing number")?;
+//! assert_eq!(number.span(), Span::new(0, 5));
+//! # Ok::&lt;_, Box&lt;dyn std::error::Error&gt;&gt;(())
+//! ```
+//!
+//! Note how the resulting [`Span`] for `Number` corresponds to the full span of
+//! its `Lit` children. Including the ones within `Nested`.
+//!
+//! Trees are usually constructed by parsing an input. This library encourages
+//! the use of a [handwritten pratt parser][pratt]. See the [calculator
+//! example][calculator] for a complete use case.
+//!
+//! &lt;br&gt;
+//!
+//! ## Compact or empty spans
+//!
+//! Spans by default uses `u32`-based indexes and `usize`-based pointers, this
+//! can be changed from its default using the [`Builder::new_with`] constructor:
+//!
+//! ```
+//! use syntree::{Builder, Span, Tree};
+//!
+//! let mut tree = Builder::&lt;_, usize, u16&gt;::new_with();
+//!
+//! tree.open("root")?;
+//! tree.open("child")?;
+//! tree.token("token", 100)?;
+//! tree.close()?;
+//! tree.open("child2")?;
+//! tree.close()?;
+//! tree.close()?;
+//!
+//! let tree = tree.build()?;
+//!
+//! let expected: Tree&lt;_, usize, u32&gt; = syntree::tree_with! {
+//!     "root" =&gt; {
+//!         "child" =&gt; { ("token", 100) },
+//!         "child2" =&gt; {}
+//!     }
+//! };
+//!
+//! assert_eq!(tree, expected);
+//! assert_eq!(tree.span(), Span::new(0, 100));
+//! # Ok::&lt;_, Box&lt;dyn std::error::Error&gt;&gt;(())
+//! ```
+//!
+//! Combined with [`Empty`], this allows for building trees without spans, if
+//! that is something you want to do:
+//!
+//! ```
+//! use syntree::{Builder, Empty, Tree};
+//!
+//! let mut tree = Builder::&lt;_, Empty, u32&gt;::new_with();
+//!
+//! tree.open("root")?;
+//! tree.open("child")?;
+//! tree.token("token", Empty)?;
+//! tree.close()?;
+//! tree.open("child2")?;
+//! tree.close()?;
+//! tree.close()?;
+//!
+//! let tree = tree.build()?;
+//!
+//! let expected: Tree&lt;_, Empty, usize&gt; = syntree::tree_with! {
+//!     "root" =&gt; {
+//!         "child" =&gt; { "token" },
+//!         "child2" =&gt; {}
+//!     }
+//! };
+//!
+//! assert_eq!(tree, expected);
+//! assert!(tree.span().is_empty());
+//! # Ok::&lt;_, Box&lt;dyn std::error::Error&gt;&gt;(())
+//! ```
+//!
+//! &lt;br&gt;
+//!
+//! ## Why not `rowan`?
+//!
+//! I love [`rowan`]. It's the reason why I started this project. But this crate
+//! still exists for a few philosophical differences that would be hard to
+//! reconcile directly in `rowan`.
+//!
+//! `rowan` only supports adding types which in some way can be coerced into an
+//! `repr(u16)` as part of the syntax tree. I think this decision is reasonable,
+//! but it precludes you from designing trees which contain anything else other
+//! than source references without having to perform some form of indirect
+//! lookup. This is something needed in order to move [Rune] to lossless syntax
+//! trees (see [the representation of `Kind::Str` variant][kind-str]).
+//!
+//! To exemplify this scenario consider the following syntax:
+//!
+//! ```
+//! #[derive(Debug, Clone, Copy)]
+//! enum Syntax {
+//!     /// A string referenced somewhere else using the provided ID.
+//!     Synthetic(usize),
+//!     /// A literal string from the source.
+//!     Lit,
+//!     /// Whitespace.
+//!     Whitespace,
+//!     /// A lexer error.
+//!     Error,
+//! }
+//! ```
+//!
+//! You can see the [full `synthetic_strings` example][synthetic_strings] for
+//! how this might be used. But not only can the `Synthetic` token correspond to
+//! some source location (as it should because it was expanded from one!). It
+//! also directly represents that it's *not* a literal string referencing a
+//! source location.
+//!
+//! In [Rune] this became needed once we started [expanding
+//! macros][rune-macros]. Because macros expand to things which do not reference
+//! source locations so we need some other mechanism to include what the tokens
+//! represent in the syntax trees.
+//!
+//! You can try a *very* simple lex-time variable expander in the
+//! [`synthetic_strings` example][synthetic_strings]:
+//!
+//! ```sh
+//! cargo run --example synthetic_strings -- "Hello $world"
+//! ```
+//!
+//! Which would output:
+//!
+//! ```text
+//! Tree:
+//! Lit@0..5 "Hello"
+//! Whitespace@5..6 " "
+//! Synthetic(0)@6..12 "$world"
+//! Eval:
+//! 0 = "Hello"
+//! 1 = "Earth"
+//! ```
+//!
+//! So in essence `syntree` doesn't believe you need to store strings in the
+//! tree itself. Even if you want to deduplicate string storage. All of that can
+//! be done on the side and encoded into the syntax tree as you wish.
+//!
+//! &lt;br&gt;
+//!
+//! ### Errors instead of panics
+//!
+//! Another point where this crate differs is that we rely on propagating a
+//! [`Error`] during tree construction if the API is used incorrectly
+//! *instead* of panicking.
+//!
+//! While on the surface this might seem like a minor difference in opinion on
+//! whether programming mistakes should be errors or not. In my experience
+//! parsers tend to be part of a crate in a larger project. And errors triggered
+//! by edge cases in user-provided input that once encountered can usually be
+//! avoided.
+//!
+//! So let's say [Rune] is embedded in [OxidizeBot] and there's a piece of code
+//! in a user-provided script which triggers a bug in the rune compiler. Which
+//! in turn causes an illegal tree to be constructed. If tree construction
+//! simply panics, the whole bot will go down. But if we instead propagate an
+//! error this would have to be handled in [OxidizeBot] which could panic if it
+//! wanted to. In this instance it's simply more appropriate to log the error
+//! and unload the script (and hopefully receive a bug report!) than to crash
+//! the bot.
+//!
+//! Rust has great diagnostics for indicating that results should be handled,
+//! and while it is [more awkward to deal with results][syntree-math] than [to
+//! simply panic][rowan-math] I believe that the end result is more robust
+//! software.
+//!
+//! &lt;br&gt;
+//!
+//! ## Performance and memory use
+//!
+//! The only goal in terms of performance is to be as performant as `rowan`. And
+//! cursory testing shows `syntree` to be a bit faster on synthetic workloads
+//! which can probably be solely attributed to storing and manipulating the
+//! entire tree in a single contiguous memory region. This might or might not
+//! change in the future, depending on if the needs for `syntree` changes. While
+//! performance is important, it *is not* a primary focus.
+//!
+//! I also expect (but haven't verified) that `syntree` could end up having a
+//! similarly low memory profile as `rowan` which performs node deduplication.
+//! The one caveat is that it depends on how the original source is stored and
+//! queried. Something which `rowan` solves for you, but `syntree` leaves as an
+//! exercise to the reader.
+//!
+//! [`Builder::new_with`]: https://docs.rs/syntree/latest/syntree/struct.Builder.html#method.new_with
+//! [`Builder`]: https://docs.rs/syntree/latest/syntree/struct.Builder.html
+//! [`close`]: https://docs.rs/syntree/latest/syntree/struct.Builder.html#method.close
+//! [`Empty`]: https://docs.rs/syntree/latest/syntree/struct.Empty.html
+//! [`Error`]: https://docs.rs/syntree/latest/syntree/enum.Error.html
+//! [`open`]: https://docs.rs/syntree/latest/syntree/struct.Builder.html#method.open
+//! [`print_with_source`]: https://docs.rs/syntree/latest/syntree/print/fn.print_with_source.html
+//! [`rowan`]: https://docs.rs/rowan/latest/rowan/
+//! [`Span`]: https://docs.rs/syntree/latest/syntree/struct.Span.html
+//! [`syntree::tree!`]: https://docs.rs/syntree/latest/syntree/macro.tree.html
+//! [`token`]: https://docs.rs/syntree/latest/syntree/struct.Builder.html#method.token
+//! [`Tree`]: https://docs.rs/syntree/latest/syntree/struct.Tree.html
+//! [abstract syntax trees]: https://en.wikipedia.org/wiki/Abstract_syntax_tree
+//! [any-syntax]: https://github.com/udoprog/syntree/blob/main/examples/iterator.rs
+//! [calculator]: https://github.com/udoprog/syntree/blob/main/examples/calculator
+//! [kind-str]: https://github.com/rune-rs/rune/blob/e97a32e/crates/rune/src/ast/generated.rs#L4359
+//! [OxidizeBot]: https://github.com/udoprog/OxidizeBot
+//! [pratt]: https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
+//! [rowan-math]: https://github.com/rust-analyzer/rowan/blob/master/examples/math.rs
+//! [rune-macros]: https://github.com/rune-rs/rune/blob/main/crates/rune-modules/src/core.rs#L36
+//! [Rune]: https://github.com/rune-rs/rune
+//! [synthetic_strings]: https://github.com/udoprog/syntree/blob/main/examples/synthetic_strings.rs
+//! [syntree-math]: https://github.com/udoprog/syntree/blob/main/examples/math.rs
+
+</span><span class="attr">#![deny(missing_docs)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![no_std]
+
+</span><span class="kw">extern crate </span>alloc;
+
+<span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+</span><span class="kw">extern crate </span>std;
+
+<span class="attr">#[cfg(not(feature = <span class="string">"alloc"</span>))]
+</span><span class="macro">compile_error!</span>(<span class="string">"The `syntree` crate currently requires that the `alloc` feature is enabled"</span>);
+
+<span class="attr">#[macro_use]
+</span><span class="kw">mod </span>macros;
+<span class="kw">mod </span>builder;
+
+<span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+</span><span class="kw">pub mod </span>edit;
+
+<span class="kw">mod </span>empty;
+<span class="kw">mod </span>error;
+<span class="kw">pub mod </span>index;
+<span class="kw">mod </span>links;
+<span class="kw">pub mod </span>node;
+<span class="kw">pub mod </span>pointer;
+<span class="kw">pub mod </span>print;
+<span class="kw">mod </span>span;
+<span class="kw">mod </span>tree;
+
+<span class="kw">pub use </span><span class="self">self</span>::builder::{Builder, Checkpoint};
+<span class="kw">pub use </span><span class="self">self</span>::empty::Empty;
+<span class="kw">pub use </span><span class="self">self</span>::error::Error;
+<span class="kw">pub use </span><span class="self">self</span>::node::node_impl::Node;
+<span class="kw">pub use </span><span class="self">self</span>::span::Span;
+<span class="kw">pub use </span><span class="self">self</span>::tree::Tree;
+</code></pre></div></section></main></body></html>

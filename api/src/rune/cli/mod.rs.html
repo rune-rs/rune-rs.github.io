@@ -982,6 +982,40 @@
 <a href="#982" id="982">982</a>
 <a href="#983" id="983">983</a>
 <a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helper to build customized commandline interfaces using custom rune
 //! contexts.
 //!
@@ -1614,15 +1648,13 @@
     </span><span class="attr">#[arg(long)]
     </span>workspace: bool,
 
-    <span class="doccomment">/// Set the given compiler option (see `--help` for available options).
-    ///
-    /// * memoize-instance-fn[=&lt;true/false&gt;] - Inline the lookup of an instance function where appropriate.
-    /// * link-checks[=&lt;true/false&gt;] - Perform linker checks which makes sure that called functions exist.
-    /// * debug-info[=&lt;true/false&gt;] - Enable or disable debug info.
-    /// * macros[=&lt;true/false&gt;] - Enable or disable macros.
-    /// * bytecode[=&lt;true/false&gt;] - Enable or disable bytecode caching.
+    <span class="doccomment">/// Set the given compiler option (see `--list-options` for available options).
     </span><span class="attr">#[arg(short = <span class="string">'O'</span>, num_args = <span class="number">1</span>)]
     </span>compiler_option: Vec&lt;String&gt;,
+
+    <span class="doccomment">/// List available compiler options.
+    </span><span class="attr">#[arg(long)]
+    </span>list_options: bool,
 
     <span class="doccomment">/// Run with the following binary from a loaded manifest. This requires a
     /// `Rune.toml` manifest.
@@ -1781,6 +1813,42 @@
     <span class="kw">let </span><span class="kw-2">mut </span>entries = alloc::Vec::new();
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>(cmd) = cmd.as_command_shared_ref() {
+        <span class="kw">if </span>cmd.shared.list_options {
+            <span class="macro">writeln!</span>(
+                io.stdout,
+                <span class="string">"Available compiler options (set with -O &lt;option&gt;=&lt;value&gt;):"
+            </span>)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(io.stdout)<span class="question-mark">?</span>;
+
+            <span class="kw">for </span>option <span class="kw">in </span>Options::available() {
+                io.stdout
+                    .set_color(ColorSpec::new().set_fg(<span class="prelude-val">Some</span>(Color::Green)))<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(io.stdout, <span class="string">"{}"</span>, option.key)<span class="question-mark">?</span>;
+                io.stdout.reset()<span class="question-mark">?</span>;
+
+                <span class="macro">write!</span>(io.stdout, <span class="string">"={}"</span>, option.default)<span class="question-mark">?</span>;
+
+                <span class="kw">if </span>option.unstable {
+                    io.stdout
+                        .set_color(ColorSpec::new().set_fg(<span class="prelude-val">Some</span>(Color::Red)).set_bold(<span class="bool-val">true</span>))<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(io.stdout, <span class="string">" (unstable)"</span>)<span class="question-mark">?</span>;
+                    io.stdout.reset()<span class="question-mark">?</span>;
+                }
+
+                <span class="macro">writeln!</span>(io.stdout, <span class="string">":"</span>)<span class="question-mark">?</span>;
+
+                <span class="macro">writeln!</span>(io.stdout, <span class="string">"    Options: {}"</span>, option.options)<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(io.stdout)<span class="question-mark">?</span>;
+
+                <span class="kw">for </span><span class="kw-2">&amp;</span>line <span class="kw">in </span>option.doc {
+                    <span class="kw">let </span>line = line.strip_prefix(<span class="string">' '</span>).unwrap_or(line);
+                    <span class="macro">writeln!</span>(io.stdout, <span class="string">"    {line}"</span>)<span class="question-mark">?</span>;
+                }
+            }
+
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(ExitCode::Success);
+        }
+
         populate_config(io, <span class="kw-2">&amp;mut </span>c, cmd)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>build_paths = c.build_paths(cmd)<span class="question-mark">?</span>;

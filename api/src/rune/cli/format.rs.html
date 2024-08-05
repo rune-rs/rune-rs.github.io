@@ -276,6 +276,24 @@
 <a href="#276" id="276">276</a>
 <a href="#277" id="277">277</a>
 <a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt;
 <span class="kw">use </span>std::io::Write;
 <span class="kw">use </span>std::path::PathBuf;
@@ -344,16 +362,23 @@
 {
     <span class="kw">let </span>col = Colors::new();
 
-    <span class="kw">let </span><span class="kw-2">mut </span>changed = <span class="number">0</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>failed = <span class="number">0</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>unchanged = <span class="number">0</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>failed_builds = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>changed = <span class="number">0u32</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>failed = <span class="number">0u32</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>unchanged = <span class="number">0u32</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>failed_builds = <span class="number">0u32</span>;
 
     <span class="kw">let </span>context = shared.context(entry, c, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="kw-2">mut </span>paths = BTreeSet::new();
 
     <span class="kw">for </span>e <span class="kw">in </span>entrys {
+        <span class="comment">// NB: We don't have to build argument entries to discover all relevant
+        // modules.
+        </span><span class="kw">if </span>e.is_argument() {
+            paths.try_insert(e.path().try_to_owned()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+            <span class="kw">continue</span>;
+        }
+
         <span class="kw">let </span><span class="kw-2">mut </span>diagnostics = <span class="kw">if </span>shared.warnings || flags.warnings_are_errors {
             Diagnostics::new()
         } <span class="kw">else </span>{
@@ -387,54 +412,65 @@
     }
 
     <span class="kw">for </span>path <span class="kw">in </span>paths {
-        <span class="kw">let </span>source = <span class="kw">match </span>Source::from_path(<span class="kw-2">&amp;</span>path) {
+        <span class="kw">let </span><span class="kw-2">mut </span>sources = Sources::new();
+
+        sources.insert(<span class="kw">match </span>Source::from_path(<span class="kw-2">&amp;</span>path) {
             <span class="prelude-val">Ok</span>(source) =&gt; source,
             <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(error).context(path.display().try_to_string()<span class="question-mark">?</span>),
+        })<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>diagnostics = Diagnostics::new();
+
+        <span class="kw">let </span>build = <span class="kw">crate</span>::fmt::prepare(<span class="kw-2">&amp;</span>sources)
+            .with_options(options)
+            .with_diagnostics(<span class="kw-2">&amp;mut </span>diagnostics);
+
+        <span class="kw">let </span>result = build.format();
+
+        <span class="kw">if </span>!diagnostics.is_empty() {
+            diagnostics.emit(io.stdout, <span class="kw-2">&amp;</span>sources)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">let </span><span class="prelude-val">Ok</span>(formatted) = result <span class="kw">else </span>{
+            failed += <span class="number">1</span>;
+            <span class="kw">continue</span>;
         };
 
-        <span class="kw">let </span>val = <span class="kw">match </span><span class="kw">crate</span>::fmt::layout_source(source.as_str()) {
-            <span class="prelude-val">Ok</span>(val) =&gt; val,
-            <span class="prelude-val">Err</span>(err) =&gt; {
-                failed += <span class="number">1</span>;
+        <span class="kw">for </span>(id, formatted) <span class="kw">in </span>formatted {
+            <span class="kw">let </span><span class="prelude-val">Some</span>(source) = sources.get(id) <span class="kw">else </span>{
+                <span class="kw">continue</span>;
+            };
+
+            <span class="kw">let </span>same = source.as_str() == formatted;
+
+            <span class="kw">if </span>same {
+                unchanged += <span class="number">1</span>;
 
                 <span class="kw">if </span>shared.verbose {
-                    io.stdout.set_color(<span class="kw-2">&amp;</span>col.red)<span class="question-mark">?</span>;
-                    <span class="macro">write!</span>(io.stdout, <span class="string">"!! "</span>)<span class="question-mark">?</span>;
+                    io.stdout.set_color(<span class="kw-2">&amp;</span>col.green)<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(io.stdout, <span class="string">"== "</span>)<span class="question-mark">?</span>;
                     io.stdout.reset()<span class="question-mark">?</span>;
-                    <span class="macro">writeln!</span>(io.stdout, <span class="string">"{}: {}"</span>, path.display(), err)<span class="question-mark">?</span>;
+                    <span class="macro">writeln!</span>(io.stdout, <span class="string">"{}"</span>, source.name())<span class="question-mark">?</span>;
                 }
 
                 <span class="kw">continue</span>;
             }
-        };
 
-        <span class="kw">let </span>same = source.as_str().as_bytes() == val;
+            changed += <span class="number">1</span>;
 
-        <span class="kw">if </span>same {
-            unchanged += <span class="number">1</span>;
-
-            <span class="kw">if </span>shared.verbose {
-                io.stdout.set_color(<span class="kw-2">&amp;</span>col.green)<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(io.stdout, <span class="string">"== "</span>)<span class="question-mark">?</span>;
+            <span class="kw">if </span>shared.verbose || flags.check {
+                io.stdout.set_color(<span class="kw-2">&amp;</span>col.yellow)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(io.stdout, <span class="string">"++ "</span>)<span class="question-mark">?</span>;
                 io.stdout.reset()<span class="question-mark">?</span>;
-                <span class="macro">writeln!</span>(io.stdout, <span class="string">"{}"</span>, path.display())<span class="question-mark">?</span>;
+                <span class="macro">writeln!</span>(io.stdout, <span class="string">"{}"</span>, source.name())<span class="question-mark">?</span>;
+                diff(io, source.as_str(), <span class="kw-2">&amp;</span>formatted, <span class="kw-2">&amp;</span>col)<span class="question-mark">?</span>;
             }
 
-            <span class="kw">continue</span>;
-        }
-
-        changed += <span class="number">1</span>;
-
-        <span class="kw">if </span>shared.verbose || flags.check {
-            io.stdout.set_color(<span class="kw-2">&amp;</span>col.yellow)<span class="question-mark">?</span>;
-            <span class="macro">write!</span>(io.stdout, <span class="string">"++ "</span>)<span class="question-mark">?</span>;
-            io.stdout.reset()<span class="question-mark">?</span>;
-            <span class="macro">writeln!</span>(io.stdout, <span class="string">"{}"</span>, path.display())<span class="question-mark">?</span>;
-            diff(io, <span class="kw-2">&amp;</span>source, <span class="kw-2">&amp;</span>val, <span class="kw-2">&amp;</span>col)<span class="question-mark">?</span>;
-        }
-
-        <span class="kw">if </span>!flags.check {
-            std::fs::write(path, <span class="kw-2">&amp;</span>val)<span class="question-mark">?</span>;
+            <span class="kw">if </span>!flags.check {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(path) = source.path() {
+                    std::fs::write(path, <span class="kw-2">&amp;</span>formatted)<span class="question-mark">?</span>;
+                }
+            }
         }
     }
 
@@ -452,14 +488,14 @@
         <span class="macro">writeln!</span>(io.stdout, <span class="string">" changed"</span>)<span class="question-mark">?</span>;
     }
 
-    <span class="kw">if </span>shared.verbose &amp;&amp; failed &gt; <span class="number">0 </span>{
+    <span class="kw">if </span>shared.verbose || failed &gt; <span class="number">0 </span>{
         io.stdout.set_color(<span class="kw-2">&amp;</span>col.red)<span class="question-mark">?</span>;
         <span class="macro">write!</span>(io.stdout, <span class="string">"{}"</span>, failed)<span class="question-mark">?</span>;
         io.stdout.reset()<span class="question-mark">?</span>;
         <span class="macro">writeln!</span>(io.stdout, <span class="string">" failed"</span>)<span class="question-mark">?</span>;
     }
 
-    <span class="kw">if </span>shared.verbose &amp;&amp; failed_builds &gt; <span class="number">0 </span>{
+    <span class="kw">if </span>shared.verbose || failed_builds &gt; <span class="number">0 </span>{
         io.stdout.set_color(<span class="kw-2">&amp;</span>col.red)<span class="question-mark">?</span>;
         <span class="macro">write!</span>(io.stdout, <span class="string">"{}"</span>, failed_builds)<span class="question-mark">?</span>;
         io.stdout.reset()<span class="question-mark">?</span>;
@@ -483,8 +519,8 @@
     <span class="prelude-val">Ok</span>(ExitCode::Success)
 }
 
-<span class="kw">fn </span>diff(io: <span class="kw-2">&amp;mut </span>Io, source: <span class="kw-2">&amp;</span>Source, val: <span class="kw-2">&amp;</span>[u8], col: <span class="kw-2">&amp;</span>Colors) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt; {
-    <span class="kw">let </span>diff = TextDiff::from_lines(source.as_str().as_bytes(), val);
+<span class="kw">fn </span>diff(io: <span class="kw-2">&amp;mut </span>Io, source: <span class="kw-2">&amp;</span>str, val: <span class="kw-2">&amp;</span>str, col: <span class="kw-2">&amp;</span>Colors) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt; {
+    <span class="kw">let </span>diff = TextDiff::from_lines(source, val);
 
     <span class="kw">for </span>(idx, group) <span class="kw">in </span>diff.grouped_ops(<span class="number">3</span>).iter().enumerate() {
         <span class="kw">if </span>idx &gt; <span class="number">0 </span>{

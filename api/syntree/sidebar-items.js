@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Error"],"macro":["tree","tree_with"],"mod":["edit","index","node","pointer","print"],"struct":["Builder","Checkpoint","Empty","Node","Span","Tree"]};

@@ -287,9 +287,19 @@
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span><span class="kw">crate</span>::ast::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::parse::{Advance, Peekable};
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>ast_parse() {
@@ -417,7 +427,7 @@
     }
 
     <span class="doccomment">/// Get the precedence for the current operator.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>precedence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>precedence(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="comment">// NB: Rules from: https://doc.rust-lang.org/reference/expressions.html#expression-precedence
         </span><span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Is(..) | <span class="self">Self</span>::IsNot(..) =&gt; <span class="number">13</span>,
@@ -443,7 +453,7 @@
     }
 
     <span class="doccomment">/// Test if operator is left associative.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>is_assoc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_assoc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Mul(..) =&gt; <span class="bool-val">true</span>,
             <span class="self">Self</span>::Div(..) =&gt; <span class="bool-val">true</span>,
@@ -462,8 +472,11 @@
     }
 
     <span class="doccomment">/// Convert from a token.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>from_peeker(p: <span class="kw-2">&amp;mut </span>Peeker&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;BinOp&gt; {
-        <span class="kw">let </span>ast::Token { kind, span } = p.tok_at(<span class="number">0</span>);
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_peeker&lt;P&gt;(p: <span class="kw-2">&amp;mut </span>P) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BinOp&gt;, P::Error&gt;
+    <span class="kw">where
+        </span>P: <span class="question-mark">?</span>Sized + Peekable,
+    {
+        <span class="kw">let </span>ast::Token { kind, span } = p.nth(<span class="number">0</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>out = <span class="kw">match </span>kind {
             <span class="macro">K!</span>[+] =&gt; <span class="self">Self</span>::Add(ast::Plus { span }),
@@ -480,7 +493,7 @@
             <span class="macro">K!</span>[<span class="kw">as</span>] =&gt; <span class="self">Self</span>::As(ast::As { span }),
             <span class="macro">K!</span>[is] =&gt; {
                 <span class="kw">let </span>is = ast::Is { span };
-                <span class="kw">let </span>ast::Token { kind, span } = p.tok_at(<span class="number">1</span>);
+                <span class="kw">let </span>ast::Token { kind, span } = p.nth(<span class="number">1</span>)<span class="question-mark">?</span>;
 
                 <span class="kw">match </span>kind {
                     <span class="macro">K!</span>[not] =&gt; <span class="self">Self</span>::IsNot(ast::IsNot {
@@ -509,21 +522,23 @@
             <span class="macro">K!</span>[&gt;&gt;=] =&gt; <span class="self">Self</span>::ShrAssign(ast::GtGtEq { span }),
             <span class="macro">K!</span>[..] =&gt; <span class="self">Self</span>::DotDot(ast::DotDot { span }),
             <span class="macro">K!</span>[..=] =&gt; <span class="self">Self</span>::DotDotEq(ast::DotDotEq { span }),
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         };
 
-        <span class="prelude-val">Some</span>(out)
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(out))
     }
 
     <span class="doccomment">/// Get how many tokens to advance for this operator.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>advance(<span class="kw-2">&amp;</span><span class="self">self</span>, p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>advance&lt;A&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, p: <span class="kw-2">&amp;mut </span>A) -&gt; <span class="prelude-ty">Result</span>&lt;(), A::Error&gt;
+    <span class="kw">where
+        </span>A: <span class="question-mark">?</span>Sized + Advance,
+    {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::IsNot(..) =&gt; {
-                p.next()<span class="question-mark">?</span>;
-                p.next()<span class="question-mark">?</span>;
+                p.advance(<span class="number">2</span>)<span class="question-mark">?</span>;
             }
             <span class="kw">_ </span>=&gt; {
-                p.next()<span class="question-mark">?</span>;
+                p.advance(<span class="number">1</span>)<span class="question-mark">?</span>;
             }
         }
 
@@ -573,7 +588,10 @@
 
 <span class="kw">impl </span>Peek <span class="kw">for </span>BinOp {
     <span class="kw">fn </span>peek(p: <span class="kw-2">&amp;mut </span>Peeker&lt;<span class="lifetime">'_</span>&gt;) -&gt; bool {
-        <span class="self">Self</span>::from_peeker(p).is_some()
+        <span class="kw">match </span><span class="self">Self</span>::from_peeker(p) {
+            <span class="prelude-val">Ok</span>(tok) =&gt; tok.is_some(),
+            <span class="prelude-val">Err</span>(infallible) =&gt; <span class="kw">match </span>infallible {},
+        }
     }
 }
 </code></pre></div></section></main></body></html>

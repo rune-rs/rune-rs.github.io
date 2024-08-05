@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["PointerU128","PointerU16","PointerU32","PointerU64","PointerU8","PointerUsize"],"trait":["Pointer","Width"]};

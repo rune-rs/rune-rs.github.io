@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["format_source"]};
+window.SIDEBAR_ITEMS = {"fn":["prepare"],"struct":["FormatError","Prepare"]};
