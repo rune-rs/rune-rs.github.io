@@ -1016,6 +1016,16 @@
 <a href="#1016" id="1016">1016</a>
 <a href="#1017" id="1017">1017</a>
 <a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helper to build customized commandline interfaces using custom rune
 //! contexts.
 //!
@@ -1024,7 +1034,8 @@
 //! * Build a language server, which is aware of things only available in your
 //!   context.
 
-</span><span class="kw">mod </span>benches;
+</span><span class="kw">mod </span>ace;
+<span class="kw">mod </span>benches;
 <span class="kw">mod </span>check;
 <span class="kw">mod </span>doc;
 <span class="kw">mod </span>format;
@@ -1449,6 +1460,8 @@
     </span>Check(CommandShared&lt;check::Flags&gt;),
     <span class="doccomment">/// Build documentation.
     </span>Doc(CommandShared&lt;doc::Flags&gt;),
+    <span class="doccomment">/// Build ace autocompletion.
+    </span>Ace(CommandShared&lt;ace::Flags&gt;),
     <span class="doccomment">/// Run all tests but do not execute
     </span>Test(CommandShared&lt;tests::Flags&gt;),
     <span class="doccomment">/// Run the given program as a benchmark
@@ -1464,9 +1477,10 @@
 }
 
 <span class="kw">impl </span>Command {
-    <span class="kw">const </span>ALL: [<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str; <span class="number">8</span>] = [
+    <span class="kw">const </span>ALL: [<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str; <span class="number">9</span>] = [
         <span class="string">"check"</span>,
         <span class="string">"doc"</span>,
+        <span class="string">"ace"</span>,
         <span class="string">"test"</span>,
         <span class="string">"bench"</span>,
         <span class="string">"run"</span>,
@@ -1479,6 +1493,7 @@
         <span class="kw">let </span>(shared, command): (<span class="kw">_</span>, <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>CommandBase) = <span class="kw">match </span><span class="self">self </span>{
             Command::Check(shared) =&gt; (<span class="kw-2">&amp;mut </span>shared.shared, <span class="kw-2">&amp;mut </span>shared.command),
             Command::Doc(shared) =&gt; (<span class="kw-2">&amp;mut </span>shared.shared, <span class="kw-2">&amp;mut </span>shared.command),
+            Command::Ace(shared) =&gt; (<span class="kw-2">&amp;mut </span>shared.shared, <span class="kw-2">&amp;mut </span>shared.command),
             Command::Test(shared) =&gt; (<span class="kw-2">&amp;mut </span>shared.shared, <span class="kw-2">&amp;mut </span>shared.command),
             Command::Bench(shared) =&gt; (<span class="kw-2">&amp;mut </span>shared.shared, <span class="kw-2">&amp;mut </span>shared.command),
             Command::Run(shared) =&gt; (<span class="kw-2">&amp;mut </span>shared.shared, <span class="kw-2">&amp;mut </span>shared.command),
@@ -1494,6 +1509,7 @@
         <span class="kw">let </span>(shared, command): (<span class="kw">_</span>, <span class="kw-2">&amp;</span><span class="kw">dyn </span>CommandBase) = <span class="kw">match </span><span class="self">self </span>{
             Command::Check(shared) =&gt; (<span class="kw-2">&amp;</span>shared.shared, <span class="kw-2">&amp;</span>shared.command),
             Command::Doc(shared) =&gt; (<span class="kw-2">&amp;</span>shared.shared, <span class="kw-2">&amp;</span>shared.command),
+            Command::Ace(shared) =&gt; (<span class="kw-2">&amp;</span>shared.shared, <span class="kw-2">&amp;</span>shared.command),
             Command::Test(shared) =&gt; (<span class="kw-2">&amp;</span>shared.shared, <span class="kw-2">&amp;</span>shared.command),
             Command::Bench(shared) =&gt; (<span class="kw-2">&amp;</span>shared.shared, <span class="kw-2">&amp;</span>shared.command),
             Command::Run(shared) =&gt; (<span class="kw-2">&amp;</span>shared.shared, <span class="kw-2">&amp;</span>shared.command),
@@ -1928,6 +1944,10 @@
         Command::Doc(f) =&gt; {
             <span class="kw">let </span>options = f.options()<span class="question-mark">?</span>;
             <span class="kw">return </span>doc::run(io, entry, c, <span class="kw-2">&amp;</span>f.command, <span class="kw-2">&amp;</span>f.shared, <span class="kw-2">&amp;</span>options, entries);
+        }
+        Command::Ace(f) =&gt; {
+            <span class="kw">let </span>options = f.options()<span class="question-mark">?</span>;
+            <span class="kw">return </span>ace::run(io, entry, c, <span class="kw-2">&amp;</span>f.command, <span class="kw-2">&amp;</span>f.shared, <span class="kw-2">&amp;</span>options, entries);
         }
         Command::Fmt(f) =&gt; {
             <span class="kw">let </span>options = f.options()<span class="question-mark">?</span>;
