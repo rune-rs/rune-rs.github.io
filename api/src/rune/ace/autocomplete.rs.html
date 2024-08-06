@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/doc/autocomplete.rs`."><title>autocomplete.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-d10b2a06af903387.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (e57f3090a 2024-08-05)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9345f17bf569ecba.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/ace/autocomplete.rs`."><title>autocomplete.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-d10b2a06af903387.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (e57f3090a 2024-08-05)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9345f17bf569ecba.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -390,22 +390,28 @@
 <a href="#390" id="390">390</a>
 <a href="#391" id="391">391</a>
 <a href="#392" id="392">392</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt::Display;
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>core::str;
 
 <span class="kw">use </span>anyhow::{Context <span class="kw">as _</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>pulldown_cmark::{Options, Parser};
 <span class="kw">use </span>syntect::parsing::SyntaxSet;
 
 <span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::borrow::Cow;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{HashMap, String};
 <span class="kw">use </span><span class="kw">crate</span>::compile::Prelude;
-<span class="kw">use </span><span class="kw">crate</span>::doc::{Artifacts, Context, Visitor};
+<span class="kw">use </span><span class="kw">crate</span>::doc::markdown;
+<span class="kw">use </span><span class="kw">crate</span>::doc::{Artifacts, Context, Function, Kind, Meta, Signature, Visitor};
 <span class="kw">use crate</span>::{hash, ItemBuf};
-
-<span class="kw">use </span><span class="kw">super</span>::build::markdown;
-<span class="kw">use </span><span class="kw">super</span>::context::{Function, Kind, Meta, Signature};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build(
     artifacts: <span class="kw-2">&amp;mut </span>Artifacts,
@@ -416,12 +422,13 @@
     <span class="kw">let </span>context = Context::new(<span class="prelude-val">Some</span>(context), visitors);
 
     <span class="kw">let </span><span class="kw-2">mut </span>acx = AutoCompleteCtx::new(<span class="kw-2">&amp;</span>context, extensions);
+
     <span class="kw">for </span>item <span class="kw">in </span>context.iter_modules() {
         <span class="kw">let </span>item = item<span class="question-mark">?</span>;
         acx.collect_meta(<span class="kw-2">&amp;</span>item)<span class="question-mark">?</span>;
     }
-    acx.build(artifacts)<span class="question-mark">?</span>;
 
+    acx.build(artifacts)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -497,13 +504,10 @@
     }
 
     <span class="kw">fn </span>build(<span class="kw-2">&amp;mut </span><span class="self">self</span>, artifacts: <span class="kw-2">&amp;mut </span>Artifacts) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>content = std::string::String::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>content = Vec::new();
         <span class="self">self</span>.write(<span class="kw-2">&amp;mut </span>content)<span class="question-mark">?</span>;
 
-        artifacts.asset(<span class="bool-val">false</span>, <span class="string">"autocomplete.js"</span>, || {
-            <span class="kw">let </span>string = String::try_from(content)<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(string.into_bytes().into())
-        })<span class="question-mark">?</span>;
+        artifacts.asset(<span class="bool-val">false</span>, <span class="string">"rune-autocomplete.js"</span>, || <span class="prelude-val">Ok</span>(content.into()))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -606,7 +610,7 @@
 
     <span class="kw">fn </span>write_hint(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        f: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>core::fmt::Write,
+        f: <span class="kw-2">&amp;mut </span>Vec&lt;u8&gt;,
         value: <span class="kw-2">&amp;</span>str,
         meta: <span class="kw-2">&amp;</span>str,
         score: usize,
@@ -615,33 +619,32 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="macro">write!</span>(f, <span class="string">r#"{{"#</span>)<span class="question-mark">?</span>;
         <span class="macro">write!</span>(f, <span class="string">r#"value: "{value}""#</span>)<span class="question-mark">?</span>;
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(caption) = caption {
             <span class="macro">write!</span>(f, <span class="string">r#", caption: "{caption}""#</span>)<span class="question-mark">?</span>;
         }
+
         <span class="macro">write!</span>(f, <span class="string">r#", meta: "{meta}""#</span>)<span class="question-mark">?</span>;
         <span class="macro">write!</span>(f, <span class="string">r#", score: {score}"#</span>)<span class="question-mark">?</span>;
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(doc) = doc {
-            <span class="macro">write!</span>(f, <span class="string">r#", docHTML: `{}`"#</span>, doc)<span class="question-mark">?</span>;
+            <span class="kw">let </span>doc = escape(doc)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(f, <span class="string">r#", docHTML: "{doc}""#</span>)<span class="question-mark">?</span>;
         }
-        <span class="macro">writeln!</span>(f, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
+
+        <span class="macro">write!</span>(f, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>write_instances(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>core::fmt::Write) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>write_instances(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Vec&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="macro">write!</span>(f, <span class="string">r#"var instance = ["#</span>)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>no_comma = <span class="bool-val">true</span>;
 
         <span class="kw">for </span>(item, meta) <span class="kw">in </span><span class="self">self</span>.instance.iter() {
             <span class="kw">let </span>Kind::Function(fnc) = meta.kind <span class="kw">else </span>{
                 <span class="kw">continue</span>;
             };
 
-            <span class="kw">if </span>no_comma {
-                no_comma = <span class="bool-val">false</span>;
-            } <span class="kw">else </span>{
-                <span class="macro">write!</span>(f, <span class="string">","</span>)<span class="question-mark">?</span>;
-            }
+            <span class="macro">write!</span>(f, <span class="string">"  "</span>)<span class="question-mark">?</span>;
 
             <span class="kw">let </span><span class="kw-2">mut </span>iter = item.iter().rev();
             <span class="kw">let </span><span class="kw-2">mut </span>value = iter
@@ -669,23 +672,22 @@
             </span>};
 
             <span class="self">self</span>.write_hint(f, <span class="kw-2">&amp;</span>value, info, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>typ), doc.as_deref())<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(f, <span class="string">","</span>)<span class="question-mark">?</span>;
         }
         <span class="macro">write!</span>(f, <span class="string">"];"</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>write_fixed(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>core::fmt::Write) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">write!</span>(f, <span class="string">r#"var fixed = ["#</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>write_fixed(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Vec&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="macro">writeln!</span>(f, <span class="string">r#"var fixed = ["#</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>no_comma = <span class="bool-val">true</span>;
-
-        <span class="kw">for </span>(item, meta) <span class="kw">in </span><span class="self">self</span>.fixed.iter() {
-            <span class="kw">if </span>no_comma {
-                no_comma = <span class="bool-val">false</span>;
-            } <span class="kw">else </span>{
-                <span class="macro">write!</span>(f, <span class="string">","</span>)<span class="question-mark">?</span>;
-            }
+        <span class="kw">for </span>(item, meta) <span class="kw">in </span><span class="self">self
+            </span>.fixed
+            .iter()
+            .filter(|(<span class="kw">_</span>, m)| !<span class="macro">matches!</span>(m.kind, Kind::Unsupported | Kind::Trait))
+        {
+            <span class="macro">write!</span>(f, <span class="string">"  "</span>)<span class="question-mark">?</span>;
 
             <span class="kw">match </span>meta.kind {
                 Kind::Type =&gt; {
@@ -721,11 +723,13 @@
                     caption.try_push_str(<span class="kw-2">&amp;</span><span class="self">self</span>.get_fn_ret_typ(<span class="kw-2">&amp;</span>fnc)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                     value.try_push_str(<span class="kw-2">&amp;</span><span class="self">Self</span>::get_fn_ext(<span class="kw-2">&amp;</span>fnc)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                     <span class="kw">let </span>doc = <span class="self">self</span>.doc_to_html(meta).ok().flatten();
+
                     <span class="kw">let </span>info = <span class="kw">if </span>fnc.is_async {
                         <span class="string">"async Function"
                     </span>} <span class="kw">else </span>{
                         <span class="string">"Function"
                     </span>};
+
                     <span class="self">self</span>.write_hint(f, <span class="kw-2">&amp;</span>value, info, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>caption), doc.as_deref())<span class="question-mark">?</span>;
                 }
                 Kind::Const(<span class="kw">_</span>) =&gt; {
@@ -738,48 +742,58 @@
                     <span class="kw">let </span>doc = <span class="self">self</span>.doc_to_html(meta).ok().flatten();
                     <span class="self">self</span>.write_hint(f, <span class="kw-2">&amp;</span>name, <span class="string">"Module"</span>, <span class="number">9</span>, <span class="prelude-val">None</span>, doc.as_deref())<span class="question-mark">?</span>;
                 }
-                Kind::Unsupported | Kind::Trait =&gt; {
-                    no_comma = <span class="bool-val">true</span>;
-                }
+                <span class="kw">_ </span>=&gt; {}
             }
-        }
-        <span class="macro">write!</span>(f, <span class="string">"];"</span>)<span class="question-mark">?</span>;
 
+            <span class="macro">writeln!</span>(f, <span class="string">","</span>)<span class="question-mark">?</span>;
+        }
+
+        <span class="macro">writeln!</span>(f, <span class="string">"];"</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>core::fmt::Write) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="macro">write!</span>(f, <span class="string">"{COMPLETER}\n\n"</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Vec&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>completer =
+            <span class="kw">super</span>::embed::Assets::get(<span class="string">"rune-completer.js"</span>).context(<span class="string">"missing rune-completer.js"</span>)<span class="question-mark">?</span>;
+
+        f.try_extend_from_slice(completer.data.as_ref())<span class="question-mark">?</span>;
         <span class="self">self</span>.write_fixed(f)<span class="question-mark">?</span>;
-        <span class="macro">write!</span>(f, <span class="string">"\n\n"</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.write_instances(f)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Display <span class="kw">for </span>AutoCompleteCtx&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; core::fmt::Result {
-        <span class="self">self</span>.write(f).map_err(|<span class="kw">_</span>| core::fmt::Error)
+<span class="kw">fn </span>escape(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Cow&lt;<span class="lifetime">'_</span>, str&gt;&gt; {
+    <span class="kw">let </span>n = <span class="lifetime">'escape</span>: {
+        <span class="kw">for </span>(n, c) <span class="kw">in </span>s.char_indices() {
+            <span class="kw">match </span>c {
+                <span class="string">'\"' </span>| <span class="string">'\n' </span>=&gt; <span class="kw">break </span><span class="lifetime">'escape </span>n,
+                <span class="kw">_ </span>=&gt; {}
+            }
+        }
+
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(Cow::Borrowed(s));
+    };
+
+    <span class="kw">let </span><span class="kw-2">mut </span>out = String::new();
+
+    <span class="kw">let </span>(head, tail) = s.split_at(n);
+    out.try_push_str(head)<span class="question-mark">?</span>;
+
+    <span class="kw">for </span>c <span class="kw">in </span>tail.chars() {
+        <span class="kw">match </span>c {
+            <span class="string">'\"' </span>=&gt; {
+                out.try_push_str(<span class="string">r#"\""#</span>)<span class="question-mark">?</span>;
+            }
+            <span class="string">'\n' </span>=&gt; {
+                out.try_push_str(<span class="string">r#"\n"#</span>)<span class="question-mark">?</span>;
+            }
+            <span class="kw">_ </span>=&gt; {
+                out.try_push(c)<span class="question-mark">?</span>;
+            }
+        }
     }
+
+    <span class="prelude-val">Ok</span>(Cow::Owned(out))
 }
-
-<span class="kw">static </span>COMPLETER: <span class="kw-2">&amp;</span>str = <span class="string">r#"
-const runeCompleter = {
-  getCompletions: (editor, session, pos, prefix, callback) =&gt; {
-    if (prefix.length === 0) {
-      callback(null, []);
-      return;
-    }
-
-    var token = session.getTokenAt(pos.row, pos.column - 1).value;
-
-    if (token.includes(".")) {
-      callback(null, instance);
-    } else {
-      callback(null, fixed);
-    }
-  },
-};
-export default runeCompleter;
-"#</span>;
 </code></pre></div></section></main></body></html>
