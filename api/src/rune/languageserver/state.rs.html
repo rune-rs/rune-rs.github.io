@@ -1173,12 +1173,73 @@
 <a href="#1173" id="1173">1173</a>
 <a href="#1174" id="1174">1174</a>
 <a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
+<a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{BTreeMap, HashSet};
 <span class="kw">use </span>std::fmt;
 <span class="kw">use </span>std::path::{Path, PathBuf};
 <span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use </span>anyhow::{anyhow, Context <span class="kw">as _</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>anyhow::{Context <span class="kw">as _</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>lsp::Url;
 <span class="kw">use </span>ropey::Rope;
 <span class="kw">use </span>tokio::sync::Notify;
@@ -1189,7 +1250,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::ast::{Span, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::meta;
 <span class="kw">use </span><span class="kw">crate</span>::compile::{
-    <span class="self">self</span>, CompileVisitor, LinkerError, Located, Location, MetaError, MetaRef, SourceMeta, WithSpan,
+    <span class="self">self</span>, CompileVisitor, FmtOptions, LinkerError, Located, Location, MetaError, MetaRef,
+    SourceMeta, WithSpan,
 };
 <span class="kw">use </span><span class="kw">crate</span>::diagnostics::{Diagnostic, FatalDiagnosticKind};
 <span class="kw">use </span><span class="kw">crate</span>::doc::VisitorData;
@@ -1282,8 +1344,69 @@
     }
 }
 
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>StateEncoding {
+    Utf8,
+    Utf16,
+}
+
+<span class="kw">impl </span>StateEncoding {
+    <span class="doccomment">/// Get line column out of source.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>source_range(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>Source, span: Span) -&gt; <span class="prelude-ty">Result</span>&lt;lsp::Range&gt; {
+        <span class="kw">let </span>start = <span class="self">self</span>.source_position(source, span.start.into_usize())<span class="question-mark">?</span>;
+        <span class="kw">let </span>end = <span class="self">self</span>.source_position(source, span.end.into_usize())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(lsp::Range { start, end })
+    }
+
+    <span class="doccomment">/// Get line column out of source.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>source_position(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>Source, at: usize) -&gt; <span class="prelude-ty">Result</span>&lt;lsp::Position&gt; {
+        <span class="kw">let </span>(l, c) = <span class="kw">match </span><span class="self">self </span>{
+            StateEncoding::Utf16 =&gt; source.pos_to_utf16cu_linecol(at),
+            StateEncoding::Utf8 =&gt; source.pos_to_utf8_linecol(at),
+        };
+
+        <span class="prelude-val">Ok</span>(lsp::Position {
+            line: u32::try_from(l)<span class="question-mark">?</span>,
+            character: u32::try_from(c)<span class="question-mark">?</span>,
+        })
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>rope_position(<span class="kw-2">&amp;</span><span class="self">self</span>, rope: <span class="kw-2">&amp;</span>Rope, pos: lsp::Position) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="doccomment">/// Translate the given lsp::Position, which is in UTF-16 because Microsoft.
+        ///
+        /// Please go complain here:
+        /// &lt;https://github.com/microsoft/language-server-protocol/issues/376&gt;
+        </span><span class="kw">fn </span>rope_position_utf16(rope: <span class="kw-2">&amp;</span>Rope, pos: lsp::Position) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+            <span class="kw">let </span>line = usize::try_from(pos.line)<span class="question-mark">?</span>;
+            <span class="kw">let </span>character = usize::try_from(pos.character)<span class="question-mark">?</span>;
+            <span class="kw">let </span>line = rope.try_line_to_char(line)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(rope.try_utf16_cu_to_char(line + character)<span class="question-mark">?</span>)
+        }
+
+        <span class="kw">fn </span>rope_position_utf8(rope: <span class="kw-2">&amp;</span>Rope, pos: lsp::Position) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+            <span class="kw">let </span>line = usize::try_from(pos.line)<span class="question-mark">?</span>;
+            <span class="kw">let </span>character = usize::try_from(pos.character)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(rope.try_line_to_char(line)<span class="question-mark">? </span>+ character)
+        }
+
+        <span class="kw">match </span><span class="self">self </span>{
+            StateEncoding::Utf16 =&gt; rope_position_utf16(rope, pos),
+            StateEncoding::Utf8 =&gt; rope_position_utf8(rope, pos),
+        }
+    }
+}
+
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>StateEncoding {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            StateEncoding::Utf8 =&gt; <span class="string">"utf-8"</span>.fmt(f),
+            StateEncoding::Utf16 =&gt; <span class="string">"utf-16"</span>.fmt(f),
+        }
+    }
+}
+
 <span class="doccomment">/// Shared server state.
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>State&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub</span>(<span class="kw">super</span>) encoding: StateEncoding,
     <span class="doccomment">/// The output abstraction.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) output: Output,
     <span class="doccomment">/// Sender to indicate interest in rebuilding the project.
@@ -1298,7 +1421,7 @@
     <span class="doccomment">/// Indicate that the server is stopped.
     </span>stopped: bool,
     <span class="doccomment">/// Sources used in the project.
-    </span>workspace: Workspace,
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) workspace: Workspace,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; State&lt;<span class="lifetime">'a</span>&gt; {
@@ -1310,6 +1433,7 @@
         options: Options,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
+            encoding: StateEncoding::Utf16,
             output,
             rebuild_notify,
             context,
@@ -1340,11 +1464,6 @@
         <span class="self">self</span>.stopped
     }
 
-    <span class="doccomment">/// Get mutable access to the workspace.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>workspace_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Workspace {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.workspace
-    }
-
     <span class="doccomment">/// Indicate interest in having the project rebuild.
     ///
     /// Sources that have been modified will be marked as dirty.
@@ -1357,36 +1476,36 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         uri: <span class="kw-2">&amp;</span>Url,
         position: lsp::Position,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;lsp::Location&gt; {
-        <span class="kw">let </span>source = <span class="self">self</span>.workspace.get(uri)<span class="question-mark">?</span>;
-        <span class="kw">let </span>offset = source.lsp_position_to_offset(position);
-        <span class="kw">let </span>def = source.find_definition_at(Span::point(offset))<span class="question-mark">?</span>;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;lsp::Location&gt;&gt; {
+        <span class="kw">let </span><span class="prelude-val">Some</span>(source) = <span class="self">self</span>.workspace.get(uri) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        };
+
+        <span class="kw">let </span>offset = <span class="self">self</span>.encoding.rope_position(<span class="kw-2">&amp;</span>source.content, position)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(def) = source.find_definition_at(Span::point(offset)) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        };
 
         <span class="kw">let </span>url = <span class="kw">match </span>def.source.path() {
-            <span class="prelude-val">Some</span>(path) =&gt; <span class="kw">crate</span>::languageserver::url::from_file_path(path).ok()<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(path) =&gt; <span class="kw">crate</span>::languageserver::url::from_file_path(path)<span class="question-mark">?</span>,
             <span class="prelude-val">None </span>=&gt; uri.clone(),
         };
 
-        <span class="kw">let </span>source = source.build_sources.as_ref()<span class="question-mark">?</span>.get(def.source.source_id())<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>(l, c) = source.pos_to_utf16cu_linecol(def.source.span().start.into_usize());
-        <span class="kw">let </span>start = lsp::Position {
-            line: l <span class="kw">as </span>u32,
-            character: c <span class="kw">as </span>u32,
+        <span class="kw">let </span><span class="prelude-val">Some</span>(source) = source
+            .build_sources
+            .as_ref()
+            .and_then(|s| s.get(def.source.source_id()))
+        <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
         };
 
-        <span class="kw">let </span>(l, c) = source.pos_to_utf16cu_linecol(def.source.span().end.into_usize());
-        <span class="kw">let </span>end = lsp::Position {
-            line: l <span class="kw">as </span>u32,
-            character: c <span class="kw">as </span>u32,
-        };
-
-        <span class="kw">let </span>range = lsp::Range { start, end };
+        <span class="kw">let </span>range = <span class="self">self</span>.encoding.source_range(source, def.source.span())<span class="question-mark">?</span>;
 
         <span class="kw">let </span>location = lsp::Location { uri: url, range };
 
         <span class="macro">tracing::trace!</span>(<span class="string">"go to location: {:?}"</span>, location);
-        <span class="prelude-val">Some</span>(location)
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(location))
     }
 
     <span class="doccomment">/// Find definition at the given uri and LSP position.
@@ -1403,7 +1522,9 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
         };
 
-        <span class="kw">let </span>offset = workspace_source.lsp_position_to_offset(position);
+        <span class="kw">let </span>offset = <span class="self">self
+            </span>.encoding
+            .rope_position(<span class="kw-2">&amp;</span>workspace_source.content, position)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="prelude-val">Some</span>((<span class="kw-2">mut </span>symbol, start)) = workspace_source.looking_back(offset)<span class="question-mark">? </span><span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
@@ -1454,32 +1575,70 @@
         <span class="kw">let </span>sources = <span class="kw-2">&amp;mut </span><span class="self">self</span>.workspace.sources;
         <span class="macro">tracing::trace!</span>(uri = <span class="question-mark">?</span>uri.try_to_string()<span class="question-mark">?</span>, uri_exists = sources.get(uri).is_some());
 
-        <span class="kw">let </span><span class="prelude-val">Some</span>(workspace_source) = sources.get_mut(uri) <span class="kw">else </span>{
+        <span class="kw">let </span><span class="prelude-val">Some</span>(s) = sources.get_mut(uri) <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
         };
 
-        <span class="kw">let </span>source = workspace_source.content.try_to_string()<span class="question-mark">?</span>;
+        <span class="kw">let </span>source = s.content.try_to_string()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="prelude-val">Ok</span>(formatted) = <span class="kw">crate</span>::fmt::layout_source(<span class="kw-2">&amp;</span>source) <span class="kw">else </span>{
+        <span class="kw">let </span>options = FmtOptions::DEFAULT;
+
+        <span class="kw">let </span><span class="prelude-val">Ok</span>(formatted) = <span class="kw">crate</span>::fmt::layout_source_with(<span class="kw-2">&amp;</span>source, <span class="kw-2">&amp;</span>options) <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
         };
 
         <span class="comment">// Only modify if changed
-        </span><span class="prelude-val">Ok</span>(<span class="kw">if </span>source != formatted {
-            workspace_source.content = Rope::from_str(<span class="kw-2">&amp;</span>formatted);
-            <span class="self">self</span>.rebuild_interest();
+        </span><span class="kw">if </span>source == formatted {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        }
 
-            <span class="prelude-val">Some</span>(lsp::TextEdit::new(
-                <span class="comment">// Range over full document
-                </span>lsp::Range::new(
-                    lsp::Position::new(<span class="number">0</span>, <span class="number">0</span>),
-                    lsp::Position::new(u32::MAX, u32::MAX),
-                ),
-                formatted.into_std(),
-            ))
-        } <span class="kw">else </span>{
-            <span class="prelude-val">None
-        </span>})
+        <span class="kw">let </span>edit = lsp::TextEdit::new(
+            <span class="comment">// Range over full document
+            </span>lsp::Range::new(
+                lsp::Position::new(<span class="number">0</span>, <span class="number">0</span>),
+                lsp::Position::new(u32::MAX, u32::MAX),
+            ),
+            formatted.into_std(),
+        );
+
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(edit))
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>range_format(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        uri: <span class="kw-2">&amp;</span>Url,
+        range: <span class="kw-2">&amp;</span>lsp::Range,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;lsp::TextEdit&gt;&gt; {
+        <span class="kw">let </span>sources = <span class="kw-2">&amp;mut </span><span class="self">self</span>.workspace.sources;
+        <span class="macro">tracing::trace!</span>(uri = <span class="question-mark">?</span>uri.try_to_string()<span class="question-mark">?</span>, uri_exists = sources.get(uri).is_some());
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(s) = sources.get_mut(uri) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        };
+
+        <span class="kw">let </span>start = <span class="self">self</span>.encoding.rope_position(<span class="kw-2">&amp;</span>s.content, range.start)<span class="question-mark">?</span>;
+        <span class="kw">let </span>end = <span class="self">self</span>.encoding.rope_position(<span class="kw-2">&amp;</span>s.content, range.end)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(source) = s.content.get_slice(start..end) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        };
+
+        <span class="kw">let </span>source = source.try_to_string()<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>options = FmtOptions::DEFAULT;
+        options.force_newline = <span class="bool-val">false</span>;
+
+        <span class="kw">let </span><span class="prelude-val">Ok</span>(formatted) = <span class="kw">crate</span>::fmt::layout_source_with(<span class="kw-2">&amp;</span>source, <span class="kw-2">&amp;</span>options) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        };
+
+        <span class="comment">// Only modify if changed
+        </span><span class="kw">if </span>source == formatted {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        }
+
+        <span class="kw">let </span>edit = lsp::TextEdit::new(<span class="kw-2">*</span>range, formatted.into_std());
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(edit))
     }
 
     <span class="doccomment">/// Rebuild the project.
@@ -1555,12 +1714,12 @@
 
         <span class="kw">for </span>(diagnostics, <span class="kw-2">mut </span>build) <span class="kw">in </span>workspace_results {
             build.populate(<span class="kw-2">&amp;mut </span>reporter)<span class="question-mark">?</span>;
-            emit_workspace(diagnostics, <span class="kw-2">&amp;</span>build, <span class="kw-2">&amp;mut </span>reporter)<span class="question-mark">?</span>;
+            <span class="self">self</span>.emit_workspace(diagnostics, <span class="kw-2">&amp;</span>build, <span class="kw-2">&amp;mut </span>reporter)<span class="question-mark">?</span>;
         }
 
         <span class="kw">for </span>(diagnostics, <span class="kw-2">mut </span>build, source_visitor, doc_visitor, unit) <span class="kw">in </span>script_results {
             build.populate(<span class="kw-2">&amp;mut </span>reporter)<span class="question-mark">?</span>;
-            emit_scripts(diagnostics, <span class="kw-2">&amp;</span>build, <span class="kw-2">&amp;mut </span>reporter)<span class="question-mark">?</span>;
+            <span class="self">self</span>.emit_scripts(diagnostics, <span class="kw-2">&amp;</span>build, <span class="kw-2">&amp;mut </span>reporter)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>sources = Arc::new(build.sources);
             <span class="kw">let </span>doc_visitor = Arc::new(doc_visitor);
@@ -1705,93 +1864,122 @@
 
         <span class="prelude-val">Ok</span>((diagnostics, build, source_visitor, doc_visitor, unit))
     }
-}
 
-<span class="doccomment">/// Emit diagnostics workspace.
-</span><span class="kw">fn </span>emit_workspace(
-    diagnostics: workspace::Diagnostics,
-    build: <span class="kw-2">&amp;</span>Build,
-    reporter: <span class="kw-2">&amp;mut </span>Reporter,
-) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">if </span><span class="macro">tracing::enabled!</span>(tracing::Level::TRACE) {
-        <span class="kw">let </span>id_to_url = build
-            .id_to_url
-            .iter()
-            .map(|(k, v)| <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, alloc::Error&gt;((<span class="kw-2">*</span>k, v.try_to_string()<span class="question-mark">?</span>)))
-            .try_collect::&lt;alloc::Result&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">??</span>;
+    <span class="doccomment">/// Emit diagnostics workspace.
+    </span><span class="kw">fn </span>emit_workspace(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        diagnostics: workspace::Diagnostics,
+        build: <span class="kw-2">&amp;</span>Build,
+        reporter: <span class="kw-2">&amp;mut </span>Reporter,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if </span><span class="macro">tracing::enabled!</span>(tracing::Level::TRACE) {
+            <span class="kw">let </span>id_to_url = build
+                .id_to_url
+                .iter()
+                .map(|(k, v)| <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, alloc::Error&gt;((<span class="kw-2">*</span>k, v.try_to_string()<span class="question-mark">?</span>)))
+                .try_collect::&lt;alloc::Result&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">??</span>;
 
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>id_to_url, <span class="string">"emitting manifest diagnostics"</span>);
+            <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>id_to_url, <span class="string">"emitting manifest diagnostics"</span>);
+        }
+
+        <span class="kw">for </span>diagnostic <span class="kw">in </span>diagnostics.diagnostics() {
+            <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>diagnostic, <span class="string">"workspace diagnostic"</span>);
+
+            <span class="kw">let </span>workspace::Diagnostic::Fatal(f) = diagnostic;
+            <span class="self">self</span>.report(build, reporter, f.source_id(), f.error(), to_error)<span class="question-mark">?</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">for </span>diagnostic <span class="kw">in </span>diagnostics.diagnostics() {
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>diagnostic, <span class="string">"workspace diagnostic"</span>);
+    <span class="doccomment">/// Emit regular compile diagnostics.
+    </span><span class="kw">fn </span>emit_scripts(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        diagnostics: <span class="kw">crate</span>::Diagnostics,
+        build: <span class="kw-2">&amp;</span>Build,
+        reporter: <span class="kw-2">&amp;mut </span>Reporter,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if </span><span class="macro">tracing::enabled!</span>(tracing::Level::TRACE) {
+            <span class="kw">let </span>id_to_url = build
+                .id_to_url
+                .iter()
+                .map(|(k, v)| <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, alloc::Error&gt;((<span class="kw-2">*</span>k, v.try_to_string()<span class="question-mark">?</span>)))
+                .try_collect::&lt;alloc::Result&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">??</span>;
 
-        <span class="kw">let </span>workspace::Diagnostic::Fatal(f) = diagnostic;
-        report(build, reporter, f.source_id(), f.error(), to_error)<span class="question-mark">?</span>;
-    }
+            <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>id_to_url, <span class="string">"emitting script diagnostics"</span>);
+        }
 
-    <span class="prelude-val">Ok</span>(())
-}
+        <span class="kw">for </span>diagnostic <span class="kw">in </span>diagnostics.diagnostics() {
+            <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>diagnostic, id_to_url = <span class="question-mark">?</span>build.id_to_url, <span class="string">"script diagnostic"</span>);
 
-<span class="doccomment">/// Emit regular compile diagnostics.
-</span><span class="kw">fn </span>emit_scripts(
-    diagnostics: <span class="kw">crate</span>::Diagnostics,
-    build: <span class="kw-2">&amp;</span>Build,
-    reporter: <span class="kw-2">&amp;mut </span>Reporter,
-) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">if </span><span class="macro">tracing::enabled!</span>(tracing::Level::TRACE) {
-        <span class="kw">let </span>id_to_url = build
-            .id_to_url
-            .iter()
-            .map(|(k, v)| <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, alloc::Error&gt;((<span class="kw-2">*</span>k, v.try_to_string()<span class="question-mark">?</span>)))
-            .try_collect::&lt;alloc::Result&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">??</span>;
+            <span class="kw">match </span>diagnostic {
+                Diagnostic::Fatal(f) =&gt; <span class="kw">match </span>f.kind() {
+                    FatalDiagnosticKind::CompileError(e) =&gt; {
+                        <span class="self">self</span>.report(build, reporter, f.source_id(), e, to_error)<span class="question-mark">?</span>;
+                    }
+                    FatalDiagnosticKind::LinkError(e) =&gt; <span class="kw">match </span>e {
+                        LinkerError::MissingFunction { hash, spans } =&gt; {
+                            <span class="kw">for </span>(span, source_id) <span class="kw">in </span>spans {
+                                <span class="kw">let </span>(<span class="prelude-val">Some</span>(url), <span class="prelude-val">Some</span>(source)) = (
+                                    build.id_to_url.get(source_id),
+                                    build.sources.get(<span class="kw-2">*</span>source_id),
+                                ) <span class="kw">else </span>{
+                                    <span class="kw">continue</span>;
+                                };
 
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>id_to_url, <span class="string">"emitting script diagnostics"</span>);
-    }
+                                <span class="kw">let </span>range = <span class="self">self</span>.encoding.source_range(source, <span class="kw-2">*</span>span)<span class="question-mark">?</span>;
 
-    <span class="kw">for </span>diagnostic <span class="kw">in </span>diagnostics.diagnostics() {
-        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>diagnostic, id_to_url = <span class="question-mark">?</span>build.id_to_url, <span class="string">"script diagnostic"</span>);
+                                <span class="kw">let </span>diagnostics = reporter.entry(url);
 
-        <span class="kw">match </span>diagnostic {
-            Diagnostic::Fatal(f) =&gt; <span class="kw">match </span>f.kind() {
-                FatalDiagnosticKind::CompileError(e) =&gt; {
-                    report(build, reporter, f.source_id(), e, to_error)<span class="question-mark">?</span>;
-                }
-                FatalDiagnosticKind::LinkError(e) =&gt; <span class="kw">match </span>e {
-                    LinkerError::MissingFunction { hash, spans } =&gt; {
-                        <span class="kw">for </span>(span, source_id) <span class="kw">in </span>spans {
-                            <span class="kw">let </span>(<span class="prelude-val">Some</span>(url), <span class="prelude-val">Some</span>(source)) = (
-                                build.id_to_url.get(source_id),
-                                build.sources.get(<span class="kw-2">*</span>source_id),
-                            ) <span class="kw">else </span>{
-                                <span class="kw">continue</span>;
-                            };
-
-                            <span class="kw">let </span><span class="prelude-val">Some</span>(range) = span_to_lsp_range(source, <span class="kw-2">*</span>span) <span class="kw">else </span>{
-                                <span class="kw">continue</span>;
-                            };
-
-                            <span class="kw">let </span>diagnostics = reporter.entry(url);
-
-                            diagnostics.try_push(to_error(
-                                range,
-                                <span class="macro">format_args!</span>(<span class="string">"Missing function with hash `{}`"</span>, hash),
-                            )<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                                diagnostics.try_push(to_error(
+                                    range,
+                                    <span class="macro">format_args!</span>(<span class="string">"Missing function with hash `{}`"</span>, hash),
+                                )<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                            }
                         }
+                    },
+                    FatalDiagnosticKind::Internal(e) =&gt; {
+                        report_without_span(build, reporter, f.source_id(), e, to_error)<span class="question-mark">?</span>;
                     }
                 },
-                FatalDiagnosticKind::Internal(e) =&gt; {
-                    report_without_span(build, reporter, f.source_id(), e, to_error)<span class="question-mark">?</span>;
+                Diagnostic::Warning(e) =&gt; {
+                    <span class="self">self</span>.report(build, reporter, e.source_id(), e, to_warning)<span class="question-mark">?</span>;
                 }
-            },
-            Diagnostic::Warning(e) =&gt; {
-                report(build, reporter, e.source_id(), e, to_warning)<span class="question-mark">?</span>;
+                Diagnostic::RuntimeWarning(<span class="kw">_</span>) =&gt; {}
             }
-            Diagnostic::RuntimeWarning(<span class="kw">_</span>) =&gt; {}
         }
+
+        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="prelude-val">Ok</span>(())
+    <span class="doccomment">/// Convert the given span and error into an error diagnostic.
+    </span><span class="kw">fn </span>report&lt;E, R&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        build: <span class="kw-2">&amp;</span>Build,
+        reporter: <span class="kw-2">&amp;mut </span>Reporter,
+        source_id: SourceId,
+        error: E,
+        report: R,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
+    <span class="kw">where
+        </span>E: fmt::Display,
+        E: Spanned,
+        R: Fn(lsp::Range, E) -&gt; alloc::Result&lt;lsp::Diagnostic&gt;,
+    {
+        <span class="kw">let </span>span = error.span();
+
+        <span class="kw">let </span>(<span class="prelude-val">Some</span>(source), <span class="prelude-val">Some</span>(url)) = (
+            build.sources.get(source_id),
+            build.id_to_url.get(<span class="kw-2">&amp;</span>source_id),
+        ) <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        };
+
+        <span class="kw">let </span>range = <span class="self">self</span>.encoding.source_range(source, span)<span class="question-mark">?</span>;
+
+        reporter.entry(url).try_push(report(range, error)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 
 <span class="doccomment">/// A collection of open sources.
@@ -1876,23 +2064,25 @@
     </span>}
 
     <span class="doccomment">/// Modify the given lsp range in the file.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>modify_lsp_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: lsp::Range, content: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>start = rope_utf16_position(<span class="kw-2">&amp;</span><span class="self">self</span>.content, range.start)<span class="question-mark">?</span>;
-        <span class="kw">let </span>end = rope_utf16_position(<span class="kw-2">&amp;</span><span class="self">self</span>.content, range.end)<span class="question-mark">?</span>;
-        <span class="self">self</span>.content.remove(start..end);
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>modify_lsp_range(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        encoding: <span class="kw-2">&amp;</span>StateEncoding,
+        range: lsp::Range,
+        content: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>start = encoding.rope_position(<span class="kw-2">&amp;</span><span class="self">self</span>.content, range.start)<span class="question-mark">?</span>;
+        <span class="kw">let </span>end = encoding.rope_position(<span class="kw-2">&amp;</span><span class="self">self</span>.content, range.end)<span class="question-mark">?</span>;
+        <span class="self">self</span>.modify_range(start, end, content)
+    }
+
+    <span class="kw">fn </span>modify_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start: usize, end: usize, content: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.content.try_remove(start..end)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>!content.is_empty() {
-            <span class="self">self</span>.content.insert(start, content);
+            <span class="self">self</span>.content.try_insert(start, content)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="doccomment">/// Offset in the rope to lsp position.
-    </span><span class="kw">fn </span>lsp_position_to_offset(<span class="kw-2">&amp;</span><span class="self">self</span>, position: lsp::Position) -&gt; usize {
-        <span class="kw">let </span>line = <span class="self">self</span>.content.line_to_char(position.line <span class="kw">as </span>usize);
-        <span class="self">self</span>.content
-            .utf16_cu_to_char(line + position.character <span class="kw">as </span>usize)
     }
 
     <span class="doccomment">/// Iterate over the text chunks in the source.
@@ -1930,74 +2120,6 @@
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="self">self</span>.content)
     }
-}
-
-<span class="doccomment">/// Convert the given span into an lsp range.
-</span><span class="kw">fn </span>span_to_lsp_range(source: <span class="kw-2">&amp;</span>Source, span: Span) -&gt; <span class="prelude-ty">Option</span>&lt;lsp::Range&gt; {
-    <span class="kw">let </span>(line, character) = source.pos_to_utf16cu_linecol(span.start.into_usize());
-    <span class="kw">let </span>start = lsp::Position::new(line <span class="kw">as </span>u32, character <span class="kw">as </span>u32);
-    <span class="kw">let </span>(line, character) = source.pos_to_utf16cu_linecol(span.end.into_usize());
-    <span class="kw">let </span>end = lsp::Position::new(line <span class="kw">as </span>u32, character <span class="kw">as </span>u32);
-    <span class="prelude-val">Some</span>(lsp::Range::new(start, end))
-}
-
-<span class="doccomment">/// Translate the given lsp::Position, which is in UTF-16 because Microsoft.
-///
-/// Please go complain here:
-/// &lt;https://github.com/microsoft/language-server-protocol/issues/376&gt;
-</span><span class="kw">fn </span>rope_utf16_position(rope: <span class="kw-2">&amp;</span>Rope, position: lsp::Position) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-    <span class="kw">let </span>line = rope.line(position.line <span class="kw">as </span>usize);
-
-    <span class="comment">// encoding target.
-    </span><span class="kw">let </span>character = position.character <span class="kw">as </span>usize;
-
-    <span class="kw">let </span><span class="kw-2">mut </span>utf16_offset = <span class="number">0usize</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>char_offset = <span class="number">0usize</span>;
-
-    <span class="kw">for </span>c <span class="kw">in </span>line.chars() {
-        <span class="kw">if </span>utf16_offset == character {
-            <span class="kw">break</span>;
-        }
-
-        <span class="kw">if </span>utf16_offset &gt; character {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">"character is not on an offset boundary"</span>));
-        }
-
-        utf16_offset += c.len_utf16();
-        char_offset += <span class="number">1</span>;
-    }
-
-    <span class="prelude-val">Ok</span>(rope.line_to_char(position.line <span class="kw">as </span>usize) + char_offset)
-}
-
-<span class="doccomment">/// Convert the given span and error into an error diagnostic.
-</span><span class="kw">fn </span>report&lt;E, R&gt;(
-    build: <span class="kw-2">&amp;</span>Build,
-    reporter: <span class="kw-2">&amp;mut </span>Reporter,
-    source_id: SourceId,
-    error: E,
-    report: R,
-) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
-<span class="kw">where
-    </span>E: fmt::Display,
-    E: Spanned,
-    R: Fn(lsp::Range, E) -&gt; alloc::Result&lt;lsp::Diagnostic&gt;,
-{
-    <span class="kw">let </span>span = error.span();
-
-    <span class="kw">let </span>(<span class="prelude-val">Some</span>(source), <span class="prelude-val">Some</span>(url)) = (
-        build.sources.get(source_id),
-        build.id_to_url.get(<span class="kw-2">&amp;</span>source_id),
-    ) <span class="kw">else </span>{
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-    };
-
-    <span class="kw">let </span><span class="prelude-val">Some</span>(range) = span_to_lsp_range(source, span) <span class="kw">else </span>{
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-    };
-
-    reporter.entry(url).try_push(report(range, error)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// Convert the given span and error into an error diagnostic.

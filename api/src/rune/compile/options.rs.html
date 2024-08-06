@@ -341,6 +341,31 @@
 <a href="#341" id="341">341</a>
 <a href="#342" id="342">342</a>
 <a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>::rust_alloc::boxed::Box;
@@ -368,9 +393,18 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) print_tree: bool,
     <span class="doccomment">/// Attempt to format even when faced with syntax errors.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) error_recovery: bool,
+    <span class="doccomment">/// Force newline at end of document.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) force_newline: bool,
 }
 
 <span class="kw">impl </span>FmtOptions {
+    <span class="doccomment">/// The default format option.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>DEFAULT: <span class="self">Self </span>= <span class="self">Self </span>{
+        print_tree: <span class="bool-val">false</span>,
+        error_recovery: <span class="bool-val">false</span>,
+        force_newline: <span class="bool-val">true</span>,
+    };
+
     <span class="doccomment">/// Parse a rune-fmt option.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>parse_option(<span class="kw-2">&amp;mut </span><span class="self">self</span>, option: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), ParseOptionError&gt; {
         <span class="kw">let </span>(head, tail) = <span class="kw">if let </span><span class="prelude-val">Some</span>((head, tail)) = option.trim().split_once(<span class="string">'='</span>) {
@@ -386,6 +420,9 @@
             <span class="string">"error-recovery" </span>=&gt; {
                 <span class="self">self</span>.error_recovery = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
             }
+            <span class="string">"force-newline" </span>=&gt; {
+                <span class="self">self</span>.force_newline = tail.map_or(<span class="bool-val">true</span>, |s| s == <span class="string">"true"</span>);
+            }
             <span class="kw">_ </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ParseOptionError {
                     option: option.into(),
@@ -394,6 +431,13 @@
         }
 
         <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>FmtOptions {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        FmtOptions::DEFAULT
     }
 }
 
@@ -451,10 +495,7 @@
         function_body: <span class="bool-val">false</span>,
         test_std: <span class="bool-val">false</span>,
         lowering: <span class="number">0</span>,
-        fmt: FmtOptions {
-            print_tree: <span class="bool-val">false</span>,
-            error_recovery: <span class="bool-val">false</span>,
-        },
+        fmt: FmtOptions::DEFAULT,
     };
 
     <span class="doccomment">/// Get a list and documentation for all available compiler options.
@@ -567,6 +608,15 @@
                     /// contains invalid syntax.
                 </span>},
                 default: <span class="string">"false"</span>,
+                options: BOOL,
+            },
+            OptionMeta {
+                key: <span class="string">"fmt.force-newline"</span>,
+                unstable: <span class="bool-val">true</span>,
+                doc: <span class="kw-2">&amp;</span><span class="macro">docstring!</span> {
+                    <span class="doccomment">/// Force newline at end of document.
+                </span>},
+                default: <span class="string">"true"</span>,
                 options: BOOL,
             },
         ];

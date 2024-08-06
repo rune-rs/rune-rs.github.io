@@ -176,13 +176,6 @@
 <a href="#176" id="176">176</a>
 <a href="#177" id="177">177</a>
 <a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helper to format Rune code.
 
 </span><span class="attr">#[cfg(test)]
@@ -202,7 +195,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::ast::Span;
-<span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="prelude-ty">Result</span>, WithSpan};
+<span class="kw">use </span><span class="kw">crate</span>::compile::{FmtOptions, <span class="prelude-ty">Result</span>, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::grammar::{Node, Parser, Remaining, Stream, Tree};
 <span class="kw">use crate</span>::{Diagnostics, Options, SourceId, Sources};
 
@@ -311,7 +304,7 @@
                 <span class="kw">continue</span>;
             };
 
-            <span class="kw">match </span>layout_source_with(source.as_str(), options) {
+            <span class="kw">match </span>layout_source_with(source.as_str(), <span class="kw-2">&amp;</span>options.fmt) {
                 <span class="prelude-val">Ok</span>(output) =&gt; {
                     files.try_push((id, output))<span class="question-mark">?</span>;
                 }
@@ -332,21 +325,14 @@
     }
 }
 
-<span class="doccomment">/// Format the given source.
-</span><span class="attr">#[cfg(feature = <span class="string">"languageserver"</span>)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>layout_source(source: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-    <span class="kw">let </span>options = Options::default();
-    layout_source_with(source, <span class="kw-2">&amp;</span>options)
-}
-
 <span class="doccomment">/// Format the given source with the specified options.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>layout_source_with(source: <span class="kw-2">&amp;</span>str, options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>layout_source_with(source: <span class="kw-2">&amp;</span>str, options: <span class="kw-2">&amp;</span>FmtOptions) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>p = Parser::new(source);
     <span class="kw">crate</span>::grammar::root(<span class="kw-2">&amp;mut </span>p)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>tree = p.build()<span class="question-mark">?</span>;
 
-    <span class="kw">if </span>options.fmt.print_tree {
+    <span class="kw">if </span>options.print_tree {
         <span class="kw">let </span>o = std::io::stdout();
         <span class="kw">let </span><span class="kw-2">mut </span>o = o.lock();
         tree.print_with_source(<span class="kw-2">&amp;mut </span>o, source)<span class="question-mark">?</span>;
@@ -361,7 +347,7 @@
         o.comments(Comments::Line)<span class="question-mark">?</span>;
     }
 
-    <span class="kw">if </span>!o.ends_with(NL) {
+    <span class="kw">if </span>options.force_newline &amp;&amp; !o.ends_with(NL) {
         o.try_push_str(NL)
             .with_span(Span::new(source.len(), source.len()))<span class="question-mark">?</span>;
     }
