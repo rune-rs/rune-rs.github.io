@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-d10b2a06af903387.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (e57f3090a 2024-08-05)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9345f17bf569ecba.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-d10b2a06af903387.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (60d146580 2024-08-06)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9345f17bf569ecba.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3151,6 +3151,8 @@
 <span class="kw">use </span>core::mem::take;
 <span class="kw">use </span>core::slice;
 
+<span class="kw">use </span>tracing::instrument_ast;
+
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::BTreeMap;
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Span, Spanned};
@@ -3166,8 +3168,6 @@
 <span class="kw">use crate</span>::{Hash, SourceId};
 
 <span class="kw">use super</span>::{Address, Any, Break, Breaks, Linear, Needs, ScopeHandle, Scopes};
-
-<span class="kw">use </span>rune_macros::instrument;
 
 <span class="macro">macro_rules!</span> converge {
     (<span class="macro-nonterminal">$expr</span>:expr $(, <span class="macro-nonterminal">$method</span>:ident($(<span class="macro-nonterminal">$diverge</span>:expr),* $(,)<span class="question-mark">?</span>))<span class="question-mark">?</span>) =&gt; {
@@ -3352,9 +3352,9 @@
 }
 
 <span class="doccomment">/// Assemble a function from an [hir::ItemFn&lt;'_&gt;].
-</span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>fn_from_item_fn&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+</span><span class="attr">#[instrument_ast(span = hir)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>fn_from_item_fn&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ItemFn&lt;<span class="lifetime">'hir</span>&gt;,
     instance_fn: bool,
 ) -&gt; compile::Result&lt;()&gt; {
@@ -3399,9 +3399,9 @@
 }
 
 <span class="doccomment">/// Assemble an async block.
-</span><span class="attr">#[instrument(span = hir.block.span)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>async_block_secondary&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+</span><span class="attr">#[instrument_ast(span = hir.block.span)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>async_block_secondary&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::AsyncBlock&lt;<span class="lifetime">'hir</span>&gt;,
 ) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span>linear = cx.scopes.linear(<span class="kw-2">&amp;</span>hir.block, hir.captures.len())<span class="question-mark">?</span>;
@@ -3418,9 +3418,9 @@
 }
 
 <span class="doccomment">/// Assemble the body of a closure function.
-</span><span class="attr">#[instrument(span = hir)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expr_closure_secondary&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+</span><span class="attr">#[instrument_ast(span = hir)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expr_closure_secondary&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprClosure&lt;<span class="lifetime">'hir</span>&gt;,
 ) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>arguments = cx.scopes.linear(hir, hir.args.len())<span class="question-mark">?</span>;
@@ -3464,7 +3464,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = pat)]
+<span class="attr">#[instrument_ast(span = pat)]
 </span><span class="kw">fn </span>fn_arg_pat&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     pat: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::PatBinding&lt;<span class="lifetime">'hir</span>&gt;,
@@ -3548,7 +3548,7 @@
 <span class="doccomment">/// Encode a pattern from a known set of bindings.
 ///
 /// Returns a boolean indicating if the label was used.
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>pat_binding&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::PatBinding&lt;<span class="lifetime">'hir</span>&gt;,
@@ -3564,7 +3564,7 @@
     <span class="prelude-val">Ok</span>(pat)
 }
 
-<span class="attr">#[instrument(span = span)]
+<span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>pat_binding_with&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
@@ -3599,7 +3599,7 @@
     <span class="prelude-val">Ok</span>(asm)
 }
 
-<span class="attr">#[instrument(span = span)]
+<span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>pat_binding_with_single&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
@@ -3668,7 +3668,7 @@
 <span class="doccomment">/// Encode a pattern.
 ///
 /// Returns a boolean indicating if the label was used.
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>pat&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Pat&lt;<span class="lifetime">'hir</span>&gt;,
@@ -3718,7 +3718,7 @@
 }
 
 <span class="doccomment">/// Assemble a pattern literal.
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>pat_lit&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'_</span>&gt;,
@@ -3743,9 +3743,9 @@
     <span class="prelude-val">Ok</span>(Asm::new(hir, Pattern::Refutable))
 }
 
-<span class="attr">#[instrument(span = hir)]
-</span><span class="kw">fn </span>pat_lit_inst&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+<span class="attr">#[instrument_ast(span = hir)]
+</span><span class="kw">fn </span>pat_lit_inst(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::Expr&lt;<span class="lifetime">'_</span>&gt;,
     addr: InstAddress,
     cond: InstAddress,
@@ -3778,7 +3778,7 @@
 }
 
 <span class="doccomment">/// Assemble an [hir::Condition&lt;'_&gt;].
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>condition&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::Condition&lt;<span class="lifetime">'hir</span>&gt;,
@@ -3833,7 +3833,7 @@
 }
 
 <span class="doccomment">/// Encode a vector pattern match.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>pat_sequence&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::PatSequence&lt;<span class="lifetime">'hir</span>&gt;,
@@ -3932,7 +3932,7 @@
 }
 
 <span class="doccomment">/// Assemble an object pattern.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>pat_object&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::PatObject&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4044,7 +4044,7 @@
 }
 
 <span class="doccomment">/// Call a block.
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>block&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Block&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4081,7 +4081,7 @@
 }
 
 <span class="doccomment">/// Call a block.
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>block_without_scope&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Block&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4133,7 +4133,7 @@
 }
 
 <span class="doccomment">/// Assemble #[builtin] format_args!(...) macro.
-</span><span class="attr">#[instrument(span = format)]
+</span><span class="attr">#[instrument_ast(span = format)]
 </span><span class="kw">fn </span>builtin_format&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     format: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::BuiltInFormat&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4167,7 +4167,7 @@
 }
 
 <span class="doccomment">/// Assemble #[builtin] template!(...) macro.
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>builtin_template&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::BuiltInTemplate&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4232,7 +4232,7 @@
 }
 
 <span class="doccomment">/// Assemble a constant value.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>const_&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     value: <span class="kw-2">&amp;</span>ConstValue,
@@ -4365,7 +4365,7 @@
 }
 
 <span class="doccomment">/// Assemble an expression.
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>expr&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4441,7 +4441,7 @@
 }
 
 <span class="doccomment">/// Assemble an assign expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_assign&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprAssign&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4551,7 +4551,7 @@
 }
 
 <span class="doccomment">/// Assemble an `.await` expression.
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>expr_await&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4574,7 +4574,7 @@
 }
 
 <span class="doccomment">/// Assemble a binary expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_binary&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprBinary&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4756,7 +4756,7 @@
 }
 
 <span class="doccomment">/// Assemble a block expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_async_block&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::ExprAsyncBlock&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4793,7 +4793,7 @@
 }
 
 <span class="doccomment">/// Assemble a constant item.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>const_item&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hash: Hash,
@@ -4815,9 +4815,9 @@
 <span class="doccomment">/// Assemble a break expression.
 ///
 /// NB: loops are expected to produce a value at the end of their expression.
-</span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_break&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+</span><span class="attr">#[instrument_ast(span = span)]
+</span><span class="kw">fn </span>expr_break&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::ExprBreak&lt;<span class="lifetime">'hir</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
 ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
@@ -4863,7 +4863,7 @@
 }
 
 <span class="doccomment">/// Assemble a call expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_call&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::ExprCall&lt;<span class="lifetime">'hir</span>&gt;,
@@ -4953,7 +4953,7 @@
 }
 
 <span class="doccomment">/// Assemble an array of expressions.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_array&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'needs</span>, <span class="kw">const </span>N: usize&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
@@ -4970,7 +4970,7 @@
     <span class="prelude-val">Ok</span>(Asm::new(span, out.into_inner()))
 }
 
-<span class="attr">#[instrument(span = span)]
+<span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>exprs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
@@ -4979,7 +4979,7 @@
     exprs_2(cx, span, args, <span class="kw-2">&amp;</span>[])
 }
 
-<span class="attr">#[instrument(span = span)]
+<span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>exprs_with&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, T&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
@@ -4990,7 +4990,7 @@
 }
 
 <span class="doccomment">/// Assemble a linear sequence of expressions.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>exprs_2&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
@@ -5044,7 +5044,7 @@
 }
 
 <span class="doccomment">/// Assemble a closure expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_call_closure&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::ExprCallClosure&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5089,7 +5089,7 @@
 }
 
 <span class="doccomment">/// Assemble a continue expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_continue&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::ExprContinue&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5118,7 +5118,7 @@
 }
 
 <span class="doccomment">/// Assemble an expr field access, like `&lt;value&gt;.&lt;field&gt;`.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_field_access&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprFieldAccess&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5185,7 +5185,7 @@
 }
 
 <span class="doccomment">/// Assemble an expression for loop.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_for&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprFor&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5362,7 +5362,7 @@
 }
 
 <span class="doccomment">/// Assemble an if expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_if&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::Conditional&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5454,7 +5454,7 @@
 }
 
 <span class="doccomment">/// Assemble an expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_index&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprIndex&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5487,7 +5487,7 @@
 }
 
 <span class="doccomment">/// Assemble a let expression.
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>expr_let&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprLet&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5508,7 +5508,7 @@
     <span class="prelude-val">Ok</span>(Asm::new(hir, ()))
 }
 
-<span class="attr">#[instrument(span = span)]
+<span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_match&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprMatch&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5631,7 +5631,7 @@
 }
 
 <span class="doccomment">/// Compile a literal object.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_object&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::ExprObject&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5760,7 +5760,7 @@
 }
 
 <span class="doccomment">/// Assemble a range expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_range&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprRange&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5850,9 +5850,9 @@
 }
 
 <span class="doccomment">/// Assemble a return expression.
-</span><span class="attr">#[instrument(span = span)]
-</span><span class="kw">fn </span>expr_return&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
-    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
+</span><span class="attr">#[instrument_ast(span = span)]
+</span><span class="kw">fn </span>expr_return&lt;<span class="lifetime">'hir</span>&gt;(
+    cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'_</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;&gt;,
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
 ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
@@ -5959,7 +5959,7 @@
     <span class="prelude-val">Ok</span>(Asm::new(span, ()))
 }
 
-<span class="attr">#[instrument(span = span)]
+<span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_select&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::ExprSelect&lt;<span class="lifetime">'hir</span>&gt;,
@@ -5980,7 +5980,7 @@
 }
 
 <span class="doccomment">/// Assemble a try expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_try&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;,
@@ -6003,7 +6003,7 @@
 }
 
 <span class="doccomment">/// Assemble a literal tuple.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_tuple&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::ExprSeq&lt;<span class="lifetime">'hir</span>&gt;,
@@ -6062,7 +6062,7 @@
 }
 
 <span class="doccomment">/// Assemble a unary expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_unary&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprUnary&lt;<span class="lifetime">'hir</span>&gt;,
@@ -6106,7 +6106,7 @@
 }
 
 <span class="doccomment">/// Assemble a literal vector.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_vec&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span>hir::ExprSeq&lt;<span class="lifetime">'hir</span>&gt;,
@@ -6139,7 +6139,7 @@
 }
 
 <span class="doccomment">/// Assemble a while loop.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_loop&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::ExprLoop&lt;<span class="lifetime">'hir</span>&gt;,
@@ -6200,7 +6200,7 @@
 }
 
 <span class="doccomment">/// Assemble a `yield` expression.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>expr_yield&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Expr&lt;<span class="lifetime">'hir</span>&gt;&gt;,
@@ -6230,7 +6230,7 @@
 }
 
 <span class="doccomment">/// Assemble a literal value.
-</span><span class="attr">#[instrument(span = span)]
+</span><span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">fn </span>lit&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: hir::Lit&lt;<span class="lifetime">'_</span>&gt;,
@@ -6276,7 +6276,7 @@
 }
 
 <span class="doccomment">/// Assemble a local expression.
-</span><span class="attr">#[instrument(span = hir)]
+</span><span class="attr">#[instrument_ast(span = hir)]
 </span><span class="kw">fn </span>local&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;(
     cx: <span class="kw-2">&amp;mut </span>Ctxt&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>, <span class="lifetime">'_</span>&gt;,
     hir: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::Local&lt;<span class="lifetime">'hir</span>&gt;,

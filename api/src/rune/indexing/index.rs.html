@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/indexing/index.rs`."><title>index.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-d10b2a06af903387.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (e57f3090a 2024-08-05)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9345f17bf569ecba.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/indexing/index.rs`."><title>index.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-d10b2a06af903387.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (60d146580 2024-08-06)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9345f17bf569ecba.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1505,13 +1505,9 @@
 <a href="#1505" id="1505">1505</a>
 <a href="#1506" id="1506">1506</a>
 <a href="#1507" id="1507">1507</a>
-<a href="#1508" id="1508">1508</a>
-<a href="#1509" id="1509">1509</a>
-<a href="#1510" id="1510">1510</a>
-<a href="#1511" id="1511">1511</a>
-<a href="#1512" id="1512">1512</a>
-<a href="#1513" id="1513">1513</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
+</pre></div><pre class="rust"><code><span class="kw">use </span>tracing::instrument_ast;
+
+<span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{Box, Vec, VecDeque};
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, OptionSpanned, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::attrs;
@@ -1524,8 +1520,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::worker::{Import, ImportKind};
 
 <span class="kw">use super</span>::{ast_to_visibility, Indexer};
-
-<span class="kw">use </span>rune_macros::instrument;
 
 <span class="doccomment">/// Macros are only allowed to expand recursively into other macros 64 times.
 </span><span class="kw">const </span>MAX_MACRO_RECURSION: usize = <span class="number">64</span>;
@@ -1698,7 +1692,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = span)]
+<span class="attr">#[instrument_ast(span = span)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>empty_block_fn(
     idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     <span class="kw-2">mut </span>ast: ast::EmptyBlock,
@@ -1744,7 +1738,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>item_fn_immediate(
     idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     <span class="kw-2">mut </span>ast: ast::ItemFn,
@@ -1897,7 +1891,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>item_fn(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: ast::ItemFn) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(impl_item) = idx.item.impl_item {
         idx.q
@@ -1915,7 +1909,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_block(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprBlock) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = ast.attributes.option_span() {
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
@@ -2049,7 +2043,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>block(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::Block) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span>guard = idx.items.push_id()<span class="question-mark">?</span>;
     <span class="kw">let </span>idx_item = idx.item.replace();
@@ -2068,7 +2062,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>local(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::Local) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = ast.attributes.option_span() {
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
@@ -2088,7 +2082,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_let(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprLet) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(mut_token) = ast.mut_token {
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(mut_token, ErrorKind::UnsupportedMut));
@@ -2099,7 +2093,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>pat(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::Pat) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">match </span>ast {
         ast::Pat::Path(pat) =&gt; {
@@ -2125,7 +2119,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>pat_tuple(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::PatTuple) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(p) = <span class="kw-2">&amp;mut </span>ast.path {
         path(idx, p)<span class="question-mark">?</span>;
@@ -2138,7 +2132,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>pat_object(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::PatObject) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">match </span><span class="kw-2">&amp;mut </span>ast.ident {
         ast::ObjectIdent::Anonymous(..) =&gt; (),
@@ -2154,7 +2148,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>pat_vec(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::PatVec) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">for </span>(p, <span class="kw">_</span>) <span class="kw">in </span><span class="kw-2">&amp;mut </span>ast.items {
         pat(idx, p)<span class="question-mark">?</span>;
@@ -2163,19 +2157,13 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
-</span><span class="kw">fn </span>pat_path(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::PatPath) -&gt; compile::Result&lt;()&gt; {
-    path(idx, <span class="kw-2">&amp;mut </span>ast.path)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(())
-}
-
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>pat_binding(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::PatBinding) -&gt; compile::Result&lt;()&gt; {
     pat(idx, <span class="kw-2">&amp;mut </span>ast.pat)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expr(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::Expr) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">match </span>ast {
         ast::Expr::Path(e) =&gt; {
@@ -2310,7 +2298,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_if(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprIf) -&gt; compile::Result&lt;()&gt; {
     condition(idx, <span class="kw-2">&amp;mut </span>ast.condition)<span class="question-mark">?</span>;
     block(idx, <span class="kw-2">&amp;mut </span>ast.block)<span class="question-mark">?</span>;
@@ -2327,21 +2315,21 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_assign(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprAssign) -&gt; compile::Result&lt;()&gt; {
     expr(idx, <span class="kw-2">&amp;mut </span>ast.lhs)<span class="question-mark">?</span>;
     expr(idx, <span class="kw-2">&amp;mut </span>ast.rhs)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_binary(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprBinary) -&gt; compile::Result&lt;()&gt; {
     expr(idx, <span class="kw-2">&amp;mut </span>ast.lhs)<span class="question-mark">?</span>;
     expr(idx, <span class="kw-2">&amp;mut </span>ast.rhs)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_match(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprMatch) -&gt; compile::Result&lt;()&gt; {
     expr(idx, <span class="kw-2">&amp;mut </span>ast.expr)<span class="question-mark">?</span>;
 
@@ -2357,7 +2345,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>condition(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::Condition) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">match </span>ast {
         ast::Condition::Expr(e) =&gt; {
@@ -2371,7 +2359,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>item_enum(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, <span class="kw-2">mut </span>ast: ast::ItemEnum) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>p = attrs::Parser::new(<span class="kw-2">&amp;</span>ast.attributes)<span class="question-mark">?</span>;
 
@@ -2465,7 +2453,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>item_struct(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, <span class="kw-2">mut </span>ast: ast::ItemStruct) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>p = attrs::Parser::new(<span class="kw-2">&amp;</span>ast.attributes)<span class="question-mark">?</span>;
 
@@ -2534,7 +2522,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>item_impl(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, <span class="kw-2">mut </span>ast: ast::ItemImpl) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(first) = ast.attributes.first() {
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
@@ -2567,7 +2555,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>item_mod(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, <span class="kw-2">mut </span>ast: ast::ItemMod) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>p = attrs::Parser::new(<span class="kw-2">&amp;</span>ast.attributes)<span class="question-mark">?</span>;
 
@@ -2617,7 +2605,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>item_const(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, <span class="kw-2">mut </span>ast: ast::ItemConst) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>p = attrs::Parser::new(<span class="kw-2">&amp;</span>ast.attributes)<span class="question-mark">?</span>;
 
@@ -2654,7 +2642,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>item(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: ast::Item) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">match </span>ast {
         ast::Item::Enum(item) =&gt; {
@@ -2731,7 +2719,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>path(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::Path) -&gt; compile::Result&lt;()&gt; {
     ast.id.set(idx.item_id()<span class="question-mark">?</span>);
 
@@ -2744,7 +2732,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>path_segment(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::PathSegment) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">if let </span>ast::PathSegment::Generics(generics) = ast {
         <span class="kw">for </span>(param, <span class="kw">_</span>) <span class="kw">in </span>generics {
@@ -2755,20 +2743,20 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_while(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprWhile) -&gt; compile::Result&lt;()&gt; {
     condition(idx, <span class="kw-2">&amp;mut </span>ast.condition)<span class="question-mark">?</span>;
     block(idx, <span class="kw-2">&amp;mut </span>ast.body)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_loop(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprLoop) -&gt; compile::Result&lt;()&gt; {
     block(idx, <span class="kw-2">&amp;mut </span>ast.body)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_for(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprFor) -&gt; compile::Result&lt;()&gt; {
     expr(idx, <span class="kw-2">&amp;mut </span>ast.iter)<span class="question-mark">?</span>;
     pat(idx, <span class="kw-2">&amp;mut </span>ast.binding)<span class="question-mark">?</span>;
@@ -2776,7 +2764,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_closure(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprClosure) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span>guard = idx.items.push_id()<span class="question-mark">?</span>;
     <span class="kw">let </span>idx_item = idx.item.replace();
@@ -2828,7 +2816,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_field_access(
     idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ast: <span class="kw-2">&amp;mut </span>ast::ExprFieldAccess,
@@ -2845,20 +2833,20 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_unary(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprUnary) -&gt; compile::Result&lt;()&gt; {
     expr(idx, <span class="kw-2">&amp;mut </span>ast.expr)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_index(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprIndex) -&gt; compile::Result&lt;()&gt; {
     expr(idx, <span class="kw-2">&amp;mut </span>ast.index)<span class="question-mark">?</span>;
     expr(idx, <span class="kw-2">&amp;mut </span>ast.target)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_break(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprBreak) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = ast.expr.as_deref_mut() {
         expr(idx, e)<span class="question-mark">?</span>;
@@ -2867,12 +2855,12 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
-</span><span class="kw">fn </span>expr_continue(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprContinue) -&gt; compile::Result&lt;()&gt; {
+<span class="attr">#[instrument_ast(span = _ast)]
+</span><span class="kw">fn </span>expr_continue(_idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, _ast: <span class="kw-2">&amp;mut </span>ast::ExprContinue) -&gt; compile::Result&lt;()&gt; {
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_yield(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprYield) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span>l = idx.scopes.mark().with_span(<span class="kw-2">&amp;*</span>ast)<span class="question-mark">?</span>;
     l.yields.try_push(ast.span())<span class="question-mark">?</span>;
@@ -2884,7 +2872,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_return(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprReturn) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = <span class="kw-2">&amp;mut </span>ast.expr {
         expr(idx, e)<span class="question-mark">?</span>;
@@ -2893,7 +2881,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_await(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprAwait) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span>l = idx.scopes.mark().with_span(<span class="kw-2">&amp;*</span>ast)<span class="question-mark">?</span>;
     l.awaits.try_push(ast.span())<span class="question-mark">?</span>;
@@ -2902,13 +2890,13 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_try(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprTry) -&gt; compile::Result&lt;()&gt; {
     expr(idx, <span class="kw-2">&amp;mut </span>ast.expr)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_select(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprSelect) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">let </span>l = idx.scopes.mark().with_span(<span class="kw-2">&amp;*</span>ast)<span class="question-mark">?</span>;
     l.awaits.try_push(ast.span())<span class="question-mark">?</span>;
@@ -2929,7 +2917,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_call(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprCall) -&gt; compile::Result&lt;()&gt; {
     ast.id.set(idx.items.id().with_span(<span class="kw-2">&amp;*</span>ast)<span class="question-mark">?</span>);
 
@@ -2941,7 +2929,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_tuple(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprTuple) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">for </span>(e, <span class="kw">_</span>) <span class="kw">in </span><span class="kw-2">&amp;mut </span>ast.items {
         expr(idx, e)<span class="question-mark">?</span>;
@@ -2950,7 +2938,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_vec(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprVec) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">for </span>(e, <span class="kw">_</span>) <span class="kw">in </span><span class="kw-2">&amp;mut </span>ast.items {
         expr(idx, e)<span class="question-mark">?</span>;
@@ -2959,7 +2947,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_object(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprObject) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">match </span><span class="kw-2">&amp;mut </span>ast.ident {
         ast::ObjectIdent::Named(p) =&gt; {
@@ -2978,7 +2966,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attr">#[instrument(span = ast)]
+<span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_range(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprRange) -&gt; compile::Result&lt;()&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(from) = <span class="kw-2">&amp;mut </span>ast.start {
         expr(idx, from)<span class="question-mark">?</span>;
