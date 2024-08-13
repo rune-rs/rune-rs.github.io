@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Expectation"],"fn":["parse_all"],"struct":["Id","NonZeroId","Parser","Peeker"],"trait":["Parse","Peek"]};
+window.SIDEBAR_ITEMS = {"enum":["Expectation"],"fn":["parse_all"],"struct":["Parser","Peeker"],"trait":["Parse","Peek"]};

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/error.rs`."><title>error.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-d10b2a06af903387.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (730d5d409 2024-08-10)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-04a29ac50d05d0b1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/error.rs`."><title>error.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b25d77b18a16a9a4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (91376f416 2024-08-12)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-cb0df477c2d67d00.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1504,6 +1504,16 @@
 <a href="#1504" id="1504">1504</a>
 <a href="#1505" id="1505">1505</a>
 <a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::convert::Infallible;
 <span class="kw">use </span>core::fmt;
 
@@ -1517,10 +1527,10 @@
 <span class="kw">use </span><span class="kw">crate</span>::ast::unescape;
 <span class="kw">use </span><span class="kw">crate</span>::ast::{Span, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::ir;
-<span class="kw">use </span><span class="kw">crate</span>::compile::{HasSpan, Location, MetaInfo, Visibility};
+<span class="kw">use </span><span class="kw">crate</span>::compile::{HasSpan, ItemId, Location, MetaInfo, Visibility};
 <span class="kw">use </span><span class="kw">crate</span>::indexing::items::{GuardMismatch, MissingLastId};
 <span class="kw">use </span><span class="kw">crate</span>::macros::{SyntheticId, SyntheticKind};
-<span class="kw">use </span><span class="kw">crate</span>::parse::{Expectation, IntoExpectation, LexerMode};
+<span class="kw">use </span><span class="kw">crate</span>::parse::{Expectation, IntoExpectation, LexerMode, NonZeroId};
 <span class="kw">use </span><span class="kw">crate</span>::query::MissingId;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::debug::DebugSignature;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::unit::EncodeError;
@@ -1763,7 +1773,8 @@
     GuardMismatch(GuardMismatch),
     MissingScope(MissingScope),
     PopError(PopError),
-    MissingId(MissingId),
+    MissingId(MissingId&lt;ItemId&gt;),
+    MissingNonZeroId(MissingId&lt;NonZeroId&gt;),
     UnescapeError(unescape::ErrorKind),
     <span class="attr">#[cfg(feature = <span class="string">"fmt"</span>)]
     </span>Syntree(syntree::Error),
@@ -2105,7 +2116,6 @@
                 ErrorKind::GuardMismatch(source) =&gt; <span class="prelude-val">Some</span>(source),
                 ErrorKind::MissingScope(source) =&gt; <span class="prelude-val">Some</span>(source),
                 ErrorKind::PopError(source) =&gt; <span class="prelude-val">Some</span>(source),
-                ErrorKind::MissingId(source) =&gt; <span class="prelude-val">Some</span>(source),
                 ErrorKind::UnescapeError(source) =&gt; <span class="prelude-val">Some</span>(source),
                 ErrorKind::SourceError { error, .. } =&gt; <span class="prelude-val">Some</span>(error),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -2160,6 +2170,9 @@
                 error.fmt(f)<span class="question-mark">?</span>;
             }
             ErrorKind::MissingId(error) =&gt; {
+                error.fmt(f)<span class="question-mark">?</span>;
+            }
+            ErrorKind::MissingNonZeroId(error) =&gt; {
                 error.fmt(f)<span class="question-mark">?</span>;
             }
             ErrorKind::UnescapeError(error) =&gt; {
@@ -2768,43 +2781,50 @@
 
 <span class="kw">impl </span>From&lt;EncodeError&gt; <span class="kw">for </span>ErrorKind {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from(source: EncodeError) -&gt; <span class="self">Self </span>{
-        ErrorKind::EncodeError(source)
+    </span><span class="kw">fn </span>from(error: EncodeError) -&gt; <span class="self">Self </span>{
+        ErrorKind::EncodeError(error)
     }
 }
 
 <span class="kw">impl </span>From&lt;MissingLastId&gt; <span class="kw">for </span>ErrorKind {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from(source: MissingLastId) -&gt; <span class="self">Self </span>{
-        ErrorKind::MissingLastId(source)
+    </span><span class="kw">fn </span>from(error: MissingLastId) -&gt; <span class="self">Self </span>{
+        ErrorKind::MissingLastId(error)
     }
 }
 
 <span class="kw">impl </span>From&lt;GuardMismatch&gt; <span class="kw">for </span>ErrorKind {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from(source: GuardMismatch) -&gt; <span class="self">Self </span>{
-        ErrorKind::GuardMismatch(source)
+    </span><span class="kw">fn </span>from(error: GuardMismatch) -&gt; <span class="self">Self </span>{
+        ErrorKind::GuardMismatch(error)
     }
 }
 
 <span class="kw">impl </span>From&lt;MissingScope&gt; <span class="kw">for </span>ErrorKind {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from(source: MissingScope) -&gt; <span class="self">Self </span>{
-        ErrorKind::MissingScope(source)
+    </span><span class="kw">fn </span>from(error: MissingScope) -&gt; <span class="self">Self </span>{
+        ErrorKind::MissingScope(error)
     }
 }
 
 <span class="kw">impl </span>From&lt;PopError&gt; <span class="kw">for </span>ErrorKind {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from(source: PopError) -&gt; <span class="self">Self </span>{
-        ErrorKind::PopError(source)
+    </span><span class="kw">fn </span>from(error: PopError) -&gt; <span class="self">Self </span>{
+        ErrorKind::PopError(error)
     }
 }
 
-<span class="kw">impl </span>From&lt;MissingId&gt; <span class="kw">for </span>ErrorKind {
+<span class="kw">impl </span>From&lt;MissingId&lt;ItemId&gt;&gt; <span class="kw">for </span>ErrorKind {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from(source: MissingId) -&gt; <span class="self">Self </span>{
-        ErrorKind::MissingId(source)
+    </span><span class="kw">fn </span>from(error: MissingId&lt;ItemId&gt;) -&gt; <span class="self">Self </span>{
+        ErrorKind::MissingId(error)
+    }
+}
+
+<span class="kw">impl </span>From&lt;MissingId&lt;NonZeroId&gt;&gt; <span class="kw">for </span>ErrorKind {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from(error: MissingId&lt;NonZeroId&gt;) -&gt; <span class="self">Self </span>{
+        ErrorKind::MissingNonZeroId(error)
     }
 }
 

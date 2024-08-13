@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/worker/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-d10b2a06af903387.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (730d5d409 2024-08-10)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-04a29ac50d05d0b1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/worker/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b25d77b18a16a9a4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (91376f416 2024-08-12)" data-channel="nightly" data-search-js="search-ef54e092fea9c776.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-cb0df477c2d67d00.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -244,13 +244,10 @@
 <a href="#244" id="244">244</a>
 <a href="#245" id="245">245</a>
 <a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Worker used by compiler.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box, HashMap, Vec, VecDeque};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, HashMap, Vec, VecDeque};
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Span};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, ModId};
 <span class="kw">use </span><span class="kw">crate</span>::indexing::index;
@@ -327,7 +324,7 @@
                                 LoadFileKind::Module { root } =&gt; (root, <span class="bool-val">true</span>),
                             };
 
-                            <span class="kw">let </span>items = Items::new(item, mod_item_id, <span class="self">self</span>.q.gen)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>items = Items::new(item)<span class="question-mark">?</span>;
 
                             <span class="macro">macro_rules!</span> indexer {
                                 () =&gt; {
@@ -337,7 +334,7 @@
                                         source_id,
                                         items,
                                         scopes: Scopes::new()<span class="question-mark">?</span>,
-                                        item: IndexItem::new(mod_item),
+                                        item: IndexItem::new(mod_item, mod_item_id),
                                         nested_item: <span class="prelude-val">None</span>,
                                         macro_depth: <span class="number">0</span>,
                                         loaded: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.loaded),
@@ -417,7 +414,7 @@
 
             <span class="comment">// Expand impl items since they might be non-local. We need to look up the metadata associated with the item.
             </span><span class="kw">while let </span><span class="prelude-val">Some</span>(entry) = <span class="self">self</span>.q.next_impl_item_entry() {
-                <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>entry.id, <span class="string">"next impl item entry"</span>);
+                <span class="macro">tracing::trace!</span>(item = <span class="question-mark">?</span><span class="self">self</span>.q.pool.item(entry.path.id), <span class="string">"next impl item entry"</span>);
 
                 <span class="kw">let </span>process = || {
                     <span class="comment">// We conservatively deny `Self` impl since that is what
@@ -447,10 +444,10 @@
                     </span><span class="self">self</span>.q
                         .inner
                         .items
-                        .try_insert(meta.item_meta.id, meta.item_meta)<span class="question-mark">?</span>;
+                        .try_insert(meta.item_meta.item, meta.item_meta)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>item = <span class="self">self</span>.q.pool.item(meta.item_meta.item);
-                    <span class="kw">let </span>items = Items::new(item, meta.item_meta.id, <span class="self">self</span>.q.gen)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>items = Items::new(item)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span><span class="kw-2">mut </span>idx = Indexer {
                         q: <span class="self">self</span>.q.borrow(),
@@ -458,22 +455,19 @@
                         source_id: entry.location.source_id,
                         items,
                         scopes: Scopes::new()<span class="question-mark">?</span>,
-                        item: IndexItem::with_impl_item(named.module, meta.item_meta.id),
+                        item: IndexItem::with_impl_item(
+                            named.module,
+                            named.item,
+                            meta.item_meta.item,
+                        ),
                         nested_item: entry.nested_item,
                         macro_depth: entry.macro_depth,
                         loaded: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.loaded),
                         queue: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.queue),
                     };
 
-                    <span class="kw">let </span>removed = idx
-                        .q
-                        .inner
-                        .impl_functions
-                        .remove(<span class="kw-2">&amp;</span>entry.id)
-                        .unwrap_or_default();
-
-                    <span class="kw">for </span>f <span class="kw">in </span>removed {
-                        index::item_fn_immediate(<span class="kw-2">&amp;mut </span>idx, Box::into_inner(f.ast))<span class="question-mark">?</span>;
+                    <span class="kw">for </span>f <span class="kw">in </span>entry.functions {
+                        index::item_fn(<span class="kw-2">&amp;mut </span>idx, f)<span class="question-mark">?</span>;
                     }
 
                     <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, compile::Error&gt;(())
