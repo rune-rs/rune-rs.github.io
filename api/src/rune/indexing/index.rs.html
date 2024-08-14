@@ -1302,12 +1302,6 @@
 <a href="#1302" id="1302">1302</a>
 <a href="#1303" id="1303">1303</a>
 <a href="#1304" id="1304">1304</a>
-<a href="#1305" id="1305">1305</a>
-<a href="#1306" id="1306">1306</a>
-<a href="#1307" id="1307">1307</a>
-<a href="#1308" id="1308">1308</a>
-<a href="#1309" id="1309">1309</a>
-<a href="#1310" id="1310">1310</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::take;
 
 <span class="kw">use </span>tracing::instrument_ast;
@@ -2557,11 +2551,8 @@
 ) -&gt; compile::Result&lt;()&gt; {
     expr(idx, <span class="kw-2">&amp;mut </span>ast.expr)<span class="question-mark">?</span>;
 
-    <span class="kw">match </span><span class="kw-2">&amp;mut </span>ast.expr_field {
-        ast::ExprField::Path(p) =&gt; {
-            path(idx, p)<span class="question-mark">?</span>;
-        }
-        ast::ExprField::LitNumber(..) =&gt; {}
+    <span class="kw">if let </span>ast::ExprField::Path(p) = <span class="kw-2">&amp;mut </span>ast.expr_field {
+        path(idx, p)<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(())
@@ -2602,12 +2593,9 @@
 
 <span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_object(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprObject) -&gt; compile::Result&lt;()&gt; {
-    <span class="kw">match </span><span class="kw-2">&amp;mut </span>ast.ident {
-        ast::ObjectIdent::Named(p) =&gt; {
-            <span class="comment">// Not a variable use: Name of the object.
-            </span>path(idx, p)<span class="question-mark">?</span>;
-        }
-        ast::ObjectIdent::Anonymous(..) =&gt; (),
+    <span class="kw">if let </span>ast::ObjectIdent::Named(p) = <span class="kw-2">&amp;mut </span>ast.ident {
+        <span class="comment">// Not a variable use: Name of the object.
+        </span>path(idx, p)<span class="question-mark">?</span>;
     }
 
     <span class="kw">for </span>(assign, <span class="kw">_</span>) <span class="kw">in </span><span class="kw-2">&amp;mut </span>ast.assignments {
