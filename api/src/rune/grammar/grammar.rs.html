@@ -1362,12 +1362,6 @@
 <a href="#1362" id="1362">1362</a>
 <a href="#1363" id="1363">1363</a>
 <a href="#1364" id="1364">1364</a>
-<a href="#1365" id="1365">1365</a>
-<a href="#1366" id="1366">1366</a>
-<a href="#1367" id="1367">1367</a>
-<a href="#1368" id="1368">1368</a>
-<a href="#1369" id="1369">1369</a>
-<a href="#1370" id="1370">1370</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Kind};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{ErrorKind, <span class="prelude-ty">Result</span>};
 
@@ -1632,7 +1626,7 @@
                         }
                         <span class="macro">K!</span>[<span class="kw">in</span>] =&gt; {
                             p.bump()<span class="question-mark">?</span>;
-                            path(p, Binary::No)<span class="question-mark">?</span>;
+                            path(p)<span class="question-mark">?</span>;
                             ModifierIn
                         }
                         <span class="kw">_ </span>=&gt; Error,
@@ -1839,7 +1833,7 @@
     p.bump()<span class="question-mark">?</span>;
 
     <span class="kw">if </span><span class="macro">matches!</span>(p.peek()<span class="question-mark">?</span>, <span class="macro">path_component!</span>()) {
-        path(p, Binary::No)<span class="question-mark">?</span>;
+        path(p)<span class="question-mark">?</span>;
     }
 
     block(p)<span class="question-mark">?</span>;
@@ -1900,7 +1894,7 @@
         }
         <span class="macro">path_component!</span>() =&gt; {
             <span class="kw">let </span>c = p.checkpoint()<span class="question-mark">?</span>;
-            path(p, Binary::No)<span class="question-mark">?</span>;
+            path(p)<span class="question-mark">?</span>;
 
             <span class="kw">match </span>p.peek()<span class="question-mark">? </span>{
                 <span class="macro">K!</span>[<span class="string">'{'</span>] =&gt; {
@@ -2027,13 +2021,13 @@
     cx: <span class="kw-2">&amp;</span><span class="kw">dyn </span>ExprCx,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Kind&gt; {
     <span class="kw">let </span>c = p.checkpoint()<span class="question-mark">?</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>kind = expr_primary(p, brace, range, binary, cx)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>kind = expr_primary(p, brace, range, cx)<span class="question-mark">?</span>;
 
     <span class="kw">if </span>is_range(kind) {
         <span class="kw">return </span><span class="prelude-val">Ok</span>(kind);
     }
 
-    kind = expr_chain(p, <span class="kw-2">&amp;</span>c, binary, kind)<span class="question-mark">?</span>;
+    kind = expr_chain(p, <span class="kw-2">&amp;</span>c, kind)<span class="question-mark">?</span>;
 
     <span class="kw">if </span>p.peek()<span class="question-mark">? </span>== <span class="macro">K!</span>[=] {
         p.bump()<span class="question-mark">?</span>;
@@ -2070,13 +2064,7 @@
 }
 
 <span class="attr">#[tracing::instrument(skip_all)]
-</span><span class="kw">fn </span>expr_primary(
-    p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;,
-    brace: Brace,
-    range: Range,
-    binary: Binary,
-    cx: <span class="kw-2">&amp;</span><span class="kw">dyn </span>ExprCx,
-) -&gt; <span class="prelude-ty">Result</span>&lt;Kind&gt; {
+</span><span class="kw">fn </span>expr_primary(p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;, brace: Brace, range: Range, cx: <span class="kw-2">&amp;</span><span class="kw">dyn </span>ExprCx) -&gt; <span class="prelude-ty">Result</span>&lt;Kind&gt; {
     <span class="kw">let </span>c = p.checkpoint()<span class="question-mark">?</span>;
 
     <span class="kw">let </span>kind = <span class="kw">match </span>p.peek()<span class="question-mark">? </span>{
@@ -2085,7 +2073,7 @@
             ExprLit
         }
         <span class="macro">path_component!</span>() =&gt; {
-            path(p, binary)<span class="question-mark">?</span>;
+            path(p)<span class="question-mark">?</span>;
 
             <span class="kw">match </span>p.peek()<span class="question-mark">? </span>{
                 <span class="macro">K!</span>[<span class="string">'{'</span>] <span class="kw">if </span><span class="macro">matches!</span>(brace, Brace::Yes) =&gt; {
@@ -2137,7 +2125,7 @@
         }
         <span class="macro">K!</span>[!] | <span class="macro">K!</span>[-] | <span class="macro">K!</span>[<span class="kw-2">&amp;</span>] | <span class="macro">K!</span>[<span class="kw-2">*</span>] =&gt; {
             p.bump()<span class="question-mark">?</span>;
-            expr_with(p, brace, range, Binary::No, cx)<span class="question-mark">?</span>;
+            outer_expr_with(p, brace, range, Binary::No, cx)<span class="question-mark">?</span>;
             ExprUnary
         }
         <span class="macro">K!</span>[<span class="kw">if</span>] =&gt; {
@@ -2248,7 +2236,7 @@
 }
 
 <span class="attr">#[tracing::instrument(skip_all)]
-</span><span class="kw">fn </span>expr_chain(p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;, c: <span class="kw-2">&amp;</span>Checkpoint, binary: Binary, <span class="kw-2">mut </span>kind: Kind) -&gt; <span class="prelude-ty">Result</span>&lt;Kind&gt; {
+</span><span class="kw">fn </span>expr_chain(p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;, c: <span class="kw-2">&amp;</span>Checkpoint, <span class="kw-2">mut </span>kind: Kind) -&gt; <span class="prelude-ty">Result</span>&lt;Kind&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>before = p.checkpoint()<span class="question-mark">?</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>has_chain = <span class="bool-val">false</span>;
 
@@ -2282,7 +2270,7 @@
                     }
                     <span class="comment">// &lt;expr&gt;.field
                     </span><span class="macro">path_component!</span>() =&gt; {
-                        path(p, binary)<span class="question-mark">?</span>;
+                        path(p)<span class="question-mark">?</span>;
                         ExprField
                     }
                     <span class="comment">// &lt;expr&gt;.&lt;number&gt;
@@ -2521,14 +2509,14 @@
 }
 
 <span class="attr">#[tracing::instrument(skip_all)]
-</span><span class="kw">fn </span>path(p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;, binary: Binary) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">fn </span>path(p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     <span class="kw">let </span>c = p.checkpoint()<span class="question-mark">?</span>;
 
     <span class="kw">while </span><span class="macro">matches!</span>(p.peek()<span class="question-mark">?</span>, <span class="macro">path_component!</span>()) {
-        <span class="comment">// Parse a generic path if we are not in a binary expression, or if we
-        // just parsed the prefix `::` of the turbofish syntax.
-        </span><span class="kw">let </span>has_generics = <span class="macro">matches!</span>(binary, Binary::No) || <span class="macro">matches!</span>(p.peek()<span class="question-mark">?</span>, <span class="macro">K!</span>[::]);
-
+        <span class="comment">// Parse a generic path if we are in a context supporting binary
+        // expressions, or if we just parsed the prefix `::` of the turbofish
+        // syntax.
+        </span><span class="kw">let </span>has_generics = <span class="macro">matches!</span>(p.peek()<span class="question-mark">?</span>, <span class="macro">K!</span>[::]);
         p.bump()<span class="question-mark">?</span>;
 
         <span class="comment">// We can't parse generics in binary expressions, since they would be
@@ -2539,7 +2527,7 @@
 
             <span class="kw">while </span><span class="macro">matches!</span>(p.peek()<span class="question-mark">?</span>, <span class="macro">path_component!</span>()) {
                 <span class="comment">// Inner paths are unambiguous.
-                </span>path(p, Binary::No)<span class="question-mark">?</span>;
+                </span>path(p)<span class="question-mark">?</span>;
                 p.bump_while(<span class="macro">K!</span>[,])<span class="question-mark">?</span>;
             }
 
@@ -2578,8 +2566,8 @@
         p.close_at(<span class="kw-2">&amp;</span>op_c, ExprOperator)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>c = p.checkpoint()<span class="question-mark">?</span>;
+        outer_expr_with(p, brace, Range::No, Binary::No, cx)<span class="question-mark">?</span>;
 
-        expr_with(p, brace, Range::No, Binary::No, cx)<span class="question-mark">?</span>;
         has_any = <span class="bool-val">true</span>;
 
         lookahead = ast::BinOp::from_peeker(p)<span class="question-mark">?</span>;
