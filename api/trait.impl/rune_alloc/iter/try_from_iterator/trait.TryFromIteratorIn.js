@@ -1,5 +1,9 @@
-(function() {var implementors = {
-"rune":[["impl <a class=\"trait\" href=\"rune/alloc/prelude/trait.TryFromIteratorIn.html\" title=\"trait rune::alloc::prelude::TryFromIteratorIn\">TryFromIteratorIn</a>&lt;<a class=\"struct\" href=\"rune/runtime/struct.Value.html\" title=\"struct rune::runtime::Value\">Value</a>, <a class=\"struct\" href=\"rune/alloc/alloc/struct.Global.html\" title=\"struct rune::alloc::alloc::Global\">Global</a>&gt; for <a class=\"struct\" href=\"rune/runtime/struct.Stack.html\" title=\"struct rune::runtime::Stack\">Stack</a>"]],
-"rune_alloc":[],
-"rune_core":[["impl&lt;C, A: <a class=\"trait\" href=\"rune_alloc/alloc/allocator/trait.Allocator.html\" title=\"trait rune_alloc::alloc::allocator::Allocator\">Allocator</a>&gt; <a class=\"trait\" href=\"rune_alloc/iter/try_from_iterator/trait.TryFromIteratorIn.html\" title=\"trait rune_alloc::iter::try_from_iterator::TryFromIteratorIn\">TryFromIteratorIn</a>&lt;C, A&gt; for <a class=\"struct\" href=\"rune_core/item/struct.ItemBuf.html\" title=\"struct rune_core::item::ItemBuf\">ItemBuf</a>&lt;A&gt;<div class=\"where\">where\n    C: <a class=\"trait\" href=\"rune_core/item/trait.IntoComponent.html\" title=\"trait rune_core::item::IntoComponent\">IntoComponent</a>,</div>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {
+    var implementors = Object.fromEntries([["rune",[["impl <a class=\"trait\" href=\"rune/alloc/prelude/trait.TryFromIteratorIn.html\" title=\"trait rune::alloc::prelude::TryFromIteratorIn\">TryFromIteratorIn</a>&lt;<a class=\"struct\" href=\"rune/runtime/struct.Value.html\" title=\"struct rune::runtime::Value\">Value</a>, <a class=\"struct\" href=\"rune/alloc/alloc/struct.Global.html\" title=\"struct rune::alloc::alloc::Global\">Global</a>&gt; for <a class=\"struct\" href=\"rune/runtime/struct.Stack.html\" title=\"struct rune::runtime::Stack\">Stack</a>"]]],["rune_alloc",[]],["rune_core",[["impl&lt;C, A: <a class=\"trait\" href=\"rune_alloc/alloc/allocator/trait.Allocator.html\" title=\"trait rune_alloc::alloc::allocator::Allocator\">Allocator</a>&gt; <a class=\"trait\" href=\"rune_alloc/iter/try_from_iterator/trait.TryFromIteratorIn.html\" title=\"trait rune_alloc::iter::try_from_iterator::TryFromIteratorIn\">TryFromIteratorIn</a>&lt;C, A&gt; for <a class=\"struct\" href=\"rune_core/item/struct.ItemBuf.html\" title=\"struct rune_core::item::ItemBuf\">ItemBuf</a>&lt;A&gt;<div class=\"where\">where\n    C: <a class=\"trait\" href=\"rune_core/item/trait.IntoComponent.html\" title=\"trait rune_core::item::IntoComponent\">IntoComponent</a>,</div>"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[521,18,685]}
