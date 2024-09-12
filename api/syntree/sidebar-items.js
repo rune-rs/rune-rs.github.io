@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Error"],"macro":["tree","tree_with"],"mod":["edit","index","node","pointer","print"],"struct":["Builder","Checkpoint","Empty","Node","Span","Tree"]};
+window.SIDEBAR_ITEMS = {"enum":["Error"],"macro":["flavor","tree","tree_with"],"mod":["edit","node","pointer","print"],"struct":["Builder","Checkpoint","Empty","EmptyVec","FlavorDefault","Node","Span","Tree","TreeIndex"],"trait":["Flavor","Index","Length","Pointer","Storage","Width"]};

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/indexing/index.rs`."><title>index.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (0d634185d 2024-08-29)" data-channel="nightly" data-search-js="search-acd2e111c9cb27e3.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-cb0df477c2d67d00.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/indexing/index.rs`."><title>index.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-405f8b29f52305f8.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (8d6b88b16 2024-09-11)" data-channel="nightly" data-search-js="search-0cfde64e8ad3a7fe.js" data-settings-js="settings-7e3bb6c46e92e77c.js" ><script src="../../../static.files/storage-29b1d5a9048d38fe.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-14659ec02b58af51.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-40f72c9259523cb3.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1302,21 +1303,65 @@
 <a href="#1302" id="1302">1302</a>
 <a href="#1303" id="1303">1303</a>
 <a href="#1304" id="1304">1304</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::take;
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::take;
 
 <span class="kw">use </span>tracing::instrument_ast;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{Box, Vec, VecDeque};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{HashMap, VecDeque};
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, OptionSpanned, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{
     <span class="self">self</span>, attrs, meta, Doc, DynLocation, ErrorKind, ItemMeta, Location, Visibility, WithSpan,
 };
 <span class="kw">use </span><span class="kw">crate</span>::indexing::{<span class="self">self</span>, Indexed};
-<span class="kw">use </span><span class="kw">crate</span>::parse::Resolve;
-<span class="kw">use </span><span class="kw">crate</span>::query::ItemImplEntry;
+<span class="kw">use </span><span class="kw">crate</span>::parse::{Resolve, ResolveContext};
+<span class="kw">use </span><span class="kw">crate</span>::query::{DeferEntry, ImplItem, ImplItemKind};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::Call;
-<span class="kw">use </span><span class="kw">crate</span>::worker::{Import, ImportKind};
+<span class="kw">use </span><span class="kw">crate</span>::worker::{Import, ImportKind, ImportState};
 
 <span class="kw">use super</span>::{ast_to_visibility, validate_call, Indexer};
 
@@ -1524,6 +1569,7 @@
             is_test: <span class="bool-val">false</span>,
             is_bench: <span class="bool-val">false</span>,
             impl_item: <span class="prelude-val">None</span>,
+            args: Vec::new(),
         }),
     })<span class="question-mark">?</span>;
 
@@ -1569,10 +1615,11 @@
         ));
     };
 
-    <span class="kw">let </span>call = validate_call(ast.const_token, ast.async_token, <span class="kw-2">&amp;</span>layer)<span class="question-mark">?</span>;
+    <span class="kw">let </span>call = validate_call(ast.const_token.is_some(), ast.async_token.is_some(), <span class="kw-2">&amp;</span>layer)<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="prelude-val">Some</span>(call) = call <span class="kw">else </span>{
-        idx.q.index_const_fn(item_meta, Box::try_new(ast)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        idx.q
+            .index_const_fn(item_meta, indexing::ConstFn::Ast(Box::try_new(ast)<span class="question-mark">?</span>))<span class="question-mark">?</span>;
         <span class="kw">return </span><span class="prelude-val">Ok</span>(());
     };
 
@@ -1644,15 +1691,19 @@
         };
     }
 
+    <span class="kw">let </span>name = ast.name;
+    <span class="kw">let </span>args = ast.args.iter().map(|(a, <span class="kw">_</span>)| a.span()).try_collect()<span class="question-mark">?</span>;
+
     <span class="kw">let </span>entry = indexing::Entry {
         item_meta,
         indexed: Indexed::Function(indexing::Function {
-            ast: indexing::FunctionAst::Item(Box::try_new(ast)<span class="question-mark">?</span>),
+            ast: indexing::FunctionAst::Item(Box::try_new(ast)<span class="question-mark">?</span>, name),
             call,
             is_instance,
             is_test,
             is_bench,
             impl_item: idx.item.impl_item,
+            args,
         }),
     };
 
@@ -1704,13 +1755,16 @@
 
         <span class="kw">let </span>item_meta = block(idx, <span class="kw-2">&amp;mut </span>ast.block)<span class="question-mark">?</span>;
         ast.block.id = item_meta.item;
-        idx.q.index_const_block(item_meta, <span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>;
+        idx.q.index_const_block(
+            item_meta,
+            indexing::ConstBlock::Ast(Box::try_new(ast.block.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>),
+        )<span class="question-mark">?</span>;
     } <span class="kw">else </span>{
         idx.scopes.push()<span class="question-mark">?</span>;
         <span class="kw">let </span>item_meta = block(idx, <span class="kw-2">&amp;mut </span>ast.block)<span class="question-mark">?</span>;
         <span class="kw">let </span>layer = idx.scopes.pop().with_span(<span class="kw-2">&amp;</span>ast)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>call = validate_call(ast.const_token, ast.async_token, <span class="kw-2">&amp;</span>layer)<span class="question-mark">?</span>;
+        <span class="kw">let </span>call = validate_call(ast.const_token.is_some(), ast.async_token.is_some(), <span class="kw-2">&amp;</span>layer)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(call) = call <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(ast, ErrorKind::ClosureKind));
@@ -1797,7 +1851,7 @@
 
 <span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>block(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::Block) -&gt; compile::Result&lt;ItemMeta&gt; {
-    <span class="kw">let </span>guard = idx.items.push_id()<span class="question-mark">?</span>;
+    <span class="kw">let </span>guard = idx.push_id()<span class="question-mark">?</span>;
 
     <span class="kw">let </span>item_meta = idx.insert_new_item(<span class="kw-2">&amp;</span>ast, Visibility::Inherited, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
     <span class="kw">let </span>idx_item = idx.item.replace(item_meta.item);
@@ -2197,8 +2251,15 @@
 
         idx.item = idx_item;
         idx.items.pop(guard).with_span(<span class="kw-2">&amp;</span>variant)<span class="question-mark">?</span>;
-        idx.q
-            .index_variant(item_meta, enum_item.item, variant, index)<span class="question-mark">?</span>;
+
+        idx.q.index_variant(
+            item_meta,
+            indexing::Variant {
+                enum_id: enum_item.item,
+                index,
+                fields: convert_fields(<span class="macro">resolve_context!</span>(idx.q), variant.body)<span class="question-mark">?</span>,
+            },
+        )<span class="question-mark">?</span>;
     }
 
     idx.item = idx_item;
@@ -2265,7 +2326,9 @@
 
     idx.item = idx_item;
     idx.items.pop(guard).with_span(<span class="kw-2">&amp;</span>ast)<span class="question-mark">?</span>;
-    idx.q.index_struct(item_meta, Box::try_new(ast)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>fields = convert_fields(<span class="macro">resolve_context!</span>(idx.q), ast.body)<span class="question-mark">?</span>;
+    idx.q.index_struct(item_meta, indexing::Struct { fields })<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -2282,14 +2345,19 @@
 
     <span class="kw">let </span>location = Location::new(idx.source_id, ast.path.span());
 
-    idx.q.inner.impl_item_queue.try_push_back(ItemImplEntry {
-        path: Box::try_new(ast.path)<span class="question-mark">?</span>,
-        location,
-        root: idx.root.clone(),
-        nested_item: idx.nested_item,
-        macro_depth: idx.macro_depth,
-        functions: take(<span class="kw-2">&amp;mut </span>ast.functions),
-    })<span class="question-mark">?</span>;
+    idx.q
+        .inner
+        .defer_queue
+        .try_push_back(DeferEntry::ImplItem(ImplItem {
+            kind: ImplItemKind::Ast {
+                path: Box::try_new(ast.path)<span class="question-mark">?</span>,
+                functions: take(<span class="kw-2">&amp;mut </span>ast.functions),
+            },
+            location,
+            root: idx.root.map(TryToOwned::try_to_owned).transpose()<span class="question-mark">?</span>,
+            nested_item: idx.nested_item,
+            macro_depth: idx.macro_depth,
+        }))<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())
 }
@@ -2364,7 +2432,11 @@
     <span class="kw">let </span>last = idx.nested_item.replace(ast.descriptive_span());
     expr(idx, <span class="kw-2">&amp;mut </span>ast.expr)<span class="question-mark">?</span>;
     idx.nested_item = last;
-    idx.q.index_const_expr(item_meta, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>;
+
+    idx.q.index_const_expr(
+        item_meta,
+        indexing::ConstExpr::Ast(Box::try_new(ast.expr.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>),
+    )<span class="question-mark">?</span>;
 
     idx.item = idx_item;
     idx.items.pop(guard).with_span(<span class="kw-2">&amp;</span>ast)<span class="question-mark">?</span>;
@@ -2435,12 +2507,12 @@
             <span class="kw">let </span>visibility = ast_to_visibility(<span class="kw-2">&amp;</span>item_use.visibility)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>import = Import {
+                state: ImportState::Ast(Box::try_new(item_use)<span class="question-mark">?</span>),
                 kind: ImportKind::Global,
                 visibility,
                 module: idx.item.module,
                 item: idx.items.item().try_to_owned()<span class="question-mark">?</span>,
                 source_id: idx.source_id,
-                ast: Box::try_new(item_use)<span class="question-mark">?</span>,
             };
 
             import.process(<span class="kw-2">&amp;mut </span>idx.q, <span class="kw-2">&amp;mut </span>|task| {
@@ -2500,7 +2572,7 @@
 
 <span class="attr">#[instrument_ast(span = ast)]
 </span><span class="kw">fn </span>expr_closure(idx: <span class="kw-2">&amp;mut </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, ast: <span class="kw-2">&amp;mut </span>ast::ExprClosure) -&gt; compile::Result&lt;()&gt; {
-    <span class="kw">let </span>guard = idx.items.push_id()<span class="question-mark">?</span>;
+    <span class="kw">let </span>guard = idx.push_id()<span class="question-mark">?</span>;
 
     idx.scopes.push()<span class="question-mark">?</span>;
 
@@ -2524,7 +2596,7 @@
 
     <span class="kw">let </span>layer = idx.scopes.pop().with_span(<span class="kw-2">&amp;*</span>ast)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>call = validate_call(<span class="prelude-val">None</span>, ast.async_token, <span class="kw-2">&amp;</span>layer)<span class="question-mark">?</span>;
+    <span class="kw">let </span>call = validate_call(<span class="bool-val">false</span>, ast.async_token.is_some(), <span class="kw-2">&amp;</span>layer)<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="prelude-val">Some</span>(call) = call <span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(<span class="kw-2">&amp;*</span>ast, ErrorKind::ClosureKind));
@@ -2605,5 +2677,23 @@
     }
 
     <span class="prelude-val">Ok</span>(())
+}
+
+<span class="doccomment">/// Convert AST fields into meta fields.
+</span><span class="kw">fn </span>convert_fields(cx: ResolveContext&lt;<span class="lifetime">'_</span>&gt;, body: ast::Fields) -&gt; compile::Result&lt;meta::Fields&gt; {
+    <span class="prelude-val">Ok</span>(<span class="kw">match </span>body {
+        ast::Fields::Empty =&gt; meta::Fields::Empty,
+        ast::Fields::Unnamed(tuple) =&gt; meta::Fields::Unnamed(tuple.len()),
+        ast::Fields::Named(st) =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>fields = HashMap::try_with_capacity(st.len())<span class="question-mark">?</span>;
+
+            <span class="kw">for </span>(position, (ast::Field { name, .. }, <span class="kw">_</span>)) <span class="kw">in </span>st.iter().enumerate() {
+                <span class="kw">let </span>name = name.resolve(cx)<span class="question-mark">?</span>;
+                fields.try_insert(name.try_into()<span class="question-mark">?</span>, meta::FieldMeta { position })<span class="question-mark">?</span>;
+            }
+
+            meta::Fields::Named(meta::FieldsNamed { fields })
+        }
+    })
 }
 </code></pre></div></section></main></body></html>

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/lowering.rs`."><title>lowering.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (0d634185d 2024-08-29)" data-channel="nightly" data-search-js="search-acd2e111c9cb27e3.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-cb0df477c2d67d00.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/lowering.rs`."><title>lowering.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-405f8b29f52305f8.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (8d6b88b16 2024-09-11)" data-channel="nightly" data-search-js="search-0cfde64e8ad3a7fe.js" data-settings-js="settings-7e3bb6c46e92e77c.js" ><script src="../../../static.files/storage-29b1d5a9048d38fe.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-14659ec02b58af51.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-40f72c9259523cb3.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1886,100 +1887,7 @@
 <a href="#1886" id="1886">1886</a>
 <a href="#1887" id="1887">1887</a>
 <a href="#1888" id="1888">1888</a>
-<a href="#1889" id="1889">1889</a>
-<a href="#1890" id="1890">1890</a>
-<a href="#1891" id="1891">1891</a>
-<a href="#1892" id="1892">1892</a>
-<a href="#1893" id="1893">1893</a>
-<a href="#1894" id="1894">1894</a>
-<a href="#1895" id="1895">1895</a>
-<a href="#1896" id="1896">1896</a>
-<a href="#1897" id="1897">1897</a>
-<a href="#1898" id="1898">1898</a>
-<a href="#1899" id="1899">1899</a>
-<a href="#1900" id="1900">1900</a>
-<a href="#1901" id="1901">1901</a>
-<a href="#1902" id="1902">1902</a>
-<a href="#1903" id="1903">1903</a>
-<a href="#1904" id="1904">1904</a>
-<a href="#1905" id="1905">1905</a>
-<a href="#1906" id="1906">1906</a>
-<a href="#1907" id="1907">1907</a>
-<a href="#1908" id="1908">1908</a>
-<a href="#1909" id="1909">1909</a>
-<a href="#1910" id="1910">1910</a>
-<a href="#1911" id="1911">1911</a>
-<a href="#1912" id="1912">1912</a>
-<a href="#1913" id="1913">1913</a>
-<a href="#1914" id="1914">1914</a>
-<a href="#1915" id="1915">1915</a>
-<a href="#1916" id="1916">1916</a>
-<a href="#1917" id="1917">1917</a>
-<a href="#1918" id="1918">1918</a>
-<a href="#1919" id="1919">1919</a>
-<a href="#1920" id="1920">1920</a>
-<a href="#1921" id="1921">1921</a>
-<a href="#1922" id="1922">1922</a>
-<a href="#1923" id="1923">1923</a>
-<a href="#1924" id="1924">1924</a>
-<a href="#1925" id="1925">1925</a>
-<a href="#1926" id="1926">1926</a>
-<a href="#1927" id="1927">1927</a>
-<a href="#1928" id="1928">1928</a>
-<a href="#1929" id="1929">1929</a>
-<a href="#1930" id="1930">1930</a>
-<a href="#1931" id="1931">1931</a>
-<a href="#1932" id="1932">1932</a>
-<a href="#1933" id="1933">1933</a>
-<a href="#1934" id="1934">1934</a>
-<a href="#1935" id="1935">1935</a>
-<a href="#1936" id="1936">1936</a>
-<a href="#1937" id="1937">1937</a>
-<a href="#1938" id="1938">1938</a>
-<a href="#1939" id="1939">1939</a>
-<a href="#1940" id="1940">1940</a>
-<a href="#1941" id="1941">1941</a>
-<a href="#1942" id="1942">1942</a>
-<a href="#1943" id="1943">1943</a>
-<a href="#1944" id="1944">1944</a>
-<a href="#1945" id="1945">1945</a>
-<a href="#1946" id="1946">1946</a>
-<a href="#1947" id="1947">1947</a>
-<a href="#1948" id="1948">1948</a>
-<a href="#1949" id="1949">1949</a>
-<a href="#1950" id="1950">1950</a>
-<a href="#1951" id="1951">1951</a>
-<a href="#1952" id="1952">1952</a>
-<a href="#1953" id="1953">1953</a>
-<a href="#1954" id="1954">1954</a>
-<a href="#1955" id="1955">1955</a>
-<a href="#1956" id="1956">1956</a>
-<a href="#1957" id="1957">1957</a>
-<a href="#1958" id="1958">1958</a>
-<a href="#1959" id="1959">1959</a>
-<a href="#1960" id="1960">1960</a>
-<a href="#1961" id="1961">1961</a>
-<a href="#1962" id="1962">1962</a>
-<a href="#1963" id="1963">1963</a>
-<a href="#1964" id="1964">1964</a>
-<a href="#1965" id="1965">1965</a>
-<a href="#1966" id="1966">1966</a>
-<a href="#1967" id="1967">1967</a>
-<a href="#1968" id="1968">1968</a>
-<a href="#1969" id="1969">1969</a>
-<a href="#1970" id="1970">1970</a>
-<a href="#1971" id="1971">1971</a>
-<a href="#1972" id="1972">1972</a>
-<a href="#1973" id="1973">1973</a>
-<a href="#1974" id="1974">1974</a>
-<a href="#1975" id="1975">1975</a>
-<a href="#1976" id="1976">1976</a>
-<a href="#1977" id="1977">1977</a>
-<a href="#1978" id="1978">1978</a>
-<a href="#1979" id="1979">1979</a>
-<a href="#1980" id="1980">1980</a>
-<a href="#1981" id="1981">1981</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>core::cell::Cell;
+<a href="#1889" id="1889">1889</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::{replace, take};
 <span class="kw">use </span>core::ops::Neg;
 
 <span class="kw">use </span>num::ToPrimitive;
@@ -1990,122 +1898,19 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box, HashMap, HashSet};
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::meta;
-<span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, DynLocation, ErrorKind, ItemId, WithSpan};
+<span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, ErrorKind, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::hash::ParametersBuilder;
 <span class="kw">use </span><span class="kw">crate</span>::hir;
 <span class="kw">use </span><span class="kw">crate</span>::parse::Resolve;
 <span class="kw">use </span><span class="kw">crate</span>::query::AsyncBlock;
 <span class="kw">use </span><span class="kw">crate</span>::query::Closure;
 <span class="kw">use </span><span class="kw">crate</span>::query::SecondaryBuildEntry;
-<span class="kw">use </span><span class="kw">crate</span>::query::{<span class="self">self</span>, GenericsParameters, Named, Query, SecondaryBuild};
+<span class="kw">use </span><span class="kw">crate</span>::query::{<span class="self">self</span>, GenericsParameters, Named, SecondaryBuild};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::ConstValue;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{Type, TypeCheck};
-<span class="kw">use crate</span>::{Hash, Item, SourceId};
+<span class="kw">use crate</span>::{Hash, Item};
 
-<span class="attr">#[derive(Default, Clone, Copy)]
-</span><span class="kw">enum </span>Needs {
-    <span class="attr">#[default]
-    </span>Value,
-    Type,
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; {
-    <span class="doccomment">/// Arena used for allocations.
-    </span>arena: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::arena::Arena,
-    q: Query&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt;,
-    source_id: SourceId,
-    in_template: Cell&lt;bool&gt;,
-    in_path: Cell&lt;bool&gt;,
-    needs: Cell&lt;Needs&gt;,
-    scopes: hir::Scopes&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>&gt;,
-    const_eval: bool,
-    statement_buffer: Vec&lt;hir::Stmt&lt;<span class="lifetime">'hir</span>&gt;&gt;,
-    statements: Vec&lt;hir::Stmt&lt;<span class="lifetime">'hir</span>&gt;&gt;,
-    pattern_bindings: Vec&lt;hir::Variable&gt;,
-    secondary_builds: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;SecondaryBuildEntry&lt;<span class="lifetime">'hir</span>&gt;&gt;&gt;,
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; Ctxt&lt;<span class="lifetime">'hir</span>, <span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; {
-    <span class="attr">#[inline(always)]
-    </span><span class="kw">fn </span>in_path&lt;F, O&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, in_path: bool, f: F) -&gt; O
-    <span class="kw">where
-        </span>F: FnOnce(<span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; O,
-    {
-        <span class="kw">let </span>in_path = <span class="self">self</span>.in_path.replace(in_path);
-        <span class="kw">let </span>output = f(<span class="self">self</span>);
-        <span class="self">self</span>.in_path.set(in_path);
-        output
-    }
-
-    <span class="doccomment">/// Construct a new context for used when constants are built separately
-    /// through the query system.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>with_query(
-        arena: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::arena::Arena,
-        q: Query&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt;,
-        source_id: SourceId,
-        secondary_builds: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;SecondaryBuildEntry&lt;<span class="lifetime">'hir</span>&gt;&gt;,
-    ) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
-        <span class="self">Self</span>::inner(arena, q, source_id, <span class="bool-val">false</span>, <span class="prelude-val">Some</span>(secondary_builds))
-    }
-
-    <span class="doccomment">/// Construct a new context used in a constant context where the resulting
-    /// expression is expected to be converted into a constant.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>with_const(
-        arena: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::arena::Arena,
-        q: Query&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt;,
-        source_id: SourceId,
-    ) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
-        <span class="self">Self</span>::inner(arena, q, source_id, <span class="bool-val">true</span>, <span class="prelude-val">None</span>)
-    }
-
-    <span class="kw">fn </span>inner(
-        arena: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span>hir::arena::Arena,
-        q: Query&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt;,
-        source_id: SourceId,
-        const_eval: bool,
-        secondary_builds: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Vec&lt;SecondaryBuildEntry&lt;<span class="lifetime">'hir</span>&gt;&gt;&gt;,
-    ) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>scopes = hir::Scopes::new(q.gen)<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            arena,
-            q,
-            source_id,
-            in_template: Cell::new(<span class="bool-val">false</span>),
-            in_path: Cell::new(<span class="bool-val">false</span>),
-            needs: Cell::new(Needs::default()),
-            scopes,
-            const_eval,
-            statement_buffer: Vec::new(),
-            statements: Vec::new(),
-            pattern_bindings: Vec::new(),
-            secondary_builds,
-        })
-    }
-
-    <span class="attr">#[allow(unused)]
-    #[instrument_ast(span = ast)]
-    </span><span class="kw">fn </span>try_lookup_meta(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
-        item: ItemId,
-        parameters: <span class="kw-2">&amp;</span>GenericsParameters,
-    ) -&gt; compile::Result&lt;<span class="prelude-ty">Option</span>&lt;meta::Meta&gt;&gt; {
-        <span class="self">self</span>.q
-            .try_lookup_meta(<span class="kw-2">&amp;</span>DynLocation::new(<span class="self">self</span>.source_id, span), item, parameters)
-    }
-
-    <span class="attr">#[instrument_ast(span = ast)]
-    </span><span class="kw">fn </span>lookup_meta(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        span: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Spanned,
-        item: ItemId,
-        parameters: <span class="kw">impl </span>AsRef&lt;GenericsParameters&gt;,
-    ) -&gt; compile::Result&lt;meta::Meta&gt; {
-        <span class="self">self</span>.q
-            .lookup_meta(<span class="kw-2">&amp;</span>DynLocation::new(<span class="self">self</span>.source_id, span), item, parameters)
-    }
-}
+<span class="kw">use super</span>::{Ctxt, Needs};
 
 <span class="doccomment">/// Lower an empty function.
 </span><span class="attr">#[instrument_ast(span = span)]
@@ -2144,7 +1949,9 @@
 ) -&gt; compile::Result&lt;hir::ExprKind&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="macro">alloc_with!</span>(cx, ast);
 
-    <span class="kw">let </span>item = cx.q.item_for(ast.id).with_span(ast)<span class="question-mark">?</span>;
+    <span class="kw">let </span>item =
+        cx.q.item_for(<span class="string">"lowering closure call"</span>, ast.id)
+            .with_span(ast)<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="prelude-val">Some</span>(meta) = cx.q.query_meta(ast, item.item, Default::default())<span class="question-mark">? </span><span class="kw">else </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
@@ -2470,7 +2277,7 @@
 ) -&gt; compile::Result&lt;hir::Expr&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="macro">alloc_with!</span>(cx, ast);
 
-    <span class="kw">let </span>in_path = cx.in_path.take();
+    <span class="kw">let </span>in_path = take(<span class="kw-2">&amp;mut </span>cx.in_path);
 
     <span class="kw">let </span>kind = <span class="kw">match </span>ast {
         ast::Expr::Path(ast) =&gt; expr_path(cx, ast, in_path)<span class="question-mark">?</span>,
@@ -2546,7 +2353,7 @@
         })),
         ast::Expr::If(ast) =&gt; hir::ExprKind::If(<span class="macro">alloc!</span>(expr_if(cx, ast)<span class="question-mark">?</span>)),
         ast::Expr::Match(ast) =&gt; hir::ExprKind::Match(<span class="macro">alloc!</span>(hir::ExprMatch {
-            expr: expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>,
+            expr: <span class="macro">alloc!</span>(expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>),
             branches: <span class="macro">iter!</span>(<span class="kw-2">&amp;</span>ast.branches, |(ast, <span class="kw">_</span>)| {
                 cx.scopes.push(<span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
@@ -2571,7 +2378,7 @@
         }
         ast::Expr::Empty(ast) =&gt; {
             <span class="comment">// NB: restore in_path setting.
-            </span>cx.in_path.set(in_path);
+            </span>cx.in_path = in_path;
             hir::ExprKind::Group(<span class="macro">alloc!</span>(expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>))
         }
         ast::Expr::Binary(ast) =&gt; {
@@ -2582,9 +2389,9 @@
 
             <span class="kw">let </span>lhs = expr(cx, <span class="kw-2">&amp;</span>ast.lhs)<span class="question-mark">?</span>;
 
-            <span class="kw">let </span>needs = cx.needs.replace(rhs_needs);
+            <span class="kw">let </span>needs = replace(<span class="kw-2">&amp;mut </span>cx.needs, rhs_needs);
             <span class="kw">let </span>rhs = expr(cx, <span class="kw-2">&amp;</span>ast.rhs)<span class="question-mark">?</span>;
-            cx.needs.set(needs);
+            cx.needs = needs;
 
             hir::ExprKind::Binary(<span class="macro">alloc!</span>(hir::ExprBinary {
                 lhs,
@@ -2664,7 +2471,7 @@
 
             <span class="kw">match </span>cx.q.builtin_macro_for(id).with_span(ast)<span class="question-mark">?</span>.as_ref() {
                 query::BuiltInMacro::Template(ast) =&gt; {
-                    <span class="kw">let </span>old = cx.in_template.replace(<span class="bool-val">true</span>);
+                    <span class="kw">let </span>old = replace(<span class="kw-2">&amp;mut </span>cx.in_template, <span class="bool-val">true</span>);
 
                     <span class="kw">let </span>result = hir::ExprKind::Template(<span class="macro">alloc!</span>(hir::BuiltInTemplate {
                         span: ast.span,
@@ -2672,19 +2479,22 @@
                         exprs: <span class="macro">iter!</span>(<span class="kw-2">&amp;</span>ast.exprs, |ast| expr(cx, ast)<span class="question-mark">?</span>),
                     }));
 
-                    cx.in_template.set(old);
+                    cx.in_template = old;
                     result
                 }
                 query::BuiltInMacro::Format(ast) =&gt; {
-                    hir::ExprKind::Format(<span class="macro">alloc!</span>(hir::BuiltInFormat {
-                        span: ast.span,
+                    <span class="kw">let </span>spec = hir::BuiltInFormatSpec {
                         fill: ast.fill,
                         align: ast.align,
                         width: ast.width,
                         precision: ast.precision,
                         flags: ast.flags,
                         format_type: ast.format_type,
-                        value: expr(cx, <span class="kw-2">&amp;</span>ast.value)<span class="question-mark">?</span>,
+                    };
+
+                    hir::ExprKind::Format(<span class="macro">alloc!</span>(hir::BuiltInFormat {
+                        spec,
+                        value: <span class="macro">alloc!</span>(expr(cx, <span class="kw-2">&amp;</span>ast.value)<span class="question-mark">?</span>),
                     }))
                 }
                 query::BuiltInMacro::File(ast) =&gt; hir::ExprKind::Lit(lit(cx, <span class="kw-2">&amp;</span>ast.value)<span class="question-mark">?</span>),
@@ -2851,7 +2661,7 @@
                 (ast::NumberValue::Float(n), <span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(hir::Lit::Float(n)),
                 (ast::NumberValue::Integer(int), <span class="prelude-val">Some</span>(ast::NumberSuffix::Byte(..))) =&gt; {
                     <span class="kw">let </span><span class="prelude-val">Some</span>(n) = int.to_u8() <span class="kw">else </span>{
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(ast, ErrorKind::BadNumberOutOfBounds));
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(ast, ErrorKind::BadByteOutOfBounds));
                     };
 
                     <span class="prelude-val">Ok</span>(hir::Lit::Byte(n))
@@ -2874,7 +2684,7 @@
             <span class="prelude-val">Ok</span>(hir::Lit::Char(ch))
         }
         ast::Lit::Str(lit) =&gt; {
-            <span class="kw">let </span>string = <span class="kw">if </span>cx.in_template.get() {
+            <span class="kw">let </span>string = <span class="kw">if </span>cx.in_template {
                 lit.resolve_template_string(<span class="macro">resolve_context!</span>(cx.q))<span class="question-mark">?
             </span>} <span class="kw">else </span>{
                 lit.resolve_string(<span class="macro">resolve_context!</span>(cx.q))<span class="question-mark">?
@@ -2984,7 +2794,9 @@
         <span class="kw">return </span><span class="prelude-val">Ok</span>(hir::ExprKind::Block(<span class="macro">alloc!</span>(block(cx, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>)));
     };
 
-    <span class="kw">let </span>item = cx.q.item_for(ast.block.id).with_span(<span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>;
+    <span class="kw">let </span>item =
+        cx.q.item_for(<span class="string">"lowering block"</span>, ast.block.id)
+            .with_span(<span class="kw-2">&amp;</span>ast.block)<span class="question-mark">?</span>;
     <span class="kw">let </span>meta = cx.lookup_meta(ast, item.item, GenericsParameters::default())<span class="question-mark">?</span>;
 
     <span class="kw">match </span>(kind, <span class="kw-2">&amp;</span>meta.kind) {
@@ -3481,7 +3293,7 @@
         <span class="kw">return </span><span class="prelude-val">Ok</span>(hir::ExprKind::Variable(id));
     }
 
-    <span class="kw">if let </span>Needs::Value = cx.needs.get() {
+    <span class="kw">if let </span>Needs::Value = cx.needs {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = ast.try_as_ident() {
             <span class="kw">let </span>name = <span class="macro">alloc_str!</span>(name.resolve(<span class="macro">resolve_context!</span>(cx.q))<span class="question-mark">?</span>);
 
@@ -3504,7 +3316,7 @@
         <span class="kw">return </span>expr_path_meta(cx, <span class="kw-2">&amp;</span>meta, ast);
     }
 
-    <span class="kw">if let </span>(Needs::Value, <span class="prelude-val">Some</span>(local)) = (cx.needs.get(), ast.try_as_ident()) {
+    <span class="kw">if let </span>(Needs::Value, <span class="prelude-val">Some</span>(local)) = (cx.needs, ast.try_as_ident()) {
         <span class="kw">let </span>local = local.resolve(<span class="macro">resolve_context!</span>(cx.q))<span class="question-mark">?</span>;
 
         <span class="comment">// light heuristics, treat it as a type error in case the first
@@ -3542,7 +3354,7 @@
 ) -&gt; compile::Result&lt;hir::ExprKind&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="macro">alloc_with!</span>(cx, span);
 
-    <span class="kw">if let </span>Needs::Value = cx.needs.get() {
+    <span class="kw">if let </span>Needs::Value = cx.needs {
         <span class="kw">match </span><span class="kw-2">&amp;</span>meta.kind {
             meta::Kind::Struct {
                 fields: meta::Fields::Empty,
@@ -3782,7 +3594,9 @@
 
     <span class="macro">alloc_with!</span>(cx, ast);
 
-    <span class="kw">let </span>expr = cx.in_path(<span class="bool-val">true</span>, |cx| expr(cx, <span class="kw-2">&amp;</span>ast.expr))<span class="question-mark">?</span>;
+    <span class="kw">let </span>in_path = replace(<span class="kw-2">&amp;mut </span>cx.in_path, <span class="bool-val">true</span>);
+    <span class="kw">let </span>expr = expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>;
+    cx.in_path = in_path;
 
     <span class="kw">let </span>call = <span class="lifetime">'ok</span>: {
         <span class="kw">match </span>expr.kind {
@@ -3857,7 +3671,9 @@
                         };
                     }
                     meta::Kind::ConstFn =&gt; {
-                        <span class="kw">let </span>from = cx.q.item_for(ast.id).with_span(ast)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>from =
+                            cx.q.item_for(<span class="string">"lowering constant function"</span>, ast.id)
+                                .with_span(ast)<span class="question-mark">?</span>;
 
                         <span class="kw">break </span><span class="lifetime">'ok </span>hir::Call::ConstFn {
                             from_module: from.module,

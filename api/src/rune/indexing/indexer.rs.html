@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/indexing/indexer.rs`."><title>indexer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (0d634185d 2024-08-29)" data-channel="nightly" data-search-js="search-acd2e111c9cb27e3.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-cb0df477c2d67d00.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/indexing/indexer.rs`."><title>indexer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-405f8b29f52305f8.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (8d6b88b16 2024-09-11)" data-channel="nightly" data-search-js="search-0cfde64e8ad3a7fe.js" data-settings-js="settings-7e3bb6c46e92e77c.js" ><script src="../../../static.files/storage-29b1d5a9048d38fe.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-14659ec02b58af51.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-40f72c9259523cb3.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -577,18 +578,48 @@
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
 <a href="#579" id="579">579</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::replace;
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a></pre></div><pre class="rust"><code><span class="kw">use </span>rust_alloc::rc::Rc;
+
+<span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::num::NonZeroUsize;
 
-<span class="kw">use </span><span class="kw">crate</span>::alloc::path::PathBuf;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::path::Path;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{HashMap, Vec, VecDeque};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, HashMap, VecDeque};
 <span class="kw">use </span><span class="kw">crate</span>::ast::spanned;
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Span, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::attrs;
 <span class="kw">use </span><span class="kw">crate</span>::compile::{
-    <span class="self">self</span>, Doc, DynLocation, ErrorKind, ItemId, ItemMeta, ModId, Visibility, WithSpan,
+    <span class="self">self</span>, Doc, DynLocation, Error, ErrorKind, ItemId, ItemMeta, ModId, Visibility, WithSpan,
 };
+<span class="kw">use </span><span class="kw">crate</span>::grammar::{Ignore, Node, Tree};
 <span class="kw">use </span><span class="kw">crate</span>::macros::MacroCompiler;
 <span class="kw">use </span><span class="kw">crate</span>::parse::{Parse, Parser, Resolve};
 <span class="kw">use </span><span class="kw">crate</span>::query::{BuiltInFile, BuiltInFormat, BuiltInLine, BuiltInMacro, BuiltInTemplate, Query};
@@ -596,7 +627,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::worker::{LoadFileKind, Task};
 <span class="kw">use </span><span class="kw">crate</span>::SourceId;
 
-<span class="kw">use super</span>::{Items, Layer, Scopes};
+<span class="kw">use super</span>::{Guard, Items, Layer, Scopes};
 
 <span class="doccomment">/// Macros are only allowed to expand recursively into other macros 64 times.
 </span><span class="kw">const </span>MAX_MACRO_RECURSION: usize = <span class="number">64</span>;
@@ -628,14 +659,33 @@
     <span class="doccomment">/// Depth of expression macro expansion that we're currently in.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) macro_depth: usize,
     <span class="doccomment">/// The root URL that the indexed file originated from.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) root: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) root: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Path&gt;,
     <span class="doccomment">/// Imports to process.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) queue: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>VecDeque&lt;Task&gt;&gt;,
     <span class="doccomment">/// Loaded modules.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) loaded: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>HashMap&lt;ModId, (SourceId, Span)&gt;&gt;,
+    <span class="doccomment">/// The current tree being processed.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) tree: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Rc&lt;Tree&gt;,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Ignore&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>Indexer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
+    <span class="doccomment">/// Report an error.
+    </span><span class="kw">fn </span>error(<span class="kw-2">&amp;mut </span><span class="self">self</span>, error: Error) -&gt; alloc::Result&lt;()&gt; {
+        <span class="self">self</span>.q.diagnostics.error(<span class="self">self</span>.source_id, error)
+    }
+
+    <span class="kw">fn </span>ignore(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: Node&lt;<span class="lifetime">'a</span>&gt;) -&gt; compile::Result&lt;()&gt; {
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; Indexer&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; {
+    <span class="doccomment">/// Push an identifier item.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>push_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; alloc::Result&lt;Guard&gt; {
+        <span class="kw">let </span>id = <span class="self">self</span>.q.pool.next_id(<span class="self">self</span>.item.id);
+        <span class="self">self</span>.items.push_id(id)
+    }
+
     <span class="doccomment">/// Insert a new item at the current indexed location.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_new_item(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -963,7 +1013,7 @@
     {
         ast.path.id = <span class="self">self</span>.item.id;
 
-        <span class="kw">let </span>item = <span class="self">self</span>.q.item_for(<span class="self">self</span>.item.id).with_span(<span class="kw-2">&amp;</span>ast)<span class="question-mark">?</span>;
+        <span class="kw">let </span>item = <span class="self">self</span>.q.item_for(<span class="string">"macro"</span>, <span class="self">self</span>.item.id).with_span(<span class="kw-2">&amp;</span>ast)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>compiler = MacroCompiler {
             item_meta: item,
@@ -984,7 +1034,10 @@
     {
         attr.path.id = <span class="self">self</span>.item.id;
 
-        <span class="kw">let </span>containing = <span class="self">self</span>.q.item_for(<span class="self">self</span>.item.id).with_span(<span class="kw-2">&amp;*</span>attr)<span class="question-mark">?</span>;
+        <span class="kw">let </span>containing = <span class="self">self
+            </span>.q
+            .item_for(<span class="string">"attribute macro"</span>, <span class="self">self</span>.item.id)
+            .with_span(<span class="kw-2">&amp;*</span>attr)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>compiler = MacroCompiler {
             item_meta: containing,
@@ -1051,7 +1104,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = <span class="self">self</span>.queue.as_mut() {
             queue.try_push_back(Task::LoadFile {
                 kind: LoadFileKind::Module {
-                    root: <span class="self">self</span>.root.clone(),
+                    root: <span class="self">self</span>.root.map(|p| p.try_to_owned()).transpose()<span class="question-mark">?</span>,
                 },
                 source_id,
                 mod_item,
@@ -1063,7 +1116,7 @@
     }
 }
 
-<span class="attr">#[must_use]
+<span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>IndexItem {
     <span class="doccomment">/// The current module being indexed.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) module: ModId,
@@ -1091,7 +1144,10 @@
     }
 
     <span class="doccomment">/// Replace item we're currently in.
+    </span><span class="attr">#[tracing::instrument(skip(<span class="self">self</span>), fields(<span class="self">self</span>.module = <span class="question-mark">?</span><span class="self">self</span>.module, <span class="self">self</span>.id = <span class="question-mark">?</span><span class="self">self</span>.id, <span class="self">self</span>.impl_item = <span class="question-mark">?</span><span class="self">self</span>.impl_item))]
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: ItemId) -&gt; IndexItem {
+        <span class="macro">tracing::debug!</span>(<span class="string">"replacing item"</span>);
+
         IndexItem {
             module: <span class="self">self</span>.module,
             id: replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.id, id),
@@ -1125,35 +1181,35 @@
 
 <span class="doccomment">/// Construct the calling convention based on the parameters.
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>validate_call(
-    const_token: <span class="prelude-ty">Option</span>&lt;<span class="macro">T!</span>[<span class="kw">const</span>]&gt;,
-    async_token: <span class="prelude-ty">Option</span>&lt;<span class="macro">T!</span>[<span class="kw">async</span>]&gt;,
+    is_const: bool,
+    is_async: bool,
     layer: <span class="kw-2">&amp;</span>Layer,
 ) -&gt; compile::Result&lt;<span class="prelude-ty">Option</span>&lt;Call&gt;&gt; {
     <span class="kw">for </span>span <span class="kw">in </span><span class="kw-2">&amp;</span>layer.awaits {
-        <span class="kw">if </span>const_token.is_some() {
+        <span class="kw">if </span>is_const {
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::AwaitInConst));
         }
 
-        <span class="kw">if </span>async_token.is_none() {
+        <span class="kw">if </span>!is_async {
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::AwaitOutsideAsync));
         }
     }
 
     <span class="kw">for </span>span <span class="kw">in </span><span class="kw-2">&amp;</span>layer.yields {
-        <span class="kw">if </span>const_token.is_some() {
+        <span class="kw">if </span>is_const {
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::YieldInConst));
         }
     }
 
-    <span class="kw">if </span>const_token.is_some() {
+    <span class="kw">if </span>is_const {
         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
     }
 
-    <span class="prelude-val">Ok</span>(<span class="kw">match </span>(!layer.yields.is_empty(), async_token) {
-        (<span class="bool-val">true</span>, <span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Some</span>(Call::Generator),
-        (<span class="bool-val">false</span>, <span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Some</span>(Call::Immediate),
-        (<span class="bool-val">true</span>, <span class="prelude-val">Some</span>(..)) =&gt; <span class="prelude-val">Some</span>(Call::Stream),
-        (<span class="bool-val">false</span>, <span class="prelude-val">Some</span>(..)) =&gt; <span class="prelude-val">Some</span>(Call::Async),
+    <span class="prelude-val">Ok</span>(<span class="kw">match </span>(!layer.yields.is_empty(), is_async) {
+        (<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; <span class="prelude-val">Some</span>(Call::Generator),
+        (<span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; <span class="prelude-val">Some</span>(Call::Immediate),
+        (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; <span class="prelude-val">Some</span>(Call::Stream),
+        (<span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; <span class="prelude-val">Some</span>(Call::Async),
     })
 }
 </code></pre></div></section></main></body></html>

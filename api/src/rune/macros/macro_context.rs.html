@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/macros/macro_context.rs`."><title>macro_context.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0-nightly (0d634185d 2024-08-29)" data-channel="nightly" data-search-js="search-acd2e111c9cb27e3.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-cb0df477c2d67d00.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/macros/macro_context.rs`."><title>macro_context.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-405f8b29f52305f8.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (8d6b88b16 2024-09-11)" data-channel="nightly" data-search-js="search-0cfde64e8ad3a7fe.js" data-settings-js="settings-7e3bb6c46e92e77c.js" ><script src="../../../static.files/storage-29b1d5a9048d38fe.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-14659ec02b58af51.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-40f72c9259523cb3.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -307,7 +308,11 @@
 <a href="#307" id="307">307</a>
 <a href="#308" id="308">308</a>
 <a href="#309" id="309">309</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Context for a macro.
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a></pre></div><pre class="rust"><code><span class="doccomment">//! Context for a macro.
 
 </span><span class="kw">use </span>core::fmt;
 
@@ -321,99 +326,104 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::Value;
 <span class="kw">use crate</span>::{Source, SourceId};
 
-<span class="macro">cfg_std!</span> {
-    <span class="doccomment">/// Construct an empty macro context which can be used for testing.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rune::ast;
-    /// use rune::macros;
-    ///
-    /// macros::test(|cx| {
-    ///     let lit = cx.lit("hello world")?;
-    ///     assert!(matches!(lit, ast::Lit::Str(..)));
-    ///     Ok(())
-    /// })?;
-    /// # Ok::&lt;_, rune::support::Error&gt;(())
-    /// ```
-    </span><span class="kw">pub fn </span>test&lt;F, O&gt;(f: F) -&gt; <span class="kw">crate</span>::support::Result&lt;O&gt;
-    <span class="kw">where
-        </span>F: FnOnce(<span class="kw-2">&amp;mut </span>MacroContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;) -&gt; <span class="kw">crate</span>::support::Result&lt;O&gt;,
-    {
-        <span class="kw">use </span><span class="kw">crate</span>::support::Context <span class="kw">as _</span>;
-        <span class="kw">use </span><span class="kw">crate</span>::compile::{NoopCompileVisitor, NoopSourceLoader, Pool, Prelude, UnitBuilder};
-        <span class="kw">use </span><span class="kw">crate</span>::hir;
-        <span class="kw">use </span><span class="kw">crate</span>::indexing::{IndexItem, Items, Scopes};
-        <span class="kw">use </span><span class="kw">crate</span>::macros::Storage;
-        <span class="kw">use </span><span class="kw">crate</span>::query::Query;
-        <span class="kw">use </span><span class="kw">crate</span>::shared::{Consts, Gen};
-        <span class="kw">use crate</span>::{Context, Diagnostics, Options, Sources, Item};
+<span class="doccomment">/// Construct an empty macro context which can be used for testing.
+///
+/// # Examples
+///
+/// ```
+/// use rune::ast;
+/// use rune::macros;
+///
+/// macros::test(|cx| {
+///     let lit = cx.lit("hello world")?;
+///     assert!(matches!(lit, ast::Lit::Str(..)));
+///     Ok(())
+/// })?;
+/// # Ok::&lt;_, rune::support::Error&gt;(())
+/// ```
+</span><span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+#[cfg_attr(rune_docsrs, doc(cfg(feature = <span class="string">"std"</span>)))]
+</span><span class="kw">pub fn </span>test&lt;F, O&gt;(f: F) -&gt; <span class="kw">crate</span>::support::Result&lt;O&gt;
+<span class="kw">where
+    </span>F: FnOnce(<span class="kw-2">&amp;mut </span>MacroContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;) -&gt; <span class="kw">crate</span>::support::Result&lt;O&gt;,
+{
+    <span class="kw">use </span>rust_alloc::rc::Rc;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>unit = UnitBuilder::default();
-        <span class="kw">let </span>prelude = Prelude::default();
-        <span class="kw">let </span>gen = Gen::default();
-        <span class="kw">let </span>const_arena = hir::Arena::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>consts = Consts::default();
-        <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::default();
-        <span class="kw">let </span><span class="kw-2">mut </span>sources = Sources::default();
-        <span class="kw">let </span><span class="kw-2">mut </span>pool = Pool::new().context(<span class="string">"Failed to allocate pool"</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>visitor = NoopCompileVisitor::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>diagnostics = Diagnostics::default();
-        <span class="kw">let </span><span class="kw-2">mut </span>source_loader = NoopSourceLoader::default();
-        <span class="kw">let </span>options = Options::default();
-        <span class="kw">let </span>context = Context::default();
-        <span class="kw">let </span><span class="kw-2">mut </span>inner = Default::default();
+    <span class="kw">use </span><span class="kw">crate</span>::compile::{NoopCompileVisitor, NoopSourceLoader, Pool, Prelude, UnitBuilder};
+    <span class="kw">use </span><span class="kw">crate</span>::hir;
+    <span class="kw">use </span><span class="kw">crate</span>::indexing::{IndexItem, Items, Scopes};
+    <span class="kw">use </span><span class="kw">crate</span>::macros::Storage;
+    <span class="kw">use </span><span class="kw">crate</span>::query::Query;
+    <span class="kw">use </span><span class="kw">crate</span>::shared::{Consts, Gen};
+    <span class="kw">use </span><span class="kw">crate</span>::support::Context <span class="kw">as _</span>;
+    <span class="kw">use crate</span>::{Context, Diagnostics, Item, Options, Sources};
 
-        <span class="kw">let </span><span class="kw-2">mut </span>query = Query::new(
-            <span class="kw-2">&amp;mut </span>unit,
-            <span class="kw-2">&amp;</span>prelude,
-            <span class="kw-2">&amp;</span>const_arena,
-            <span class="kw-2">&amp;mut </span>consts,
-            <span class="kw-2">&amp;mut </span>storage,
-            <span class="kw-2">&amp;mut </span>sources,
-            <span class="kw-2">&amp;mut </span>pool,
-            <span class="kw-2">&amp;mut </span>visitor,
-            <span class="kw-2">&amp;mut </span>diagnostics,
-            <span class="kw-2">&amp;mut </span>source_loader,
-            <span class="kw-2">&amp;</span>options,
-            <span class="kw-2">&amp;</span>gen,
-            <span class="kw-2">&amp;</span>context,
-            <span class="kw-2">&amp;mut </span>inner,
-        );
+    <span class="kw">let </span><span class="kw-2">mut </span>unit = UnitBuilder::default();
+    <span class="kw">let </span>prelude = Prelude::default();
+    <span class="kw">let </span>gen = Gen::default();
+    <span class="kw">let </span>const_arena = hir::Arena::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>consts = Consts::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>storage = Storage::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>sources = Sources::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>pool = Pool::new().context(<span class="string">"Failed to allocate pool"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>visitor = NoopCompileVisitor::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>diagnostics = Diagnostics::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>source_loader = NoopSourceLoader::default();
+    <span class="kw">let </span>options = Options::from_default_env()<span class="question-mark">?</span>;
+    <span class="kw">let </span>context = Context::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>inner = Default::default();
 
-        <span class="kw">let </span>source_id = SourceId::empty();
+    <span class="kw">let </span><span class="kw-2">mut </span>query = Query::new(
+        <span class="kw-2">&amp;mut </span>unit,
+        <span class="kw-2">&amp;</span>prelude,
+        <span class="kw-2">&amp;</span>const_arena,
+        <span class="kw-2">&amp;mut </span>consts,
+        <span class="kw-2">&amp;mut </span>storage,
+        <span class="kw-2">&amp;mut </span>sources,
+        <span class="kw-2">&amp;mut </span>pool,
+        <span class="kw-2">&amp;mut </span>visitor,
+        <span class="kw-2">&amp;mut </span>diagnostics,
+        <span class="kw-2">&amp;mut </span>source_loader,
+        <span class="kw-2">&amp;</span>options,
+        <span class="kw-2">&amp;</span>gen,
+        <span class="kw-2">&amp;</span>context,
+        <span class="kw-2">&amp;mut </span>inner,
+    );
 
-        <span class="kw">let </span>(root_id, root_mod_id) = query
-            .insert_root_mod(source_id, Span::empty())
-            .context(<span class="string">"Failed to inserted root module"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>source_id = SourceId::empty();
 
-        <span class="kw">let </span>item_meta = query
-            .item_for(root_id)
-            .context(<span class="string">"Just inserted item meta does not exist"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>(root_id, root_mod_id) = query
+        .insert_root_mod(source_id, Span::empty())
+        .context(<span class="string">"Failed to inserted root module"</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>idx = Indexer {
-            q: query.borrow(),
-            source_id,
-            items: Items::new(Item::new()).context(<span class="string">"Failed to construct items"</span>)<span class="question-mark">?</span>,
-            scopes: Scopes::new().context(<span class="string">"Failed to build indexer scopes"</span>)<span class="question-mark">?</span>,
-            item: IndexItem::new(root_mod_id, root_id),
-            nested_item: <span class="prelude-val">None</span>,
-            macro_depth: <span class="number">0</span>,
-            root: <span class="prelude-val">None</span>,
-            queue: <span class="prelude-val">None</span>,
-            loaded: <span class="prelude-val">None</span>,
-        };
+    <span class="kw">let </span>item_meta = query
+        .item_for(<span class="string">"root item"</span>, root_id)
+        .context(<span class="string">"Just inserted item meta does not exist"</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>cx = MacroContext {
-            macro_span: Span::empty(),
-            input_span: Span::empty(),
-            item_meta,
-            idx: <span class="kw-2">&amp;mut </span>idx,
-        };
+    <span class="kw">let </span>tree = Rc::default();
 
-        f(<span class="kw-2">&amp;mut </span>cx)
-    }
+    <span class="kw">let </span><span class="kw-2">mut </span>idx = Indexer {
+        q: query.borrow(),
+        source_id,
+        items: Items::new(Item::new()).context(<span class="string">"Failed to construct items"</span>)<span class="question-mark">?</span>,
+        scopes: Scopes::new().context(<span class="string">"Failed to build indexer scopes"</span>)<span class="question-mark">?</span>,
+        item: IndexItem::new(root_mod_id, root_id),
+        nested_item: <span class="prelude-val">None</span>,
+        macro_depth: <span class="number">0</span>,
+        root: <span class="prelude-val">None</span>,
+        queue: <span class="prelude-val">None</span>,
+        loaded: <span class="prelude-val">None</span>,
+        tree: <span class="kw-2">&amp;</span>tree,
+    };
+
+    <span class="kw">let </span><span class="kw-2">mut </span>cx = MacroContext {
+        macro_span: Span::empty(),
+        input_span: Span::empty(),
+        item_meta,
+        idx: <span class="kw-2">&amp;mut </span>idx,
+    };
+
+    f(<span class="kw-2">&amp;mut </span>cx)
 }
 
 <span class="doccomment">/// Context for a running macro.
