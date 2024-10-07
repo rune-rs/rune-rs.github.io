@@ -154,7 +154,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_24(arg0, arg1, arg2) {
-      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h1d6cec2d2408b719(arg0, arg1, addHeapObject(arg2));
+      wasm$1._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hdafa7d7213360931(arg0, arg1, addHeapObject(arg2));
   }
 
   /**
@@ -177,7 +177,7 @@ var rune = (function (exports) {
       }
   }
   function __wbg_adapter_58(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h223b14993d0a98ec(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+      wasm$1.wasm_bindgen__convert__closures__invoke2_mut__h320298061164bcb4(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
   }
 
   async function __wbg_load(module, imports) {
@@ -234,10 +234,6 @@ var rune = (function (exports) {
           const ret = false;
           return ret;
       };
-      imports.wbg.__wbg_jssleep_0c89e01a12b4439e = function(arg0) {
-          const ret = js_sleep(arg0);
-          return addHeapObject(ret);
-      };
       imports.wbg.__wbg_new_525245e2b9901204 = function() {
           const ret = new Object();
           return addHeapObject(ret);
@@ -279,6 +275,10 @@ var rune = (function (exports) {
           }
           const ret = result;
           return ret;
+      };
+      imports.wbg.__wbg_jssleep_0c89e01a12b4439e = function(arg0) {
+          const ret = js_sleep(arg0);
+          return addHeapObject(ret);
       };
       imports.wbg.__wbg_text_a94b91ea8700357a = function() { return handleError(function (arg0) {
           const ret = getObject(arg0).text();
@@ -438,7 +438,7 @@ var rune = (function (exports) {
       imports.wbg.__wbg_queueMicrotask_12a30234db4045d3 = function(arg0) {
           queueMicrotask(getObject(arg0));
       };
-      imports.wbg.__wbindgen_closure_wrapper5726 = function(arg0, arg1, arg2) {
+      imports.wbg.__wbindgen_closure_wrapper5722 = function(arg0, arg1, arg2) {
           const ret = makeMutClosure(arg0, arg1, 970, __wbg_adapter_24);
           return addHeapObject(ret);
       };
@@ -508,7 +508,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-834682dc.wasm";
+                  let path = "/js/assets/rune_wasm-deda657e.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
