@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/future.rs`."><title>future.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-6d8951b3ccd3cbca.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (3ae715c8c 2024-10-07)" data-channel="nightly" data-search-js="search-e056c65ede92db13.js" data-settings-js="settings-805db61a62df4bd2.js" ><script src="../../../static.files/storage-1d39b6787ed640ff.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f070b9041d14864c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-0111fcff984fae8f.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>future.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/future.rs`."><title>future.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-49344e4802b2d48a.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (52fd99839 2024-10-10)" data-channel="nightly" data-search-js="search-e056c65ede92db13.js" data-settings-js="settings-805db61a62df4bd2.js" ><script src="../../../static.files/storage-1d39b6787ed640ff.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f070b9041d14864c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-0111fcff984fae8f.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>future.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -126,19 +126,38 @@
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future;
 <span class="kw">use </span>core::pin::Pin;
+<span class="kw">use </span>core::ptr::NonNull;
 <span class="kw">use </span>core::task::{Context, Poll};
 
+<span class="kw">use </span><span class="kw">crate</span>::alloc::alloc::Global;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{ToValue, Value, VmErrorKind, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
 <span class="kw">use </span>pin_project::pin_project;
 
-<span class="doccomment">/// dyn future alias.
-</span><span class="kw">type </span>DynFuture = <span class="kw">dyn </span>future::Future&lt;Output = VmResult&lt;Value&gt;&gt; + <span class="lifetime">'static</span>;
+<span class="doccomment">/// A virtual table for a type-erased future.
+</span><span class="kw">struct </span>Vtable {
+    poll: <span class="kw">unsafe fn</span>(<span class="kw-2">*mut </span>(), cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;VmResult&lt;Value&gt;&gt;,
+    drop: <span class="kw">unsafe fn</span>(<span class="kw-2">*mut </span>()),
+}
 
 <span class="doccomment">/// A type-erased future that can only be unsafely polled in combination with
 /// the virtual machine that created it.
@@ -147,7 +166,8 @@
 #[rune(builtin, static_type = FUTURE)]
 #[rune(from_value = Value::into_future)]
 </span><span class="kw">pub struct </span>Future {
-    future: <span class="prelude-ty">Option</span>&lt;Pin&lt;Box&lt;DynFuture&gt;&gt;&gt;,
+    future: <span class="prelude-ty">Option</span>&lt;NonNull&lt;()&gt;&gt;,
+    vtable: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>Vtable,
 }
 
 <span class="kw">impl </span>Future {
@@ -157,27 +177,25 @@
         </span>T: <span class="lifetime">'static </span>+ future::Future&lt;Output = VmResult&lt;O&gt;&gt;,
         O: ToValue,
     {
-        <span class="comment">// First construct a normal box, then coerce unsized.
-        </span><span class="kw">let </span>b = Box::try_new(<span class="kw">async move </span>{
-            <span class="kw">let </span>value = <span class="macro">vm_try!</span>(future.<span class="kw">await</span>);
-            value.to_value()
-        })<span class="question-mark">?</span>;
+        <span class="kw">let </span>(future, Global) = Box::into_raw_with_allocator(Box::try_new(future)<span class="question-mark">?</span>);
 
-        <span class="comment">// SAFETY: We know that the allocator the boxed used is `Global`, which
-        // is compatible with the allocator used by the `std` box.
-        </span><span class="kw">unsafe </span>{
-            <span class="kw">let </span>(ptr, alloc) = Box::into_raw_with_allocator(b);
-            <span class="comment">// Our janky coerce unsized.
-            </span><span class="kw">let </span>b: ::rust_alloc::boxed::Box&lt;DynFuture&gt; = ::rust_alloc::boxed::Box::from_raw(ptr);
-            <span class="kw">let </span>b = ::rust_alloc::boxed::Box::into_raw(b);
-            <span class="kw">let </span>b = Box::from_raw_in(b, alloc);
+        <span class="kw">let </span>future = <span class="kw">unsafe </span>{ NonNull::new_unchecked(future).cast() };
 
-            <span class="comment">// Second convert into one of our boxes, which ensures that memory is
-            // being accounted for.
-            </span><span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-                future: <span class="prelude-val">Some</span>(Box::into_pin(b)),
-            })
-        }
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            future: <span class="prelude-val">Some</span>(future),
+            vtable: <span class="kw-2">&amp;</span>Vtable {
+                poll: |future, cx| <span class="kw">unsafe </span>{
+                    <span class="kw">match </span>Pin::new_unchecked(<span class="kw-2">&amp;mut *</span>future.cast::&lt;T&gt;()).poll(cx) {
+                        Poll::Pending =&gt; Poll::Pending,
+                        Poll::Ready(VmResult::Ok(result)) =&gt; Poll::Ready(result.to_value()),
+                        Poll::Ready(VmResult::Err(err)) =&gt; Poll::Ready(VmResult::Err(err)),
+                    }
+                },
+                drop: |future| <span class="kw">unsafe </span>{
+                    <span class="kw">_ </span>= Box::from_raw_in(future.cast::&lt;T&gt;(), Global);
+                },
+            },
+        })
     }
 
     <span class="doccomment">/// Check if future is completed.
@@ -192,21 +210,31 @@
     <span class="kw">type </span>Output = VmResult&lt;Value&gt;;
 
     <span class="kw">fn </span>poll(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;VmResult&lt;Value&gt;&gt; {
-        <span class="kw">let </span>this = <span class="self">self</span>.get_mut();
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>this = <span class="self">self</span>.get_unchecked_mut();
 
-        <span class="kw">let </span>future = <span class="kw">match </span><span class="kw-2">&amp;mut </span>this.future {
-            <span class="prelude-val">Some</span>(future) =&gt; future,
-            <span class="prelude-val">None </span>=&gt; {
+            <span class="kw">let </span><span class="prelude-val">Some</span>(future) = this.future <span class="kw">else </span>{
                 <span class="kw">return </span>Poll::Ready(VmResult::err(VmErrorKind::FutureCompleted));
-            }
-        };
+            };
 
-        <span class="kw">match </span>future.as_mut().poll(cx) {
-            Poll::Ready(result) =&gt; {
-                this.future = <span class="prelude-val">None</span>;
-                Poll::Ready(result)
+            <span class="kw">match </span>(this.vtable.poll)(future.as_ptr(), cx) {
+                Poll::Ready(result) =&gt; {
+                    this.future = <span class="prelude-val">None</span>;
+                    (this.vtable.drop)(future.as_ptr());
+                    Poll::Ready(result)
+                }
+                Poll::Pending =&gt; Poll::Pending,
             }
-            Poll::Pending =&gt; Poll::Pending,
+        }
+    }
+}
+
+<span class="kw">impl </span>Drop <span class="kw">for </span>Future {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">unsafe </span>{
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(future) = <span class="self">self</span>.future.take() {
+                (<span class="self">self</span>.vtable.drop)(future.as_ptr());
+            }
         }
     }
 }
