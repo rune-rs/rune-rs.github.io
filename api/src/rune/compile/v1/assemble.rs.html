@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (a93c1718c 2024-10-24)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/v1/</div>assemble.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (c1db4dc24 2024-10-25)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/v1/</div>assemble.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -3155,7 +3155,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::BTreeMap;
-<span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Span, Spanned};
+<span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::ir;
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, Assembly, ErrorKind, ItemId, ModId, Options, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::hir;
@@ -3207,7 +3207,7 @@
     <span class="doccomment">/// Scopes defined in the compiler.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) scopes: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Scopes&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Context for which to emit warnings.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) contexts: Vec&lt;Span&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) contexts: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned&gt;,
     <span class="doccomment">/// The nesting of loop we are currently in.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) breaks: Breaks&lt;<span class="lifetime">'hir</span>&gt;,
     <span class="doccomment">/// Enabled optimizations.
@@ -3232,7 +3232,7 @@
     }
 
     <span class="doccomment">/// Get the latest relevant warning context.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>context(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Span&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>context(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned&gt; {
         <span class="self">self</span>.contexts.last().copied()
     }
 
@@ -4089,7 +4089,7 @@
     needs: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;,
 ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>diverge = <span class="prelude-val">None</span>;
-    cx.contexts.try_push(hir.span())<span class="question-mark">?</span>;
+    cx.contexts.try_push(hir)<span class="question-mark">?</span>;
 
     <span class="kw">for </span>stmt <span class="kw">in </span>hir.statements {
         <span class="kw">let </span><span class="kw-2">mut </span>needs = Any::ignore(hir).with_name(<span class="string">"statement ignore"</span>);
@@ -5966,7 +5966,7 @@
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
     needs: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;,
 ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
-    cx.contexts.try_push(span.span())<span class="question-mark">?</span>;
+    cx.contexts.try_push(span)<span class="question-mark">?</span>;
     cx.select_branches.clear();
 
     <span class="kw">let </span>asm = expr_select_inner(cx, hir, span, needs)<span class="question-mark">?</span>;
