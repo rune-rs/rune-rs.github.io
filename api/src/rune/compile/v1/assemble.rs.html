@@ -3146,8 +3146,7 @@
 <a href="#3145" id="3145">3145</a>
 <a href="#3146" id="3146">3146</a>
 <a href="#3147" id="3147">3147</a>
-<a href="#3148" id="3148">3148</a>
-<a href="#3149" id="3149">3149</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#3148" id="3148">3148</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::take;
 <span class="kw">use </span>core::slice;
 
@@ -6069,18 +6068,16 @@
     span: <span class="kw-2">&amp;</span><span class="lifetime">'hir </span><span class="kw">dyn </span>Spanned,
     needs: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Needs&lt;<span class="lifetime">'a</span>, <span class="lifetime">'hir</span>&gt;,
 ) -&gt; compile::Result&lt;Asm&lt;<span class="lifetime">'hir</span>&gt;&gt; {
-    <span class="macro">converge!</span>(expr(cx, <span class="kw-2">&amp;</span>hir.expr, needs)<span class="question-mark">?</span>);
-
-    <span class="kw">let </span><span class="prelude-val">Some</span>(addr) = needs.try_as_addr()<span class="question-mark">? </span><span class="kw">else </span>{
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(Asm::new(span, ()));
-    };
+    <span class="kw">let </span><span class="kw-2">mut </span>addr = cx.scopes.defer(span);
+    <span class="macro">converge!</span>(expr(cx, <span class="kw-2">&amp;</span>hir.expr, <span class="kw-2">&amp;mut </span>addr)<span class="question-mark">?</span>, free(addr));
+    <span class="kw">let </span>addr = addr.into_addr()<span class="question-mark">?</span>;
 
     <span class="kw">match </span>hir.op {
         ast::UnOp::Not(..) =&gt; {
             cx.asm.push(
                 Inst::Not {
                     addr: addr.addr(),
-                    out: addr.output(),
+                    out: needs.alloc_output()<span class="question-mark">?</span>,
                 },
                 span,
             )<span class="question-mark">?</span>;
@@ -6089,7 +6086,7 @@
             cx.asm.push(
                 Inst::Neg {
                     addr: addr.addr(),
-                    out: addr.output(),
+                    out: needs.alloc_output()<span class="question-mark">?</span>,
                 },
                 span,
             )<span class="question-mark">?</span>;
@@ -6102,6 +6099,7 @@
         }
     }
 
+    addr.free()<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(Asm::new(span, ()))
 }
 
