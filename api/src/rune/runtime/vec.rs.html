@@ -582,7 +582,16 @@
 <a href="#581" id="581">581</a>
 <a href="#582" id="582">582</a>
 <a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp;
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp;
 <span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::ops;
@@ -596,11 +605,12 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::slice::Iter;
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::runtime::Hasher;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Formatter, FromValue, Mutable, ProtocolCaller, RawAnyGuard, Ref, ToValue, UnsafeToRef, Value,
-    ValueBorrowRef, VmErrorKind, VmResult,
+<span class="kw">use crate</span>::{Any, TypeHash};
+
+<span class="kw">use super</span>::{
+    Formatter, FromValue, ProtocolCaller, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo,
+    RangeToInclusive, RawAnyGuard, Ref, ToValue, UnsafeToRef, Value, VmErrorKind, VmResult,
 };
-<span class="kw">use </span><span class="kw">crate</span>::Any;
 
 <span class="doccomment">/// Struct representing a dynamic vector.
 ///
@@ -936,27 +946,35 @@
     /// types, such as vectors and tuples.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>index_get(this: <span class="kw-2">&amp;</span>[Value], index: Value) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
         <span class="kw">let </span>slice: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[Value]&gt; = <span class="lifetime">'out</span>: {
-            <span class="kw">if let </span>ValueBorrowRef::Mutable(value) = <span class="macro">vm_try!</span>(index.borrow_ref()) {
-                <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                    Mutable::RangeFrom(range) =&gt; {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(index.as_any()) {
+                <span class="kw">match </span>value.type_hash() {
+                    RangeFrom::HASH =&gt; {
+                        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;RangeFrom&gt;());
                         <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
                         <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..);
                     }
-                    Mutable::RangeFull(..) =&gt; <span class="kw">break </span><span class="lifetime">'out </span>this.get(..),
-                    Mutable::RangeInclusive(range) =&gt; {
+                    RangeFull::HASH =&gt; {
+                        <span class="kw">_ </span>= <span class="macro">vm_try!</span>(value.borrow_ref::&lt;RangeFull&gt;());
+                        <span class="kw">break </span><span class="lifetime">'out </span>this.get(..);
+                    }
+                    RangeInclusive::HASH =&gt; {
+                        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;RangeInclusive&gt;());
                         <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
                         <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
                         <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..=end);
                     }
-                    Mutable::RangeToInclusive(range) =&gt; {
+                    RangeToInclusive::HASH =&gt; {
+                        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;RangeToInclusive&gt;());
                         <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
                         <span class="kw">break </span><span class="lifetime">'out </span>this.get(..=end);
                     }
-                    Mutable::RangeTo(range) =&gt; {
+                    RangeTo::HASH =&gt; {
+                        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;RangeTo&gt;());
                         <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
                         <span class="kw">break </span><span class="lifetime">'out </span>this.get(..end);
                     }
-                    Mutable::Range(range) =&gt; {
+                    Range::HASH =&gt; {
+                        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;Range&gt;());
                         <span class="kw">let </span>start = <span class="macro">vm_try!</span>(range.start.as_usize());
                         <span class="kw">let </span>end = <span class="macro">vm_try!</span>(range.end.as_usize());
                         <span class="kw">break </span><span class="lifetime">'out </span>this.get(start..end);

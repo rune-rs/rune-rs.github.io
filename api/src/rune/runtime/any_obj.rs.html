@@ -697,7 +697,54 @@
 <a href="#696" id="696">696</a>
 <a href="#697" id="697">697</a>
 <a href="#698" id="698">698</a>
-<a href="#699" id="699">699</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any::TypeId;
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any::TypeId;
 <span class="kw">use </span>core::cell::Cell;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::{needs_drop, offset_of, replace, ManuallyDrop};
@@ -712,19 +759,41 @@
     RefVtable, Snapshot, TypeInfo, VmErrorKind,
 };
 
-<span class="doccomment">/// Errors caused by casting an any reference.
-</span><span class="attr">#[cfg_attr(test, derive(Debug, PartialEq))]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>AnyObjError {
-    Cast(TypeInfo),
+<span class="doccomment">/// Errors caused when accessing or coercing an [`AnyObj`].
+</span><span class="attr">#[cfg_attr(test, derive(PartialEq))]
+</span><span class="kw">pub struct </span>AnyObjError {
+    kind: AnyObjErrorKind,
+}
+
+<span class="kw">impl </span>AnyObjError {
+    <span class="kw">fn </span>new(kind: AnyObjErrorKind) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ kind }
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>into_kind(<span class="self">self</span>) -&gt; AnyObjErrorKind {
+        <span class="self">self</span>.kind
+    }
+}
+
+<span class="attr">#[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>AnyObjErrorKind {
+    Cast(AnyTypeInfo, TypeInfo),
     AccessError(AccessError),
 }
 
-<span class="kw">impl</span>&lt;T&gt; From&lt;T&gt; <span class="kw">for </span>AnyObjError
-<span class="kw">where
-    </span>AccessError: From&lt;T&gt;,
-{
-    <span class="kw">fn </span>from(value: T) -&gt; <span class="self">Self </span>{
-        AnyObjError::AccessError(AccessError::from(value))
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>AnyObjError {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="self">self</span>.kind.fmt(f)
+    }
+}
+
+<span class="kw">impl </span>From&lt;AccessError&gt; <span class="kw">for </span>AnyObjError {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from(error: AccessError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(AnyObjErrorKind::AccessError(error))
     }
 }
 
@@ -877,11 +946,14 @@
         <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
 
         <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::new(AnyObjErrorKind::Cast(
+                T::INFO,
+                vtable.type_info(),
+            )));
         }
 
         <span class="kw">if </span>!<span class="macro">matches!</span>(vtable.kind, Kind::Own) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::AccessError(AccessError::not_owned(
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::from(AccessError::not_owned(
                 vtable.type_info(),
             )));
         }
@@ -937,18 +1009,21 @@
     ///
     /// This errors in case the underlying value is not owned, non-owned
     /// references cannot be coerced into [`Ref&lt;T&gt;`].
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_ref&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Ref&lt;T&gt;, AnyObjError&gt;
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_ref&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Ref&lt;T&gt;, AnyObjError&gt;
     <span class="kw">where
         </span>T: Any,
     {
         <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
 
         <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::new(AnyObjErrorKind::Cast(
+                T::INFO,
+                vtable.type_info(),
+            )));
         }
 
         <span class="kw">if </span>!<span class="macro">matches!</span>(vtable.kind, Kind::Own) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::AccessError(AccessError::not_owned(
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::from(AccessError::not_owned(
                 vtable.type_info(),
             )));
         }
@@ -978,18 +1053,21 @@
     ///
     /// This errors in case the underlying value is not owned, non-owned
     /// references cannot be coerced into [`Mut&lt;T&gt;`].
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_mut&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Mut&lt;T&gt;, AnyObjError&gt;
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_mut&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Mut&lt;T&gt;, AnyObjError&gt;
     <span class="kw">where
         </span>T: Any,
     {
         <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
 
         <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::new(AnyObjErrorKind::Cast(
+                T::INFO,
+                vtable.type_info(),
+            )));
         }
 
         <span class="kw">if </span>!<span class="macro">matches!</span>(vtable.kind, Kind::Own) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::AccessError(AccessError::not_owned(
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::from(AccessError::not_owned(
                 vtable.type_info(),
             )));
         }
@@ -1017,14 +1095,17 @@
     ///
     /// This prevents other exclusive accesses from being performed while the
     /// guard returned from this function is live.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_borrow_ref&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BorrowRef&lt;<span class="lifetime">'_</span>, T&gt;, AnyObjError&gt;
+    </span><span class="kw">pub fn </span>borrow_ref&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BorrowRef&lt;<span class="lifetime">'_</span>, T&gt;, AnyObjError&gt;
     <span class="kw">where
         </span>T: Any,
     {
         <span class="kw">let </span>vtable = vtable(<span class="self">self</span>);
 
         <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::new(AnyObjErrorKind::Cast(
+                T::INFO,
+                vtable.type_info(),
+            )));
         }
 
         <span class="comment">// SAFETY: We've checked for the appropriate type just above.
@@ -1035,18 +1116,50 @@
         }
     }
 
+    <span class="doccomment">/// Returns some mutable reference to the boxed value if it is of type `T`.
+    </span><span class="kw">pub fn </span>borrow_mut&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BorrowMut&lt;<span class="lifetime">'_</span>, T&gt;, AnyObjError&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">let </span>vtable = vtable(<span class="self">self</span>);
+
+        <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::new(AnyObjErrorKind::Cast(
+                T::INFO,
+                vtable.type_info(),
+            )));
+        }
+
+        <span class="kw">if </span><span class="macro">matches!</span>(vtable.kind, Kind::Ref) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::new(AnyObjErrorKind::Cast(
+                T::INFO,
+                vtable.type_info(),
+            )));
+        }
+
+        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
+        </span><span class="kw">unsafe </span>{
+            <span class="kw">let </span>guard = <span class="self">self</span>.shared.as_ref().access.exclusive()<span class="question-mark">?</span>;
+            <span class="kw">let </span>data = vtable.as_ptr(<span class="self">self</span>.shared);
+            <span class="prelude-val">Ok</span>(BorrowMut::new(data, guard))
+        }
+    }
+
     <span class="doccomment">/// Get a reference to the interior value while checking for shared access.
     ///
     /// This prevents other exclusive accesses from being performed while the
     /// guard returned from this function is live.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_borrow_ptr&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(NonNull&lt;T&gt;, RawAnyObjGuard), AnyObjError&gt;
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>borrow_ref_ptr&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(NonNull&lt;T&gt;, RawAnyObjGuard), AnyObjError&gt;
     <span class="kw">where
         </span>T: Any,
     {
         <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
 
         <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::new(AnyObjErrorKind::Cast(
+                T::INFO,
+                vtable.type_info(),
+            )));
         }
 
         <span class="comment">// SAFETY: We've checked for the appropriate type just above.
@@ -1068,43 +1181,24 @@
     }
 
     <span class="doccomment">/// Returns some mutable reference to the boxed value if it is of type `T`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_borrow_mut&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BorrowMut&lt;<span class="lifetime">'_</span>, T&gt;, AnyObjError&gt;
-    <span class="kw">where
-        </span>T: Any,
-    {
-        <span class="kw">let </span>vtable = vtable(<span class="self">self</span>);
-
-        <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
-        }
-
-        <span class="kw">if </span><span class="macro">matches!</span>(vtable.kind, Kind::Ref) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
-        }
-
-        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
-        </span><span class="kw">unsafe </span>{
-            <span class="kw">let </span>guard = <span class="self">self</span>.shared.as_ref().access.exclusive()<span class="question-mark">?</span>;
-            <span class="kw">let </span>data = vtable.as_ptr(<span class="self">self</span>.shared);
-            <span class="prelude-val">Ok</span>(BorrowMut::new(data, guard))
-        }
-    }
-
-    <span class="doccomment">/// Returns some mutable reference to the boxed value if it is of type `T`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_borrow_mut_ptr&lt;T&gt;(
-        <span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(NonNull&lt;T&gt;, RawAnyObjGuard), AnyObjError&gt;
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>borrow_mut_ptr&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(NonNull&lt;T&gt;, RawAnyObjGuard), AnyObjError&gt;
     <span class="kw">where
         </span>T: Any,
     {
         <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
 
         <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::new(AnyObjErrorKind::Cast(
+                T::INFO,
+                vtable.type_info(),
+            )));
         }
 
         <span class="kw">if </span><span class="macro">matches!</span>(vtable.kind, Kind::Ref) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::new(AnyObjErrorKind::Cast(
+                T::INFO,
+                vtable.type_info(),
+            )));
         }
 
         <span class="comment">// SAFETY: We've checked for the appropriate type just above.

@@ -795,9 +795,7 @@
 <a href="#794" id="794">794</a>
 <a href="#795" id="795">795</a>
 <a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
+<a href="#797" id="797">797</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">use </span>proc_macro2::TokenStream;
 <span class="kw">use </span>quote::{quote, quote_spanned, ToTokens};
@@ -1303,7 +1301,7 @@
 
         <span class="kw">let </span>Tokens {
             alloc,
-            any,
+            any_t,
             box_,
             context_error,
             from_value,
@@ -1373,7 +1371,35 @@
             }
         };
 
-        <span class="kw">let </span>impl_type_of = <span class="kw">if </span>attr.builtin.is_none() {
+        <span class="kw">let </span>impl_type_of = <span class="kw">if let </span><span class="prelude-val">Some</span>(ty) = attr.static_type {
+            <span class="kw">let </span>ty_hash = syn::Ident::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{ty}_HASH"</span>), ty.span());
+
+            <span class="prelude-val">Some</span>(<span class="macro">quote!</span> {
+                <span class="attr">#[automatically_derived]
+                </span><span class="kw">impl </span>#impl_generics #type_hash_t <span class="kw">for </span>#ident #type_generics #where_clause {
+                    <span class="kw">const </span>HASH: #hash = #static_type_mod::#ty_hash;
+                }
+
+                <span class="attr">#[automatically_derived]
+                </span><span class="kw">impl </span>#impl_generics #type_of <span class="kw">for </span>#ident #type_generics #where_clause {
+                    <span class="attr">#[inline]
+                    </span><span class="kw">fn </span>type_info() -&gt; #type_info {
+                        #type_info::static_type(#static_type_mod::#ty)
+                    }
+                }
+
+                <span class="attr">#[automatically_derived]
+                </span><span class="kw">impl </span>#impl_generics #maybe_type_of <span class="kw">for </span>#ident #type_generics #where_clause {
+                    <span class="attr">#[inline]
+                    </span><span class="kw">fn </span>maybe_type_of() -&gt; #alloc::Result&lt;#meta::DocType&gt; {
+                        #meta::DocType::with_generics(
+                            &lt;<span class="self">Self </span><span class="kw">as </span>#type_hash_t&gt;::HASH,
+                            [#(&lt;#generic_names <span class="kw">as </span>#maybe_type_of&gt;::maybe_type_of()),<span class="kw-2">*</span>]
+                        )
+                    }
+                }
+            })
+        } <span class="kw">else if </span>attr.builtin.is_none() {
             <span class="kw">let </span>type_hash = type_hash.into_inner();
 
             <span class="kw">let </span>make_hash = <span class="kw">if </span>!generic_names.is_empty() {
@@ -1412,42 +1438,14 @@
                     }
                 }
             })
-        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(ty) = attr.static_type {
-            <span class="kw">let </span>ty_hash = syn::Ident::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{ty}_HASH"</span>), ty.span());
-
-            <span class="prelude-val">Some</span>(<span class="macro">quote!</span> {
-                <span class="attr">#[automatically_derived]
-                </span><span class="kw">impl </span>#impl_generics #type_hash_t <span class="kw">for </span>#ident #type_generics #where_clause {
-                    <span class="kw">const </span>HASH: #hash = #static_type_mod::#ty_hash;
-                }
-
-                <span class="attr">#[automatically_derived]
-                </span><span class="kw">impl </span>#impl_generics #type_of <span class="kw">for </span>#ident #type_generics #where_clause {
-                    <span class="attr">#[inline]
-                    </span><span class="kw">fn </span>type_info() -&gt; #type_info {
-                        #type_info::static_type(#static_type_mod::#ty)
-                    }
-                }
-
-                <span class="attr">#[automatically_derived]
-                </span><span class="kw">impl </span>#impl_generics #maybe_type_of <span class="kw">for </span>#ident #type_generics #where_clause {
-                    <span class="attr">#[inline]
-                    </span><span class="kw">fn </span>maybe_type_of() -&gt; #alloc::Result&lt;#meta::DocType&gt; {
-                        #meta::DocType::with_generics(
-                            &lt;<span class="self">Self </span><span class="kw">as </span>#type_hash_t&gt;::HASH,
-                            [#(&lt;#generic_names <span class="kw">as </span>#maybe_type_of&gt;::maybe_type_of()),<span class="kw-2">*</span>]
-                        )
-                    }
-                }
-            })
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
 
-        <span class="kw">let </span>any = <span class="kw">if </span>attr.builtin.is_none() {
-            <span class="prelude-val">Some</span>(<span class="macro">quote!</span> {
+        <span class="kw">let </span>non_builtin = attr.builtin.is_none().then(|| {
+            <span class="macro">quote!</span> {
                 <span class="attr">#[automatically_derived]
-                </span><span class="kw">impl </span>#impl_generics #any <span class="kw">for </span>#ident #type_generics #where_clause {
+                </span><span class="kw">impl </span>#impl_generics #any_t <span class="kw">for </span>#ident #type_generics #where_clause {
                 }
 
                 <span class="attr">#[automatically_derived]
@@ -1497,10 +1495,8 @@
                         <span class="prelude-ty">Option</span>::&lt;<span class="kw-2">&amp;</span>str&gt;::None
                     }
                 }
-            })
-        } <span class="kw">else </span>{
-            <span class="prelude-val">None
-        </span>};
+            }
+        });
 
         <span class="kw">let </span>impl_from_value = <span class="lifetime">'out</span>: {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(path) = attr.from_value {
@@ -1592,7 +1588,7 @@
             #impl_from_value
             #impl_from_value_ref
             #impl_from_value_mut
-            #any
+            #non_builtin
         }
     }
 }
