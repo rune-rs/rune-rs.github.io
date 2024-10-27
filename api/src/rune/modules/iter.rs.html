@@ -2498,13 +2498,7 @@
 <a href="#2497" id="2497">2497</a>
 <a href="#2498" id="2498">2498</a>
 <a href="#2499" id="2499">2499</a>
-<a href="#2500" id="2500">2500</a>
-<a href="#2501" id="2501">2501</a>
-<a href="#2502" id="2502">2502</a>
-<a href="#2503" id="2503">2503</a>
-<a href="#2504" id="2504">2504</a>
-<a href="#2505" id="2505">2505</a>
-<a href="#2506" id="2506">2506</a></pre></div><pre class="rust"><code><span class="doccomment">//! Iterators.
+<a href="#2500" id="2500">2500</a></pre></div><pre class="rust"><code><span class="doccomment">//! Iterators.
 
 </span><span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
@@ -2514,8 +2508,8 @@
 </span><span class="kw">use </span><span class="kw">crate</span>::modules::collections::{HashMap, HashSet};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::range::RangeIter;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    CoreTypeOf, FromValue, Function, Inline, InstAddress, Mutable, Object, Output, OwnedTuple,
-    Protocol, Value, ValueBorrowRef, Vec, VmErrorKind, VmResult,
+    FromValue, Function, Inline, InstAddress, Mutable, Object, Output, OwnedTuple, Protocol,
+    TypeHash, Value, ValueBorrowRef, Vec, VmErrorKind, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::shared::Caller;
 <span class="kw">use crate</span>::{Any, ContextError, Module, Params};
@@ -2875,19 +2869,16 @@
                 <span class="kw">let </span>next = next.clone();
                 <span class="kw">let </span>size_hint = size_hint.clone();
 
-                cx.function(
-                    Params::new(<span class="string">"collect"</span>, [Vec::type_hash()]),
-                    <span class="kw">move </span>|iter: Value| {
-                        <span class="kw">let </span>(cap, <span class="kw">_</span>) = <span class="macro">vm_try!</span>(size_hint.call((<span class="kw-2">&amp;</span>iter,)));
-                        <span class="kw">let </span><span class="kw-2">mut </span>vec = <span class="macro">vm_try!</span>(Vec::with_capacity(cap));
+                cx.function(Params::new(<span class="string">"collect"</span>, [Vec::HASH]), <span class="kw">move </span>|iter: Value| {
+                    <span class="kw">let </span>(cap, <span class="kw">_</span>) = <span class="macro">vm_try!</span>(size_hint.call((<span class="kw-2">&amp;</span>iter,)));
+                    <span class="kw">let </span><span class="kw-2">mut </span>vec = <span class="macro">vm_try!</span>(Vec::with_capacity(cap));
 
-                        <span class="kw">while let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(next.call((<span class="kw-2">&amp;</span>iter,))) {
-                            <span class="macro">vm_try!</span>(vec.push(value));
-                        }
+                    <span class="kw">while let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(next.call((<span class="kw-2">&amp;</span>iter,))) {
+                        <span class="macro">vm_try!</span>(vec.push(value));
+                    }
 
-                        VmResult::Ok(vec)
-                    },
-                )<span class="question-mark">?</span>;
+                    VmResult::Ok(vec)
+                })<span class="question-mark">?</span>;
             }
 
             {
@@ -2895,7 +2886,7 @@
                 <span class="kw">let </span>size_hint = size_hint.clone();
 
                 cx.function(
-                    Params::new(<span class="string">"collect"</span>, [VecDeque::type_hash()]),
+                    Params::new(<span class="string">"collect"</span>, [VecDeque::HASH]),
                     <span class="kw">move </span>|iter: Value| {
                         <span class="kw">let </span>(cap, <span class="kw">_</span>) = <span class="macro">vm_try!</span>(size_hint.call((<span class="kw-2">&amp;</span>iter,)));
                         <span class="kw">let </span><span class="kw-2">mut </span>vec = <span class="macro">vm_try!</span>(Vec::with_capacity(cap));
@@ -2914,7 +2905,7 @@
                 <span class="kw">let </span>size_hint = size_hint.clone();
 
                 cx.function(
-                    Params::new(<span class="string">"collect"</span>, [HashSet::type_hash()]),
+                    Params::new(<span class="string">"collect"</span>, [HashSet::HASH]),
                     <span class="kw">move </span>|iter: Value| {
                         <span class="kw">let </span>(cap, <span class="kw">_</span>) = <span class="macro">vm_try!</span>(size_hint.call((<span class="kw-2">&amp;</span>iter,)));
                         <span class="kw">let </span><span class="kw-2">mut </span>set = <span class="macro">vm_try!</span>(HashSet::with_capacity(cap));
@@ -2933,7 +2924,7 @@
                 <span class="kw">let </span>size_hint = size_hint.clone();
 
                 cx.function(
-                    Params::new(<span class="string">"collect"</span>, [HashMap::type_hash()]),
+                    Params::new(<span class="string">"collect"</span>, [HashMap::HASH]),
                     <span class="kw">move </span>|iter: Value| {
                         <span class="kw">let </span>(cap, <span class="kw">_</span>) = <span class="macro">vm_try!</span>(size_hint.call((<span class="kw-2">&amp;</span>iter,)));
                         <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">vm_try!</span>(HashMap::with_capacity(cap));
@@ -2952,7 +2943,7 @@
                 <span class="kw">let </span>size_hint = size_hint.clone();
 
                 cx.function(
-                    Params::new(<span class="string">"collect"</span>, [Object::type_hash()]),
+                    Params::new(<span class="string">"collect"</span>, [Object::HASH]),
                     <span class="kw">move </span>|iter: Value| {
                         <span class="kw">let </span>(cap, <span class="kw">_</span>) = <span class="macro">vm_try!</span>(size_hint.call((<span class="kw-2">&amp;</span>iter,)));
                         <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="macro">vm_try!</span>(Object::with_capacity(cap));
@@ -2971,7 +2962,7 @@
                 <span class="kw">let </span>size_hint = size_hint.clone();
 
                 cx.function(
-                    Params::new(<span class="string">"collect"</span>, [OwnedTuple::type_hash()]),
+                    Params::new(<span class="string">"collect"</span>, [OwnedTuple::HASH]),
                     <span class="kw">move </span>|iter: Value| {
                         <span class="kw">let </span>(cap, <span class="kw">_</span>) = <span class="macro">vm_try!</span>(size_hint.call((<span class="kw-2">&amp;</span>iter,)));
                         <span class="kw">let </span><span class="kw-2">mut </span>vec = <span class="macro">vm_try!</span>(alloc::Vec::try_with_capacity(cap));
@@ -2989,7 +2980,7 @@
                 <span class="kw">let </span>next = next.clone();
 
                 cx.function(
-                    Params::new(<span class="string">"collect"</span>, [String::type_hash()]),
+                    Params::new(<span class="string">"collect"</span>, [String::HASH]),
                     <span class="kw">move </span>|iter: Value| {
                         <span class="kw">let </span><span class="kw-2">mut </span>string = String::new();
 
@@ -3019,31 +3010,28 @@
 
             <span class="macro">macro_rules!</span> ops {
                 (<span class="macro-nonterminal">$ty</span>:ty) =&gt; {{
-                    cx.function(
-                        Params::new(<span class="string">"product"</span>, [&lt;<span class="macro-nonterminal">$ty</span>&gt;::type_hash()]),
-                        |iter: Value| {
-                            <span class="kw">let </span><span class="kw-2">mut </span>product = <span class="kw">match </span><span class="macro">vm_try!</span>(iter.protocol_next()) {
-                                <span class="prelude-val">Some</span>(init) =&gt; <span class="macro">vm_try!</span>(&lt;<span class="macro-nonterminal">$ty</span>&gt;::from_value(init)),
-                                <span class="prelude-val">None </span>=&gt; &lt;<span class="macro-nonterminal">$ty</span>&gt;::ONE,
+                    cx.function(Params::new(<span class="string">"product"</span>, [&lt;<span class="macro-nonterminal">$ty</span>&gt;::HASH]), |iter: Value| {
+                        <span class="kw">let </span><span class="kw-2">mut </span>product = <span class="kw">match </span><span class="macro">vm_try!</span>(iter.protocol_next()) {
+                            <span class="prelude-val">Some</span>(init) =&gt; <span class="macro">vm_try!</span>(&lt;<span class="macro-nonterminal">$ty</span>&gt;::from_value(init)),
+                            <span class="prelude-val">None </span>=&gt; &lt;<span class="macro-nonterminal">$ty</span>&gt;::ONE,
+                        };
+
+                        <span class="kw">while let </span><span class="prelude-val">Some</span>(v) = <span class="macro">vm_try!</span>(iter.protocol_next()) {
+                            <span class="kw">let </span>v = <span class="macro">vm_try!</span>(&lt;<span class="macro-nonterminal">$ty</span>&gt;::from_value(v));
+
+                            <span class="kw">let </span><span class="prelude-val">Some</span>(out) = product.checked_mul(v) <span class="kw">else </span>{
+                                <span class="kw">return </span>VmResult::err(VmErrorKind::Overflow);
                             };
 
-                            <span class="kw">while let </span><span class="prelude-val">Some</span>(v) = <span class="macro">vm_try!</span>(iter.protocol_next()) {
-                                <span class="kw">let </span>v = <span class="macro">vm_try!</span>(&lt;<span class="macro-nonterminal">$ty</span>&gt;::from_value(v));
+                            product = out;
+                        }
 
-                                <span class="kw">let </span><span class="prelude-val">Some</span>(out) = product.checked_mul(v) <span class="kw">else </span>{
-                                    <span class="kw">return </span>VmResult::err(VmErrorKind::Overflow);
-                                };
-
-                                product = out;
-                            }
-
-                            VmResult::Ok(product)
-                        },
-                    )<span class="question-mark">?</span>;
+                        VmResult::Ok(product)
+                    })<span class="question-mark">?</span>;
                 }
 
                 {
-                    cx.function(Params::new(<span class="string">"sum"</span>, [&lt;<span class="macro-nonterminal">$ty</span>&gt;::type_hash()]), |iter: Value| {
+                    cx.function(Params::new(<span class="string">"sum"</span>, [&lt;<span class="macro-nonterminal">$ty</span>&gt;::HASH]), |iter: Value| {
                         <span class="kw">let </span><span class="kw-2">mut </span>sum = <span class="kw">match </span><span class="macro">vm_try!</span>(iter.protocol_next()) {
                             <span class="prelude-val">Some</span>(init) =&gt; <span class="macro">vm_try!</span>(&lt;<span class="macro-nonterminal">$ty</span>&gt;::from_value(init)),
                             <span class="prelude-val">None </span>=&gt; &lt;<span class="macro-nonterminal">$ty</span>&gt;::ZERO,
@@ -3876,7 +3864,7 @@
 
         <span class="macro">macro_rules!</span> sum_ops {
             (<span class="macro-nonterminal">$ty</span>:ty) =&gt; {
-                t.function(Params::new(<span class="string">"sum"</span>, [&lt;<span class="macro-nonterminal">$ty</span>&gt;::type_hash()]))<span class="question-mark">?
+                t.function(Params::new(<span class="string">"sum"</span>, [&lt;<span class="macro-nonterminal">$ty</span>&gt;::HASH]))<span class="question-mark">?
                     </span>.argument_types::&lt;(Value,)&gt;()<span class="question-mark">?
                     </span>.return_type::&lt;<span class="macro-nonterminal">$ty</span>&gt;()<span class="question-mark">?
                     </span>.docs(<span class="macro">docstring!</span> {
@@ -3915,7 +3903,7 @@
 
         <span class="macro">macro_rules!</span> integer_product_ops {
             (<span class="macro-nonterminal">$ty</span>:ty) =&gt; {
-                t.function(Params::new(<span class="string">"product"</span>, [&lt;<span class="macro-nonterminal">$ty</span>&gt;::type_hash()]))<span class="question-mark">?
+                t.function(Params::new(<span class="string">"product"</span>, [&lt;<span class="macro-nonterminal">$ty</span>&gt;::HASH]))<span class="question-mark">?
                     </span>.argument_types::&lt;(Value,)&gt;()<span class="question-mark">?
                     </span>.return_type::&lt;<span class="macro-nonterminal">$ty</span>&gt;()<span class="question-mark">?
                     </span>.docs(<span class="macro">docstring!</span> {
@@ -3947,7 +3935,7 @@
             };
         }
 
-        t.function(Params::new(<span class="string">"collect"</span>, [Vec::type_hash()]))<span class="question-mark">?
+        t.function(Params::new(<span class="string">"collect"</span>, [Vec::HASH]))<span class="question-mark">?
             </span>.return_type::&lt;Vec&gt;()<span class="question-mark">?
             </span>.docs(<span class="macro">docstring!</span> {
                 <span class="doccomment">/// Collect the iterator as a [`Vec`].
@@ -3961,7 +3949,7 @@
                 /// ```
             </span>})<span class="question-mark">?</span>;
 
-        t.function(Params::new(<span class="string">"collect"</span>, [VecDeque::type_hash()]))<span class="question-mark">?
+        t.function(Params::new(<span class="string">"collect"</span>, [VecDeque::HASH]))<span class="question-mark">?
             </span>.return_type::&lt;VecDeque&gt;()<span class="question-mark">?
             </span>.docs(<span class="macro">docstring!</span> {
                 <span class="doccomment">/// Collect the iterator as a [`VecDeque`].
@@ -3975,7 +3963,7 @@
                 /// ```
             </span>})<span class="question-mark">?</span>;
 
-        t.function(Params::new(<span class="string">"collect"</span>, [HashSet::type_hash()]))<span class="question-mark">?
+        t.function(Params::new(<span class="string">"collect"</span>, [HashSet::HASH]))<span class="question-mark">?
             </span>.return_type::&lt;HashSet&gt;()<span class="question-mark">?
             </span>.docs(<span class="macro">docstring!</span> {
                 <span class="doccomment">/// Collect the iterator as a [`HashSet`].
@@ -3992,7 +3980,7 @@
                 /// ```
             </span>})<span class="question-mark">?</span>;
 
-        t.function(Params::new(<span class="string">"collect"</span>, [HashMap::type_hash()]))<span class="question-mark">?
+        t.function(Params::new(<span class="string">"collect"</span>, [HashMap::HASH]))<span class="question-mark">?
             </span>.return_type::&lt;HashMap&gt;()<span class="question-mark">?
             </span>.docs(<span class="macro">docstring!</span> {
                 <span class="doccomment">/// Collect the iterator as a [`HashMap`].
@@ -4014,7 +4002,7 @@
                 /// ```
             </span>})<span class="question-mark">?</span>;
 
-        t.function(Params::new(<span class="string">"collect"</span>, [Object::type_hash()]))<span class="question-mark">?
+        t.function(Params::new(<span class="string">"collect"</span>, [Object::HASH]))<span class="question-mark">?
             </span>.return_type::&lt;HashMap&gt;()<span class="question-mark">?
             </span>.docs(<span class="macro">docstring!</span> {
                 <span class="doccomment">/// Collect the iterator as an [`Object`].
@@ -4026,7 +4014,7 @@
                 /// ```
             </span>})<span class="question-mark">?</span>;
 
-        t.function(Params::new(<span class="string">"collect"</span>, [OwnedTuple::type_hash()]))<span class="question-mark">?
+        t.function(Params::new(<span class="string">"collect"</span>, [OwnedTuple::HASH]))<span class="question-mark">?
             </span>.return_type::&lt;OwnedTuple&gt;()<span class="question-mark">?
             </span>.docs(<span class="macro">docstring!</span> {
                 <span class="doccomment">/// Collect the iterator as a [`Tuple`].
@@ -4038,7 +4026,7 @@
                 /// ```
             </span>})<span class="question-mark">?</span>;
 
-        t.function(Params::new(<span class="string">"collect"</span>, [String::type_hash()]))<span class="question-mark">?
+        t.function(Params::new(<span class="string">"collect"</span>, [String::HASH]))<span class="question-mark">?
             </span>.return_type::&lt;String&gt;()<span class="question-mark">?
             </span>.docs(<span class="macro">docstring!</span> {
                 <span class="doccomment">/// Collect the iterator as a [`String`].
@@ -4052,7 +4040,7 @@
 
         <span class="macro">macro_rules!</span> float_product_ops {
             (<span class="macro-nonterminal">$ty</span>:ty) =&gt; {
-                t.function(Params::new(<span class="string">"product"</span>, [&lt;<span class="macro-nonterminal">$ty</span>&gt;::type_hash()]))<span class="question-mark">?
+                t.function(Params::new(<span class="string">"product"</span>, [&lt;<span class="macro-nonterminal">$ty</span>&gt;::HASH]))<span class="question-mark">?
                     </span>.argument_types::&lt;(Value,)&gt;()<span class="question-mark">?
                     </span>.return_type::&lt;<span class="macro-nonterminal">$ty</span>&gt;()<span class="question-mark">?
                     </span>.docs(<span class="macro">docstring!</span> {

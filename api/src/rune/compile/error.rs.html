@@ -1525,7 +1525,19 @@
 <a href="#1524" id="1524">1524</a>
 <a href="#1525" id="1525">1525</a>
 <a href="#1526" id="1526">1526</a>
-<a href="#1527" id="1527">1527</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::convert::Infallible;
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::convert::Infallible;
 <span class="kw">use </span>core::fmt;
 
 <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
@@ -1541,6 +1553,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::ast::{Span, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::ir;
 <span class="kw">use </span><span class="kw">crate</span>::compile::{HasSpan, Location, MetaInfo, Visibility};
+<span class="kw">use </span><span class="kw">crate</span>::hash::TooManyParameters;
 <span class="kw">use </span><span class="kw">crate</span>::indexing::items::{GuardMismatch, MissingLastId};
 <span class="kw">use </span><span class="kw">crate</span>::macros::{SyntheticId, SyntheticKind};
 <span class="kw">use </span><span class="kw">crate</span>::parse::{Expectation, IntoExpectation, LexerMode};
@@ -1632,6 +1645,13 @@
 {
     <span class="kw">fn </span>from(spanned: HasSpan&lt;S, E&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(spanned.span(), spanned.into_inner())
+    }
+}
+
+<span class="kw">impl </span>From&lt;TooManyParameters&gt; <span class="kw">for </span>ErrorKind {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from(error: TooManyParameters) -&gt; <span class="self">Self </span>{
+        ErrorKind::TooManyParameters(error)
     }
 }
 
@@ -1781,6 +1801,7 @@
     PopError(PopError),
     UnescapeError(unescape::ErrorKind),
     Syntree(syntree::Error&lt;alloc::Error&gt;),
+    TooManyParameters(TooManyParameters),
     FormatError,
     <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
     </span>SourceError {
@@ -2197,6 +2218,9 @@
                 error.fmt(f)<span class="question-mark">?</span>;
             }
             ErrorKind::Syntree(error) =&gt; {
+                error.fmt(f)<span class="question-mark">?</span>;
+            }
+            ErrorKind::TooManyParameters(error) =&gt; {
                 error.fmt(f)<span class="question-mark">?</span>;
             }
             ErrorKind::FormatError =&gt; {

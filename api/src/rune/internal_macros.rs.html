@@ -144,10 +144,7 @@
 <a href="#143" id="143">143</a>
 <a href="#144" id="144">144</a>
 <a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a></pre></div><pre class="rust"><code><span class="doccomment">/// Helper to borrow out a [ResolveContext][crate::parse::ResolveContext].
+<a href="#146" id="146">146</a></pre></div><pre class="rust"><code><span class="doccomment">/// Helper to borrow out a [ResolveContext][crate::parse::ResolveContext].
 </span><span class="macro">macro_rules!</span> resolve_context {
     (<span class="macro-nonterminal">$q</span>:expr) =&gt; {
         <span class="macro-nonterminal">$crate::parse::ResolveContext </span>{
@@ -159,12 +156,9 @@
 
 <span class="doccomment">/// Build an implementation of `TypeOf` basic of a static type.
 </span><span class="macro">macro_rules!</span> impl_static_type {
-    (<span class="kw">impl </span>&lt;$(<span class="macro-nonterminal">$p</span>:ident),<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$ty</span>:ty =&gt; <span class="macro-nonterminal">$static_type</span>:expr) =&gt; {
-        <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$p</span>,)<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$crate::runtime::CoreTypeOf </span><span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
-            <span class="attr">#[inline]
-            </span><span class="kw">fn </span>type_hash() -&gt; <span class="macro-nonterminal">$crate::Hash </span>{
-                <span class="macro-nonterminal">$static_type</span>.hash
-            }
+    (<span class="kw">impl </span>&lt;$(<span class="macro-nonterminal">$p</span>:ident),<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$ty</span>:ty, <span class="macro-nonterminal">$static_type</span>:expr, <span class="macro-nonterminal">$static_type_hash</span>:expr) =&gt; {
+        <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$p</span>,)<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$crate::TypeHash </span><span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
+            <span class="kw">const </span>HASH: <span class="macro-nonterminal">$crate::Hash </span>= <span class="macro-nonterminal">$static_type_hash</span>;
         }
 
         <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$p</span>,)<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$crate::runtime::TypeOf </span><span class="kw">for </span><span class="macro-nonterminal">$ty
@@ -173,7 +167,7 @@
         {
             <span class="attr">#[inline]
             </span><span class="kw">fn </span>type_info() -&gt; <span class="macro-nonterminal">$crate::runtime::TypeInfo </span>{
-                <span class="macro-nonterminal">$crate::runtime::TypeInfo::StaticType</span>(<span class="macro-nonterminal">$static_type</span>)
+                <span class="macro-nonterminal">$crate::runtime::TypeInfo::static_type</span>(<span class="macro-nonterminal">$static_type</span>)
             }
         }
 
@@ -184,15 +178,15 @@
             <span class="attr">#[inline]
             </span><span class="kw">fn </span>maybe_type_of() -&gt; <span class="macro-nonterminal">$crate::alloc::Result</span>&lt;<span class="macro-nonterminal">$crate::compile::meta::DocType</span>&gt; {
                 <span class="macro-nonterminal">$crate::compile::meta::DocType::with_generics</span>(
-                    &lt;<span class="macro-nonterminal">$ty </span><span class="kw">as </span><span class="macro-nonterminal">$crate::runtime::CoreTypeOf</span>&gt;::type_hash(),
+                    &lt;<span class="macro-nonterminal">$ty </span><span class="kw">as </span><span class="macro-nonterminal">$crate::TypeHash</span>&gt;::HASH,
                     [$(&lt;<span class="macro-nonterminal">$p </span><span class="kw">as </span><span class="macro-nonterminal">$crate::runtime::MaybeTypeOf</span>&gt;::maybe_type_of()<span class="question-mark">?</span>),<span class="kw-2">*</span>]
                 )
             }
         }
     };
 
-    (<span class="macro-nonterminal">$ty</span>:ty =&gt; <span class="macro-nonterminal">$static_type</span>:expr) =&gt; {
-        <span class="macro">impl_static_type!</span>(<span class="kw">impl </span>&lt;&gt; <span class="macro-nonterminal">$ty </span>=&gt; <span class="macro-nonterminal">$static_type</span>);
+    (<span class="macro-nonterminal">$ty</span>:ty, <span class="macro-nonterminal">$static_type</span>:expr, <span class="macro-nonterminal">$static_type_hash</span>:expr) =&gt; {
+        <span class="macro">impl_static_type!</span>(<span class="kw">impl </span>&lt;&gt; <span class="macro-nonterminal">$ty</span>, <span class="macro-nonterminal">$static_type</span>, <span class="macro-nonterminal">$static_type_hash</span>);
     };
 }
 

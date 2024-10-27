@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Hash"],"trait":["IntoHash","ToTypeHash"]};
+window.SIDEBAR_ITEMS = {"struct":["Hash","ParametersBuilder","TooManyParameters"],"trait":["IntoHash","ToTypeHash"]};

@@ -82,7 +82,50 @@
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
 <a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -92,54 +135,99 @@
 
 <span class="kw">use </span>::rust_alloc::sync::Arc;
 
-<span class="doccomment">/// Type information about a value, that can be printed for human consumption
-/// through its [Display][fmt::Display] implementation.
-</span><span class="attr">#[derive(Debug, TryClone, PartialEq, Eq)]
-#[non_exhaustive]
-</span><span class="kw">pub enum </span>TypeInfo {
+<span class="attr">#[derive(Debug, TryClone, PartialEq, Eq)]
+</span><span class="kw">enum </span>TypeInfoKind {
     <span class="doccomment">/// The static type of a value.
     </span>StaticType(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>StaticType),
+    <span class="doccomment">/// Reference to an external type.
+    </span>Any(AnyTypeInfo),
     <span class="doccomment">/// A named type.
     </span>Typed(Arc&lt;Rtti&gt;),
     <span class="doccomment">/// A variant.
     </span>Variant(Arc&lt;VariantRtti&gt;),
-    <span class="doccomment">/// Reference to an external type.
-    </span>Any(AnyTypeInfo),
+}
+
+<span class="doccomment">/// Diagnostical type information for a given type.
+///
+/// Has reasonable [`Debug`] and [`Display`] implementations to identify a given
+/// type.
+///
+/// [`Debug`]: core::fmt::Debug
+/// [`Display`]: core::fmt::Display
+</span><span class="attr">#[derive(TryClone, PartialEq, Eq)]
+#[non_exhaustive]
+</span><span class="kw">pub struct </span>TypeInfo {
+    kind: TypeInfoKind,
 }
 
 <span class="kw">impl </span>TypeInfo {
+    <span class="attr">#[inline]
+    </span><span class="kw">const fn </span>new(kind: TypeInfoKind) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ kind }
+    }
+
     <span class="doccomment">/// Construct type info from an statically known [`Any`] type.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>any&lt;T&gt;() -&gt; <span class="self">Self
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub const fn </span>any&lt;T&gt;() -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>T: Any,
     {
-        TypeInfo::Any(AnyTypeInfo::__private_new(T::BASE_NAME, T::type_hash()))
+        <span class="self">Self</span>::any_type_info(T::INFO)
+    }
+
+    <span class="doccomment">/// Construct type info from an statically known [`Any`] type.
+    </span><span class="attr">#[doc(hidden)]
+    #[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>any_type_info(type_info: AnyTypeInfo) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(TypeInfoKind::Any(type_info))
+    }
+
+    <span class="attr">#[doc(hidden)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>static_type(ty: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>StaticType) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(TypeInfoKind::StaticType(ty))
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>typed(rtti: Arc&lt;Rtti&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(TypeInfoKind::Typed(rtti))
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>variant(rtti: Arc&lt;VariantRtti&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(TypeInfoKind::Variant(rtti))
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
-        <span class="kw">match </span><span class="self">self </span>{
-            TypeInfo::StaticType(ty) =&gt; ty.hash,
-            TypeInfo::Typed(ty) =&gt; ty.hash,
-            TypeInfo::Variant(ty) =&gt; ty.hash,
-            TypeInfo::Any(ty) =&gt; ty.hash,
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.kind {
+            TypeInfoKind::StaticType(ty) =&gt; ty.hash,
+            TypeInfoKind::Typed(ty) =&gt; ty.hash,
+            TypeInfoKind::Variant(ty) =&gt; ty.hash,
+            TypeInfoKind::Any(ty) =&gt; ty.hash,
         }
+    }
+}
+
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>TypeInfo {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="self">self</span>.kind.fmt(f)
     }
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>TypeInfo {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::StaticType(ty) =&gt; {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.kind {
+            TypeInfoKind::StaticType(ty) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"{}"</span>, ty.name)<span class="question-mark">?</span>;
             }
-            <span class="self">Self</span>::Typed(rtti) =&gt; {
+            TypeInfoKind::Typed(rtti) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"{}"</span>, rtti.item)<span class="question-mark">?</span>;
             }
-            <span class="self">Self</span>::Variant(rtti) =&gt; {
+            TypeInfoKind::Variant(rtti) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"{}"</span>, rtti.item)<span class="question-mark">?</span>;
             }
-            <span class="self">Self</span>::Any(info) =&gt; {
+            TypeInfoKind::Any(info) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"{}"</span>, info.name)<span class="question-mark">?</span>;
             }
         }
@@ -151,18 +239,16 @@
 <span class="doccomment">/// Type information for the [`Any`][crate::Any] type.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, PartialEq, Eq)]
 #[try_clone(copy)]
-#[non_exhaustive]
 </span><span class="kw">pub struct </span>AnyTypeInfo {
     <span class="doccomment">/// The name of the type.
-    </span><span class="kw">pub </span>name: RawStr,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) name: RawStr,
     <span class="doccomment">/// The type hash of the item.
-    </span><span class="kw">pub </span>hash: Hash,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) hash: Hash,
 }
 
 <span class="kw">impl </span>AnyTypeInfo {
     <span class="doccomment">/// Private constructor, use at your own risk.
-    </span><span class="attr">#[doc(hidden)]
-    </span><span class="kw">pub fn </span>__private_new(name: RawStr, hash: Hash) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>new(name: RawStr, hash: Hash) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ name, hash }
     }
 }

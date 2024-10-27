@@ -697,28 +697,7 @@
 <a href="#696" id="696">696</a>
 <a href="#697" id="697">697</a>
 <a href="#698" id="698">698</a>
-<a href="#699" id="699">699</a>
-<a href="#700" id="700">700</a>
-<a href="#701" id="701">701</a>
-<a href="#702" id="702">702</a>
-<a href="#703" id="703">703</a>
-<a href="#704" id="704">704</a>
-<a href="#705" id="705">705</a>
-<a href="#706" id="706">706</a>
-<a href="#707" id="707">707</a>
-<a href="#708" id="708">708</a>
-<a href="#709" id="709">709</a>
-<a href="#710" id="710">710</a>
-<a href="#711" id="711">711</a>
-<a href="#712" id="712">712</a>
-<a href="#713" id="713">713</a>
-<a href="#714" id="714">714</a>
-<a href="#715" id="715">715</a>
-<a href="#716" id="716">716</a>
-<a href="#717" id="717">717</a>
-<a href="#718" id="718">718</a>
-<a href="#719" id="719">719</a>
-<a href="#720" id="720">720</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any::TypeId;
+<a href="#699" id="699">699</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any::TypeId;
 <span class="kw">use </span>core::cell::Cell;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::{needs_drop, offset_of, replace, ManuallyDrop};
@@ -729,8 +708,8 @@
 <span class="kw">use crate</span>::{Any, Hash};
 
 <span class="kw">use super</span>::{
-    Access, AccessError, AnyTypeInfo, BorrowMut, BorrowRef, Mut, RawAccessGuard, RawAnyGuard,
-    RawStr, Ref, RefVtable, Snapshot, TypeInfo, VmErrorKind,
+    Access, AccessError, AnyTypeInfo, BorrowMut, BorrowRef, Mut, RawAccessGuard, RawAnyGuard, Ref,
+    RefVtable, Snapshot, TypeInfo, VmErrorKind,
 };
 
 <span class="doccomment">/// Errors caused by casting an any reference.
@@ -802,8 +781,8 @@
             kind: Kind::Own,
             type_id: TypeId::of::&lt;T&gt;,
             debug: debug_ref_impl::&lt;T&gt;,
-            type_name: type_name_impl::&lt;T&gt;,
-            type_hash: T::type_hash,
+            type_info: T::INFO,
+            type_hash: T::HASH,
             drop_value: <span class="kw">const </span>{
                 <span class="kw">if </span>needs_drop::&lt;T&gt;() {
                     <span class="prelude-val">Some</span>(drop_value::&lt;T&gt;)
@@ -840,8 +819,8 @@
             kind: Kind::Ref,
             type_id: TypeId::of::&lt;T&gt;,
             debug: debug_ref_impl::&lt;T&gt;,
-            type_name: type_name_impl::&lt;T&gt;,
-            type_hash: T::type_hash,
+            type_info: T::INFO,
+            type_hash: T::HASH,
             drop_value: <span class="prelude-val">None</span>,
             drop: drop_box::&lt;NonNull&lt;T&gt;&gt;,
             clone: clone_ref::&lt;T&gt;,
@@ -872,8 +851,8 @@
             kind: Kind::Mut,
             type_id: TypeId::of::&lt;T&gt;,
             debug: debug_mut_impl::&lt;T&gt;,
-            type_name: type_name_impl::&lt;T&gt;,
-            type_hash: T::type_hash,
+            type_info: T::INFO,
+            type_hash: T::HASH,
             drop_value: <span class="prelude-val">None</span>,
             drop: drop_box::&lt;NonNull&lt;T&gt;&gt;,
             clone: clone_mut::&lt;T&gt;,
@@ -993,12 +972,12 @@
         }
     }
 
-    <span class="doccomment">/// Downcast into an owned value of type [`Ref&lt;T&gt;`].
+    <span class="doccomment">/// Downcast into an owned value of type [`Mut&lt;T&gt;`].
     ///
     /// # Errors
     ///
     /// This errors in case the underlying value is not owned, non-owned
-    /// references cannot be coerced into [`Ref&lt;T&gt;`].
+    /// references cannot be coerced into [`Mut&lt;T&gt;`].
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_mut&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Mut&lt;T&gt;, AnyObjError&gt;
     <span class="kw">where
         </span>T: Any,
@@ -1192,12 +1171,12 @@
 
     <span class="doccomment">/// Access the underlying type id for the data.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
-        (vtable(<span class="self">self</span>).type_hash)()
+        vtable(<span class="self">self</span>).type_hash
     }
 
     <span class="doccomment">/// Access full type info for type.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.as_ref().type_info() }
+        TypeInfo::any_type_info(vtable(<span class="self">self</span>).type_info)
     }
 }
 
@@ -1251,12 +1230,6 @@
 <span class="doccomment">/// The signature of a descriptive type name function.
 </span><span class="kw">type </span>DebugFn = <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result;
 
-<span class="doccomment">/// Get the type name.
-</span><span class="kw">type </span>TypeNameFn = <span class="kw">fn</span>() -&gt; RawStr;
-
-<span class="doccomment">/// The signature of a type hash function.
-</span><span class="kw">type </span>TypeHashFn = <span class="kw">fn</span>() -&gt; Hash;
-
 <span class="doccomment">/// The kind of the stored value in the `AnyObj`.
 </span><span class="kw">enum </span>Kind {
     <span class="doccomment">/// Underlying access is shared.
@@ -1274,10 +1247,10 @@
     </span>type_id: TypeIdFn,
     <span class="doccomment">/// Type information for diagnostics.
     </span>debug: DebugFn,
-    <span class="doccomment">/// Type name accessor.
-    </span>type_name: TypeNameFn,
-    <span class="doccomment">/// Get the type hash of the stored type.
-    </span>type_hash: TypeHashFn,
+    <span class="doccomment">/// Type information.
+    </span>type_info: AnyTypeInfo,
+    <span class="doccomment">/// Type hash of the interior type.
+    </span>type_hash: Hash,
     <span class="doccomment">/// Value drop implementation. Set to `None` if the underlying value does
     /// not need to be dropped.
     </span>drop_value: <span class="prelude-ty">Option</span>&lt;<span class="kw">unsafe fn</span>(NonNull&lt;Shared&gt;)&gt;,
@@ -1288,6 +1261,11 @@
 }
 
 <span class="kw">impl </span>Vtable {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
+        TypeInfo::any_type_info(<span class="self">self</span>.type_info)
+    }
+
     <span class="kw">fn </span>as_ptr&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, base: NonNull&lt;Shared&gt;) -&gt; NonNull&lt;T&gt; {
         <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.kind, Kind::Own) {
             <span class="kw">unsafe </span>{ base.byte_add(<span class="macro">offset_of!</span>(Shared&lt;T&gt;, data)).cast() }
@@ -1298,14 +1276,6 @@
                     .read()
             }
         }
-    }
-
-    <span class="doccomment">/// Construct type information.
-    </span><span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
-        TypeInfo::Any(AnyTypeInfo::__private_new(
-            (<span class="self">self</span>.type_name)(),
-            (<span class="self">self</span>.type_hash)(),
-        ))
     }
 }
 
@@ -1322,11 +1292,6 @@
 }
 
 <span class="kw">impl </span>Shared {
-    <span class="doccomment">/// Construct type information.
-    </span><span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
-        <span class="self">self</span>.vtable.type_info()
-    }
-
     <span class="doccomment">/// Increment the reference count of the inner value.
     </span><span class="kw">unsafe fn </span>inc(this: NonNull&lt;<span class="self">Self</span>&gt;) {
         <span class="kw">let </span>count_ref = <span class="kw-2">&amp;*</span><span class="macro">addr_of!</span>((<span class="kw-2">*</span>this.as_ptr()).count);
@@ -1390,13 +1355,6 @@
     </span>T: <span class="question-mark">?</span>Sized + Any,
 {
     <span class="macro">write!</span>(f, <span class="string">"&amp;mut {}"</span>, T::BASE_NAME)
-}
-
-<span class="kw">fn </span>type_name_impl&lt;T&gt;() -&gt; RawStr
-<span class="kw">where
-    </span>T: <span class="question-mark">?</span>Sized + Any,
-{
-    T::BASE_NAME
 }
 
 <span class="kw">unsafe fn </span>drop_value&lt;T&gt;(this: NonNull&lt;Shared&gt;) {

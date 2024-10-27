@@ -797,21 +797,7 @@
 <a href="#796" id="796">796</a>
 <a href="#797" id="797">797</a>
 <a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a>
-<a href="#800" id="800">800</a>
-<a href="#801" id="801">801</a>
-<a href="#802" id="802">802</a>
-<a href="#803" id="803">803</a>
-<a href="#804" id="804">804</a>
-<a href="#805" id="805">805</a>
-<a href="#806" id="806">806</a>
-<a href="#807" id="807">807</a>
-<a href="#808" id="808">808</a>
-<a href="#809" id="809">809</a>
-<a href="#810" id="810">810</a>
-<a href="#811" id="811">811</a>
-<a href="#812" id="812">812</a>
-<a href="#813" id="813">813</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
+<a href="#799" id="799">799</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">use </span>proc_macro2::TokenStream;
 <span class="kw">use </span>quote::{quote, quote_spanned, ToTokens};
@@ -1317,11 +1303,9 @@
 
         <span class="kw">let </span>Tokens {
             alloc,
-            any_type_info,
             any,
             box_,
             context_error,
-            core_type_of,
             from_value,
             hash,
             install_with,
@@ -1337,6 +1321,7 @@
             ref_,
             static_type_mod,
             to_value,
+            type_hash_t,
             type_info,
             type_of,
             unsafe_to_mut,
@@ -1392,39 +1377,27 @@
             <span class="kw">let </span>type_hash = type_hash.into_inner();
 
             <span class="kw">let </span>make_hash = <span class="kw">if </span>!generic_names.is_empty() {
-                <span class="macro">quote!</span>(#hash::new_with_type_parameters(#type_hash, #hash::parameters([#(&lt;#generic_names <span class="kw">as </span>#core_type_of&gt;::type_hash()),<span class="kw-2">*</span>])))
+                <span class="macro">quote!</span>(#hash::new_with_type_parameters(#type_hash, #hash::parameters([#(&lt;#generic_names <span class="kw">as </span>#type_hash_t&gt;::HASH),<span class="kw-2">*</span>])))
             } <span class="kw">else </span>{
                 <span class="macro">quote!</span>(#hash::new(#type_hash))
             };
 
-            <span class="kw">let </span>type_parameters = <span class="kw">if </span>!generic_names.is_empty() {
-                <span class="macro">quote!</span>(#hash::parameters([#(&lt;#generic_names <span class="kw">as </span>#core_type_of&gt;::type_hash()),<span class="kw-2">*</span>]))
-            } <span class="kw">else </span>{
-                <span class="macro">quote!</span>(#hash::EMPTY)
-            };
+            <span class="kw">let </span>type_parameters =
+                <span class="macro">quote!</span>(#hash::parameters([#(&lt;#generic_names <span class="kw">as </span>#type_hash_t&gt;::HASH),<span class="kw-2">*</span>]));
 
             <span class="prelude-val">Some</span>(<span class="macro">quote!</span> {
                 <span class="attr">#[automatically_derived]
-                </span><span class="kw">impl </span>#impl_generics #core_type_of <span class="kw">for </span>#ident #type_generics #where_clause {
-                    <span class="attr">#[inline]
-                    </span><span class="kw">fn </span>type_hash() -&gt; #hash {
-                        #make_hash
-                    }
+                </span><span class="kw">impl </span>#impl_generics #type_hash_t <span class="kw">for </span>#ident #type_generics #where_clause {
+                    <span class="kw">const </span>HASH: #hash = #make_hash;
                 }
 
                 <span class="attr">#[automatically_derived]
                 </span><span class="kw">impl </span>#impl_generics #type_of <span class="kw">for </span>#ident #type_generics #where_clause {
-                    <span class="attr">#[inline]
-                    </span><span class="kw">fn </span>type_parameters() -&gt; #hash {
-                        #type_parameters
-                    }
+                    <span class="kw">const </span>PARAMETERS: #hash = #type_parameters;
 
                     <span class="attr">#[inline]
                     </span><span class="kw">fn </span>type_info() -&gt; #type_info {
-                        #type_info::Any(#any_type_info::__private_new(
-                            #raw_str::from_str(core::any::type_name::&lt;<span class="self">Self</span>&gt;()),
-                            &lt;<span class="self">Self </span><span class="kw">as </span>#core_type_of&gt;::type_hash(),
-                        ))
+                        #type_info::any::&lt;<span class="self">Self</span>&gt;()
                     }
                 }
 
@@ -1433,27 +1406,26 @@
                     <span class="attr">#[inline]
                     </span><span class="kw">fn </span>maybe_type_of() -&gt; #alloc::Result&lt;#meta::DocType&gt; {
                         #meta::DocType::with_generics(
-                            &lt;<span class="self">Self </span><span class="kw">as </span>#core_type_of&gt;::type_hash(),
+                            &lt;<span class="self">Self </span><span class="kw">as </span>#type_hash_t&gt;::HASH,
                             [#(&lt;#generic_names <span class="kw">as </span>#maybe_type_of&gt;::maybe_type_of()<span class="question-mark">?</span>),<span class="kw-2">*</span>]
                         )
                     }
                 }
             })
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(ty) = attr.static_type {
+            <span class="kw">let </span>ty_hash = syn::Ident::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{ty}_HASH"</span>), ty.span());
+
             <span class="prelude-val">Some</span>(<span class="macro">quote!</span> {
                 <span class="attr">#[automatically_derived]
-                </span><span class="kw">impl </span>#impl_generics #core_type_of <span class="kw">for </span>#ident #type_generics #where_clause {
-                    <span class="attr">#[inline]
-                    </span><span class="kw">fn </span>type_hash() -&gt; #hash {
-                        #static_type_mod::#ty.hash
-                    }
+                </span><span class="kw">impl </span>#impl_generics #type_hash_t <span class="kw">for </span>#ident #type_generics #where_clause {
+                    <span class="kw">const </span>HASH: #hash = #static_type_mod::#ty_hash;
                 }
 
                 <span class="attr">#[automatically_derived]
                 </span><span class="kw">impl </span>#impl_generics #type_of <span class="kw">for </span>#ident #type_generics #where_clause {
                     <span class="attr">#[inline]
                     </span><span class="kw">fn </span>type_info() -&gt; #type_info {
-                        #type_info::StaticType(#static_type_mod::#ty)
+                        #type_info::static_type(#static_type_mod::#ty)
                     }
                 }
 
@@ -1462,7 +1434,7 @@
                     <span class="attr">#[inline]
                     </span><span class="kw">fn </span>maybe_type_of() -&gt; #alloc::Result&lt;#meta::DocType&gt; {
                         #meta::DocType::with_generics(
-                            &lt;<span class="self">Self </span><span class="kw">as </span>#core_type_of&gt;::type_hash(),
+                            &lt;<span class="self">Self </span><span class="kw">as </span>#type_hash_t&gt;::HASH,
                             [#(&lt;#generic_names <span class="kw">as </span>#maybe_type_of&gt;::maybe_type_of()),<span class="kw-2">*</span>]
                         )
                     }

@@ -211,48 +211,94 @@
 <a href="#210" id="210">210</a>
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc;
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::compile::meta;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{Mut, Ref, Shared, TypeInfo};
 <span class="kw">use </span><span class="kw">crate</span>::Hash;
 
-<span class="doccomment">/// Core type of trait.
-</span><span class="kw">pub trait </span>CoreTypeOf {
-    <span class="doccomment">/// Get full type hash, including type parameters.
-    </span><span class="kw">fn </span>type_hash() -&gt; Hash;
+<span class="doccomment">/// Static type hash for a given type.
+///
+/// This trait allows you to determine the unique hash of any given type that
+/// can be used in Rune through the [`HASH`] associated constant.
+///
+/// This trait is usually implemented automatically through the [`Any` derive].
+///
+/// A type hash is unique for types which in Rune are considered the same. This
+/// might not be true for types in Rust. For example, `&amp;str` and `String` have
+/// the same type hash:
+///
+/// ```
+/// use rune::TypeHash;
+///
+/// assert_eq!(&lt;&amp;str&gt;::HASH, String::HASH);
+/// ```
+///
+/// [`HASH`]: TypeHash::HASH
+/// [`Any` derive]: derive@crate::Any
+</span><span class="kw">pub trait </span>TypeHash {
+    <span class="doccomment">/// The complete type hash of the type including type parameters which
+    /// uniquely identifiers a given type.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rune::TypeHash;
+    ///
+    /// assert_ne!(String::HASH, i64::HASH);
+    ///
+    /// fn is_a_string&lt;T&gt;() -&gt; bool where T: TypeHash {
+    ///     matches!(T::HASH, String::HASH)
+    /// }
+    ///
+    /// assert!(is_a_string::&lt;String&gt;());
+    /// assert!(!is_a_string::&lt;i64&gt;());
+    /// ```
+    </span><span class="kw">const </span>HASH: Hash;
 }
 
 <span class="doccomment">/// Blanket implementation for references.
-</span><span class="kw">impl</span>&lt;T&gt; CoreTypeOf <span class="kw">for </span><span class="kw-2">&amp;</span>T
+</span><span class="kw">impl</span>&lt;T&gt; TypeHash <span class="kw">for </span><span class="kw-2">&amp;</span>T
 <span class="kw">where
-    </span>T: <span class="question-mark">?</span>Sized + CoreTypeOf,
+    </span>T: <span class="question-mark">?</span>Sized + TypeHash,
 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_hash() -&gt; Hash {
-        T::type_hash()
-    }
+    <span class="kw">const </span>HASH: Hash = T::HASH;
 }
 
 <span class="doccomment">/// Blanket implementation for mutable references.
-</span><span class="kw">impl</span>&lt;T&gt; CoreTypeOf <span class="kw">for </span><span class="kw-2">&amp;mut </span>T
+</span><span class="kw">impl</span>&lt;T&gt; TypeHash <span class="kw">for </span><span class="kw-2">&amp;mut </span>T
 <span class="kw">where
-    </span>T: <span class="question-mark">?</span>Sized + CoreTypeOf,
+    </span>T: <span class="question-mark">?</span>Sized + TypeHash,
 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_hash() -&gt; Hash {
-        T::type_hash()
-    }
+    <span class="kw">const </span>HASH: Hash = T::HASH;
 }
 
 <span class="doccomment">/// Trait used for Rust types for which we can determine the runtime type of.
-</span><span class="kw">pub trait </span>TypeOf: CoreTypeOf {
-    <span class="doccomment">/// Hash of type parameters.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_parameters() -&gt; Hash {
-        Hash::EMPTY
-    }
+</span><span class="kw">pub trait </span>TypeOf: TypeHash {
+    <span class="doccomment">/// Type parameters for the type.
+    ///
+    /// See [`ParametersBuilder`] for more information.
+    ///
+    /// [`ParametersBuilder`]: crate::hash::ParametersBuilder
+    </span><span class="kw">const </span>PARAMETERS: Hash = Hash::EMPTY;
 
-    <span class="doccomment">/// Access diagnostical information on the value type.
+    <span class="doccomment">/// Diagnostical type information for the current type.
+    ///
+    /// Has reasonable [`Debug`] and [`Display`] implementations to identify a
+    /// given type.
+    ///
+    /// [`Debug`]: core::fmt::Debug
+    /// [`Display`]: core::fmt::Display
     </span><span class="kw">fn </span>type_info() -&gt; TypeInfo;
 }
 
@@ -317,10 +363,7 @@
 <span class="kw">where
     </span>T: <span class="question-mark">?</span>Sized + TypeOf,
 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_parameters() -&gt; Hash {
-        T::type_parameters()
-    }
+    <span class="kw">const </span>PARAMETERS: Hash = T::PARAMETERS;
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
@@ -333,10 +376,7 @@
 <span class="kw">where
     </span>T: <span class="question-mark">?</span>Sized + TypeOf,
 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_parameters() -&gt; Hash {
-        T::type_parameters()
-    }
+    <span class="kw">const </span>PARAMETERS: Hash = T::PARAMETERS;
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
@@ -345,14 +385,11 @@
 }
 
 <span class="doccomment">/// Blanket implementation for owned references.
-</span><span class="kw">impl</span>&lt;T&gt; CoreTypeOf <span class="kw">for </span>Ref&lt;T&gt;
+</span><span class="kw">impl</span>&lt;T&gt; TypeHash <span class="kw">for </span>Ref&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="question-mark">?</span>Sized + CoreTypeOf,
+    </span>T: <span class="question-mark">?</span>Sized + TypeHash,
 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_hash() -&gt; Hash {
-        T::type_hash()
-    }
+    <span class="kw">const </span>HASH: Hash = T::HASH;
 }
 
 <span class="doccomment">/// Blanket implementation for owned references.
@@ -360,10 +397,7 @@
 <span class="kw">where
     </span>T: <span class="question-mark">?</span>Sized + TypeOf,
 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_parameters() -&gt; Hash {
-        T::type_parameters()
-    }
+    <span class="kw">const </span>PARAMETERS: Hash = T::PARAMETERS;
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
@@ -372,14 +406,11 @@
 }
 
 <span class="doccomment">/// Blanket implementation for owned mutable references.
-</span><span class="kw">impl</span>&lt;T&gt; CoreTypeOf <span class="kw">for </span>Mut&lt;T&gt;
+</span><span class="kw">impl</span>&lt;T&gt; TypeHash <span class="kw">for </span>Mut&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="question-mark">?</span>Sized + CoreTypeOf,
+    </span>T: <span class="question-mark">?</span>Sized + TypeHash,
 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_hash() -&gt; Hash {
-        T::type_hash()
-    }
+    <span class="kw">const </span>HASH: Hash = T::HASH;
 }
 
 <span class="doccomment">/// Blanket implementation for owned mutable references.
@@ -387,10 +418,7 @@
 <span class="kw">where
     </span>T: <span class="question-mark">?</span>Sized + TypeOf,
 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_parameters() -&gt; Hash {
-        T::type_parameters()
-    }
+    <span class="kw">const </span>PARAMETERS: Hash = T::PARAMETERS;
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
@@ -399,14 +427,11 @@
 }
 
 <span class="doccomment">/// Blanket implementation for owned shared values.
-</span><span class="kw">impl</span>&lt;T&gt; CoreTypeOf <span class="kw">for </span>Shared&lt;T&gt;
+</span><span class="kw">impl</span>&lt;T&gt; TypeHash <span class="kw">for </span>Shared&lt;T&gt;
 <span class="kw">where
-    </span>T: <span class="question-mark">?</span>Sized + CoreTypeOf,
+    </span>T: <span class="question-mark">?</span>Sized + TypeHash,
 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_hash() -&gt; Hash {
-        T::type_hash()
-    }
+    <span class="kw">const </span>HASH: Hash = T::HASH;
 }
 
 <span class="doccomment">/// Blanket implementation for owned shared values.
@@ -414,10 +439,7 @@
 <span class="kw">where
     </span>T: <span class="question-mark">?</span>Sized + TypeOf,
 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_parameters() -&gt; Hash {
-        T::type_parameters()
-    }
+    <span class="kw">const </span>PARAMETERS: Hash = T::PARAMETERS;
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
