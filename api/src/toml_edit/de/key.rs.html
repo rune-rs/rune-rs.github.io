@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.19.15/src/de/key.rs`."><title>key.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">toml_edit/de/</div>key.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.22.22/src/de/key.rs`."><title>key.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">toml_edit/de/</div>key.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -138,22 +138,33 @@
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
 <a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a></pre></div><pre class="rust"><code><span class="kw">use </span>serde::de::IntoDeserializer;
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a></pre></div><pre class="rust"><code><span class="kw">use </span>serde::de::IntoDeserializer;
 
 <span class="kw">use </span><span class="kw">super</span>::Error;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>KeyDeserializer {
     span: <span class="prelude-ty">Option</span>&lt;std::ops::Range&lt;usize&gt;&gt;,
-    key: <span class="kw">crate</span>::InternalString,
+    key: <span class="kw">crate</span>::Key,
 }
 
 <span class="kw">impl </span>KeyDeserializer {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(key: <span class="kw">crate</span>::InternalString, span: <span class="prelude-ty">Option</span>&lt;std::ops::Range&lt;usize&gt;&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(key: <span class="kw">crate</span>::Key, span: <span class="prelude-ty">Option</span>&lt;std::ops::Range&lt;usize&gt;&gt;) -&gt; <span class="self">Self </span>{
         KeyDeserializer { span, key }
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; serde::de::IntoDeserializer&lt;<span class="lifetime">'de</span>, Error&gt; <span class="kw">for </span>KeyDeserializer {
+<span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; IntoDeserializer&lt;<span class="lifetime">'de</span>, Error&gt; <span class="kw">for </span>KeyDeserializer {
     <span class="kw">type </span>Deserializer = <span class="self">Self</span>;
 
     <span class="kw">fn </span>into_deserializer(<span class="self">self</span>) -&gt; <span class="self">Self</span>::Deserializer {
@@ -196,21 +207,32 @@
     {
         <span class="kw">if </span>serde_spanned::__unstable::is_spanned(name, fields) {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = <span class="self">self</span>.span.clone() {
-                <span class="kw">return </span>visitor.visit_map(<span class="kw">super</span>::SpannedDeserializer::new(<span class="self">self</span>.key.as_str(), span));
+                <span class="kw">return </span>visitor.visit_map(<span class="kw">super</span>::SpannedDeserializer::new(<span class="self">self</span>.key.get(), span));
             }
         }
         <span class="self">self</span>.deserialize_any(visitor)
     }
 
+    <span class="kw">fn </span>deserialize_newtype_struct&lt;V&gt;(
+        <span class="self">self</span>,
+        _name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+        visitor: V,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, Error&gt;
+    <span class="kw">where
+        </span>V: serde::de::Visitor&lt;<span class="lifetime">'de</span>&gt;,
+    {
+        visitor.visit_newtype_struct(<span class="self">self</span>)
+    }
+
     <span class="macro">serde::forward_to_deserialize_any!</span> {
         bool u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 char str string seq
-        bytes byte_buf map option unit newtype_struct
+        bytes byte_buf map option unit
         ignored_any unit_struct tuple_struct tuple identifier
     }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; serde::de::EnumAccess&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>KeyDeserializer {
-    <span class="kw">type </span>Error = <span class="kw">super</span>::Error;
+    <span class="kw">type </span>Error = Error;
     <span class="kw">type </span>Variant = UnitOnly&lt;<span class="self">Self</span>::Error&gt;;
 
     <span class="kw">fn </span>variant_seed&lt;T&gt;(<span class="self">self</span>, seed: T) -&gt; <span class="prelude-ty">Result</span>&lt;(T::Value, <span class="self">Self</span>::Variant), <span class="self">Self</span>::Error&gt;

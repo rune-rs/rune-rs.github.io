@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/musli-0.0.121/src/int/encoding.rs`."><title>encoding.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="musli" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">musli/int/</div>encoding.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/musli-0.0.124/src/int/encoding.rs`."><title>encoding.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="musli" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">musli/int/</div>encoding.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -146,14 +146,22 @@
 <a href="#145" id="145">145</a>
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::int::continuation <span class="kw">as </span>c;
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::int::continuation <span class="kw">as </span>c;
 <span class="kw">use </span><span class="kw">crate</span>::int::zigzag <span class="kw">as </span>zig;
 <span class="kw">use </span><span class="kw">crate</span>::int::{Signed, Unsigned, UnsignedOps};
 <span class="kw">use crate</span>::{Context, Options, Reader, Writer};
 
 <span class="doccomment">/// Governs how unsigned integers are encoded into a [`Writer`].
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>encode_unsigned&lt;C, W, T, <span class="kw">const </span>OPT: Options&gt;(
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>encode_unsigned&lt;C, W, T, <span class="kw">const </span>OPT: Options&gt;(
     cx: <span class="kw-2">&amp;</span>C,
     writer: W,
     value: T,
@@ -165,7 +173,7 @@
 {
     <span class="kw">match </span><span class="kw">crate</span>::options::integer::&lt;OPT&gt;() {
         <span class="kw">crate</span>::options::Integer::Variable =&gt; c::encode(cx, writer, value),
-        <span class="kw">_ </span>=&gt; {
+        <span class="kw">crate</span>::options::Integer::Fixed =&gt; {
             <span class="kw">let </span>bo = <span class="kw">crate</span>::options::byteorder::&lt;OPT&gt;();
             value.write_bytes(cx, writer, bo)
         }
@@ -175,14 +183,14 @@
 <span class="doccomment">/// Decode an unsigned value from the specified reader using the configuration
 /// passed in through `F`.
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>decode_unsigned&lt;<span class="lifetime">'de</span>, C, R, T: UnsignedOps, <span class="kw">const </span>OPT: Options&gt;(
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>decode_unsigned&lt;<span class="lifetime">'de</span>, C, R, T, <span class="kw">const </span>OPT: Options&gt;(
     cx: <span class="kw-2">&amp;</span>C,
     reader: R,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;T, C::Error&gt;
 <span class="kw">where
     </span>C: <span class="question-mark">?</span>Sized + Context,
     R: Reader&lt;<span class="lifetime">'de</span>&gt;,
-    T: Unsigned,
+    T: UnsignedOps,
 {
     <span class="kw">match </span><span class="kw">crate</span>::options::integer::&lt;OPT&gt;() {
         <span class="kw">crate</span>::options::Integer::Variable =&gt; c::decode(cx, reader),
@@ -195,7 +203,7 @@
 
 <span class="doccomment">/// Governs how signed integers are encoded into a [`Writer`].
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>encode_signed&lt;C, W, T, <span class="kw">const </span>OPT: Options&gt;(
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>encode_signed&lt;C, W, T, <span class="kw">const </span>OPT: Options&gt;(
     cx: <span class="kw-2">&amp;</span>C,
     writer: W,
     value: T,
@@ -208,7 +216,7 @@
 {
     <span class="kw">match </span><span class="kw">crate</span>::options::integer::&lt;OPT&gt;() {
         <span class="kw">crate</span>::options::Integer::Variable =&gt; c::encode(cx, writer, zig::encode(value)),
-        <span class="kw">_ </span>=&gt; {
+        <span class="kw">crate</span>::options::Integer::Fixed =&gt; {
             <span class="kw">let </span>bo = <span class="kw">crate</span>::options::byteorder::&lt;OPT&gt;();
             value.unsigned().write_bytes(cx, writer, bo)
         }
@@ -217,7 +225,10 @@
 
 <span class="doccomment">/// Governs how signed integers are decoded from a [`Reader`].
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>decode_signed&lt;<span class="lifetime">'de</span>, C, R, T, <span class="kw">const </span>OPT: Options&gt;(cx: <span class="kw-2">&amp;</span>C, reader: R) -&gt; <span class="prelude-ty">Result</span>&lt;T, C::Error&gt;
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>decode_signed&lt;<span class="lifetime">'de</span>, C, R, T, <span class="kw">const </span>OPT: Options&gt;(
+    cx: <span class="kw-2">&amp;</span>C,
+    reader: R,
+) -&gt; <span class="prelude-ty">Result</span>&lt;T, C::Error&gt;
 <span class="kw">where
     </span>C: <span class="question-mark">?</span>Sized + Context,
     R: Reader&lt;<span class="lifetime">'de</span>&gt;,
@@ -229,7 +240,7 @@
             <span class="kw">let </span>value: T::Unsigned = c::decode(cx, reader)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(zig::decode(value))
         }
-        <span class="kw">_ </span>=&gt; {
+        <span class="kw">crate</span>::options::Integer::Fixed =&gt; {
             <span class="kw">let </span>bo = <span class="kw">crate</span>::options::byteorder::&lt;OPT&gt;();
             <span class="prelude-val">Ok</span>(T::Unsigned::read_bytes(cx, reader, bo)<span class="question-mark">?</span>.signed())
         }
@@ -238,7 +249,7 @@
 
 <span class="doccomment">/// Governs how usize lengths are encoded into a [`Writer`].
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>encode_usize&lt;C, W, <span class="kw">const </span>OPT: Options&gt;(
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>encode_usize&lt;C, W, <span class="kw">const </span>OPT: Options&gt;(
     cx: <span class="kw-2">&amp;</span>C,
     writer: W,
     value: usize,
@@ -251,6 +262,7 @@
         <span class="kw">crate</span>::options::Integer::Variable =&gt; c::encode(cx, writer, value),
         <span class="kw">_ </span>=&gt; {
             <span class="kw">let </span>bo = <span class="kw">crate</span>::options::byteorder::&lt;OPT&gt;();
+
             <span class="macro">macro_rules!</span> fixed {
                 (<span class="macro-nonterminal">$ty</span>:ty) =&gt; {{
                     <span class="kw">let </span><span class="prelude-val">Ok</span>(value) = &lt;<span class="macro-nonterminal">$ty</span>&gt;::try_from(value) <span class="kw">else </span>{
@@ -261,14 +273,17 @@
                 }};
             }
 
-            <span class="macro">crate::width_arm!</span>(<span class="kw">crate</span>::options::length_width::&lt;OPT&gt;(), fixed)
+            <span class="macro">crate::options::width_arm!</span>(<span class="kw">crate</span>::options::length_width::&lt;OPT&gt;(), fixed)
         }
     }
 }
 
 <span class="doccomment">/// Governs how usize lengths are decoded from a [`Reader`].
 </span><span class="attr">#[inline]
-</span><span class="kw">pub fn </span>decode_usize&lt;<span class="lifetime">'de</span>, C, R, <span class="kw">const </span>OPT: Options&gt;(cx: <span class="kw-2">&amp;</span>C, reader: R) -&gt; <span class="prelude-ty">Result</span>&lt;usize, C::Error&gt;
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>decode_usize&lt;<span class="lifetime">'de</span>, C, R, <span class="kw">const </span>OPT: Options&gt;(
+    cx: <span class="kw-2">&amp;</span>C,
+    reader: R,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, C::Error&gt;
 <span class="kw">where
     </span>C: <span class="question-mark">?</span>Sized + Context,
     R: Reader&lt;<span class="lifetime">'de</span>&gt;,
@@ -280,7 +295,8 @@
 
             <span class="macro">macro_rules!</span> fixed {
                 (<span class="macro-nonterminal">$ty</span>:ty) =&gt; {{
-                    <span class="kw">let </span><span class="prelude-val">Ok</span>(value) =
+                    <span class="attr">#[allow(irrefutable_let_patterns)]
+                    </span><span class="kw">let </span><span class="prelude-val">Ok</span>(value) =
                         usize::try_from(&lt;<span class="macro-nonterminal">$ty </span><span class="kw">as </span>UnsignedOps&gt;::read_bytes(cx, reader, bo)<span class="question-mark">?</span>)
                     <span class="kw">else </span>{
                         <span class="kw">return </span><span class="prelude-val">Err</span>(cx.message(<span class="string">"Value type out of bounds for usize"</span>));
@@ -290,7 +306,7 @@
                 }};
             }
 
-            <span class="macro">crate::width_arm!</span>(<span class="kw">crate</span>::options::length_width::&lt;OPT&gt;(), fixed)
+            <span class="macro">crate::options::width_arm!</span>(<span class="kw">crate</span>::options::length_width::&lt;OPT&gt;(), fixed)
         }
     }
 }

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_ARRAY_BUFFER"],"macro":["default"],"static":["SYSTEM"],"struct":["ArrayBuffer","Disabled","Slice","String","System","Vec"],"trait":["Allocator","RawVec"]};

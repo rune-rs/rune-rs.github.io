@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Capture","ErrorMarker","Ignore","RichError","Same","StackContext","SystemContext"],"trait":["Error"]};
+window.SIDEBAR_ITEMS = {"fn":["new","with_alloc"],"struct":["Capture","DefaultContext","Error","ErrorMarker","Ignore","Same"],"trait":["ContextError"]};

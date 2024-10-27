@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["Error","ToOwned"]};
+window.SIDEBAR_ITEMS = {"trait":["ToOwned"]};

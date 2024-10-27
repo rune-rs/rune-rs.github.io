@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.19.15/src/visit_mut.rs`."><title>visit_mut.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">toml_edit/</div>visit_mut.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.22.22/src/visit_mut.rs`."><title>visit_mut.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">toml_edit/</div>visit_mut.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -250,7 +250,11 @@
 <a href="#249" id="249">249</a>
 <a href="#250" id="250">250</a>
 <a href="#251" id="251">251</a>
-<a href="#252" id="252">252</a></pre></div><pre class="rust"><code><span class="attr">#![allow(missing_docs)]
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a></pre></div><pre class="rust"><code><span class="attr">#![allow(missing_docs)]
 
 </span><span class="doccomment">//! Document tree traversal to mutate an exclusive borrow of a document tree in place.
 //!
@@ -297,6 +301,8 @@
 //! 2 decimal points.
 //!
 //! ```
+//! # #[cfg(feature = "parse")] {
+//! # #[cfg(feature = "display")] {
 //! # use toml_edit::*;
 //! use toml_edit::visit_mut::*;
 //!
@@ -322,7 +328,7 @@
 //! table = { apple = 4.5 }
 //! "#;
 //!
-//! let mut document: Document = input.parse().unwrap();
+//! let mut document: DocumentMut = input.parse().unwrap();
 //! let mut visitor = FloatToString;
 //! visitor.visit_document_mut(&amp;mut document);
 //!
@@ -332,13 +338,15 @@
 //! "#;
 //!
 //! assert_eq!(format!("{}", document), output);
+//! # }
+//! # }
 //! ```
 //!
 //! For a more complex example where the visitor has internal state, see `examples/visit.rs`
-//! [on GitHub](https://github.com/ordian/toml_edit/blob/master/examples/visit.rs).
+//! [on GitHub](https://github.com/toml-rs/toml/blob/main/crates/toml_edit/examples/visit.rs).
 
 </span><span class="kw">use crate</span>::{
-    Array, ArrayOfTables, Datetime, Document, Formatted, InlineTable, Item, KeyMut, Table,
+    Array, ArrayOfTables, Datetime, DocumentMut, Formatted, InlineTable, Item, KeyMut, Table,
     TableLike, Value,
 };
 
@@ -346,7 +354,7 @@
 ///
 /// See the [module documentation](self) for details.
 </span><span class="kw">pub trait </span>VisitMut {
-    <span class="kw">fn </span>visit_document_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: <span class="kw-2">&amp;mut </span>Document) {
+    <span class="kw">fn </span>visit_document_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: <span class="kw-2">&amp;mut </span>DocumentMut) {
         visit_document_mut(<span class="self">self</span>, node);
     }
 
@@ -359,7 +367,7 @@
     }
 
     <span class="kw">fn </span>visit_inline_table_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: <span class="kw-2">&amp;mut </span>InlineTable) {
-        visit_inline_table_mut(<span class="self">self</span>, node)
+        visit_inline_table_mut(<span class="self">self</span>, node);
     }
 
     <span class="doccomment">/// [`visit_table_mut`](Self::visit_table_mut) and
@@ -385,7 +393,7 @@
     }
 
     <span class="kw">fn </span>visit_boolean_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: <span class="kw-2">&amp;mut </span>Formatted&lt;bool&gt;) {
-        visit_boolean_mut(<span class="self">self</span>, node)
+        visit_boolean_mut(<span class="self">self</span>, node);
     }
 
     <span class="kw">fn </span>visit_datetime_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: <span class="kw-2">&amp;mut </span>Formatted&lt;Datetime&gt;) {
@@ -393,19 +401,19 @@
     }
 
     <span class="kw">fn </span>visit_float_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: <span class="kw-2">&amp;mut </span>Formatted&lt;f64&gt;) {
-        visit_float_mut(<span class="self">self</span>, node)
+        visit_float_mut(<span class="self">self</span>, node);
     }
 
     <span class="kw">fn </span>visit_integer_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: <span class="kw-2">&amp;mut </span>Formatted&lt;i64&gt;) {
-        visit_integer_mut(<span class="self">self</span>, node)
+        visit_integer_mut(<span class="self">self</span>, node);
     }
 
     <span class="kw">fn </span>visit_string_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: <span class="kw-2">&amp;mut </span>Formatted&lt;String&gt;) {
-        visit_string_mut(<span class="self">self</span>, node)
+        visit_string_mut(<span class="self">self</span>, node);
     }
 }
 
-<span class="kw">pub fn </span>visit_document_mut&lt;V&gt;(v: <span class="kw-2">&amp;mut </span>V, node: <span class="kw-2">&amp;mut </span>Document)
+<span class="kw">pub fn </span>visit_document_mut&lt;V&gt;(v: <span class="kw-2">&amp;mut </span>V, node: <span class="kw-2">&amp;mut </span>DocumentMut)
 <span class="kw">where
     </span>V: VisitMut + <span class="question-mark">?</span>Sized,
 {
@@ -451,7 +459,7 @@
 <span class="kw">where
     </span>V: VisitMut + <span class="question-mark">?</span>Sized,
 {
-    v.visit_item_mut(node)
+    v.visit_item_mut(node);
 }
 
 <span class="kw">pub fn </span>visit_array_mut&lt;V&gt;(v: <span class="kw-2">&amp;mut </span>V, node: <span class="kw-2">&amp;mut </span>Array)

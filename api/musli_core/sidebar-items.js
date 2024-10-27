@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"attr":["decoder","encoder","visitor"],"derive":["Decode","Encode"],"mod":["buf","de","en","hint","mode","no_std"],"trait":["Allocator","Buf","Context","Decode","Decoder","Encode","Encoder"]};
+window.SIDEBAR_ITEMS = {"attr":["decoder","encoder","visitor"],"derive":["Decode","Encode"],"mod":["alloc","de","en","hint","mode","no_std"],"trait":["Context","Decode","Decoder","Encode","Encoder"]};

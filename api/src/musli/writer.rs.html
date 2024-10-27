@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/musli-0.0.121/src/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="musli" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">musli/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/musli-0.0.124/src/writer.rs`."><title>writer.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="musli" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">musli/</div>writer.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -257,7 +257,8 @@
 <a href="#256" id="256">256</a>
 <a href="#257" id="257">257</a>
 <a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a></pre></div><pre class="rust"><code><span class="doccomment">//! Trait governing how to write bytes.
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a></pre></div><pre class="rust"><code><span class="doccomment">//! Trait governing how to write bytes.
 //!
 //! To adapt [`std::io::Write`] types, see the [`wrap`] function.
 //!
@@ -266,10 +267,8 @@
 </span><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::take;
 
-<span class="kw">use crate</span>::{Buf, Context};
-
-<span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
-</span><span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::{Allocator, Vec};
+<span class="kw">use </span><span class="kw">crate</span>::Context;
 
 <span class="doccomment">/// The trait governing how a writer works.
 </span><span class="kw">pub trait </span>Writer {
@@ -291,10 +290,9 @@
     </span><span class="kw">fn </span>borrow_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Mut&lt;<span class="lifetime">'_</span>&gt;;
 
     <span class="doccomment">/// Write a buffer to the current writer.
-    </span><span class="kw">fn </span>write_buffer&lt;C, B&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, buffer: B) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
+    </span><span class="kw">fn </span>extend&lt;C&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, buffer: Vec&lt;<span class="lifetime">'_</span>, u8, C::Allocator&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
     <span class="kw">where
-        </span>C: <span class="question-mark">?</span>Sized + Context,
-        B: Buf;
+        </span>C: <span class="question-mark">?</span>Sized + Context;
 
     <span class="doccomment">/// Write bytes to the current writer.
     </span><span class="kw">fn </span>write_bytes&lt;C&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, bytes: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
@@ -323,12 +321,11 @@
     </span>}
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>write_buffer&lt;C, B&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, buffer: B) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
+    </span><span class="kw">fn </span>extend&lt;C&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, buffer: Vec&lt;<span class="lifetime">'_</span>, u8, C::Allocator&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
     <span class="kw">where
         </span>C: <span class="question-mark">?</span>Sized + Context,
-        B: Buf,
     {
-        (<span class="kw-2">*</span><span class="self">self</span>).write_buffer(cx, buffer)
+        (<span class="kw-2">*</span><span class="self">self</span>).extend(cx, buffer)
     }
 
     <span class="attr">#[inline]
@@ -349,7 +346,7 @@
 }
 
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
-</span><span class="kw">impl </span>Writer <span class="kw">for </span>Vec&lt;u8&gt; {
+</span><span class="kw">impl </span>Writer <span class="kw">for </span>rust_alloc::vec::Vec&lt;u8&gt; {
     <span class="kw">type </span>Mut&lt;<span class="lifetime">'this</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">'this </span><span class="kw-2">mut </span><span class="self">Self </span><span class="kw">where </span><span class="self">Self</span>: <span class="lifetime">'this</span>;
 
     <span class="attr">#[inline]
@@ -358,10 +355,9 @@
     </span>}
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>write_buffer&lt;C, B&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, buffer: B) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
+    </span><span class="kw">fn </span>extend&lt;C&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, buffer: Vec&lt;<span class="lifetime">'_</span>, u8, C::Allocator&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
     <span class="kw">where
         </span>C: <span class="question-mark">?</span>Sized + Context,
-        B: Buf,
     {
         <span class="comment">// SAFETY: the buffer never outlives this function call.
         </span><span class="self">self</span>.write_bytes(cx, buffer.as_slice())
@@ -397,10 +393,9 @@
     </span>}
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>write_buffer&lt;C, B&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, buffer: B) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
+    </span><span class="kw">fn </span>extend&lt;C&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, buffer: Vec&lt;<span class="lifetime">'_</span>, u8, C::Allocator&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
     <span class="kw">where
         </span>C: <span class="question-mark">?</span>Sized + Context,
-        B: Buf,
     {
         <span class="comment">// SAFETY: the buffer never outlives this function call.
         </span><span class="self">self</span>.write_bytes(cx, buffer.as_slice())
@@ -443,26 +438,34 @@
     }
 }
 
-<span class="doccomment">/// A writer that writes against an underlying [`Buf`].
-</span><span class="kw">pub struct </span>BufWriter&lt;T&gt; {
-    buf: T,
+<span class="doccomment">/// A writer that writes against an underlying [`Vec`].
+</span><span class="kw">pub struct </span>BufWriter&lt;<span class="lifetime">'a</span>, A&gt;
+<span class="kw">where
+    </span>A: <span class="lifetime">'a </span>+ <span class="question-mark">?</span>Sized + Allocator,
+{
+    buf: Vec&lt;<span class="lifetime">'a</span>, u8, A&gt;,
 }
 
-<span class="kw">impl</span>&lt;T&gt; BufWriter&lt;T&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A&gt; BufWriter&lt;<span class="lifetime">'a</span>, A&gt;
+<span class="kw">where
+    </span>A: <span class="lifetime">'a </span>+ <span class="question-mark">?</span>Sized + Allocator,
+{
     <span class="doccomment">/// Construct a new buffer writer.
-    </span><span class="kw">pub fn </span>new(buf: T) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ buf }
+    </span><span class="kw">pub fn </span>new(alloc: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>A) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            buf: Vec::new_in(alloc),
+        }
     }
 
     <span class="doccomment">/// Coerce into inner buffer.
-    </span><span class="kw">pub fn </span>into_inner(<span class="self">self</span>) -&gt; T {
+    </span><span class="kw">pub fn </span>into_inner(<span class="self">self</span>) -&gt; Vec&lt;<span class="lifetime">'a</span>, u8, A&gt; {
         <span class="self">self</span>.buf
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; Writer <span class="kw">for </span>BufWriter&lt;T&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, A&gt; Writer <span class="kw">for </span>BufWriter&lt;<span class="lifetime">'a</span>, A&gt;
 <span class="kw">where
-    </span>T: Buf,
+    </span>A: <span class="lifetime">'a </span>+ <span class="question-mark">?</span>Sized + Allocator,
 {
     <span class="kw">type </span>Mut&lt;<span class="lifetime">'this</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">'this </span><span class="kw-2">mut </span><span class="self">Self
     </span><span class="kw">where
@@ -474,10 +477,9 @@
     </span>}
 
     <span class="attr">#[inline(always)]
-    </span><span class="kw">fn </span>write_buffer&lt;C, B&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, buffer: B) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
+    </span><span class="kw">fn </span>extend&lt;C&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;</span>C, buffer: Vec&lt;<span class="lifetime">'_</span>, u8, C::Allocator&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), C::Error&gt;
     <span class="kw">where
         </span>C: <span class="question-mark">?</span>Sized + Context,
-        B: Buf,
     {
         <span class="kw">if </span>!<span class="self">self</span>.buf.write(buffer.as_slice()) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(cx.message(<span class="string">"Buffer overflow"</span>));

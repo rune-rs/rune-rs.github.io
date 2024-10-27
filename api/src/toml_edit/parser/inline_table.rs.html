@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.19.15/src/parser/inline_table.rs`."><title>inline_table.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">toml_edit/parser/</div>inline_table.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.22.22/src/parser/inline_table.rs`."><title>inline_table.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">toml_edit/parser/</div>inline_table.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -179,43 +179,48 @@
 <a href="#178" id="178">178</a>
 <a href="#179" id="179">179</a>
 <a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a></pre></div><pre class="rust"><code><span class="kw">use </span>winnow::combinator::cut_err;
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a></pre></div><pre class="rust"><code><span class="kw">use </span>winnow::combinator::cut_err;
 <span class="kw">use </span>winnow::combinator::delimited;
-<span class="kw">use </span>winnow::combinator::separated0;
+<span class="kw">use </span>winnow::combinator::separated;
+<span class="kw">use </span>winnow::combinator::trace;
 <span class="kw">use </span>winnow::token::one_of;
-<span class="kw">use </span>winnow::trace::trace;
 
 <span class="kw">use </span><span class="kw">crate</span>::key::Key;
-<span class="kw">use </span><span class="kw">crate</span>::parser::errors::CustomError;
+<span class="kw">use </span><span class="kw">crate</span>::parser::error::CustomError;
 <span class="kw">use </span><span class="kw">crate</span>::parser::key::key;
 <span class="kw">use </span><span class="kw">crate</span>::parser::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::parser::trivia::ws;
 <span class="kw">use </span><span class="kw">crate</span>::parser::value::value;
-<span class="kw">use </span><span class="kw">crate</span>::table::TableKeyValue;
-<span class="kw">use crate</span>::{InlineTable, InternalString, Item, RawString, Value};
+<span class="kw">use crate</span>::{InlineTable, Item, RawString, Value};
 
 <span class="kw">use </span>indexmap::map::Entry;
 
 <span class="comment">// ;; Inline Table
 
 // inline-table = inline-table-open inline-table-keyvals inline-table-close
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inline_table&lt;<span class="lifetime">'i</span>&gt;(
-    check: RecursionCheck,
-) -&gt; <span class="kw">impl </span>Parser&lt;Input&lt;<span class="lifetime">'i</span>&gt;, InlineTable, ContextError&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>inline_table&lt;<span class="lifetime">'i</span>&gt;(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;) -&gt; PResult&lt;InlineTable&gt; {
     trace(<span class="string">"inline-table"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;| {
         delimited(
             INLINE_TABLE_OPEN,
-            cut_err(inline_table_keyvals(check).try_map(|(kv, p)| table_from_pairs(kv, p))),
+            cut_err(inline_table_keyvals.try_map(|(kv, p)| table_from_pairs(kv, p))),
             cut_err(INLINE_TABLE_CLOSE)
                 .context(StrContext::Label(<span class="string">"inline table"</span>))
                 .context(StrContext::Expected(StrContextValue::CharLiteral(<span class="string">'}'</span>))),
         )
         .parse_next(input)
     })
+    .parse_next(input)
 }
 
 <span class="kw">fn </span>table_from_pairs(
-    v: Vec&lt;(Vec&lt;Key&gt;, TableKeyValue)&gt;,
+    v: Vec&lt;(Vec&lt;Key&gt;, (Key, Item))&gt;,
     preamble: RawString,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;InlineTable, CustomError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>root = InlineTable::new();
@@ -223,16 +228,25 @@
     <span class="comment">// Assuming almost all pairs will be directly in `root`
     </span>root.items.reserve(v.len());
 
-    <span class="kw">for </span>(path, kv) <span class="kw">in </span>v {
+    <span class="kw">for </span>(path, (key, value)) <span class="kw">in </span>v {
         <span class="kw">let </span>table = descend_path(<span class="kw-2">&amp;mut </span>root, <span class="kw-2">&amp;</span>path)<span class="question-mark">?</span>;
-        <span class="kw">let </span>key: InternalString = kv.key.get_internal().into();
+
+        <span class="comment">// "Likewise, using dotted keys to redefine tables already defined in [table] form is not allowed"
+        </span><span class="kw">let </span>mixed_table_types = table.is_dotted() == path.is_empty();
+        <span class="kw">if </span>mixed_table_types {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(CustomError::DuplicateKey {
+                key: key.get().into(),
+                table: <span class="prelude-val">None</span>,
+            });
+        }
+
         <span class="kw">match </span>table.items.entry(key) {
             Entry::Vacant(o) =&gt; {
-                o.insert(kv);
+                o.insert(value);
             }
             Entry::Occupied(o) =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(CustomError::DuplicateKey {
-                    key: o.key().as_str().into(),
+                    key: o.key().get().into(),
                     table: <span class="prelude-val">None</span>,
                 });
             }
@@ -245,15 +259,26 @@
     <span class="kw-2">mut </span>table: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>InlineTable,
     path: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[Key],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>InlineTable, CustomError&gt; {
+    <span class="kw">let </span>dotted = !path.is_empty();
     <span class="kw">for </span>(i, key) <span class="kw">in </span>path.iter().enumerate() {
         <span class="kw">let </span>entry = table.entry_format(key).or_insert_with(|| {
             <span class="kw">let </span><span class="kw-2">mut </span>new_table = InlineTable::new();
-            new_table.set_dotted(<span class="bool-val">true</span>);
+            new_table.set_implicit(dotted);
+            new_table.set_dotted(dotted);
 
             Value::InlineTable(new_table)
         });
         <span class="kw">match </span><span class="kw-2">*</span>entry {
             Value::InlineTable(<span class="kw-2">ref mut </span>sweet_child_of_mine) =&gt; {
+                <span class="comment">// Since tables cannot be defined more than once, redefining such tables using a
+                // [table] header is not allowed. Likewise, using dotted keys to redefine tables
+                // already defined in [table] form is not allowed.
+                </span><span class="kw">if </span>dotted &amp;&amp; !sweet_child_of_mine.is_implicit() {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(CustomError::DuplicateKey {
+                        key: key.get().into(),
+                        table: <span class="prelude-val">None</span>,
+                    });
+                }
                 table = sweet_child_of_mine;
             }
             <span class="kw-2">ref </span>v =&gt; {
@@ -278,53 +303,42 @@
 // ( key keyval-sep val inline-table-sep inline-table-keyvals-non-empty ) /
 // ( key keyval-sep val )
 
-</span><span class="kw">fn </span>inline_table_keyvals&lt;<span class="lifetime">'i</span>&gt;(
-    check: RecursionCheck,
-) -&gt; <span class="kw">impl </span>Parser&lt;Input&lt;<span class="lifetime">'i</span>&gt;, (Vec&lt;(Vec&lt;Key&gt;, TableKeyValue)&gt;, RawString), ContextError&gt; {
-    <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;| {
-        <span class="kw">let </span>check = check.recursing(input)<span class="question-mark">?</span>;
-        (
-            separated0(keyval(check), INLINE_TABLE_SEP),
-            ws.span().map(RawString::with_span),
-        )
-            .parse_next(input)
-    }
+</span><span class="kw">fn </span>inline_table_keyvals(
+    input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;,
+) -&gt; PResult&lt;(Vec&lt;(Vec&lt;Key&gt;, (Key, Item))&gt;, RawString)&gt; {
+    (
+        separated(<span class="number">0</span>.., keyval, INLINE_TABLE_SEP),
+        ws.span().map(RawString::with_span),
+    )
+        .parse_next(input)
 }
 
-<span class="kw">fn </span>keyval&lt;<span class="lifetime">'i</span>&gt;(
-    check: RecursionCheck,
-) -&gt; <span class="kw">impl </span>Parser&lt;Input&lt;<span class="lifetime">'i</span>&gt;, (Vec&lt;Key&gt;, TableKeyValue), ContextError&gt; {
-    <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;| {
-        (
-            key,
-            cut_err((
-                one_of(KEYVAL_SEP)
-                    .context(StrContext::Expected(StrContextValue::CharLiteral(<span class="string">'.'</span>)))
-                    .context(StrContext::Expected(StrContextValue::CharLiteral(<span class="string">'='</span>))),
-                (ws.span(), value(check), ws.span()),
-            )),
-        )
-            .map(|(key, (<span class="kw">_</span>, v))| {
-                <span class="kw">let </span><span class="kw-2">mut </span>path = key;
-                <span class="kw">let </span>key = path.pop().expect(<span class="string">"grammar ensures at least 1"</span>);
+<span class="kw">fn </span>keyval(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;(Vec&lt;Key&gt;, (Key, Item))&gt; {
+    (
+        key,
+        cut_err((
+            one_of(KEYVAL_SEP)
+                .context(StrContext::Expected(StrContextValue::CharLiteral(<span class="string">'.'</span>)))
+                .context(StrContext::Expected(StrContextValue::CharLiteral(<span class="string">'='</span>))),
+            (ws.span(), value, ws.span()),
+        )),
+    )
+        .map(|(key, (<span class="kw">_</span>, v))| {
+            <span class="kw">let </span><span class="kw-2">mut </span>path = key;
+            <span class="kw">let </span>key = path.pop().expect(<span class="string">"grammar ensures at least 1"</span>);
 
-                <span class="kw">let </span>(pre, v, suf) = v;
-                <span class="kw">let </span>pre = RawString::with_span(pre);
-                <span class="kw">let </span>suf = RawString::with_span(suf);
-                <span class="kw">let </span>v = v.decorated(pre, suf);
-                (
-                    path,
-                    TableKeyValue {
-                        key,
-                        value: Item::Value(v),
-                    },
-                )
-            })
-            .parse_next(input)
-    }
+            <span class="kw">let </span>(pre, v, suf) = v;
+            <span class="kw">let </span>pre = RawString::with_span(pre);
+            <span class="kw">let </span>suf = RawString::with_span(suf);
+            <span class="kw">let </span>v = v.decorated(pre, suf);
+            (path, (key, Item::Value(v)))
+        })
+        .parse_next(input)
 }
 
 <span class="attr">#[cfg(test)]
+#[cfg(feature = <span class="string">"parse"</span>)]
+#[cfg(feature = <span class="string">"display"</span>)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
@@ -339,7 +353,7 @@
         ];
         <span class="kw">for </span>input <span class="kw">in </span>inputs {
             <span class="macro">dbg!</span>(input);
-            <span class="kw">let </span><span class="kw-2">mut </span>parsed = inline_table(Default::default()).parse(new_input(input));
+            <span class="kw">let </span><span class="kw-2">mut </span>parsed = inline_table.parse(new_input(input));
             <span class="kw">if let </span><span class="prelude-val">Ok</span>(parsed) = <span class="kw-2">&amp;mut </span>parsed {
                 parsed.despan(input);
             }
@@ -352,7 +366,7 @@
         <span class="kw">let </span>invalid_inputs = [<span class="string">r#"{a = 1e165"#</span>, <span class="string">r#"{ hello = "world", a = 2, hello = 1}"#</span>];
         <span class="kw">for </span>input <span class="kw">in </span>invalid_inputs {
             <span class="macro">dbg!</span>(input);
-            <span class="kw">let </span><span class="kw-2">mut </span>parsed = inline_table(Default::default()).parse(new_input(input));
+            <span class="kw">let </span><span class="kw-2">mut </span>parsed = inline_table.parse(new_input(input));
             <span class="kw">if let </span><span class="prelude-val">Ok</span>(parsed) = <span class="kw-2">&amp;mut </span>parsed {
                 parsed.despan(input);
             }

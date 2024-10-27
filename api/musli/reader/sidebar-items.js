@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Limit","SliceReader"],"trait":["Reader"]};
+window.SIDEBAR_ITEMS = {"struct":["Limit","SliceReader"],"trait":["IntoReader","Reader"]};

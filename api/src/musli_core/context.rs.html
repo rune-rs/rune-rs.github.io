@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/musli-core-0.0.121/src/context.rs`."><title>context.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="musli_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">musli_core/</div>context.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/musli-core-0.0.124/src/context.rs`."><title>context.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="musli_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">musli_core/</div>context.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -433,36 +433,30 @@
 <a href="#432" id="432">432</a>
 <a href="#433" id="433">433</a>
 <a href="#434" id="434">434</a>
-<a href="#435" id="435">435</a>
-<a href="#436" id="436">436</a>
-<a href="#437" id="437">437</a>
-<a href="#438" id="438">438</a>
-<a href="#439" id="439">439</a>
-<a href="#440" id="440">440</a></pre></div><pre class="rust"><code><span class="doccomment">//! Things related to working with contexts.
+<a href="#435" id="435">435</a></pre></div><pre class="rust"><code><span class="doccomment">//! Things related to working with contexts.
 
-</span><span class="kw">use </span>core::fmt;
+</span><span class="kw">use </span>core::error::Error;
+<span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::str;
 
+<span class="kw">use </span><span class="kw">crate</span>::alloc::Allocator;
 <span class="kw">use </span><span class="kw">crate</span>::de::{DecodeBytes, DecodeUnsized, DecodeUnsizedBytes};
-<span class="kw">use </span><span class="kw">crate</span>::no_std;
-<span class="kw">use crate</span>::{Buf, Decode, Decoder};
+<span class="kw">use crate</span>::{Decode, Decoder};
 
 <span class="doccomment">/// Provides ergonomic access to the serialization context.
 ///
 /// This is used to among other things report diagnostics.
 </span><span class="kw">pub trait </span>Context {
     <span class="doccomment">/// Mode of the context.
-    </span><span class="kw">type </span>Mode;
+    </span><span class="kw">type </span>Mode: <span class="lifetime">'static</span>;
     <span class="doccomment">/// Error produced by context.
     </span><span class="kw">type </span>Error: <span class="lifetime">'static</span>;
     <span class="doccomment">/// A mark during processing.
     </span><span class="kw">type </span>Mark: Copy + Default;
-    <span class="doccomment">/// A growable buffer.
-    </span><span class="kw">type </span>Buf&lt;<span class="lifetime">'this</span>&gt;: Buf
-    <span class="kw">where
-        </span><span class="self">Self</span>: <span class="lifetime">'this</span>;
+    <span class="doccomment">/// The allocator associated with the context.
+    </span><span class="kw">type </span>Allocator: <span class="question-mark">?</span>Sized + Allocator;
     <span class="doccomment">/// An allocated buffer containing a valid string.
-    </span><span class="kw">type </span>BufString&lt;<span class="lifetime">'this</span>&gt;: AsRef&lt;str&gt;
+    </span><span class="kw">type </span>String&lt;<span class="lifetime">'this</span>&gt;: AsRef&lt;str&gt;
     <span class="kw">where
         </span><span class="self">Self</span>: <span class="lifetime">'this</span>;
 
@@ -510,20 +504,21 @@
         T::decode_unsized_bytes(<span class="self">self</span>, decoder, f)
     }
 
-    <span class="doccomment">/// Allocate a buffer.
-    </span><span class="kw">fn </span>alloc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Buf&lt;<span class="lifetime">'_</span>&gt;&gt;;
+    <span class="doccomment">/// Access the underlying allocator.
+    </span><span class="kw">fn </span>alloc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Allocator;
 
     <span class="doccomment">/// Collect and allocate a string from a [`Display`] implementation.
     ///
     /// [`Display`]: fmt::Display
-    </span><span class="kw">fn </span>collect_string&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::BufString&lt;<span class="lifetime">'_</span>&gt;, <span class="self">Self</span>::Error&gt;
+    </span><span class="kw">fn </span>collect_string&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::String&lt;<span class="lifetime">'_</span>&gt;, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + fmt::Display;
 
     <span class="doccomment">/// Generate a map function which maps an error using the `custom` function.
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>map&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>FnOnce(T) -&gt; <span class="self">Self</span>::Error + <span class="lifetime">'_
     </span><span class="kw">where
-        </span>T: <span class="lifetime">'static </span>+ Send + Sync + no_std::Error,
+        </span>T: <span class="lifetime">'static </span>+ Send + Sync + Error,
     {
         <span class="kw">move </span>|error| <span class="self">self</span>.custom(error)
     }
@@ -533,9 +528,10 @@
     /// reporting error-like things out from the context.
     </span><span class="kw">fn </span>custom&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, error: T) -&gt; <span class="self">Self</span>::Error
     <span class="kw">where
-        </span>T: <span class="lifetime">'static </span>+ Send + Sync + no_std::Error;
+        </span>T: <span class="lifetime">'static </span>+ Send + Sync + Error;
 
     <span class="doccomment">/// Generate a map function which maps an error using the `message` function.
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>map_message&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>FnOnce(T) -&gt; <span class="self">Self</span>::Error + <span class="lifetime">'_
     </span><span class="kw">where
         </span>T: fmt::Display,
@@ -570,7 +566,7 @@
     #[inline(always)]
     </span><span class="kw">fn </span>marked_custom&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, mark: <span class="self">Self</span>::Mark, message: T) -&gt; <span class="self">Self</span>::Error
     <span class="kw">where
-        </span>T: <span class="lifetime">'static </span>+ Send + Sync + no_std::Error,
+        </span>T: <span class="lifetime">'static </span>+ Send + Sync + Error,
     {
         <span class="self">self</span>.custom(message)
     }
@@ -651,15 +647,9 @@
 
     <span class="doccomment">/// Encountered an unsupported field tag.
     </span><span class="attr">#[inline(always)]
-    </span><span class="kw">fn </span>invalid_field_string_tag(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, field: <span class="self">Self</span>::Buf&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="self">Self</span>::Error {
-        <span class="comment">// SAFETY: Getting the slice does not overlap any interleaving operations.
-        </span><span class="kw">let </span>bytes = field.as_slice();
-
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(string) = str::from_utf8(bytes) {
-            <span class="self">self</span>.message(<span class="macro">format_args!</span>(<span class="string">"Invalid field tag {string:?}"</span>))
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.message(<span class="macro">format_args!</span>(<span class="string">"Invalid field tag {bytes:?}"</span>))
-        }
+    </span><span class="kw">fn </span>invalid_field_string_tag(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, field: <span class="self">Self</span>::String&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="self">Self</span>::Error {
+        <span class="kw">let </span>field = field.as_ref();
+        <span class="self">self</span>.message(<span class="macro">format_args!</span>(<span class="string">"Invalid field tag `{field}`"</span>))
     }
 
     <span class="doccomment">/// Missing variant field required to decode.
