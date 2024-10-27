@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/any_obj.rs`."><title>any_obj.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (c1db4dc24 2024-10-25)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>any_obj.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/any_obj.rs`."><title>any_obj.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>any_obj.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -650,92 +650,180 @@
 <a href="#649" id="649">649</a>
 <a href="#650" id="650">650</a>
 <a href="#651" id="651">651</a>
-<a href="#652" id="652">652</a></pre></div><pre class="rust"><code><span class="doccomment">//! Helper types for a holder of data.
-
-</span><span class="kw">use </span>core::any::TypeId;
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
+<a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
+<a href="#692" id="692">692</a>
+<a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any::TypeId;
+<span class="kw">use </span>core::cell::Cell;
 <span class="kw">use </span>core::fmt;
-<span class="kw">use </span>core::mem::ManuallyDrop;
-<span class="kw">use </span>core::ops::{Deref, DerefMut};
-<span class="kw">use </span>core::ptr;
+<span class="kw">use </span>core::mem::{needs_drop, offset_of, replace, ManuallyDrop};
+<span class="kw">use </span>core::ptr::{<span class="self">self</span>, addr_of, addr_of_mut, drop_in_place, NonNull};
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::alloc::Global;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box};
-<span class="kw">use </span><span class="kw">crate</span>::any::Any;
-<span class="kw">use </span><span class="kw">crate</span>::compile::meta;
-<span class="kw">use </span><span class="kw">crate</span>::hash::Hash;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{AnyTypeInfo, MaybeTypeOf, RawStr, TypeInfo};
+<span class="kw">use crate</span>::{Any, Hash};
 
-<span class="doccomment">/// Errors raised during casting operations.
-</span><span class="attr">#[derive(Debug, PartialEq)]
-#[allow(missing_docs)]
-#[non_exhaustive]
-</span><span class="kw">pub enum </span>AnyObjError {
-    RefAsMut { name: RawStr },
-    RefAsOwned { name: RawStr },
-    MutAsOwned { name: RawStr },
-    Cast,
+<span class="kw">use super</span>::{
+    Access, AccessError, AnyTypeInfo, BorrowMut, BorrowRef, Mut, RawAccessGuard, RawAnyGuard,
+    RawStr, Ref, RefVtable, Snapshot, TypeInfo, VmErrorKind,
+};
+
+<span class="doccomment">/// Errors caused by casting an any reference.
+</span><span class="attr">#[cfg_attr(test, derive(Debug, PartialEq))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>AnyObjError {
+    Cast(TypeInfo),
+    AccessError(AccessError),
 }
 
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>AnyObjError {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
-        <span class="kw">match </span><span class="self">self </span>{
-            AnyObjError::RefAsMut { name } =&gt; <span class="macro">write!</span>(
-                f,
-                <span class="string">"Cannot borrow a shared reference `&amp;{name}` mutably as `&amp;mut {name}`"</span>,
-            ),
-            AnyObjError::RefAsOwned { name } =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"Cannot take ownership of a shared reference `&amp;{name}`"</span>,)
-            }
-            AnyObjError::MutAsOwned { name } =&gt; <span class="macro">write!</span>(
-                f,
-                <span class="string">"Cannot take ownership of a mutable reference `&amp;mut {name}`"</span>,
-            ),
-            AnyObjError::Cast {} =&gt; <span class="macro">write!</span>(f, <span class="string">"Cast failed"</span>),
+<span class="kw">impl</span>&lt;T&gt; From&lt;T&gt; <span class="kw">for </span>AnyObjError
+<span class="kw">where
+    </span>AccessError: From&lt;T&gt;,
+{
+    <span class="kw">fn </span>from(value: T) -&gt; <span class="self">Self </span>{
+        AnyObjError::AccessError(AccessError::from(value))
+    }
+}
+
+<span class="doccomment">/// Guard which decrements and releases shared storage for the guarded reference.
+</span><span class="kw">struct </span>AnyObjDecShared {
+    shared: NonNull&lt;Shared&gt;,
+}
+
+<span class="kw">impl </span>Drop <span class="kw">for </span>AnyObjDecShared {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// Safety: We know that the inner value is live in this instance.
+        </span><span class="kw">unsafe </span>{
+            Shared::dec(<span class="self">self</span>.shared);
         }
     }
 }
 
-<span class="kw">impl </span>core::error::Error <span class="kw">for </span>AnyObjError {}
-
-<span class="doccomment">/// Our own private dynamic Any implementation.
-///
-/// In contrast to `Box&lt;dyn std::any::Any&gt;`, this allows for storing a raw
-/// pointer directly in the object to avoid one level of indirection. Otherwise
-/// it's equivalent.
-</span><span class="attr">#[repr(C)]
-</span><span class="kw">pub struct </span>AnyObj {
-    vtable: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>AnyObjVtable,
-    data: ptr::NonNull&lt;()&gt;,
+<span class="doccomment">/// Guard which decrements and releases shared storage for the guarded reference.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AnyObjDrop {
+    <span class="attr">#[allow(unused)]
+    </span>shared: NonNull&lt;Shared&gt;,
 }
 
-<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>AnyObj {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="self">self</span>.debug(f)
+<span class="kw">impl </span>Drop <span class="kw">for </span>AnyObjDrop {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// Safety: We know that the inner value is live in this instance.
+        </span><span class="kw">unsafe </span>{
+            <span class="self">self</span>.shared.as_ref().access.take();
+
+            Shared::dec(<span class="self">self</span>.shared);
+        }
     }
 }
 
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RawAnyObjGuard {
+    <span class="attr">#[allow(unused)]
+    </span>guard: RawAccessGuard,
+    <span class="attr">#[allow(unused)]
+    </span>dec_shared: AnyObjDecShared,
+}
+
+<span class="doccomment">/// A type-erased wrapper for a reference, whether it is mutable or not.
+</span><span class="kw">pub struct </span>AnyObj {
+    shared: NonNull&lt;Shared&gt;,
+}
+
 <span class="kw">impl </span>AnyObj {
-    <span class="doccomment">/// Construct a new any from the original any.
-    </span><span class="kw">pub fn </span>new&lt;T&gt;(data: T) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt;
+    <span class="doccomment">/// Construct an Any that wraps an owned object.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new&lt;T&gt;(data: T) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt;
     <span class="kw">where
         </span>T: Any,
     {
-        <span class="kw">let </span>data = <span class="kw">unsafe </span>{
-            <span class="kw">let </span>(ptr, Global) = Box::into_raw_with_allocator(Box::try_new_in(data, Global)<span class="question-mark">?</span>);
-            ptr::NonNull::new_unchecked(ptr.cast())
+        <span class="kw">let </span>vtable = <span class="kw-2">&amp;</span>Vtable {
+            kind: Kind::Own,
+            type_id: TypeId::of::&lt;T&gt;,
+            debug: debug_ref_impl::&lt;T&gt;,
+            type_name: type_name_impl::&lt;T&gt;,
+            type_hash: T::type_hash,
+            drop_value: <span class="kw">const </span>{
+                <span class="kw">if </span>needs_drop::&lt;T&gt;() {
+                    <span class="prelude-val">Some</span>(drop_value::&lt;T&gt;)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>}
+            },
+            drop: drop_box::&lt;ManuallyDrop&lt;T&gt;&gt;,
+            clone: clone_own::&lt;T&gt;,
         };
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            vtable: <span class="kw-2">&amp;</span>AnyObjVtable {
-                kind: AnyObjKind::Owned,
-                drop: drop_impl::&lt;T&gt;,
-                as_ptr: as_ptr_impl::&lt;T&gt;,
-                debug: debug_impl::&lt;T&gt;,
-                type_name: type_name_impl::&lt;T&gt;,
-                type_hash: type_hash_impl::&lt;T&gt;,
-            },
+        <span class="kw">let </span>shared = Shared {
+            access: Access::new(),
+            count: Cell::new(<span class="number">1</span>),
+            vtable,
             data,
-        })
+        };
+
+        <span class="kw">let </span>shared = NonNull::from(Box::leak(Box::try_new(shared)<span class="question-mark">?</span>)).cast();
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ shared })
     }
 
     <span class="doccomment">/// Construct an Any that wraps a pointer.
@@ -744,106 +832,30 @@
     ///
     /// Caller must ensure that the returned `AnyObj` doesn't outlive the
     /// reference it is wrapping.
-    ///
-    /// This would be an example of incorrect use:
-    ///
-    /// ```no_run
-    /// use rune::Any;
-    /// use rune::runtime::AnyObj;
-    ///
-    /// #[derive(Any)]
-    /// struct Foo(u32);
-    ///
-    /// let mut v = Foo(1u32);
-    /// let any = unsafe { AnyObj::from_ref(&amp;v) };
-    ///
-    /// drop(v);
-    ///
-    /// // any use of `any` beyond here is undefined behavior.
-    /// ```
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rune::Any;
-    /// use rune::runtime::AnyObj;
-    ///
-    /// #[derive(Any)]
-    /// struct Foo(u32);
-    ///
-    /// let mut v = Foo(1u32);
-    ///
-    /// let any = unsafe { AnyObj::from_ref(&amp;mut v) };
-    /// let b = any.downcast_borrow_ref::&lt;Foo&gt;().unwrap();
-    /// assert_eq!(b.0, 1u32);
-    /// ```
-    </span><span class="kw">pub unsafe fn </span>from_ref&lt;T&gt;(data: <span class="kw-2">&amp;</span>T) -&gt; <span class="self">Self
-    </span><span class="kw">where
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>from_ref&lt;T&gt;(data: <span class="kw-2">*const </span>T) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt;
+    <span class="kw">where
         </span>T: Any,
     {
-        <span class="kw">let </span>data = ptr::NonNull::new_unchecked(data <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*mut </span><span class="kw">_</span>);
-
-        <span class="self">Self </span>{
-            vtable: <span class="kw-2">&amp;</span>AnyObjVtable {
-                kind: AnyObjKind::RefPtr,
-                drop: noop_drop_impl::&lt;T&gt;,
-                as_ptr: as_ptr_impl::&lt;T&gt;,
-                debug: debug_ref_impl::&lt;T&gt;,
-                type_name: type_name_impl::&lt;T&gt;,
-                type_hash: type_hash_impl::&lt;T&gt;,
-            },
-            data,
-        }
-    }
-
-    <span class="doccomment">/// Construct an Any that wraps a Deref type, behaving as the Target of
-    /// the Deref implementation
-    ///
-    /// # Safety
-    ///
-    /// Caller must ensure that the returned `AnyObj` doesn't outlive the
-    /// dereference target.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rune::Any;
-    /// use rune::runtime::AnyObj;
-    /// use std::cell::RefCell;
-    ///
-    /// #[derive(Any)]
-    /// struct Foo(u32);
-    ///
-    /// let mut v = RefCell::new(Foo(1u32));
-    /// let mut guard = v.borrow();
-    ///
-    /// let any = unsafe { AnyObj::from_deref(guard)? };
-    ///
-    /// let b = any.downcast_borrow_ref::&lt;Foo&gt;().unwrap();
-    /// assert_eq!(b.0, 1u32);
-    /// # Ok::&lt;_, rune::support::Error&gt;(())
-    /// ```
-    </span><span class="kw">pub unsafe fn </span>from_deref&lt;T&gt;(data: T) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt;
-    <span class="kw">where
-        </span>T: Deref,
-        T::Target: Any,
-    {
-        <span class="kw">let </span>data = {
-            <span class="kw">let </span>(ptr, Global) = Box::into_raw_with_allocator(Box::try_new_in(data, Global)<span class="question-mark">?</span>);
-            ptr::NonNull::new_unchecked(ptr.cast())
+        <span class="kw">let </span>vtable = <span class="kw-2">&amp;</span>Vtable {
+            kind: Kind::Ref,
+            type_id: TypeId::of::&lt;T&gt;,
+            debug: debug_ref_impl::&lt;T&gt;,
+            type_name: type_name_impl::&lt;T&gt;,
+            type_hash: T::type_hash,
+            drop_value: <span class="prelude-val">None</span>,
+            drop: drop_box::&lt;NonNull&lt;T&gt;&gt;,
+            clone: clone_ref::&lt;T&gt;,
         };
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            vtable: <span class="kw-2">&amp;</span>AnyObjVtable {
-                kind: AnyObjKind::RefPtr,
-                drop: drop_impl::&lt;T&gt;,
-                as_ptr: as_ptr_deref_impl::&lt;T&gt;,
-                debug: debug_ref_impl::&lt;T::Target&gt;,
-                type_name: type_name_impl::&lt;T::Target&gt;,
-                type_hash: type_hash_impl::&lt;T::Target&gt;,
-            },
-            data,
-        })
+        <span class="kw">let </span>shared = Shared {
+            access: Access::new(),
+            count: Cell::new(<span class="number">1</span>),
+            vtable,
+            data: NonNull::new_unchecked(data.cast_mut()),
+        };
+
+        <span class="kw">let </span>shared = NonNull::from(Box::leak(Box::try_new(shared)<span class="question-mark">?</span>)).cast();
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ shared })
     }
 
     <span class="doccomment">/// Construct an Any that wraps a mutable pointer.
@@ -852,427 +864,518 @@
     ///
     /// Caller must ensure that the returned `AnyObj` doesn't outlive the
     /// reference it is wrapping.
-    ///
-    /// This would be an example of incorrect use:
-    ///
-    /// ```no_run
-    /// use rune::Any;
-    /// use rune::runtime::AnyObj;
-    ///
-    /// #[derive(Any)]
-    /// struct Foo(u32);
-    ///
-    /// let mut v = Foo(1u32);
-    /// let any = unsafe { AnyObj::from_mut(&amp;mut v) };
-    ///
-    /// drop(v);
-    ///
-    /// // any use of `any` beyond here is undefined behavior.
-    /// ```
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rune::Any;
-    /// use rune::runtime::{AnyObj, VmResult};
-    ///
-    /// #[derive(Any)]
-    /// struct Foo(u32);
-    ///
-    /// let mut v = Foo(1u32);
-    ///
-    /// {
-    ///     let mut any = unsafe { AnyObj::from_mut(&amp;mut v) };
-    ///
-    ///     let Ok(v) = any.downcast_borrow_mut::&lt;Foo&gt;() else {
-    ///         panic!("Conversion failed");
-    ///     };
-    ///
-    ///     v.0 += 1;
-    /// }
-    ///
-    /// assert_eq!(v.0, 2);
-    /// ```
-    </span><span class="kw">pub unsafe fn </span>from_mut&lt;T&gt;(data: <span class="kw-2">&amp;mut </span>T) -&gt; <span class="self">Self
-    </span><span class="kw">where
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>from_mut&lt;T&gt;(data: <span class="kw-2">*mut </span>T) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt;
+    <span class="kw">where
         </span>T: Any,
     {
-        <span class="kw">let </span>data = ptr::NonNull::new_unchecked(data <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as </span><span class="kw-2">*mut </span>());
+        <span class="kw">let </span>vtable = <span class="kw-2">&amp;</span>Vtable {
+            kind: Kind::Mut,
+            type_id: TypeId::of::&lt;T&gt;,
+            debug: debug_mut_impl::&lt;T&gt;,
+            type_name: type_name_impl::&lt;T&gt;,
+            type_hash: T::type_hash,
+            drop_value: <span class="prelude-val">None</span>,
+            drop: drop_box::&lt;NonNull&lt;T&gt;&gt;,
+            clone: clone_mut::&lt;T&gt;,
+        };
 
-        <span class="self">Self </span>{
-            vtable: <span class="kw-2">&amp;</span>AnyObjVtable {
-                kind: AnyObjKind::MutPtr,
-                drop: noop_drop_impl::&lt;T&gt;,
-                as_ptr: as_ptr_impl::&lt;T&gt;,
-                debug: debug_mut_impl::&lt;T&gt;,
-                type_name: type_name_impl::&lt;T&gt;,
-                type_hash: type_hash_impl::&lt;T&gt;,
-            },
-            data,
+        <span class="kw">let </span>shared = Shared {
+            access: Access::new(),
+            count: Cell::new(<span class="number">1</span>),
+            vtable,
+            data: NonNull::new_unchecked(data),
+        };
+
+        <span class="kw">let </span>shared = NonNull::from(Box::leak(Box::try_new(shared)<span class="question-mark">?</span>)).cast();
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ shared })
+    }
+
+    <span class="doccomment">/// Downcast into an owned value of type `T`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, AnyObjError&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
+
+        <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+        }
+
+        <span class="kw">if </span>!<span class="macro">matches!</span>(vtable.kind, Kind::Own) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::AccessError(AccessError::not_owned(
+                vtable.type_info(),
+            )));
+        }
+
+        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
+        </span><span class="kw">unsafe </span>{
+            <span class="self">self</span>.shared.as_ref().access.try_take()<span class="question-mark">?</span>;
+            <span class="kw">let </span>data = vtable.as_ptr::&lt;T&gt;(<span class="self">self</span>.shared);
+            <span class="prelude-val">Ok</span>(data.read())
         }
     }
 
-    <span class="doccomment">/// Construct an Any that wraps a DerefMut type, behaving as the Target of
-    /// the DerefMut implementation
+    <span class="doccomment">/// Take the interior value and drop it if necessary.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drop(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), AccessError&gt; {
+        <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
+
+        <span class="kw">if </span>!<span class="macro">matches!</span>(vtable.kind, Kind::Own) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AccessError::not_owned(vtable.type_info()));
+        }
+
+        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
+        </span><span class="kw">unsafe </span>{
+            <span class="self">self</span>.shared.as_ref().access.try_take()<span class="question-mark">?</span>;
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(drop_value) = vtable.drop_value {
+                drop_value(<span class="self">self</span>.shared);
+            }
+
+            <span class="prelude-val">Ok</span>(())
+        }
+    }
+
+    <span class="doccomment">/// Take the interior value and return a handle to the taken value.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>take(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, VmErrorKind&gt; {
+        <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
+
+        <span class="kw">if </span>!<span class="macro">matches!</span>(vtable.kind, Kind::Own) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(VmErrorKind::from(AccessError::not_owned(
+                vtable.type_info(),
+            )));
+        }
+
+        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
+        </span><span class="kw">unsafe </span>{
+            <span class="self">self</span>.shared.as_ref().access.try_take()<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>((vtable.clone)(<span class="self">self</span>.shared)<span class="question-mark">?</span>)
+        }
+    }
+
+    <span class="doccomment">/// Downcast into an owned value of type [`Ref&lt;T&gt;`].
+    ///
+    /// # Errors
+    ///
+    /// This errors in case the underlying value is not owned, non-owned
+    /// references cannot be coerced into [`Ref&lt;T&gt;`].
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_ref&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Ref&lt;T&gt;, AnyObjError&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
+
+        <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+        }
+
+        <span class="kw">if </span>!<span class="macro">matches!</span>(vtable.kind, Kind::Own) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::AccessError(AccessError::not_owned(
+                vtable.type_info(),
+            )));
+        }
+
+        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
+        </span><span class="kw">unsafe </span>{
+            <span class="self">self</span>.shared.as_ref().access.try_shared()<span class="question-mark">?</span>;
+            <span class="kw">let </span>this = ManuallyDrop::new(<span class="self">self</span>);
+            <span class="kw">let </span>data = vtable.as_ptr(this.shared);
+
+            <span class="kw">let </span>vtable = <span class="kw-2">&amp;</span>RefVtable {
+                drop: |shared: NonNull&lt;()&gt;| {
+                    <span class="kw">let </span>shared = shared.cast::&lt;Shared&gt;();
+                    shared.as_ref().access.release();
+                    Shared::dec(shared)
+                },
+            };
+
+            <span class="kw">let </span>guard = RawAnyGuard::new(this.shared.cast(), vtable);
+            <span class="prelude-val">Ok</span>(Ref::new(data, guard))
+        }
+    }
+
+    <span class="doccomment">/// Downcast into an owned value of type [`Ref&lt;T&gt;`].
+    ///
+    /// # Errors
+    ///
+    /// This errors in case the underlying value is not owned, non-owned
+    /// references cannot be coerced into [`Ref&lt;T&gt;`].
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_mut&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Mut&lt;T&gt;, AnyObjError&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
+
+        <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+        }
+
+        <span class="kw">if </span>!<span class="macro">matches!</span>(vtable.kind, Kind::Own) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::AccessError(AccessError::not_owned(
+                vtable.type_info(),
+            )));
+        }
+
+        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
+        </span><span class="kw">unsafe </span>{
+            <span class="self">self</span>.shared.as_ref().access.try_exclusive()<span class="question-mark">?</span>;
+            <span class="kw">let </span>this = ManuallyDrop::new(<span class="self">self</span>);
+            <span class="kw">let </span>data = vtable.as_ptr(this.shared);
+
+            <span class="kw">let </span>vtable = <span class="kw-2">&amp;</span>RefVtable {
+                drop: |shared: NonNull&lt;()&gt;| {
+                    <span class="kw">let </span>shared = shared.cast::&lt;Shared&gt;();
+                    shared.as_ref().access.release();
+                    Shared::dec(shared)
+                },
+            };
+
+            <span class="kw">let </span>guard = RawAnyGuard::new(this.shared.cast(), vtable);
+            <span class="prelude-val">Ok</span>(Mut::new(data, guard))
+        }
+    }
+
+    <span class="doccomment">/// Get a reference to the interior value while checking for shared access.
+    ///
+    /// This prevents other exclusive accesses from being performed while the
+    /// guard returned from this function is live.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_borrow_ref&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BorrowRef&lt;<span class="lifetime">'_</span>, T&gt;, AnyObjError&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">let </span>vtable = vtable(<span class="self">self</span>);
+
+        <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+        }
+
+        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
+        </span><span class="kw">unsafe </span>{
+            <span class="kw">let </span>guard = <span class="self">self</span>.shared.as_ref().access.shared()<span class="question-mark">?</span>;
+            <span class="kw">let </span>data = vtable.as_ptr(<span class="self">self</span>.shared);
+            <span class="prelude-val">Ok</span>(BorrowRef::new(data, guard))
+        }
+    }
+
+    <span class="doccomment">/// Get a reference to the interior value while checking for shared access.
+    ///
+    /// This prevents other exclusive accesses from being performed while the
+    /// guard returned from this function is live.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_borrow_ptr&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(NonNull&lt;T&gt;, RawAnyObjGuard), AnyObjError&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
+
+        <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+        }
+
+        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
+        </span><span class="kw">unsafe </span>{
+            <span class="kw">let </span>guard = <span class="self">self</span>.shared.as_ref().access.shared()<span class="question-mark">?</span>.into_raw();
+            <span class="kw">let </span>this = ManuallyDrop::new(<span class="self">self</span>);
+
+            <span class="kw">let </span>data = vtable.as_ptr(this.shared);
+
+            <span class="kw">let </span>guard = RawAnyObjGuard {
+                guard,
+                dec_shared: AnyObjDecShared {
+                    shared: this.shared,
+                },
+            };
+
+            <span class="prelude-val">Ok</span>((data, guard))
+        }
+    }
+
+    <span class="doccomment">/// Returns some mutable reference to the boxed value if it is of type `T`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_borrow_mut&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BorrowMut&lt;<span class="lifetime">'_</span>, T&gt;, AnyObjError&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">let </span>vtable = vtable(<span class="self">self</span>);
+
+        <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+        }
+
+        <span class="kw">if </span><span class="macro">matches!</span>(vtable.kind, Kind::Ref) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+        }
+
+        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
+        </span><span class="kw">unsafe </span>{
+            <span class="kw">let </span>guard = <span class="self">self</span>.shared.as_ref().access.exclusive()<span class="question-mark">?</span>;
+            <span class="kw">let </span>data = vtable.as_ptr(<span class="self">self</span>.shared);
+            <span class="prelude-val">Ok</span>(BorrowMut::new(data, guard))
+        }
+    }
+
+    <span class="doccomment">/// Returns some mutable reference to the boxed value if it is of type `T`.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_borrow_mut_ptr&lt;T&gt;(
+        <span class="self">self</span>,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(NonNull&lt;T&gt;, RawAnyObjGuard), AnyObjError&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">let </span>vtable = vtable(<span class="kw-2">&amp;</span><span class="self">self</span>);
+
+        <span class="kw">if </span>(vtable.type_id)() != TypeId::of::&lt;T&gt;() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+        }
+
+        <span class="kw">if </span><span class="macro">matches!</span>(vtable.kind, Kind::Ref) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast(vtable.type_info()));
+        }
+
+        <span class="comment">// SAFETY: We've checked for the appropriate type just above.
+        </span><span class="kw">unsafe </span>{
+            <span class="kw">let </span>guard = <span class="self">self</span>.shared.as_ref().access.exclusive()<span class="question-mark">?</span>.into_raw();
+            <span class="kw">let </span>this = ManuallyDrop::new(<span class="self">self</span>);
+
+            <span class="kw">let </span>data = vtable.as_ptr(this.shared);
+
+            <span class="kw">let </span>guard = RawAnyObjGuard {
+                guard,
+                dec_shared: AnyObjDecShared {
+                    shared: this.shared,
+                },
+            };
+
+            <span class="prelude-val">Ok</span>((data, guard))
+        }
+    }
+
+    <span class="doccomment">/// Deconstruct the shared value into a guard and shared box.
     ///
     /// # Safety
     ///
-    /// Caller must ensure that the returned `AnyObj` doesn't outlive the
-    /// dereference target.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rune::Any;
-    /// use rune::runtime::AnyObj;
-    /// use std::cell::RefCell;
-    ///
-    /// #[derive(Any)]
-    /// struct Foo(u32);
-    ///
-    /// let mut v = RefCell::new(Foo(1u32));
-    /// let mut guard = v.borrow_mut();
-    ///
-    /// let any = unsafe { AnyObj::from_deref_mut(guard)? };
-    ///
-    /// let b = any.downcast_borrow_ref::&lt;Foo&gt;().unwrap();
-    /// assert_eq!(b.0, 1u32);
-    /// # Ok::&lt;_, rune::support::Error&gt;(())
-    /// ```
-    </span><span class="kw">pub unsafe fn </span>from_deref_mut&lt;T&gt;(data: T) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt;
-    <span class="kw">where
-        </span>T: DerefMut,
-        T::Target: Any,
-    {
-        <span class="kw">let </span>data = {
-            <span class="kw">let </span>(ptr, Global) = Box::into_raw_with_allocator(Box::try_new_in(data, Global)<span class="question-mark">?</span>);
-            ptr::NonNull::new_unchecked(ptr.cast())
+    /// The content of the shared value will be forcibly destructed once the
+    /// returned guard is dropped, unchecked use of the shared value after this
+    /// point will lead to undefined behavior.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>into_drop_guard(<span class="self">self</span>) -&gt; (<span class="self">Self</span>, AnyObjDrop) {
+        <span class="comment">// Increment the reference count by one to account for the guard holding
+        // onto it.
+        </span>Shared::inc(<span class="self">self</span>.shared);
+
+        <span class="kw">let </span>guard = AnyObjDrop {
+            shared: <span class="self">self</span>.shared,
         };
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            vtable: <span class="kw-2">&amp;</span>AnyObjVtable {
-                kind: AnyObjKind::MutPtr,
-                drop: drop_impl::&lt;T&gt;,
-                as_ptr: as_ptr_deref_mut_impl::&lt;T&gt;,
-                debug: debug_mut_impl::&lt;T::Target&gt;,
-                type_name: type_name_impl::&lt;T::Target&gt;,
-                type_hash: type_hash_impl::&lt;T::Target&gt;,
-            },
-            data,
-        })
+        (<span class="self">self</span>, guard)
     }
 
-    <span class="doccomment">/// Construct a new any with the specified raw components.
-    ///
-    /// ### Safety
-    ///
-    /// The caller must ensure that the vtable matches up with the data pointer
-    /// provided. This is primarily public for use in a C ffi.
-    </span><span class="kw">pub unsafe fn </span>new_raw(vtable: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>AnyObjVtable, data: <span class="kw-2">*const </span>()) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            vtable,
-            data: ptr::NonNull::new_unchecked(data <span class="kw">as </span><span class="kw-2">*mut </span>()),
-        }
+    <span class="doccomment">/// Test if the value is sharable.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_readable(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="comment">// Safety: Since we have a reference to this shared, we know that the
+        // inner is available.
+        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.shared.as_ref().access.is_shared() }
     }
 
-    <span class="doccomment">/// Returns `true` if the boxed type is the same as `T`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rune::Any;
-    /// use rune::runtime::AnyObj;
-    ///
-    /// #[derive(Debug, Any)]
-    /// struct Foo;
-    ///
-    /// #[derive(Debug, Any)]
-    /// struct Other;
-    ///
-    /// let any = AnyObj::new(Foo)?;
-    ///
-    /// assert!(any.is::&lt;Foo&gt;());
-    /// assert!(!any.is::&lt;Other&gt;());
-    /// # Ok::&lt;_, rune::support::Error&gt;(())
-    /// ```
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>is&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool
-    <span class="kw">where
-        </span>T: Any,
-    {
-        <span class="self">self</span>.raw_as_ptr(TypeId::of::&lt;T&gt;()).is_ok()
-    }
-
-    <span class="doccomment">/// Returns stored value if it is of type `T`, or `None` if it isn't.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rune::Any;
-    /// use rune::runtime::AnyObj;
-    ///
-    /// #[derive(Debug, PartialEq, Eq, Any)]
-    /// struct Thing(u32);
-    ///
-    /// let any = AnyObj::new(Thing(1u32))?;
-    ///
-    /// let Ok(thing) = any.downcast::&lt;Thing&gt;() else {
-    ///     panic!("Conversion failed");
-    /// };
-    ///
-    /// assert_eq!(thing, Thing(1));
-    /// # Ok::&lt;_, rune::support::Error&gt;(())
-    /// ```
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>downcast&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, (AnyObjError, <span class="self">Self</span>)&gt;
-    <span class="kw">where
-        </span>T: Any,
-    {
-        <span class="kw">match </span><span class="self">self</span>.vtable.kind {
-            <span class="comment">// Only owned things can be taken.
-            </span>AnyObjKind::Owned =&gt; (),
-            AnyObjKind::RefPtr =&gt; {
-                <span class="kw">let </span>error = AnyObjError::RefAsOwned {
-                    name: <span class="self">self</span>.type_name(),
-                };
-                <span class="kw">return </span><span class="prelude-val">Err</span>((error, <span class="self">self</span>));
-            }
-            AnyObjKind::MutPtr =&gt; {
-                <span class="kw">let </span>error = AnyObjError::MutAsOwned {
-                    name: <span class="self">self</span>.type_name(),
-                };
-                <span class="kw">return </span><span class="prelude-val">Err</span>((error, <span class="self">self</span>));
-            }
-        };
-
-        <span class="kw">let </span>this = ManuallyDrop::new(<span class="self">self</span>);
-
+    <span class="doccomment">/// Test if the value is exclusively accessible.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_writable(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">unsafe </span>{
-            <span class="kw">let </span><span class="prelude-val">Some</span>(ptr) = (this.vtable.as_ptr)(this.data.as_ptr(), TypeId::of::&lt;T&gt;()) <span class="kw">else </span>{
-                <span class="kw">let </span>this = ManuallyDrop::into_inner(this);
-                <span class="kw">return </span><span class="prelude-val">Err</span>((AnyObjError::Cast, this));
-            };
-
-            <span class="prelude-val">Ok</span>(Box::into_inner(Box::from_raw_in(
-                ptr.cast_mut().cast(),
-                rune_alloc::alloc::Global,
-            )))
+            <span class="kw">let </span>shared = <span class="self">self</span>.shared.as_ref();
+            !<span class="macro">matches!</span>(shared.vtable.kind, Kind::Ref) &amp;&amp; shared.access.is_exclusive()
         }
     }
 
-    <span class="doccomment">/// Returns some reference to the boxed value if it is of type `T`, or
-    /// `None` if it isn't.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rune::Any;
-    /// use rune::runtime::{AnyObj, AnyObjError};
-    ///
-    /// #[derive(Debug, PartialEq, Eq, Any)]
-    /// struct Thing(u32);
-    ///
-    /// #[derive(Debug, PartialEq, Eq, Any)]
-    /// struct Other;
-    ///
-    /// let any = AnyObj::new(Thing(1u32))?;
-    /// assert_eq!(Ok(&amp;Thing(1u32)), any.downcast_borrow_ref::&lt;Thing&gt;());
-    /// assert_eq!(Err(AnyObjError::Cast), any.downcast_borrow_ref::&lt;Other&gt;());
-    /// # Ok::&lt;_, rune::support::Error&gt;(())
-    /// ```
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>downcast_borrow_ref&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>T, AnyObjError&gt;
-    <span class="kw">where
-        </span>T: Any,
-    {
-        <span class="kw">unsafe </span>{
-            <span class="kw">let </span><span class="prelude-val">Some</span>(ptr) = (<span class="self">self</span>.vtable.as_ptr)(<span class="self">self</span>.data.as_ptr(), TypeId::of::&lt;T&gt;()) <span class="kw">else </span>{
-                <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast);
-            };
-
-            <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;*</span>ptr.cast())
-        }
-    }
-
-    <span class="doccomment">/// Returns some mutable reference to the boxed value if it is of type `T`, or
-    /// `None` if it isn't.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rune::Any;
-    /// use rune::runtime::AnyObj;
-    ///
-    /// #[derive(Debug, PartialEq, Eq, Any)]
-    /// struct Thing(u32);
-    ///
-    /// let mut any = AnyObj::new(Thing(1u32))?;
-    /// any.downcast_borrow_mut::&lt;Thing&gt;().unwrap().0 = 2;
-    /// assert_eq!(Ok(&amp;Thing(2u32)), any.downcast_borrow_ref::&lt;Thing&gt;());
-    /// # Ok::&lt;_, rune::support::Error&gt;(())
-    /// ```
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>downcast_borrow_mut&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>T, AnyObjError&gt;
-    <span class="kw">where
-        </span>T: Any,
-    {
-        <span class="kw">if let </span>AnyObjKind::RefPtr = <span class="self">self</span>.vtable.kind {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::RefAsMut {
-                name: <span class="self">self</span>.type_name(),
-            });
-        }
-
-        <span class="kw">unsafe </span>{
-            <span class="kw">let </span><span class="prelude-val">Some</span>(ptr) = (<span class="self">self</span>.vtable.as_ptr)(<span class="self">self</span>.data.as_ptr(), TypeId::of::&lt;T&gt;()) <span class="kw">else </span>{
-                <span class="kw">return </span><span class="prelude-val">Err</span>(AnyObjError::Cast);
-            };
-
-            <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;mut *</span>ptr.cast_mut().cast())
-        }
-    }
-
-    <span class="doccomment">/// Attempt to perform a conversion to a raw pointer.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw_as_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>, expected: TypeId) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">*const </span>(), AnyObjError&gt; {
-        <span class="comment">// Safety: invariants are checked at construction time.
-        </span><span class="kw">match unsafe </span>{ (<span class="self">self</span>.vtable.as_ptr)(<span class="self">self</span>.data.as_ptr(), expected) } {
-            <span class="prelude-val">Some</span>(ptr) =&gt; <span class="prelude-val">Ok</span>(ptr),
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(AnyObjError::Cast),
-        }
+    <span class="doccomment">/// Get access snapshot of shared value.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>snapshot(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Snapshot {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.as_ref().access.snapshot() }
     }
 
     <span class="doccomment">/// Debug format the current any type.
-    </span><span class="kw">pub fn </span>debug(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        (<span class="self">self</span>.vtable.debug)(f)
-    }
-
-    <span class="doccomment">/// Access the underlying type name for the data.
-    </span><span class="kw">pub fn </span>type_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RawStr {
-        (<span class="self">self</span>.vtable.type_name)()
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>debug(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        (vtable(<span class="self">self</span>).debug)(f)
     }
 
     <span class="doccomment">/// Access the underlying type id for the data.
-    </span><span class="kw">pub fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
-        (<span class="self">self</span>.vtable.type_hash)()
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
+        (vtable(<span class="self">self</span>).type_hash)()
     }
 
     <span class="doccomment">/// Access full type info for type.
-    </span><span class="kw">pub fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
-        TypeInfo::Any(AnyTypeInfo::__private_new(
-            (<span class="self">self</span>.vtable.type_name)(),
-            (<span class="self">self</span>.vtable.type_hash)(),
-        ))
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.shared.as_ref().type_info() }
     }
 }
 
-<span class="kw">impl </span>MaybeTypeOf <span class="kw">for </span>AnyObj {
+<span class="kw">impl </span>Clone <span class="kw">for </span>AnyObj {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>maybe_type_of() -&gt; alloc::Result&lt;meta::DocType&gt; {
-        <span class="prelude-val">Ok</span>(meta::DocType::empty())
+    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="comment">// SAFETY: We know that the inner value is live in this instance.
+        </span><span class="kw">unsafe </span>{
+            Shared::inc(<span class="self">self</span>.shared);
+        }
+
+        <span class="self">Self </span>{
+            shared: <span class="self">self</span>.shared,
+        }
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>clone_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, source: <span class="kw-2">&amp;</span><span class="self">Self</span>) {
+        <span class="kw">if </span>ptr::eq(<span class="self">self</span>.shared.as_ptr(), source.shared.as_ptr()) {
+            <span class="kw">return</span>;
+        }
+
+        <span class="kw">let </span>old = replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.shared, source.shared);
+
+        <span class="comment">// SAFETY: We know that the inner value is live in both instances.
+        </span><span class="kw">unsafe </span>{
+            Shared::dec(old);
+            Shared::inc(<span class="self">self</span>.shared);
+        }
+    }
+}
+
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>AnyObj {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="self">self</span>.debug(f)
     }
 }
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>AnyObj {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="comment">// Safety: The safety of the called implementation is guaranteed at
-        // compile time.
+        <span class="comment">// Safety: We know that the inner value is live in this instance.
         </span><span class="kw">unsafe </span>{
-            (<span class="self">self</span>.vtable.drop)(<span class="self">self</span>.data.as_ptr());
+            Shared::dec(<span class="self">self</span>.shared);
         }
     }
 }
 
-<span class="doccomment">/// The signature of a drop function.
-</span><span class="kw">pub type </span>DropFn = <span class="kw">unsafe fn</span>(<span class="kw-2">*mut </span>());
-
 <span class="doccomment">/// The signature of a pointer coercion function.
-</span><span class="kw">pub type </span>AsPtrFn = <span class="kw">unsafe fn</span>(this: <span class="kw-2">*const </span>(), expected: TypeId) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*const </span>()&gt;;
+</span><span class="kw">type </span>TypeIdFn = <span class="kw">fn</span>() -&gt; TypeId;
 
 <span class="doccomment">/// The signature of a descriptive type name function.
-</span><span class="kw">pub type </span>DebugFn = <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result;
+</span><span class="kw">type </span>DebugFn = <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result;
 
 <span class="doccomment">/// Get the type name.
-</span><span class="kw">pub type </span>TypeNameFn = <span class="kw">fn</span>() -&gt; RawStr;
+</span><span class="kw">type </span>TypeNameFn = <span class="kw">fn</span>() -&gt; RawStr;
 
 <span class="doccomment">/// The signature of a type hash function.
-</span><span class="kw">pub type </span>TypeHashFn = <span class="kw">fn</span>() -&gt; Hash;
+</span><span class="kw">type </span>TypeHashFn = <span class="kw">fn</span>() -&gt; Hash;
 
 <span class="doccomment">/// The kind of the stored value in the `AnyObj`.
-</span><span class="kw">enum </span>AnyObjKind {
-    <span class="doccomment">/// A boxed value that is owned.
-    </span>Owned,
-    <span class="doccomment">/// A pointer (`*const T`).
-    </span>RefPtr,
-    <span class="doccomment">/// A mutable pointer (`*mut T`).
-    </span>MutPtr,
+</span><span class="kw">enum </span>Kind {
+    <span class="doccomment">/// Underlying access is shared.
+    </span>Ref,
+    <span class="doccomment">/// Underlying access is exclusive.
+    </span>Mut,
+    <span class="doccomment">/// Underlying access is owned.
+    </span>Own,
 }
 
-<span class="doccomment">/// The vtable for any type stored in the virtual machine.
-///
-/// This can be implemented manually assuming it obeys the constraints of the
-/// type. Otherwise we rely _heavily_ on the invariants provided by
-/// `std::any::Any` which are checked at construction-time for this type.
-</span><span class="attr">#[repr(C)]
-</span><span class="kw">pub struct </span>AnyObjVtable {
-    <span class="doccomment">/// The kind of the object being stored. Determines how it can be accessed.
-    </span>kind: AnyObjKind,
-    <span class="doccomment">/// The underlying drop implementation for the stored type.
-    </span>drop: DropFn,
+<span class="kw">struct </span>Vtable {
+    <span class="doccomment">/// The statically known kind of reference being stored.
+    </span>kind: Kind,
     <span class="doccomment">/// Punt the inner pointer to the type corresponding to the type hash.
-    </span>as_ptr: AsPtrFn,
+    </span>type_id: TypeIdFn,
     <span class="doccomment">/// Type information for diagnostics.
     </span>debug: DebugFn,
     <span class="doccomment">/// Type name accessor.
     </span>type_name: TypeNameFn,
     <span class="doccomment">/// Get the type hash of the stored type.
     </span>type_hash: TypeHashFn,
+    <span class="doccomment">/// Value drop implementation. Set to `None` if the underlying value does
+    /// not need to be dropped.
+    </span>drop_value: <span class="prelude-ty">Option</span>&lt;<span class="kw">unsafe fn</span>(NonNull&lt;Shared&gt;)&gt;,
+    <span class="doccomment">/// Only drop the box implementation.
+    </span>drop: <span class="kw">unsafe fn</span>(NonNull&lt;Shared&gt;),
+    <span class="doccomment">/// Clone the literal content of the shared value.
+    </span>clone: <span class="kw">unsafe fn</span>(NonNull&lt;Shared&gt;) -&gt; alloc::Result&lt;AnyObj&gt;,
 }
 
-<span class="kw">unsafe fn </span>drop_impl&lt;T&gt;(this: <span class="kw-2">*mut </span>()) {
-    drop(Box::from_raw_in(this <span class="kw">as </span><span class="kw-2">*mut </span>T, Global));
+<span class="kw">impl </span>Vtable {
+    <span class="kw">fn </span>as_ptr&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, base: NonNull&lt;Shared&gt;) -&gt; NonNull&lt;T&gt; {
+        <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.kind, Kind::Own) {
+            <span class="kw">unsafe </span>{ base.byte_add(<span class="macro">offset_of!</span>(Shared&lt;T&gt;, data)).cast() }
+        } <span class="kw">else </span>{
+            <span class="kw">unsafe </span>{
+                base.byte_add(<span class="macro">offset_of!</span>(Shared&lt;NonNull&lt;T&gt;&gt;, data))
+                    .cast()
+                    .read()
+            }
+        }
+    }
+
+    <span class="doccomment">/// Construct type information.
+    </span><span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
+        TypeInfo::Any(AnyTypeInfo::__private_new(
+            (<span class="self">self</span>.type_name)(),
+            (<span class="self">self</span>.type_hash)(),
+        ))
+    }
 }
 
-<span class="kw">fn </span>as_ptr_impl&lt;T&gt;(this: <span class="kw-2">*const </span>(), expected: TypeId) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*const </span>()&gt;
-<span class="kw">where
-    </span>T: Any,
-{
-    <span class="kw">if </span>expected == TypeId::of::&lt;T&gt;() {
-        <span class="prelude-val">Some</span>(this)
-    } <span class="kw">else </span>{
-        <span class="prelude-val">None
-    </span>}
+<span class="attr">#[repr(C)]
+</span><span class="kw">struct </span>Shared&lt;T = ()&gt; {
+    <span class="doccomment">/// The currently handed out access to the shared data.
+    </span>access: Access,
+    <span class="doccomment">/// The number of strong references to the shared data.
+    </span>count: Cell&lt;usize&gt;,
+    <span class="doccomment">/// Vtable of the shared value.
+    </span>vtable: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>Vtable,
+    <span class="doccomment">/// Data of the shared reference.
+    </span>data: T,
 }
 
-<span class="kw">fn </span>as_ptr_deref_impl&lt;T: Deref&gt;(this: <span class="kw-2">*const </span>(), expected: TypeId) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*const </span>()&gt;
-<span class="kw">where
-    </span>T::Target: Any,
-{
-    <span class="kw">if </span>expected == TypeId::of::&lt;T::Target&gt;() {
-        <span class="kw">let </span>guard = this <span class="kw">as </span><span class="kw-2">*const </span>T;
-        <span class="kw">unsafe </span>{ <span class="prelude-val">Some</span>((<span class="kw-2">*</span>guard).deref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>()) }
-    } <span class="kw">else </span>{
-        <span class="prelude-val">None
-    </span>}
-}
+<span class="kw">impl </span>Shared {
+    <span class="doccomment">/// Construct type information.
+    </span><span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
+        <span class="self">self</span>.vtable.type_info()
+    }
 
-<span class="kw">fn </span>as_ptr_deref_mut_impl&lt;T: DerefMut&gt;(this: <span class="kw-2">*const </span>(), expected: TypeId) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*const </span>()&gt;
-<span class="kw">where
-    </span>T::Target: Any,
-{
-    <span class="kw">if </span>expected == TypeId::of::&lt;T::Target&gt;() {
-        <span class="kw">let </span>guard = this <span class="kw">as </span><span class="kw-2">*mut </span>T;
-        <span class="kw">unsafe </span>{ <span class="prelude-val">Some</span>((<span class="kw-2">*</span>guard).deref_mut() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>()) }
-    } <span class="kw">else </span>{
-        <span class="prelude-val">None
-    </span>}
-}
+    <span class="doccomment">/// Increment the reference count of the inner value.
+    </span><span class="kw">unsafe fn </span>inc(this: NonNull&lt;<span class="self">Self</span>&gt;) {
+        <span class="kw">let </span>count_ref = <span class="kw-2">&amp;*</span><span class="macro">addr_of!</span>((<span class="kw-2">*</span>this.as_ptr()).count);
+        <span class="kw">let </span>count = count_ref.get();
 
-<span class="kw">fn </span>noop_drop_impl&lt;T&gt;(<span class="kw">_</span>: <span class="kw-2">*mut </span>()) {}
+        <span class="macro">debug_assert_ne!</span>(
+            count, <span class="number">0</span>,
+            <span class="string">"Reference count of zero should only happen if Shared is incorrectly implemented"
+        </span>);
 
-<span class="kw">fn </span>debug_impl&lt;T&gt;(f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result
-<span class="kw">where
-    </span>T: Any,
-{
-    <span class="macro">write!</span>(f, <span class="string">"{}"</span>, T::BASE_NAME)
+        <span class="kw">if </span>count == usize::MAX {
+            <span class="kw">crate</span>::alloc::abort();
+        }
+
+        count_ref.set(count + <span class="number">1</span>);
+    }
+
+    <span class="doccomment">/// Decrement the reference count in inner, and free the underlying data if
+    /// it has reached zero.
+    ///
+    /// # Safety
+    ///
+    /// ProtocolCaller needs to ensure that `this` is a valid pointer.
+    </span><span class="kw">unsafe fn </span>dec(this: NonNull&lt;<span class="self">Self</span>&gt;) {
+        <span class="kw">let </span>count_ref = <span class="kw-2">&amp;*</span><span class="macro">addr_of!</span>((<span class="kw-2">*</span>this.as_ptr()).count);
+        <span class="kw">let </span>count = count_ref.get();
+
+        <span class="macro">debug_assert_ne!</span>(
+            count, <span class="number">0</span>,
+            <span class="string">"Reference count of zero should only happen if Shared is incorrectly implemented"
+        </span>);
+
+        <span class="kw">let </span>count = count - <span class="number">1</span>;
+        count_ref.set(count);
+
+        <span class="kw">if </span>count == <span class="number">0 </span>{
+            <span class="kw">let </span>vtable = <span class="kw-2">*</span><span class="macro">addr_of!</span>((<span class="kw-2">*</span>this.as_ptr()).vtable);
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(drop_value) = vtable.drop_value {
+                <span class="kw">let </span>access = <span class="kw-2">&amp;*</span><span class="macro">addr_of!</span>((<span class="kw-2">*</span>this.as_ptr()).access);
+
+                <span class="kw">if </span>!access.is_taken() {
+                    drop_value(this);
+                }
+            }
+
+            (vtable.drop)(this);
+        }
+    }
 }
 
 <span class="kw">fn </span>debug_ref_impl&lt;T&gt;(f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result
@@ -1296,10 +1399,43 @@
     T::BASE_NAME
 }
 
-<span class="kw">fn </span>type_hash_impl&lt;T&gt;() -&gt; Hash
+<span class="kw">unsafe fn </span>drop_value&lt;T&gt;(this: NonNull&lt;Shared&gt;) {
+    <span class="kw">let </span>data = <span class="macro">addr_of_mut!</span>((<span class="kw-2">*</span>this.cast::&lt;Shared&lt;T&gt;&gt;().as_ptr()).data);
+    drop_in_place(data);
+}
+
+<span class="kw">unsafe fn </span>drop_box&lt;T&gt;(this: NonNull&lt;Shared&gt;) {
+    drop(Box::from_raw_in(this.cast::&lt;Shared&lt;T&gt;&gt;().as_ptr(), Global))
+}
+
+<span class="kw">unsafe fn </span>clone_own&lt;T&gt;(this: NonNull&lt;Shared&gt;) -&gt; alloc::Result&lt;AnyObj&gt;
 <span class="kw">where
-    </span>T: <span class="question-mark">?</span>Sized + Any,
+    </span>T: Any,
 {
-    T::type_hash()
+    <span class="comment">// NB: We read the value without deallocating it from the previous location,
+    // since that would cause the returned value to be invalid.
+    </span><span class="kw">let </span>value = <span class="macro">addr_of_mut!</span>((<span class="kw-2">*</span>this.cast::&lt;Shared&lt;T&gt;&gt;().as_ptr()).data).read();
+    AnyObj::new(value)
+}
+
+<span class="kw">unsafe fn </span>clone_ref&lt;T&gt;(this: NonNull&lt;Shared&gt;) -&gt; alloc::Result&lt;AnyObj&gt;
+<span class="kw">where
+    </span>T: Any,
+{
+    <span class="kw">let </span>value = <span class="macro">addr_of_mut!</span>((<span class="kw-2">*</span>this.cast::&lt;Shared&lt;NonNull&lt;T&gt;&gt;&gt;().as_ptr()).data).read();
+    AnyObj::from_ref(value.as_ptr().cast_const())
+}
+
+<span class="kw">unsafe fn </span>clone_mut&lt;T&gt;(this: NonNull&lt;Shared&gt;) -&gt; alloc::Result&lt;AnyObj&gt;
+<span class="kw">where
+    </span>T: Any,
+{
+    <span class="kw">let </span>value = <span class="macro">addr_of_mut!</span>((<span class="kw-2">*</span>this.cast::&lt;Shared&lt;NonNull&lt;T&gt;&gt;&gt;().as_ptr()).data).read();
+    AnyObj::from_mut(value.as_ptr())
+}
+
+<span class="attr">#[inline]
+</span><span class="kw">fn </span>vtable(any: <span class="kw-2">&amp;</span>AnyObj) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>Vtable {
+    <span class="kw">unsafe </span>{ <span class="macro">addr_of!</span>((<span class="kw-2">*</span>any.shared.as_ptr()).vtable).read() }
 }
 </code></pre></div></section></main></body></html>

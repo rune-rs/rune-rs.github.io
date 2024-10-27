@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (c1db4dc24 2024-10-25)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4ee5002b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (9b18a122f 2024-10-26)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -4021,47 +4021,7 @@
 <a href="#4020" id="4020">4020</a>
 <a href="#4021" id="4021">4021</a>
 <a href="#4022" id="4022">4022</a>
-<a href="#4023" id="4023">4023</a>
-<a href="#4024" id="4024">4024</a>
-<a href="#4025" id="4025">4025</a>
-<a href="#4026" id="4026">4026</a>
-<a href="#4027" id="4027">4027</a>
-<a href="#4028" id="4028">4028</a>
-<a href="#4029" id="4029">4029</a>
-<a href="#4030" id="4030">4030</a>
-<a href="#4031" id="4031">4031</a>
-<a href="#4032" id="4032">4032</a>
-<a href="#4033" id="4033">4033</a>
-<a href="#4034" id="4034">4034</a>
-<a href="#4035" id="4035">4035</a>
-<a href="#4036" id="4036">4036</a>
-<a href="#4037" id="4037">4037</a>
-<a href="#4038" id="4038">4038</a>
-<a href="#4039" id="4039">4039</a>
-<a href="#4040" id="4040">4040</a>
-<a href="#4041" id="4041">4041</a>
-<a href="#4042" id="4042">4042</a>
-<a href="#4043" id="4043">4043</a>
-<a href="#4044" id="4044">4044</a>
-<a href="#4045" id="4045">4045</a>
-<a href="#4046" id="4046">4046</a>
-<a href="#4047" id="4047">4047</a>
-<a href="#4048" id="4048">4048</a>
-<a href="#4049" id="4049">4049</a>
-<a href="#4050" id="4050">4050</a>
-<a href="#4051" id="4051">4051</a>
-<a href="#4052" id="4052">4052</a>
-<a href="#4053" id="4053">4053</a>
-<a href="#4054" id="4054">4054</a>
-<a href="#4055" id="4055">4055</a>
-<a href="#4056" id="4056">4056</a>
-<a href="#4057" id="4057">4057</a>
-<a href="#4058" id="4058">4058</a>
-<a href="#4059" id="4059">4059</a>
-<a href="#4060" id="4060">4060</a>
-<a href="#4061" id="4061">4061</a>
-<a href="#4062" id="4062">4062</a>
-<a href="#4063" id="4063">4063</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#4023" id="4023">4023</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -4964,6 +4924,9 @@
                 },
                 <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
             },
+            ValueBorrowRef::Any(..) =&gt; {
+                <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
+            }
         };
 
         <span class="kw">match </span>result {
@@ -5037,49 +5000,50 @@
         target: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value,
         field: <span class="kw-2">&amp;</span>str,
     ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'a</span>, Value&gt;&gt;&gt; {
-        <span class="kw">let </span>target = <span class="kw">match </span><span class="macro">vm_try!</span>(target.value_ref()) {
-            ValueRef::Mutable(target) =&gt; <span class="macro">vm_try!</span>(target.borrow_mut()),
-            ValueRef::Inline(actual) =&gt; {
-                <span class="kw">return </span>err(VmErrorKind::MissingField {
-                    target: actual.type_info(),
-                    field: <span class="macro">vm_try!</span>(field.try_to_owned()),
-                });
-            }
-        };
-
-        <span class="kw">let </span><span class="kw-2">mut </span>unsupported = <span class="bool-val">false</span>;
-
-        <span class="kw">let </span>result = BorrowMut::try_map(target, |value| {
-            <span class="kw">match </span>value {
-                Mutable::Object(target) =&gt; {
-                    <span class="kw">return </span>target.get_mut(field);
-                }
-                Mutable::Struct(target) =&gt; {
-                    <span class="kw">return </span>target.get_mut(field);
-                }
-                Mutable::Variant(Variant {
-                    data: VariantData::Struct(st),
-                    ..
-                }) =&gt; {
-                    <span class="kw">return </span>st.get_mut(field);
-                }
-                <span class="kw">_ </span>=&gt; {}
-            }
-
-            unsupported = <span class="bool-val">true</span>;
-            <span class="prelude-val">None
-        </span>});
-
-        <span class="kw">if </span>unsupported {
-            <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
-        }
-
-        <span class="kw">match </span>result {
-            <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(<span class="prelude-val">Some</span>(value)),
-            <span class="prelude-val">Err</span>(actual) =&gt; err(VmErrorKind::MissingField {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(target.value_ref()) {
+            ValueRef::Inline(actual) =&gt; err(VmErrorKind::MissingField {
                 target: actual.type_info(),
                 field: <span class="macro">vm_try!</span>(field.try_to_owned()),
             }),
+            ValueRef::Mutable(target) =&gt; {
+                <span class="kw">let </span>target = <span class="macro">vm_try!</span>(target.borrow_mut());
+
+                <span class="kw">let </span><span class="kw-2">mut </span>unsupported = <span class="bool-val">false</span>;
+
+                <span class="kw">let </span>result = BorrowMut::try_map(target, |value| {
+                    <span class="kw">match </span>value {
+                        Mutable::Object(target) =&gt; {
+                            <span class="kw">return </span>target.get_mut(field);
+                        }
+                        Mutable::Struct(target) =&gt; {
+                            <span class="kw">return </span>target.get_mut(field);
+                        }
+                        Mutable::Variant(Variant {
+                            data: VariantData::Struct(st),
+                            ..
+                        }) =&gt; {
+                            <span class="kw">return </span>st.get_mut(field);
+                        }
+                        <span class="kw">_ </span>=&gt; {}
+                    }
+
+                    unsupported = <span class="bool-val">true</span>;
+                    <span class="prelude-val">None
+                </span>});
+
+                <span class="kw">if </span>unsupported {
+                    <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
+                }
+
+                <span class="kw">match </span>result {
+                    <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(<span class="prelude-val">Some</span>(value)),
+                    <span class="prelude-val">Err</span>(actual) =&gt; err(VmErrorKind::MissingField {
+                        target: actual.type_info(),
+                        field: <span class="macro">vm_try!</span>(field.try_to_owned()),
+                    }),
+                }
+            }
+            ValueRef::Any(..) =&gt; VmResult::Ok(<span class="prelude-val">None</span>),
         }
     }
 
@@ -5146,6 +5110,7 @@
                 }
                 <span class="kw">_ </span>=&gt; VmResult::Ok(<span class="bool-val">false</span>),
             },
+            ValueRef::Any(..) =&gt; VmResult::Ok(<span class="bool-val">false</span>),
         }
     }
 
@@ -5159,35 +5124,37 @@
         <span class="kw">let </span>index = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_string(slot));
 
         <span class="lifetime">'fallback</span>: {
-            <span class="kw">let </span>ValueRef::Mutable(target) = <span class="macro">vm_try!</span>(target.value_ref()) <span class="kw">else </span>{
-                <span class="kw">return </span>VmResult::Ok(CallResult::Unsupported(target.clone()));
-            };
-
-            <span class="kw">match </span><span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(target.borrow_mut()) {
-                Mutable::Object(object) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = object.get(index.as_str()) {
-                        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
-                        <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
+            <span class="kw">match </span><span class="macro">vm_try!</span>(target.value_ref()) {
+                ValueRef::Inline(..) =&gt; {
+                    <span class="kw">return </span>VmResult::Ok(CallResult::Unsupported(target.clone()));
+                }
+                ValueRef::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(target.borrow_mut()) {
+                    Mutable::Object(object) =&gt; {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = object.get(index.as_str()) {
+                            <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
+                            <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
+                        }
                     }
-                }
-                Mutable::Struct(typed_object) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = typed_object.get(index.as_str()) {
-                        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
-                        <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
+                    Mutable::Struct(typed_object) =&gt; {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = typed_object.get(index.as_str()) {
+                            <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
+                            <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
+                        }
                     }
-                }
-                Mutable::Variant(Variant {
-                    data: VariantData::Struct(data),
-                    ..
-                }) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = data.get(index.as_str()) {
-                        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
-                        <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
+                    Mutable::Variant(Variant {
+                        data: VariantData::Struct(data),
+                        ..
+                    }) =&gt; {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = data.get(index.as_str()) {
+                            <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
+                            <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
+                        }
                     }
-                }
-                <span class="kw">_ </span>=&gt; {
-                    <span class="kw">break </span><span class="lifetime">'fallback</span>;
-                }
+                    <span class="kw">_ </span>=&gt; {
+                        <span class="kw">break </span><span class="lifetime">'fallback</span>;
+                    }
+                },
+                ValueRef::Any(..) =&gt; <span class="kw">break </span><span class="lifetime">'fallback</span>,
             }
 
             <span class="kw">return </span>err(VmErrorKind::ObjectIndexMissing { slot });
@@ -5199,51 +5166,46 @@
     }
 
     <span class="kw">fn </span>try_object_slot_index_set(target: <span class="kw-2">&amp;</span>Value, field: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>Value) -&gt; VmResult&lt;bool&gt; {
-        <span class="lifetime">'fallback</span>: {
-            <span class="kw">let </span>ValueRef::Mutable(target) = <span class="macro">vm_try!</span>(target.value_ref()) <span class="kw">else </span>{
-                <span class="kw">return </span>err(VmErrorKind::MissingField {
-                    target: <span class="macro">vm_try!</span>(target.type_info()),
-                    field: <span class="macro">vm_try!</span>(field.try_to_owned()),
-                });
-            };
+        <span class="kw">match </span><span class="macro">vm_try!</span>(target.value_ref()) {
+            ValueRef::Inline(target) =&gt; err(VmErrorKind::MissingField {
+                target: target.type_info(),
+                field: <span class="macro">vm_try!</span>(field.try_to_owned()),
+            }),
+            ValueRef::Mutable(target) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>target = <span class="macro">vm_try!</span>(target.borrow_mut());
 
-            <span class="kw">match </span><span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(target.borrow_mut()) {
-                Mutable::Object(object) =&gt; {
-                    <span class="kw">let </span>key = <span class="macro">vm_try!</span>(field.try_to_owned());
-                    <span class="macro">vm_try!</span>(object.insert(key, value.clone()));
-                    <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>);
-                }
-                Mutable::Struct(object) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = object.get_mut(field) {
-                        v.clone_from(value);
+                <span class="kw">match </span><span class="kw-2">&amp;mut *</span>target {
+                    Mutable::Object(object) =&gt; {
+                        <span class="kw">let </span>key = <span class="macro">vm_try!</span>(field.try_to_owned());
+                        <span class="macro">vm_try!</span>(object.insert(key, value.clone()));
                         <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>);
                     }
-
-                    <span class="kw">return </span>err(VmErrorKind::MissingField {
-                        target: object.type_info(),
-                        field: <span class="macro">vm_try!</span>(field.try_to_owned()),
-                    });
-                }
-                Mutable::Variant(variant) =&gt; {
-                    <span class="kw">if let </span>VariantData::Struct(data) = variant.data_mut() {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = data.get_mut(field) {
+                    Mutable::Struct(object) =&gt; {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = object.get_mut(field) {
                             v.clone_from(value);
                             <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>);
                         }
                     }
+                    Mutable::Variant(variant) =&gt; {
+                        <span class="kw">if let </span>VariantData::Struct(data) = variant.data_mut() {
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = data.get_mut(field) {
+                                v.clone_from(value);
+                                <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>);
+                            }
+                        }
+                    }
+                    <span class="kw">_ </span>=&gt; {
+                        <span class="kw">return </span>VmResult::Ok(<span class="bool-val">false</span>);
+                    }
+                }
 
-                    <span class="kw">return </span>err(VmErrorKind::MissingField {
-                        target: variant.type_info(),
-                        field: <span class="macro">vm_try!</span>(field.try_to_owned()),
-                    });
-                }
-                <span class="kw">_ </span>=&gt; {
-                    <span class="kw">break </span><span class="lifetime">'fallback</span>;
-                }
+                err(VmErrorKind::MissingField {
+                    target: target.type_info(),
+                    field: <span class="macro">vm_try!</span>(field.try_to_owned()),
+                })
             }
+            ValueRef::Any(..) =&gt; VmResult::Ok(<span class="bool-val">false</span>),
         }
-
-        VmResult::Ok(<span class="bool-val">false</span>)
     }
 
     <span class="kw">fn </span>on_tuple&lt;F, O&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, ty: TypeCheck, value: <span class="kw-2">&amp;</span>Value, f: F) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;O&gt;&gt;
@@ -5279,6 +5241,7 @@
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
+            ValueBorrowRef::Any(..) =&gt; <span class="prelude-val">None</span>,
         })
     }
 
@@ -6547,55 +6510,10 @@
                 <span class="kw">break </span><span class="lifetime">'fallback</span>;
             };
 
-            <span class="kw">let </span><span class="kw-2">mut </span>target = <span class="kw">match </span><span class="macro">vm_try!</span>(target.value_ref()) {
-                ValueRef::Mutable(target) =&gt; <span class="macro">vm_try!</span>(target.borrow_mut()),
-                ValueRef::Inline(target) =&gt; {
-                    <span class="kw">return </span>err(VmErrorKind::UnsupportedIndexSet {
-                        target: target.type_info(),
-                        index: <span class="macro">vm_try!</span>(index.type_info()),
-                        value: <span class="macro">vm_try!</span>(value.type_info()),
-                    });
-                }
-            };
-
-            <span class="kw">match </span><span class="kw-2">&amp;mut *</span>target {
-                Mutable::Object(object) =&gt; {
-                    <span class="macro">vm_try!</span>(object.insert(<span class="macro">vm_try!</span>(field.try_to_owned()), value.clone()));
-                }
-                Mutable::Struct(typed_object) =&gt; {
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(v) = typed_object.get_mut(field) <span class="kw">else </span>{
-                        <span class="kw">return </span>err(VmErrorKind::MissingField {
-                            target: typed_object.type_info(),
-                            field: <span class="macro">vm_try!</span>(field.try_to_owned()),
-                        });
-                    };
-
-                    v.clone_from(value);
-                }
-                Mutable::Variant(variant) =&gt; {
-                    <span class="kw">let </span>VariantData::Struct(st) = variant.data_mut() <span class="kw">else </span>{
-                        <span class="kw">return </span>err(VmErrorKind::MissingField {
-                            target: variant.type_info(),
-                            field: <span class="macro">vm_try!</span>(field.try_to_owned()),
-                        });
-                    };
-
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(v) = st.get_mut(field) <span class="kw">else </span>{
-                        <span class="kw">return </span>err(VmErrorKind::MissingField {
-                            target: variant.type_info(),
-                            field: <span class="macro">vm_try!</span>(field.try_to_owned()),
-                        });
-                    };
-
-                    v.clone_from(value);
-                }
-                <span class="kw">_ </span>=&gt; {
-                    <span class="kw">break </span><span class="lifetime">'fallback</span>;
-                }
+            <span class="kw">if </span><span class="macro">vm_try!</span>(<span class="self">Self</span>::try_object_slot_index_set(target, field, value)) {
+                <span class="kw">return </span>VmResult::Ok(());
             }
-
-            <span class="kw">return </span>VmResult::Ok(());
-        }
+        };
 
         <span class="kw">let </span>target = target.clone();
         <span class="kw">let </span>index = index.clone();
@@ -6763,6 +6681,7 @@
                         }
                     }
                 }
+                ValueBorrowRef::Any(..) =&gt; (),
             }
 
             <span class="kw">let </span>target = target.clone();
@@ -7273,15 +7192,15 @@
                     Mutable::Variant(variant) =&gt; {
                         <span class="kw">break </span><span class="lifetime">'out </span>variant.rtti().hash == variant_hash;
                     }
-                    Mutable::Any(any) =&gt; {
-                        <span class="kw">if </span>any.type_hash() != enum_hash {
-                            <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
-                        }
-                    }
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
                     }
                 },
+                ValueBorrowRef::Any(any) =&gt; {
+                    <span class="kw">if </span>any.type_hash() != enum_hash {
+                        <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
+                    }
+                }
                 <span class="kw">_ </span>=&gt; {
                     <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
                 }
@@ -7341,6 +7260,7 @@
                 }
                 <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
             },
+            ValueBorrowRef::Any(..) =&gt; <span class="bool-val">false</span>,
         };
 
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
