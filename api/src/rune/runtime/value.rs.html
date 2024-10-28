@@ -2320,33 +2320,7 @@
 <a href="#2319" id="2319">2319</a>
 <a href="#2320" id="2320">2320</a>
 <a href="#2321" id="2321">2321</a>
-<a href="#2322" id="2322">2322</a>
-<a href="#2323" id="2323">2323</a>
-<a href="#2324" id="2324">2324</a>
-<a href="#2325" id="2325">2325</a>
-<a href="#2326" id="2326">2326</a>
-<a href="#2327" id="2327">2327</a>
-<a href="#2328" id="2328">2328</a>
-<a href="#2329" id="2329">2329</a>
-<a href="#2330" id="2330">2330</a>
-<a href="#2331" id="2331">2331</a>
-<a href="#2332" id="2332">2332</a>
-<a href="#2333" id="2333">2333</a>
-<a href="#2334" id="2334">2334</a>
-<a href="#2335" id="2335">2335</a>
-<a href="#2336" id="2336">2336</a>
-<a href="#2337" id="2337">2337</a>
-<a href="#2338" id="2338">2338</a>
-<a href="#2339" id="2339">2339</a>
-<a href="#2340" id="2340">2340</a>
-<a href="#2341" id="2341">2341</a>
-<a href="#2342" id="2342">2342</a>
-<a href="#2343" id="2343">2343</a>
-<a href="#2344" id="2344">2344</a>
-<a href="#2345" id="2345">2345</a>
-<a href="#2346" id="2346">2346</a>
-<a href="#2347" id="2347">2347</a>
-<a href="#2348" id="2348">2348</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2322" id="2322">2322</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>serde;
@@ -2368,18 +2342,18 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
 <span class="kw">use </span><span class="kw">crate</span>::compile::meta;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::static_type;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::vm::CallResultOnly;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    AccessError, AnyObj, AnyObjDrop, BorrowMut, BorrowRef, Bytes, ConstValue, ControlFlow,
-    DynGuardedArgs, EnvProtocolCaller, Format, Formatter, FromValue, Function, Future, Generator,
-    GeneratorState, IntoOutput, Iterator, MaybeTypeOf, Mut, Object, OwnedTuple, Protocol,
-    ProtocolCaller, RawAnyObjGuard, Ref, RuntimeError, Shared, Snapshot, Stream, ToValue, Type,
-    TypeInfo, Variant, Vec, Vm, VmErrorKind, VmIntegerRepr, VmResult,
+<span class="kw">use crate</span>::{Any, Hash};
+
+<span class="kw">use </span><span class="kw">super</span>::static_type;
+<span class="kw">use super</span>::{
+    AccessError, AnyObj, AnyObjDrop, BorrowMut, BorrowRef, Bytes, CallResultOnly, ConstValue,
+    ControlFlow, DynGuardedArgs, EnvProtocolCaller, Format, Formatter, FromValue, Function, Future,
+    Generator, GeneratorState, IntoOutput, Iterator, MaybeTypeOf, Mut, Object, OwnedTuple,
+    Protocol, ProtocolCaller, RawAnyObjGuard, Ref, RuntimeError, Shared, Snapshot, Stream, ToValue,
+    Type, TypeInfo, Variant, Vec, Vm, VmErrorKind, VmIntegerRepr, VmResult,
 };
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::runtime::{Hasher, Tuple};
-<span class="kw">use crate</span>::{Any, Hash};
+</span><span class="kw">use super</span>::{Hasher, Tuple};
 
 <span class="doccomment">/// Defined guard for a reference value.
 ///
@@ -2718,14 +2692,6 @@
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
                 },
-                BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                    Mutable::Format(format) =&gt; {
-                        <span class="macro">vm_try!</span>(format.spec.format(<span class="kw-2">&amp;</span>format.value, f, caller));
-                    }
-                    <span class="kw">_ </span>=&gt; {
-                        <span class="kw">break </span><span class="lifetime">'fallback</span>;
-                    }
-                },
                 <span class="kw">_ </span>=&gt; {
                     <span class="kw">break </span><span class="lifetime">'fallback</span>;
                 }
@@ -2783,7 +2749,6 @@
                     Mutable::Struct(value) =&gt; Mutable::Struct(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Variant(value) =&gt; Mutable::Variant(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Function(value) =&gt; Mutable::Function(<span class="macro">vm_try!</span>(value.try_clone())),
-                    Mutable::Format(value) =&gt; Mutable::Format(<span class="macro">vm_try!</span>(value.try_clone())),
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
@@ -2883,9 +2848,6 @@
                     <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Function(value) =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
-                }
-                Mutable::Format(value) =&gt; {
                     <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
             };
@@ -3219,16 +3181,6 @@
         borrow_generator_ref,
         borrow_generator_mut,
         into_generator,
-    }
-
-    <span class="macro">into!</span> {
-        <span class="doccomment">/// Coerce into a [`Format`].
-        </span>Format(Format),
-        into_format_ref,
-        into_format_mut,
-        borrow_format_ref,
-        borrow_format_mut,
-        into_format,
     }
 
     <span class="macro">into!</span> {
@@ -4321,7 +4273,6 @@
     Object =&gt; Object,
     Tuple =&gt; OwnedTuple,
     Generator =&gt; Generator&lt;Vm&gt;,
-    Format =&gt; Format,
     Future =&gt; Future,
     Stream =&gt; Stream&lt;Vm&gt;,
 }
@@ -4329,6 +4280,7 @@
 <span class="macro">any_from!</span> {
     String,
     Bytes,
+    Format,
 }
 
 <span class="macro">from_container!</span> {
@@ -4631,8 +4583,6 @@
     </span>Variant(Variant),
     <span class="doccomment">/// A stored function pointer.
     </span>Function(Function),
-    <span class="doccomment">/// A value being formatted.
-    </span>Format(Format),
 }
 
 <span class="kw">impl </span>Mutable {
@@ -4649,7 +4599,6 @@
             Mutable::Option(..) =&gt; TypeInfo::static_type(static_type::OPTION),
             Mutable::Result(..) =&gt; TypeInfo::static_type(static_type::RESULT),
             Mutable::Function(..) =&gt; TypeInfo::static_type(static_type::FUNCTION),
-            Mutable::Format(..) =&gt; TypeInfo::static_type(static_type::FORMAT),
             Mutable::EmptyStruct(empty) =&gt; empty.type_info(),
             Mutable::TupleStruct(tuple) =&gt; tuple.type_info(),
             Mutable::Struct(object) =&gt; object.type_info(),
@@ -4674,7 +4623,6 @@
             Mutable::Result(..) =&gt; static_type::RESULT.hash,
             Mutable::Option(..) =&gt; static_type::OPTION.hash,
             Mutable::Function(..) =&gt; static_type::FUNCTION.hash,
-            Mutable::Format(..) =&gt; static_type::FORMAT.hash,
             Mutable::EmptyStruct(empty) =&gt; empty.rtti.hash,
             Mutable::TupleStruct(tuple) =&gt; tuple.rtti.hash,
             Mutable::Struct(object) =&gt; object.rtti.hash,

@@ -58,16 +58,69 @@
 <a href="#57" id="57">57</a>
 <a href="#58" id="58">58</a>
 <a href="#59" id="59">59</a>
-<a href="#60" id="60">60</a></pre></div><pre class="rust"><code><span class="doccomment">//! Formatting text.
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a></pre></div><pre class="rust"><code><span class="doccomment">//! Formatting text.
 
 </span><span class="kw">use </span>core::fmt;
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::compile;
 <span class="kw">use </span><span class="kw">crate</span>::macros::{FormatArgs, MacroContext, TokenStream};
 <span class="kw">use </span><span class="kw">crate</span>::parse::Parser;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Format, Formatter, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{EnvProtocolCaller, Format, Formatter, VmResult};
 <span class="kw">use crate</span>::{ContextError, Module};
 
 <span class="doccomment">/// Formatting text.
@@ -83,14 +136,20 @@
 /// ```
 </span><span class="attr">#[rune::module(::std::fmt)]
 </span><span class="kw">pub fn </span>module() -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>module = Module::from_meta(<span class="self">self</span>::module_meta)<span class="question-mark">?</span>.with_unique(<span class="string">"std::fmt"</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>m = Module::from_meta(<span class="self">self</span>::module_meta)<span class="question-mark">?</span>.with_unique(<span class="string">"std::fmt"</span>);
 
-    module.ty::&lt;Format&gt;()<span class="question-mark">?</span>;
-    module.ty::&lt;Formatter&gt;()<span class="question-mark">?</span>;
-    module.ty::&lt;fmt::Error&gt;()<span class="question-mark">?</span>;
-    module.function_meta(fmt_error_string_display)<span class="question-mark">?</span>;
-    module.macro_meta(format)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(module)
+    m.ty::&lt;Formatter&gt;()<span class="question-mark">?</span>;
+    m.ty::&lt;fmt::Error&gt;()<span class="question-mark">?</span>;
+    m.function_meta(fmt_error_string_display)<span class="question-mark">?</span>;
+    m.macro_meta(format)<span class="question-mark">?</span>;
+
+    m.ty::&lt;Format&gt;()<span class="question-mark">?</span>;
+    m.function_meta(format_string_display__meta)<span class="question-mark">?</span>;
+    m.function_meta(format_string_debug__meta)<span class="question-mark">?</span>;
+    m.function_meta(format_clone__meta)<span class="question-mark">?</span>;
+    m.implement_trait::&lt;Format&gt;(<span class="macro">rune::item!</span>(::std::clone::Clone))<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(m)
 }
 
 <span class="attr">#[rune::function(instance, protocol = STRING_DISPLAY)]
@@ -117,5 +176,50 @@
     p.eof()<span class="question-mark">?</span>;
     <span class="kw">let </span>expanded = args.expand(cx)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(expanded.into_token_stream(cx)<span class="question-mark">?</span>)
+}
+
+<span class="doccomment">/// Write a display representation of a format specification.
+///
+/// # Examples
+///
+/// ```rune
+/// let value = #[builtin] format!("Hello", fill = '0', width = 10);
+/// assert_eq!(format!("{value}"), "Hello00000");
+/// ```
+</span><span class="attr">#[rune::function(keep, instance, protocol = STRING_DISPLAY)]
+</span><span class="kw">fn </span>format_string_display(format: <span class="kw-2">&amp;</span>Format, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
+    VmResult::Ok(<span class="macro">vm_try!</span>(format.spec.format(
+        <span class="kw-2">&amp;</span>format.value,
+        f,
+        <span class="kw-2">&amp;mut </span>EnvProtocolCaller
+    )))
+}
+
+<span class="doccomment">/// Write a debug representation of a format specification.
+///
+/// # Examples
+///
+/// ```rune
+/// let value = #[builtin] format!("Hello", fill = '0', width = 10);
+/// let string = format!("{value:?}");
+/// assert!(string is String);
+/// ```
+</span><span class="attr">#[rune::function(keep, instance, protocol = STRING_DEBUG)]
+</span><span class="kw">fn </span>format_string_debug(format: <span class="kw-2">&amp;</span>Format, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
+    VmResult::Ok(<span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{format:?}"</span>)))
+}
+
+<span class="doccomment">/// Clones a format specification.
+///
+/// # Examples
+///
+/// ```rune
+/// let value = #[builtin] format!("Hello", fill = '0', width = 10);
+/// let vlaue2 = value.clone();
+/// assert_eq!(format!("{value}"), "Hello00000");
+/// ```
+</span><span class="attr">#[rune::function(keep, instance, protocol = CLONE)]
+</span><span class="kw">fn </span>format_clone(this: <span class="kw-2">&amp;</span>Format) -&gt; VmResult&lt;Format&gt; {
+    VmResult::Ok(<span class="macro">vm_try!</span>(this.try_clone()))
 }
 </code></pre></div></section></main></body></html>
