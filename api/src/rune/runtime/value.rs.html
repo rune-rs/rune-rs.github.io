@@ -2316,41 +2316,7 @@
 <a href="#2315" id="2315">2315</a>
 <a href="#2316" id="2316">2316</a>
 <a href="#2317" id="2317">2317</a>
-<a href="#2318" id="2318">2318</a>
-<a href="#2319" id="2319">2319</a>
-<a href="#2320" id="2320">2320</a>
-<a href="#2321" id="2321">2321</a>
-<a href="#2322" id="2322">2322</a>
-<a href="#2323" id="2323">2323</a>
-<a href="#2324" id="2324">2324</a>
-<a href="#2325" id="2325">2325</a>
-<a href="#2326" id="2326">2326</a>
-<a href="#2327" id="2327">2327</a>
-<a href="#2328" id="2328">2328</a>
-<a href="#2329" id="2329">2329</a>
-<a href="#2330" id="2330">2330</a>
-<a href="#2331" id="2331">2331</a>
-<a href="#2332" id="2332">2332</a>
-<a href="#2333" id="2333">2333</a>
-<a href="#2334" id="2334">2334</a>
-<a href="#2335" id="2335">2335</a>
-<a href="#2336" id="2336">2336</a>
-<a href="#2337" id="2337">2337</a>
-<a href="#2338" id="2338">2338</a>
-<a href="#2339" id="2339">2339</a>
-<a href="#2340" id="2340">2340</a>
-<a href="#2341" id="2341">2341</a>
-<a href="#2342" id="2342">2342</a>
-<a href="#2343" id="2343">2343</a>
-<a href="#2344" id="2344">2344</a>
-<a href="#2345" id="2345">2345</a>
-<a href="#2346" id="2346">2346</a>
-<a href="#2347" id="2347">2347</a>
-<a href="#2348" id="2348">2348</a>
-<a href="#2349" id="2349">2349</a>
-<a href="#2350" id="2350">2350</a>
-<a href="#2351" id="2351">2351</a>
-<a href="#2352" id="2352">2352</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2318" id="2318">2318</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>serde;
@@ -2777,7 +2743,6 @@
                     });
                 }
                 ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                    Mutable::Bytes(value) =&gt; Mutable::Bytes(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Vec(value) =&gt; Mutable::Vec(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Tuple(value) =&gt; Mutable::Tuple(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Object(value) =&gt; Mutable::Object(<span class="macro">vm_try!</span>(value.try_clone())),
@@ -2851,9 +2816,6 @@
             };
 
             <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-                Mutable::Bytes(value) =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
-                }
                 Mutable::Vec(value) =&gt; {
                     <span class="macro">vm_try!</span>(Vec::string_debug_with(value, f, caller));
                 }
@@ -3196,16 +3158,6 @@
     }
 
     <span class="macro">into!</span> {
-        <span class="doccomment">/// Coerce into [`Bytes`].
-        </span>Bytes(Bytes),
-        into_bytes_ref,
-        into_bytes_mut,
-        borrow_bytes_ref,
-        borrow_bytes_mut,
-        into_bytes,
-    }
-
-    <span class="macro">into!</span> {
         <span class="doccomment">/// Coerce into a [`ControlFlow`].
         </span>ControlFlow(ControlFlow),
         into_control_flow_ref,
@@ -3536,9 +3488,6 @@
                     });
                 }
                 (ValueBorrowRef::Mutable(a), ValueBorrowRef::Mutable(b2)) =&gt; <span class="kw">match </span>(<span class="kw-2">&amp;**</span>a, <span class="kw-2">&amp;*</span>b2) {
-                    (Mutable::Bytes(a), Mutable::Bytes(b)) =&gt; {
-                        <span class="kw">return </span>VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b);
-                    }
                     (Mutable::ControlFlow(a), Mutable::ControlFlow(b)) =&gt; {
                         <span class="kw">return </span>ControlFlow::partial_eq_with(a, b, caller);
                     }
@@ -3665,10 +3614,6 @@
                 }
             },
             ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                Mutable::Bytes(bytes) =&gt; {
-                    hasher.write(bytes);
-                    <span class="kw">return </span>VmResult::Ok(());
-                }
                 Mutable::Tuple(tuple) =&gt; {
                     <span class="kw">return </span>Tuple::hash_with(tuple, hasher, caller);
                 }
@@ -3725,9 +3670,6 @@
                 });
             }
             (ValueBorrowRef::Mutable(a), ValueBorrowRef::Mutable(b)) =&gt; <span class="kw">match </span>(<span class="kw-2">&amp;*</span>a, <span class="kw-2">&amp;*</span>b) {
-                (Mutable::Bytes(a), Mutable::Bytes(b)) =&gt; {
-                    <span class="kw">return </span>VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b);
-                }
                 (Mutable::Vec(a), Mutable::Vec(b)) =&gt; {
                     <span class="kw">return </span>Vec::eq_with(a, b, Value::eq_with, caller);
                 }
@@ -3828,9 +3770,6 @@
                 })
             }
             (ValueBorrowRef::Mutable(a), ValueBorrowRef::Mutable(b)) =&gt; <span class="kw">match </span>(<span class="kw-2">&amp;*</span>a, <span class="kw-2">&amp;*</span>b) {
-                (Mutable::Bytes(a), Mutable::Bytes(b)) =&gt; {
-                    <span class="kw">return </span>VmResult::Ok(a.partial_cmp(b));
-                }
                 (Mutable::Vec(a), Mutable::Vec(b)) =&gt; {
                     <span class="kw">return </span>Vec::partial_cmp_with(a, b, caller);
                 }
@@ -3923,9 +3862,6 @@
         <span class="kw">match </span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_ref()), <span class="macro">vm_try!</span>(b.borrow_ref())) {
             (ValueBorrowRef::Inline(a), ValueBorrowRef::Inline(b)) =&gt; <span class="kw">return </span>a.cmp(b),
             (ValueBorrowRef::Mutable(a), ValueBorrowRef::Mutable(b)) =&gt; <span class="kw">match </span>(<span class="kw-2">&amp;*</span>a, <span class="kw-2">&amp;*</span>b) {
-                (Mutable::Bytes(a), Mutable::Bytes(b)) =&gt; {
-                    <span class="kw">return </span>VmResult::Ok(a.cmp(b));
-                }
                 (Mutable::Vec(a), Mutable::Vec(b)) =&gt; {
                     <span class="kw">return </span>Vec::cmp_with(a, b, caller);
                 }
@@ -4314,7 +4250,6 @@
 }
 
 <span class="macro">from!</span> {
-    Bytes =&gt; Bytes,
     ControlFlow =&gt; ControlFlow,
     Function =&gt; Function,
     GeneratorState =&gt; GeneratorState,
@@ -4333,6 +4268,7 @@
 
 <span class="macro">any_from!</span> {
     String,
+    Bytes,
 }
 
 <span class="macro">from_container!</span> {
@@ -4605,8 +4541,6 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Mutable {
-    <span class="doccomment">/// A byte string.
-    </span>Bytes(Bytes),
     <span class="doccomment">/// A vector containing any values.
     </span>Vec(Vec),
     <span class="doccomment">/// A tuple.
@@ -4644,7 +4578,6 @@
 <span class="kw">impl </span>Mutable {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
         <span class="kw">match </span><span class="self">self </span>{
-            Mutable::Bytes(..) =&gt; TypeInfo::static_type(static_type::BYTES),
             Mutable::Vec(..) =&gt; TypeInfo::static_type(static_type::VEC),
             Mutable::Tuple(..) =&gt; TypeInfo::static_type(static_type::TUPLE),
             Mutable::Object(..) =&gt; TypeInfo::static_type(static_type::OBJECT),
@@ -4670,7 +4603,6 @@
     /// *enum*, and not the type hash of the variant itself.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
         <span class="kw">match </span><span class="self">self </span>{
-            Mutable::Bytes(..) =&gt; static_type::BYTES.hash,
             Mutable::Vec(..) =&gt; static_type::VEC.hash,
             Mutable::Tuple(..) =&gt; static_type::TUPLE.hash,
             Mutable::Object(..) =&gt; static_type::OBJECT.hash,
