@@ -2350,21 +2350,7 @@
 <a href="#2349" id="2349">2349</a>
 <a href="#2350" id="2350">2350</a>
 <a href="#2351" id="2351">2351</a>
-<a href="#2352" id="2352">2352</a>
-<a href="#2353" id="2353">2353</a>
-<a href="#2354" id="2354">2354</a>
-<a href="#2355" id="2355">2355</a>
-<a href="#2356" id="2356">2356</a>
-<a href="#2357" id="2357">2357</a>
-<a href="#2358" id="2358">2358</a>
-<a href="#2359" id="2359">2359</a>
-<a href="#2360" id="2360">2360</a>
-<a href="#2361" id="2361">2361</a>
-<a href="#2362" id="2362">2362</a>
-<a href="#2363" id="2363">2363</a>
-<a href="#2364" id="2364">2364</a>
-<a href="#2365" id="2365">2365</a>
-<a href="#2366" id="2366">2366</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2352" id="2352">2352</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>serde;
@@ -2732,7 +2718,7 @@
                         <span class="macro">vm_try!</span>(f.push_str(buffer.format(<span class="kw-2">*</span>float)));
                     }
                     Inline::Bool(bool) =&gt; {
-                        <span class="macro">vm_write!</span>(f, <span class="string">"{bool}"</span>);
+                        <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{bool}"</span>));
                     }
                     Inline::Byte(byte) =&gt; {
                         <span class="kw">let </span><span class="kw-2">mut </span>buffer = itoa::Buffer::new();
@@ -2746,14 +2732,11 @@
                     Mutable::Format(format) =&gt; {
                         <span class="macro">vm_try!</span>(format.spec.format(<span class="kw-2">&amp;</span>format.value, f, caller));
                     }
-                    Mutable::String(string) =&gt; {
-                        <span class="macro">vm_try!</span>(f.push_str(string));
-                    }
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
                 },
-                ValueBorrowRef::Any(..) =&gt; {
+                <span class="kw">_ </span>=&gt; {
                     <span class="kw">break </span><span class="lifetime">'fallback</span>;
                 }
             }
@@ -2794,7 +2777,6 @@
                     });
                 }
                 ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                    Mutable::String(value) =&gt; Mutable::String(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Bytes(value) =&gt; Mutable::Bytes(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Vec(value) =&gt; Mutable::Vec(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Tuple(value) =&gt; Mutable::Tuple(<span class="macro">vm_try!</span>(value.try_clone())),
@@ -2857,11 +2839,11 @@
         <span class="lifetime">'fallback</span>: {
             <span class="kw">let </span>value = <span class="kw">match </span><span class="self">self</span>.repr {
                 Repr::Empty =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"&lt;empty&gt;"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;empty&gt;"</span>));
                     <span class="kw">return </span>VmResult::Ok(());
                 }
                 Repr::Inline(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                     <span class="kw">return </span>VmResult::Ok(());
                 }
                 Repr::Mutable(<span class="kw-2">ref </span>value) =&gt; value,
@@ -2869,59 +2851,56 @@
             };
 
             <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-                Mutable::String(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
-                }
                 Mutable::Bytes(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Vec(value) =&gt; {
                     <span class="macro">vm_try!</span>(Vec::string_debug_with(value, f, caller));
                 }
                 Mutable::Tuple(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Object(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::ControlFlow(value) =&gt; {
                     <span class="macro">vm_try!</span>(ControlFlow::string_debug_with(value, f, caller));
                 }
                 Mutable::Future(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Stream(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Generator(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::GeneratorState(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Option(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Result(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::EmptyStruct(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::TupleStruct(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Struct(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Variant(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Function(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Format(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
             };
 
@@ -2938,18 +2917,18 @@
             }
             CallResultOnly::Unsupported(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>value.repr {
                 Repr::Empty =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"&lt;empty&gt;"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;empty&gt;"</span>));
                 }
                 Repr::Inline(value) =&gt; {
-                    <span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Repr::Mutable(value) =&gt; {
                     <span class="kw">let </span>ty = <span class="macro">vm_try!</span>(value.borrow_ref()).type_info();
-                    <span class="macro">vm_write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>));
                 }
                 Repr::Any(value) =&gt; {
                     <span class="kw">let </span>ty = value.type_info();
-                    <span class="macro">vm_write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>);
+                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>));
                 }
             },
         }
@@ -3091,31 +3070,17 @@
         <span class="self">self</span>.borrow_string_ref()
     }
 
-    <span class="doccomment">/// Borrow the value of a string as a reference.
+    <span class="doccomment">/// Borrow the interior value as a string reference.
     </span><span class="kw">pub fn </span>borrow_string_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;BorrowRef&lt;<span class="lifetime">'_</span>, str&gt;, RuntimeError&gt; {
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="self">self</span>.borrow_ref()<span class="question-mark">? </span>{
-            ValueBorrowRef::Mutable(value) =&gt; value,
-            actual =&gt; {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(RuntimeError::expected::&lt;str&gt;(actual.type_info()));
-            }
-        };
-
-        <span class="kw">let </span>result = BorrowRef::try_map(value, |kind| <span class="kw">match </span>kind {
-            Mutable::String(string) =&gt; <span class="prelude-val">Some</span>(string.as_str()),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-        });
-
-        <span class="kw">match </span>result {
-            <span class="prelude-val">Ok</span>(s) =&gt; <span class="prelude-val">Ok</span>(s),
-            <span class="prelude-val">Err</span>(actual) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected::&lt;str&gt;(actual.type_info())),
-        }
+        <span class="kw">let </span>string = <span class="self">self</span>.borrow_any_ref::&lt;String&gt;()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(BorrowRef::map(string, String::as_str))
     }
 
     <span class="doccomment">/// Take the current value as a string.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>into_string(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, RuntimeError&gt; {
         <span class="kw">match </span><span class="self">self</span>.take_value()<span class="question-mark">? </span>{
-            OwnedValue::Mutable(Mutable::String(string)) =&gt; <span class="prelude-val">Ok</span>(string),
+            OwnedValue::Any(value) =&gt; <span class="prelude-val">Ok</span>(value.downcast()<span class="question-mark">?</span>),
             actual =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected::&lt;String&gt;(actual.type_info())),
         }
     }
@@ -3344,9 +3309,12 @@
     /// This consumes the underlying value.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>into_any_obj(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;AnyObj, RuntimeError&gt; {
-        <span class="kw">match </span><span class="self">self</span>.take_value()<span class="question-mark">? </span>{
-            OwnedValue::Any(value) =&gt; <span class="prelude-val">Ok</span>(value),
-            <span class="kw-2">ref </span>actual =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any_obj(actual.type_info())),
+        <span class="kw">match </span><span class="self">self</span>.into_repr()<span class="question-mark">? </span>{
+            ValueRepr::Inline(value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any_obj(value.type_info())),
+            ValueRepr::Mutable(value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any_obj(
+                value.borrow_ref()<span class="question-mark">?</span>.type_info(),
+            )),
+            ValueRepr::Any(value) =&gt; <span class="prelude-val">Ok</span>(value),
         }
     }
 
@@ -3382,12 +3350,13 @@
     <span class="kw">where
         </span>T: Any,
     {
-        <span class="kw">match </span><span class="self">self</span>.into_repr()<span class="question-mark">? </span>{
-            ValueRepr::Inline(value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(value.type_info())),
-            ValueRepr::Mutable(value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(
+        <span class="kw">match </span><span class="self">self</span>.repr {
+            Repr::Inline(value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(value.type_info())),
+            Repr::Mutable(value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(
                 value.borrow_ref()<span class="question-mark">?</span>.type_info(),
             )),
-            ValueRepr::Any(value) =&gt; <span class="prelude-val">Ok</span>(value.into_ref()<span class="question-mark">?</span>),
+            Repr::Any(value) =&gt; <span class="prelude-val">Ok</span>(value.into_ref()<span class="question-mark">?</span>),
+            Repr::Empty =&gt; <span class="prelude-val">Err</span>(RuntimeError::from(AccessError::empty())),
         }
     }
 
@@ -3421,12 +3390,13 @@
     <span class="kw">where
         </span>T: Any,
     {
-        <span class="kw">match </span><span class="self">self</span>.into_repr()<span class="question-mark">? </span>{
-            ValueRepr::Inline(value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(value.type_info())),
-            ValueRepr::Mutable(value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(
+        <span class="kw">match </span><span class="self">self</span>.repr {
+            Repr::Inline(value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(value.type_info())),
+            Repr::Mutable(value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(
                 value.borrow_ref()<span class="question-mark">?</span>.type_info(),
             )),
-            ValueRepr::Any(value) =&gt; <span class="prelude-val">Ok</span>(value.into_mut()<span class="question-mark">?</span>),
+            Repr::Any(value) =&gt; <span class="prelude-val">Ok</span>(value.into_mut()<span class="question-mark">?</span>),
+            Repr::Empty =&gt; <span class="prelude-val">Err</span>(RuntimeError::from(AccessError::empty())),
         }
     }
 
@@ -3490,9 +3460,16 @@
     <span class="kw">where
         </span>T: Any,
     {
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="self">self</span>.take_value()<span class="question-mark">? </span>{
-            OwnedValue::Any(any) =&gt; any,
-            actual =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(actual.type_info())),
+        <span class="kw">let </span>value = <span class="kw">match </span><span class="self">self</span>.into_repr()<span class="question-mark">? </span>{
+            ValueRepr::Inline(value) =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(value.type_info()))
+            }
+            ValueRepr::Mutable(value) =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(RuntimeError::expected_any::&lt;T&gt;(
+                    value.borrow_ref()<span class="question-mark">?</span>.type_info(),
+                ))
+            }
+            ValueRepr::Any(any) =&gt; any,
         };
 
         <span class="prelude-val">Ok</span>(value.downcast::&lt;T&gt;()<span class="question-mark">?</span>)
@@ -3603,9 +3580,6 @@
 
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
-                    (Mutable::String(a), Mutable::String(b)) =&gt; {
-                        <span class="kw">return </span>VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b);
-                    }
                     (Mutable::Option(a), Mutable::Option(b)) =&gt; <span class="kw">match </span>(a, b) {
                         (<span class="prelude-val">Some</span>(a), <span class="prelude-val">Some</span>(b)) =&gt; <span class="kw">return </span>Value::partial_eq_with(a, b, caller),
                         (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>),
@@ -3691,10 +3665,6 @@
                 }
             },
             ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                Mutable::String(string) =&gt; {
-                    hasher.write_str(string);
-                    <span class="kw">return </span>VmResult::Ok(());
-                }
                 Mutable::Bytes(bytes) =&gt; {
                     hasher.write(bytes);
                     <span class="kw">return </span>VmResult::Ok(());
@@ -3707,7 +3677,7 @@
                 }
                 <span class="kw">_ </span>=&gt; {}
             },
-            ValueBorrowRef::Any(..) =&gt; {}
+            <span class="kw">_ </span>=&gt; {}
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((hasher,));
@@ -3794,9 +3764,6 @@
                     <span class="kw">if </span>a.rtti().enum_hash == b.rtti().enum_hash {
                         <span class="kw">return </span>Variant::eq_with(a, b, caller);
                     }
-                }
-                (Mutable::String(a), Mutable::String(b)) =&gt; {
-                    <span class="kw">return </span>VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b);
                 }
                 (Mutable::Option(a), Mutable::Option(b)) =&gt; <span class="kw">match </span>(a, b) {
                     (<span class="prelude-val">Some</span>(a), <span class="prelude-val">Some</span>(b)) =&gt; <span class="kw">return </span>Value::eq_with(a, b, caller),
@@ -3898,9 +3865,6 @@
                         <span class="kw">return </span>Variant::partial_cmp_with(a, b, caller);
                     }
                 }
-                (Mutable::String(a), Mutable::String(b)) =&gt; {
-                    <span class="kw">return </span>VmResult::Ok(a.partial_cmp(b));
-                }
                 (Mutable::Option(a), Mutable::Option(b)) =&gt; <span class="kw">match </span>(a, b) {
                     (<span class="prelude-val">Some</span>(a), <span class="prelude-val">Some</span>(b)) =&gt; <span class="kw">return </span>Value::partial_cmp_with(a, b, caller),
                     (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">Some</span>(Ordering::Equal)),
@@ -3996,9 +3960,6 @@
                         <span class="kw">return </span>Variant::cmp_with(a, b, caller);
                     }
                 }
-                (Mutable::String(a), Mutable::String(b)) =&gt; {
-                    <span class="kw">return </span>VmResult::Ok(a.cmp(b));
-                }
                 (Mutable::Option(a), Mutable::Option(b)) =&gt; <span class="kw">match </span>(a, b) {
                     (<span class="prelude-val">Some</span>(a), <span class="prelude-val">Some</span>(b)) =&gt; <span class="kw">return </span>Value::cmp_with(a, b, caller),
                     (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span>VmResult::Ok(Ordering::Equal),
@@ -4047,7 +4008,7 @@
     ///
     /// let value = rune::to_value(u32::MAX)?;
     ///
-    /// assert_eq!(value.try_as_integer::&lt;u64&gt;(), Ok(u32::MAX as u64));
+    /// assert_eq!(value.try_as_integer::&lt;u64&gt;()?, u32::MAX as u64);
     /// assert!(value.try_as_integer::&lt;i32&gt;().is_err());
     ///
     /// # Ok::&lt;(), rune::support::Error&gt;(())
@@ -4133,6 +4094,18 @@
             Repr::Inline(value) =&gt; <span class="prelude-val">Ok</span>(ValueBorrowRef::Inline(value)),
             Repr::Mutable(value) =&gt; <span class="prelude-val">Ok</span>(ValueBorrowRef::Mutable(value.borrow_ref()<span class="question-mark">?</span>)),
             Repr::Any(value) =&gt; <span class="prelude-val">Ok</span>(ValueBorrowRef::Any(value)),
+            Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
+        }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_borrow_ref&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BorrowRef&lt;<span class="lifetime">'_</span>, T&gt;&gt;, AccessError&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
+            Repr::Inline(..) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            Repr::Mutable(..) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            Repr::Any(value) =&gt; value.try_borrow_ref(),
             Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
         }
     }
@@ -4341,7 +4314,6 @@
 }
 
 <span class="macro">from!</span> {
-    String =&gt; String,
     Bytes =&gt; Bytes,
     ControlFlow =&gt; ControlFlow,
     Function =&gt; Function,
@@ -4357,6 +4329,10 @@
     Format =&gt; Format,
     Future =&gt; Future,
     Stream =&gt; Stream&lt;Vm&gt;,
+}
+
+<span class="macro">any_from!</span> {
+    String,
 }
 
 <span class="macro">from_container!</span> {
@@ -4629,8 +4605,6 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Mutable {
-    <span class="doccomment">/// A UTF-8 string.
-    </span>String(String),
     <span class="doccomment">/// A byte string.
     </span>Bytes(Bytes),
     <span class="doccomment">/// A vector containing any values.
@@ -4670,7 +4644,6 @@
 <span class="kw">impl </span>Mutable {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
         <span class="kw">match </span><span class="self">self </span>{
-            Mutable::String(..) =&gt; TypeInfo::static_type(static_type::STRING),
             Mutable::Bytes(..) =&gt; TypeInfo::static_type(static_type::BYTES),
             Mutable::Vec(..) =&gt; TypeInfo::static_type(static_type::VEC),
             Mutable::Tuple(..) =&gt; TypeInfo::static_type(static_type::TUPLE),
@@ -4697,7 +4670,6 @@
     /// *enum*, and not the type hash of the variant itself.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
         <span class="kw">match </span><span class="self">self </span>{
-            Mutable::String(..) =&gt; static_type::STRING.hash,
             Mutable::Bytes(..) =&gt; static_type::BYTES.hash,
             Mutable::Vec(..) =&gt; static_type::VEC.hash,
             Mutable::Tuple(..) =&gt; static_type::TUPLE.hash,

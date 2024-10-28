@@ -614,10 +614,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::String;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Formatter, Inline, Mutable, ProtocolCaller, Value, ValueRef, VmErrorKind, VmResult,
-};
-<span class="kw">use </span><span class="kw">crate</span>::Any;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Formatter, Inline, ProtocolCaller, Value, ValueRef, VmErrorKind, VmResult};
+<span class="kw">use crate</span>::{Any, TypeHash};
 
 <span class="doccomment">/// Error raised when trying to parse a type string and it fails.
 </span><span class="attr">#[derive(Debug, Clone, Copy)]
@@ -733,7 +731,7 @@
     <span class="doccomment">/// Format the given float.
     </span><span class="kw">fn </span>format_float(<span class="kw-2">&amp;</span><span class="self">self</span>, buf: <span class="kw-2">&amp;mut </span>String, n: f64) -&gt; VmResult&lt;()&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(precision) = <span class="self">self</span>.precision {
-            <span class="macro">vm_write!</span>(buf, <span class="string">"{:.*}"</span>, precision.get(), n);
+            <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(buf, <span class="string">"{:.*}"</span>, precision.get(), n));
         } <span class="kw">else </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>buffer = ryu::Buffer::new();
             <span class="macro">vm_try!</span>(buf.try_push_str(buffer.format(n)));
@@ -832,18 +830,19 @@
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
                 },
-                ValueRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-                    Mutable::String(s) =&gt; {
-                        <span class="macro">vm_try!</span>(f.buf_mut().try_push_str(s));
+                ValueRef::Mutable(..) =&gt; {
+                    <span class="kw">break </span><span class="lifetime">'fallback</span>;
+                }
+                ValueRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                    String::HASH =&gt; {
+                        <span class="kw">let </span>s = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;String&gt;());
+                        <span class="macro">vm_try!</span>(f.buf_mut().try_push_str(<span class="kw-2">&amp;</span>s));
                         <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, <span class="self">self</span>.align, <span class="self">self</span>.fill, <span class="prelude-val">None</span>));
                     }
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
                 },
-                ValueRef::Any(..) =&gt; {
-                    <span class="kw">break </span><span class="lifetime">'fallback</span>;
-                }
             }
 
             <span class="kw">return </span>VmResult::Ok(());
@@ -875,17 +874,18 @@
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
                 },
-                ValueRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-                    Mutable::String(s) =&gt; {
-                        <span class="macro">vm_write!</span>(f, <span class="string">"{s:?}"</span>);
+                ValueRef::Mutable(..) =&gt; {
+                    <span class="kw">break </span><span class="lifetime">'fallback</span>;
+                }
+                ValueRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                    String::HASH =&gt; {
+                        <span class="kw">let </span>s = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;String&gt;());
+                        <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{s:?}"</span>));
                     }
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
                 },
-                ValueRef::Any(..) =&gt; {
-                    <span class="kw">break </span><span class="lifetime">'fallback</span>;
-                }
             }
 
             <span class="kw">return </span>VmResult::Ok(());
@@ -898,7 +898,7 @@
         <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_inline()) {
             <span class="prelude-val">Some</span>(Inline::Integer(n)) =&gt; {
                 <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
-                <span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:X}"</span>, n);
+                <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:X}"</span>, n));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
             <span class="kw">_ </span>=&gt; {
@@ -913,7 +913,7 @@
         <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_inline()) {
             <span class="prelude-val">Some</span>(Inline::Integer(n)) =&gt; {
                 <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
-                <span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:x}"</span>, n);
+                <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:x}"</span>, n));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
             <span class="kw">_ </span>=&gt; {
@@ -928,7 +928,7 @@
         <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_inline()) {
             <span class="prelude-val">Some</span>(Inline::Integer(n)) =&gt; {
                 <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
-                <span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:b}"</span>, n);
+                <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:b}"</span>, n));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
             <span class="kw">_ </span>=&gt; {
@@ -943,7 +943,7 @@
         <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_inline()) {
             <span class="prelude-val">Some</span>(Inline::Integer(n)) =&gt; {
                 <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
-                <span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:p}"</span>, n <span class="kw">as </span><span class="kw-2">*const </span>());
+                <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f.buf_mut(), <span class="string">"{:p}"</span>, n <span class="kw">as </span><span class="kw-2">*const </span>()));
                 <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, align, fill, sign));
             }
             <span class="kw">_ </span>=&gt; {

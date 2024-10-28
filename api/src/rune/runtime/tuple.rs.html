@@ -435,8 +435,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    ConstValue, FromValue, Mut, Mutable, OwnedValue, RawAnyGuard, Ref, ToValue, UnsafeToMut,
-    UnsafeToRef, Value, ValueShared, VmErrorKind, VmResult,
+    ConstValue, FromValue, Mut, Mutable, RawAnyGuard, Ref, ToValue, UnsafeToMut, UnsafeToRef,
+    Value, ValueRepr, ValueShared, VmErrorKind, VmResult,
 };
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::runtime::{Hasher, ProtocolCaller};
@@ -709,16 +709,16 @@
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>OwnedTuple {
     <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(value.take_value()) {
-            OwnedValue::Inline(value) =&gt; <span class="kw">match </span>value {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(value.into_repr()) {
+            ValueRepr::Inline(value) =&gt; <span class="kw">match </span>value {
                 Inline::Unit =&gt; VmResult::Ok(<span class="self">Self</span>::new()),
                 actual =&gt; VmResult::expected::&lt;<span class="self">Self</span>&gt;(actual.type_info()),
             },
-            OwnedValue::Mutable(value) =&gt; <span class="kw">match </span>value {
+            ValueRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="macro">vm_try!</span>(value.take()) {
                 Mutable::Tuple(tuple) =&gt; VmResult::Ok(tuple),
                 actual =&gt; VmResult::expected::&lt;<span class="self">Self</span>&gt;(actual.type_info()),
             },
-            OwnedValue::Any(value) =&gt; VmResult::expected::&lt;<span class="self">Self</span>&gt;(value.type_info()),
+            ValueRepr::Any(value) =&gt; VmResult::expected::&lt;<span class="self">Self</span>&gt;(value.type_info()),
         }
     }
 }

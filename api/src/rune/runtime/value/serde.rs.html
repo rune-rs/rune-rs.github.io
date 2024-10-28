@@ -309,11 +309,16 @@
 <a href="#308" id="308">308</a>
 <a href="#309" id="309">309</a>
 <a href="#310" id="310">310</a>
-<a href="#311" id="311">311</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{Bytes, Inline, Mutable, Object, ValueBorrowRef, Vec};
+<span class="kw">use </span><span class="kw">crate</span>::TypeHash;
 
 <span class="kw">use </span>serde::de::{<span class="self">self</span>, Deserialize <span class="kw">as _</span>, Error <span class="kw">as _</span>};
 <span class="kw">use </span>serde::ser::{<span class="self">self</span>, Error <span class="kw">as _</span>, SerializeMap <span class="kw">as _</span>, SerializeSeq <span class="kw">as _</span>};
@@ -348,7 +353,6 @@
                 Inline::Ordering(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize orderings"</span>)),
             },
             ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                Mutable::String(string) =&gt; serializer.serialize_str(string),
                 Mutable::Bytes(bytes) =&gt; serializer.serialize_bytes(bytes),
                 Mutable::Vec(vec) =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_seq(<span class="prelude-val">Some</span>(vec.len()))<span class="question-mark">?</span>;
@@ -403,9 +407,13 @@
                     <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize `start..end` ranges"</span>))
                 }
             },
-            ValueBorrowRef::Any(..) =&gt; {
-                <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize external references"</span>))
-            }
+            ValueBorrowRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                String::HASH =&gt; {
+                    <span class="kw">let </span>string = value.borrow_ref::&lt;String&gt;().map_err(S::Error::custom)<span class="question-mark">?</span>;
+                    serializer.serialize_str(string.as_str())
+                }
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize external references"</span>)),
+            },
         }
     }
 }

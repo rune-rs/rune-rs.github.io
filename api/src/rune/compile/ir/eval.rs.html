@@ -442,7 +442,13 @@
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
-<a href="#444" id="444">444</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::ops::{Add, Mul, Shl, Shr, Sub};
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::ops::{Add, Mul, Shl, Shr, Sub};
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -451,7 +457,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::ir::{<span class="self">self</span>};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::query::Used;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Inline, Mutable, Object, OwnedTuple, Value, ValueBorrowRef};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Inline, Object, OwnedTuple, Value, ValueBorrowRef};
+<span class="kw">use </span><span class="kw">crate</span>::TypeHash;
 
 <span class="doccomment">/// The outcome of a constant evaluation.
 </span><span class="kw">pub enum </span>EvalOutcome {
@@ -583,18 +590,22 @@
 
             <span class="kw">return </span><span class="prelude-val">Ok</span>(Value::from(out));
         }
-        (ValueBorrowRef::Mutable(a), ValueBorrowRef::Mutable(b)) =&gt; {
-            <span class="kw">let </span>out = <span class="lifetime">'out</span>: {
-                <span class="kw">if let </span>(Mutable::String(a), Mutable::String(b)) = (<span class="kw-2">&amp;*</span>a, <span class="kw-2">&amp;*</span>b) {
+        (ValueBorrowRef::Any(a), ValueBorrowRef::Any(b)) =&gt; {
+            <span class="kw">let </span>value = <span class="lifetime">'out</span>: {
+                <span class="kw">if let </span>(String::HASH, String::HASH) = (a.type_hash(), b.type_hash()) {
+                    <span class="kw">let </span>a = a.borrow_ref::&lt;String&gt;().with_span(span)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>b = b.borrow_ref::&lt;String&gt;().with_span(span)<span class="question-mark">?</span>;
+
                     <span class="kw">if let </span>ir::IrBinaryOp::Add = ir.op {
-                        <span class="kw">break </span><span class="lifetime">'out </span>Mutable::String(add_strings(a, b).with_span(span)<span class="question-mark">?</span>);
+                        <span class="kw">let </span>string = add_strings(<span class="kw-2">&amp;</span>a, <span class="kw-2">&amp;</span>b).with_span(span)<span class="question-mark">?</span>;
+                        <span class="kw">break </span><span class="lifetime">'out </span>Value::new(string).with_span(span)<span class="question-mark">?</span>;
                     }
                 }
 
                 <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(span));
             };
 
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(Value::try_from(out).with_span(span)<span class="question-mark">?</span>);
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(value);
         }
         <span class="kw">_ </span>=&gt; (),
     }
@@ -810,15 +821,16 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
                         }
                     },
-                    ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                        Mutable::String(s) =&gt; {
-                            buf.try_push_str(s)<span class="question-mark">?</span>;
+                    ValueBorrowRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                        String::HASH =&gt; {
+                            <span class="kw">let </span>s = value.borrow_ref::&lt;String&gt;().with_span(ir)<span class="question-mark">?</span>;
+                            buf.try_push_str(<span class="kw-2">&amp;</span>s)<span class="question-mark">?</span>;
                         }
                         <span class="kw">_ </span>=&gt; {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
                         }
                     },
-                    ValueBorrowRef::Any(..) =&gt; {
+                    ValueBorrowRef::Mutable(..) =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
                     }
                 }

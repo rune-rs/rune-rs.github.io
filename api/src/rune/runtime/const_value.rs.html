@@ -211,7 +211,13 @@
 <a href="#210" id="210">210</a>
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a></pre></div><pre class="rust"><code><span class="kw">use </span>serde::{Deserialize, Serialize};
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a></pre></div><pre class="rust"><code><span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box, HashMap, String, Vec};
@@ -219,6 +225,7 @@
     <span class="self">self</span>, Bytes, FromValue, Inline, Mutable, Object, OwnedTuple, ToValue, TypeInfo, Value,
     ValueBorrowRef, VmErrorKind, VmResult,
 };
+<span class="kw">use </span><span class="kw">crate</span>::TypeHash;
 
 <span class="doccomment">/// A constant value.
 </span><span class="attr">#[derive(Debug, Deserialize, Serialize)]
@@ -267,7 +274,6 @@
                 }
             },
             ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                Mutable::String(s) =&gt; <span class="self">Self</span>::String(<span class="macro">vm_try!</span>(s.try_to_owned())),
                 Mutable::Option(option) =&gt; <span class="self">Self</span>::Option(<span class="kw">match </span>option {
                     <span class="prelude-val">Some</span>(some) =&gt; <span class="prelude-val">Some</span>(<span class="macro">vm_try!</span>(Box::try_new(<span class="macro">vm_try!</span>(<span class="self">Self</span>::from_value_ref(some))))),
                     <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
@@ -308,11 +314,17 @@
                     })
                 }
             },
-            value =&gt; {
-                <span class="kw">return </span>VmResult::err(VmErrorKind::ConstNotSupported {
-                    actual: value.type_info(),
-                })
-            }
+            ValueBorrowRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                String::HASH =&gt; {
+                    <span class="kw">let </span>s = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;String&gt;());
+                    <span class="self">Self</span>::String(<span class="macro">vm_try!</span>(s.try_to_owned()))
+                }
+                <span class="kw">_ </span>=&gt; {
+                    <span class="kw">return </span>VmResult::err(VmErrorKind::ConstNotSupported {
+                        actual: value.type_info(),
+                    });
+                }
+            },
         })
     }
 
