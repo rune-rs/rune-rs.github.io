@@ -1045,20 +1045,7 @@
 <a href="#1044" id="1044">1044</a>
 <a href="#1045" id="1045">1045</a>
 <a href="#1046" id="1046">1046</a>
-<a href="#1047" id="1047">1047</a>
-<a href="#1048" id="1048">1048</a>
-<a href="#1049" id="1049">1049</a>
-<a href="#1050" id="1050">1050</a>
-<a href="#1051" id="1051">1051</a>
-<a href="#1052" id="1052">1052</a>
-<a href="#1053" id="1053">1053</a>
-<a href="#1054" id="1054">1054</a>
-<a href="#1055" id="1055">1055</a>
-<a href="#1056" id="1056">1056</a>
-<a href="#1057" id="1057">1057</a>
-<a href="#1058" id="1058">1058</a>
-<a href="#1059" id="1059">1059</a>
-<a href="#1060" id="1060">1060</a></pre></div><pre class="rust"><code><span class="doccomment">//! Helper to build customized commandline interfaces using custom rune
+<a href="#1047" id="1047">1047</a></pre></div><pre class="rust"><code><span class="doccomment">//! Helper to build customized commandline interfaces using custom rune
 //! contexts.
 //!
 //! This can be used to:
@@ -1074,6 +1061,7 @@
 <span class="kw">mod </span>languageserver;
 <span class="kw">mod </span>loader;
 <span class="kw">mod </span>naming;
+<span class="kw">mod </span>out;
 <span class="kw">mod </span>run;
 <span class="kw">mod </span>tests;
 <span class="kw">mod </span>visitor;
@@ -1096,8 +1084,10 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::compile::ParseOptionError;
 <span class="kw">use </span><span class="kw">crate</span>::modules::capture_io::CaptureIo;
-<span class="kw">use </span><span class="kw">crate</span>::termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+<span class="kw">use </span><span class="kw">crate</span>::termcolor::{ColorChoice, StandardStream};
 <span class="kw">use crate</span>::{Context, ContextError, Hash, ItemBuf, Options};
+
+<span class="kw">use </span><span class="self">self</span>::out::{Color, Io, Stream};
 
 <span class="doccomment">/// Default about splash.
 </span><span class="kw">const </span>DEFAULT_ABOUT: <span class="kw-2">&amp;</span>str = <span class="string">"The Rune Language Interpreter"</span>;
@@ -1195,7 +1185,7 @@
             <span class="prelude-val">Err</span>(error) =&gt; {
                 <span class="kw">let </span>o = std::io::stderr();
                 <span class="comment">// ignore error because stdout / stderr might've been closed.
-                </span><span class="kw">let _ </span>= format_errors(o.lock(), <span class="kw-2">&amp;</span>error);
+                </span><span class="kw">let _ </span>= format_errors(<span class="kw-2">&amp;mut </span>o.lock(), <span class="kw-2">&amp;</span>error);
                 std::process::exit(ExitCode::Failure <span class="kw">as </span>i32);
             }
         }
@@ -1212,7 +1202,7 @@
             <span class="prelude-val">Err</span>(error) =&gt; {
                 <span class="kw">let </span>o = std::io::stderr();
                 <span class="comment">// ignore error because stdout / stderr might've been closed.
-                </span><span class="kw">let _ </span>= format_errors(o.lock(), <span class="kw-2">&amp;</span>error);
+                </span><span class="kw">let _ </span>= format_errors(<span class="kw-2">&amp;mut </span>o.lock(), <span class="kw-2">&amp;</span>error);
                 std::process::exit(ExitCode::Failure <span class="kw">as </span>i32);
             }
         }
@@ -1273,10 +1263,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>stdout = StandardStream::stdout(choice);
         <span class="kw">let </span><span class="kw-2">mut </span>stderr = StandardStream::stderr(choice);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>io = Io {
-            stdout: <span class="kw-2">&amp;mut </span>stdout,
-            stderr: <span class="kw-2">&amp;mut </span>stderr,
-        };
+        <span class="kw">let </span><span class="kw-2">mut </span>io = Io::new(<span class="kw-2">&amp;mut </span>stdout, <span class="kw-2">&amp;mut </span>stderr);
 
         tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_default_env())
@@ -1285,11 +1272,9 @@
         <span class="kw">match </span>main_with_out(<span class="kw-2">&amp;mut </span>io, <span class="kw-2">&amp;mut </span><span class="self">self</span>, args).<span class="kw">await </span>{
             <span class="prelude-val">Ok</span>(code) =&gt; <span class="prelude-val">Ok</span>(code),
             <span class="prelude-val">Err</span>(error) =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>o = io.stdout.lock();
-                o.set_color(ColorSpec::new().set_fg(<span class="prelude-val">Some</span>(Color::Red)))<span class="question-mark">?</span>;
-                <span class="kw">let </span>result = format_errors(<span class="kw-2">&amp;mut </span>o, <span class="kw-2">&amp;</span>error);
-                o.set_color(<span class="kw-2">&amp;</span>ColorSpec::new())<span class="question-mark">?</span>;
-                result<span class="question-mark">?</span>;
+                <span class="kw">let </span>o = io.with_color(Stream::Stdout, Color::Error)<span class="question-mark">?</span>;
+                format_errors(o, <span class="kw-2">&amp;</span>error)<span class="question-mark">?</span>;
+                o.close()<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(ExitCode::Failure)
             }
         }
@@ -1343,11 +1328,6 @@
             }
         }
     }
-}
-
-<span class="kw">struct </span>Io&lt;<span class="lifetime">'a</span>&gt; {
-    stdout: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>StandardStream,
-    stderr: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>StandardStream,
 }
 
 <span class="attr">#[derive(Parser, Debug, Clone)]
@@ -1782,9 +1762,9 @@
 }
 
 <span class="doccomment">/// Format the given error.
-</span><span class="kw">fn </span>format_errors&lt;O&gt;(<span class="kw-2">mut </span>o: O, error: <span class="kw-2">&amp;</span>Error) -&gt; io::Result&lt;()&gt;
+</span><span class="kw">fn </span>format_errors&lt;O&gt;(o: <span class="kw-2">&amp;mut </span>O, error: <span class="kw-2">&amp;</span>Error) -&gt; io::Result&lt;()&gt;
 <span class="kw">where
-    </span>O: io::Write,
+    </span>O: <span class="question-mark">?</span>Sized + io::Write,
 {
     <span class="macro">writeln!</span>(o, <span class="string">"Error: {}"</span>, error)<span class="question-mark">?</span>;
 
@@ -1899,22 +1879,19 @@
                     <span class="macro">writeln!</span>(io.stdout)<span class="question-mark">?</span>;
                 }
 
-                io.stdout
-                    .set_color(ColorSpec::new().set_fg(<span class="prelude-val">Some</span>(Color::Green)))<span class="question-mark">?</span>;
-                <span class="macro">write!</span>(io.stdout, <span class="string">"{}"</span>, option.key)<span class="question-mark">?</span>;
-                io.stdout.reset()<span class="question-mark">?</span>;
+                io.write(
+                    <span class="macro">format_args!</span>(<span class="string">"{}"</span>, option.key),
+                    Stream::Stdout,
+                    Color::Highlight,
+                )<span class="question-mark">?</span>;
 
                 <span class="macro">write!</span>(io.stdout, <span class="string">"={}"</span>, option.default)<span class="question-mark">?</span>;
 
                 <span class="kw">if </span>option.unstable {
-                    io.stdout
-                        .set_color(ColorSpec::new().set_fg(<span class="prelude-val">Some</span>(Color::Red)).set_bold(<span class="bool-val">true</span>))<span class="question-mark">?</span>;
-                    <span class="macro">write!</span>(io.stdout, <span class="string">" (unstable)"</span>)<span class="question-mark">?</span>;
-                    io.stdout.reset()<span class="question-mark">?</span>;
+                    io.write(<span class="string">" (unstable)"</span>, Stream::Stdout, Color::Error)<span class="question-mark">?</span>;
                 }
 
                 <span class="macro">writeln!</span>(io.stdout, <span class="string">":"</span>)<span class="question-mark">?</span>;
-
                 <span class="macro">writeln!</span>(io.stdout, <span class="string">"    Options: {}"</span>, option.options)<span class="question-mark">?</span>;
                 <span class="macro">writeln!</span>(io.stdout)<span class="question-mark">?</span>;
 
@@ -1944,19 +1921,16 @@
                 }
                 BuildPath::Package(p) =&gt; {
                     <span class="kw">if </span>verbose {
-                        <span class="kw">let </span><span class="kw-2">mut </span>o = io.stderr.lock();
-                        o.set_color(ColorSpec::new().set_fg(<span class="prelude-val">Some</span>(Color::Green)).set_bold(<span class="bool-val">true</span>))<span class="question-mark">?</span>;
-                        <span class="kw">let </span>result = <span class="macro">write!</span>(o, <span class="string">"{:&gt;12}"</span>, what);
-                        o.set_color(<span class="kw-2">&amp;</span>ColorSpec::new())<span class="question-mark">?</span>;
-                        o.flush()<span class="question-mark">?</span>;
-                        result<span class="question-mark">?</span>;
-                        <span class="macro">writeln!</span>(
-                            o,
+                        <span class="kw">let </span><span class="kw-2">mut </span>section = io.section(what, Stream::Stderr, Color::Highlight)<span class="question-mark">?</span>;
+
+                        section.append(<span class="macro">format_args!</span>(
                             <span class="string">" {} `{}` (from {})"</span>,
                             p.found.kind,
                             p.found.path.display(),
                             p.package.name
-                        )<span class="question-mark">?</span>;
+                        ))<span class="question-mark">?</span>;
+
+                        section.close()<span class="question-mark">?</span>;
                     }
 
                     entries.try_push(EntryPoint::Package(p))<span class="question-mark">?</span>;
