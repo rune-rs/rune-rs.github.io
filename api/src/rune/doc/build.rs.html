@@ -1251,7 +1251,15 @@
 <a href="#1250" id="1250">1250</a>
 <a href="#1251" id="1251">1251</a>
 <a href="#1252" id="1252">1252</a>
-<a href="#1253" id="1253">1253</a></pre></div><pre class="rust"><code><span class="kw">mod </span>js;
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a></pre></div><pre class="rust"><code><span class="kw">mod </span>js;
 <span class="kw">mod </span>type_;
 
 <span class="kw">use </span>core::fmt;
@@ -1385,7 +1393,8 @@
     css.try_push(runedoc_css)<span class="question-mark">?</span>;
 
     <span class="comment">// Collect an ordered set of modules, so we have a baseline of what to render when.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>initial = VecDeque::new();
+    </span><span class="kw">let </span><span class="kw-2">mut </span>initial = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>initial_seen = HashSet::new();
 
     <span class="kw">for </span>item <span class="kw">in </span>context.iter_modules() {
         <span class="kw">let </span>item = item<span class="question-mark">?</span>;
@@ -1396,8 +1405,14 @@
             .find(|m| <span class="macro">matches!</span>(<span class="kw-2">&amp;</span>m.kind, Kind::Module))
             .with_context(|| <span class="macro">anyhow!</span>(<span class="string">"Missing meta for {item}"</span>))<span class="question-mark">?</span>;
 
-        initial.try_push_back((Build::Module, meta))<span class="question-mark">?</span>;
+        <span class="kw">if </span>!initial_seen.try_insert(meta.hash)<span class="question-mark">? </span>{
+            <span class="kw">continue</span>;
+        }
+
+        initial.try_push((Build::Module, meta))<span class="question-mark">?</span>;
     }
+
+    initial.sort_by_key(|(<span class="kw">_</span>, meta)| meta.item);
 
     <span class="kw">let </span>search_index = RelativePath::new(<span class="string">"index.js"</span>);
     <span class="kw">let </span>root_index = RelativePath::new(<span class="string">"index.html"</span>);
@@ -1425,49 +1440,46 @@
 
     <span class="kw">let </span><span class="kw-2">mut </span>modules = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>builders = Vec::new();
-
     <span class="kw">let </span><span class="kw-2">mut </span>visited = HashSet::new();
 
     <span class="kw">while let </span><span class="prelude-val">Some</span>((build, meta)) = queue.pop_front() {
-        <span class="kw">if </span>!visited.try_insert(meta.hash)<span class="question-mark">? </span>{
+        <span class="kw">if </span>!visited.try_insert((build, meta.hash))<span class="question-mark">? </span>{
+            <span class="macro">tracing::error!</span>(<span class="question-mark">?</span>build, <span class="question-mark">?</span>meta.item, <span class="string">"Already visited"</span>);
             <span class="kw">continue</span>;
         }
 
+        cx.set_path(meta)<span class="question-mark">?</span>;
+
+        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>build, <span class="question-mark">?</span>meta.item, <span class="question-mark">?</span>cx.state.path, <span class="string">"Building"</span>);
+
         <span class="kw">match </span>build {
             Build::Type =&gt; {
-                cx.set_path(meta)<span class="question-mark">?</span>;
                 <span class="kw">let </span>(builder, items) = <span class="self">self</span>::type_::build(<span class="kw-2">&amp;mut </span>cx, <span class="string">"Type"</span>, <span class="string">"type"</span>, meta)<span class="question-mark">?</span>;
                 builders.try_push(builder)<span class="question-mark">?</span>;
                 cx.index.try_extend(items)<span class="question-mark">?</span>;
             }
             Build::Trait =&gt; {
-                cx.set_path(meta)<span class="question-mark">?</span>;
                 <span class="kw">let </span>(builder, items) = <span class="self">self</span>::type_::build(<span class="kw-2">&amp;mut </span>cx, <span class="string">"Trait"</span>, <span class="string">"trait"</span>, meta)<span class="question-mark">?</span>;
                 builders.try_push(builder)<span class="question-mark">?</span>;
                 cx.index.try_extend(items)<span class="question-mark">?</span>;
             }
             Build::Struct =&gt; {
-                cx.set_path(meta)<span class="question-mark">?</span>;
                 <span class="kw">let </span>(builder, index) = <span class="self">self</span>::type_::build(<span class="kw-2">&amp;mut </span>cx, <span class="string">"Struct"</span>, <span class="string">"struct"</span>, meta)<span class="question-mark">?</span>;
                 builders.try_push(builder)<span class="question-mark">?</span>;
                 cx.index.try_extend(index)<span class="question-mark">?</span>;
             }
             Build::Enum =&gt; {
-                cx.set_path(meta)<span class="question-mark">?</span>;
                 <span class="kw">let </span>(builder, index) = <span class="self">self</span>::type_::build(<span class="kw-2">&amp;mut </span>cx, <span class="string">"Enum"</span>, <span class="string">"enum"</span>, meta)<span class="question-mark">?</span>;
                 builders.try_push(builder)<span class="question-mark">?</span>;
                 cx.index.try_extend(index)<span class="question-mark">?</span>;
             }
             Build::Macro =&gt; {
-                cx.set_path(meta)<span class="question-mark">?</span>;
                 builders.try_push(build_macro(<span class="kw-2">&amp;mut </span>cx, meta)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
             }
             Build::Function =&gt; {
-                cx.set_path(meta)<span class="question-mark">?</span>;
                 builders.try_push(build_function(<span class="kw-2">&amp;mut </span>cx, meta)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
             }
             Build::Module =&gt; {
-                cx.set_path(meta)<span class="question-mark">?</span>;
                 builders.try_push(module(<span class="kw-2">&amp;mut </span>cx, meta, <span class="kw-2">&amp;mut </span>queue)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 modules.try_push((meta.item, cx.state.path.clone()))<span class="question-mark">?</span>;
             }
@@ -2066,7 +2078,8 @@
     }
 }
 
-<span class="kw">enum </span>Build {
+<span class="attr">#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
+</span><span class="kw">enum </span>Build {
     Type,
     Struct,
     Enum,
@@ -2252,9 +2265,12 @@
     <span class="kw">let </span><span class="kw-2">mut </span>traits = Vec::new();
 
     <span class="kw">for </span>(<span class="kw">_</span>, name) <span class="kw">in </span>cx.context.iter_components(meta.item)<span class="question-mark">? </span>{
-        <span class="kw">let </span>lookup_item = meta.item.join([name])<span class="question-mark">?</span>;
+        <span class="kw">let </span>item = meta.item.join([name])<span class="question-mark">?</span>;
+        <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>item, <span class="string">"Looking up"</span>);
 
-        <span class="kw">for </span>m <span class="kw">in </span>cx.context.meta(<span class="kw-2">&amp;</span>lookup_item)<span class="question-mark">? </span>{
+        <span class="kw">for </span>m <span class="kw">in </span>cx.context.meta(<span class="kw-2">&amp;</span>item)<span class="question-mark">? </span>{
+            <span class="macro">tracing::trace!</span>(<span class="question-mark">?</span>item, <span class="question-mark">?</span>m.kind, <span class="string">"Found"</span>);
+
             <span class="kw">match </span>m.kind {
                 Kind::Type { .. } =&gt; {
                     queue.try_push_front((Build::Type, m))<span class="question-mark">?</span>;
