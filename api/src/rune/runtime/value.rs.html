@@ -2296,31 +2296,7 @@
 <a href="#2295" id="2295">2295</a>
 <a href="#2296" id="2296">2296</a>
 <a href="#2297" id="2297">2297</a>
-<a href="#2298" id="2298">2298</a>
-<a href="#2299" id="2299">2299</a>
-<a href="#2300" id="2300">2300</a>
-<a href="#2301" id="2301">2301</a>
-<a href="#2302" id="2302">2302</a>
-<a href="#2303" id="2303">2303</a>
-<a href="#2304" id="2304">2304</a>
-<a href="#2305" id="2305">2305</a>
-<a href="#2306" id="2306">2306</a>
-<a href="#2307" id="2307">2307</a>
-<a href="#2308" id="2308">2308</a>
-<a href="#2309" id="2309">2309</a>
-<a href="#2310" id="2310">2310</a>
-<a href="#2311" id="2311">2311</a>
-<a href="#2312" id="2312">2312</a>
-<a href="#2313" id="2313">2313</a>
-<a href="#2314" id="2314">2314</a>
-<a href="#2315" id="2315">2315</a>
-<a href="#2316" id="2316">2316</a>
-<a href="#2317" id="2317">2317</a>
-<a href="#2318" id="2318">2318</a>
-<a href="#2319" id="2319">2319</a>
-<a href="#2320" id="2320">2320</a>
-<a href="#2321" id="2321">2321</a>
-<a href="#2322" id="2322">2322</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2298" id="2298">2298</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>serde;
@@ -2736,7 +2712,6 @@
                     Mutable::Vec(value) =&gt; Mutable::Vec(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Tuple(value) =&gt; Mutable::Tuple(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Object(value) =&gt; Mutable::Object(<span class="macro">vm_try!</span>(value.try_clone())),
-                    Mutable::ControlFlow(value) =&gt; Mutable::ControlFlow(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Stream(value) =&gt; Mutable::Stream(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Generator(value) =&gt; Mutable::Generator(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::GeneratorState(value) =&gt; {
@@ -2813,9 +2788,6 @@
                 }
                 Mutable::Object(value) =&gt; {
                     <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
-                }
-                Mutable::ControlFlow(value) =&gt; {
-                    <span class="macro">vm_try!</span>(ControlFlow::string_debug_with(value, f, caller));
                 }
                 Mutable::Future(value) =&gt; {
                     <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
@@ -3144,16 +3116,6 @@
     }
 
     <span class="macro">into!</span> {
-        <span class="doccomment">/// Coerce into a [`ControlFlow`].
-        </span>ControlFlow(ControlFlow),
-        into_control_flow_ref,
-        into_control_flow_mut,
-        borrow_control_flow_ref,
-        borrow_control_flow_mut,
-        into_control_flow,
-    }
-
-    <span class="macro">into!</span> {
         <span class="doccomment">/// Coerce into a [`Function`].
         </span>Function(Function),
         into_function_ref,
@@ -3464,9 +3426,6 @@
                     });
                 }
                 (BorrowRefRepr::Mutable(a), BorrowRefRepr::Mutable(b2)) =&gt; <span class="kw">match </span>(<span class="kw-2">&amp;**</span>a, <span class="kw-2">&amp;*</span>b2) {
-                    (Mutable::ControlFlow(a), Mutable::ControlFlow(b)) =&gt; {
-                        <span class="kw">return </span>ControlFlow::partial_eq_with(a, b, caller);
-                    }
                     (Mutable::EmptyStruct(a), Mutable::EmptyStruct(b)) =&gt; {
                         <span class="kw">if </span>a.rtti.hash == b.rtti.hash {
                             <span class="comment">// NB: don't get any future ideas, this must fall through to
@@ -3657,9 +3616,6 @@
                 }
                 (Mutable::Object(a), Mutable::Object(b)) =&gt; {
                     <span class="kw">return </span>Object::eq_with(a, b, Value::eq_with, caller);
-                }
-                (Mutable::ControlFlow(a), Mutable::ControlFlow(b)) =&gt; {
-                    <span class="kw">return </span>ControlFlow::eq_with(a, b, caller);
                 }
                 (Mutable::EmptyStruct(a), Mutable::EmptyStruct(b)) =&gt; {
                     <span class="kw">if </span>a.rtti.hash == b.rtti.hash {
@@ -4262,7 +4218,6 @@
 }
 
 <span class="macro">from!</span> {
-    ControlFlow =&gt; ControlFlow,
     Function =&gt; Function,
     GeneratorState =&gt; GeneratorState,
     Vec =&gt; Vec,
@@ -4281,6 +4236,7 @@
     String,
     Bytes,
     Format,
+    ControlFlow,
 }
 
 <span class="macro">from_container!</span> {
@@ -4559,8 +4515,6 @@
     </span>Tuple(OwnedTuple),
     <span class="doccomment">/// An object.
     </span>Object(Object),
-    <span class="doccomment">/// A control flow indicator.
-    </span>ControlFlow(ControlFlow),
     <span class="doccomment">/// A stored future.
     </span>Future(Future),
     <span class="doccomment">/// A Stream.
@@ -4591,7 +4545,6 @@
             Mutable::Vec(..) =&gt; TypeInfo::static_type(static_type::VEC),
             Mutable::Tuple(..) =&gt; TypeInfo::static_type(static_type::TUPLE),
             Mutable::Object(..) =&gt; TypeInfo::static_type(static_type::OBJECT),
-            Mutable::ControlFlow(..) =&gt; TypeInfo::static_type(static_type::CONTROL_FLOW),
             Mutable::Future(..) =&gt; TypeInfo::static_type(static_type::FUTURE),
             Mutable::Stream(..) =&gt; TypeInfo::static_type(static_type::STREAM),
             Mutable::Generator(..) =&gt; TypeInfo::static_type(static_type::GENERATOR),
@@ -4615,7 +4568,6 @@
             Mutable::Vec(..) =&gt; static_type::VEC.hash,
             Mutable::Tuple(..) =&gt; static_type::TUPLE.hash,
             Mutable::Object(..) =&gt; static_type::OBJECT.hash,
-            Mutable::ControlFlow(..) =&gt; static_type::CONTROL_FLOW.hash,
             Mutable::Future(..) =&gt; static_type::FUTURE.hash,
             Mutable::Stream(..) =&gt; static_type::STREAM.hash,
             Mutable::Generator(..) =&gt; static_type::GENERATOR.hash,
