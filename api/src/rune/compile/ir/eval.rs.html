@@ -457,7 +457,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::ir::{<span class="self">self</span>};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::query::Used;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Inline, Object, OwnedTuple, Value, ValueBorrowRef};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{BorrowRefRepr, Inline, Object, OwnedTuple, Value};
 <span class="kw">use </span><span class="kw">crate</span>::TypeHash;
 
 <span class="doccomment">/// The outcome of a constant evaluation.
@@ -522,11 +522,11 @@
     <span class="kw">let </span>a = eval_ir(<span class="kw-2">&amp;</span>ir.lhs, interp, used)<span class="question-mark">?</span>;
     <span class="kw">let </span>b = eval_ir(<span class="kw-2">&amp;</span>ir.rhs, interp, used)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>a = a.borrow_ref().with_span(ir)<span class="question-mark">?</span>;
-    <span class="kw">let </span>b = b.borrow_ref().with_span(ir)<span class="question-mark">?</span>;
+    <span class="kw">let </span>a = a.borrow_ref_repr().with_span(ir)<span class="question-mark">?</span>;
+    <span class="kw">let </span>b = b.borrow_ref_repr().with_span(ir)<span class="question-mark">?</span>;
 
     <span class="kw">match </span>(a, b) {
-        (ValueBorrowRef::Inline(a), ValueBorrowRef::Inline(b)) =&gt; {
+        (BorrowRefRepr::Inline(a), BorrowRefRepr::Inline(b)) =&gt; {
             <span class="kw">let </span>out = <span class="lifetime">'out</span>: {
                 <span class="kw">match </span>(a, b) {
                     (Inline::Integer(a), Inline::Integer(b)) =&gt; <span class="kw">match </span>ir.op {
@@ -590,7 +590,7 @@
 
             <span class="kw">return </span><span class="prelude-val">Ok</span>(Value::from(out));
         }
-        (ValueBorrowRef::Any(a), ValueBorrowRef::Any(b)) =&gt; {
+        (BorrowRefRepr::Any(a), BorrowRefRepr::Any(b)) =&gt; {
             <span class="kw">let </span>value = <span class="lifetime">'out</span>: {
                 <span class="kw">if let </span>(String::HASH, String::HASH) = (a.type_hash(), b.type_hash()) {
                     <span class="kw">let </span>a = a.borrow_ref::&lt;String&gt;().with_span(span)<span class="question-mark">?</span>;
@@ -803,10 +803,10 @@
             }
             ir::IrTemplateComponent::Ir(ir) =&gt; {
                 <span class="kw">let </span>const_value = eval_ir(ir, interp, used)<span class="question-mark">?</span>;
-                <span class="kw">let </span>value = const_value.borrow_ref().with_span(ir)<span class="question-mark">?</span>;
+                <span class="kw">let </span>value = const_value.borrow_ref_repr().with_span(ir)<span class="question-mark">?</span>;
 
                 <span class="kw">match </span>value {
-                    ValueBorrowRef::Inline(value) =&gt; <span class="kw">match </span>value {
+                    BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
                         Inline::Integer(integer) =&gt; {
                             <span class="macro">write!</span>(buf, <span class="string">"{integer}"</span>)<span class="question-mark">?</span>;
                         }
@@ -821,7 +821,7 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
                         }
                     },
-                    ValueBorrowRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                    BorrowRefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                         String::HASH =&gt; {
                             <span class="kw">let </span>s = value.borrow_ref::&lt;String&gt;().with_span(ir)<span class="question-mark">?</span>;
                             buf.try_push_str(<span class="kw-2">&amp;</span>s)<span class="question-mark">?</span>;
@@ -830,7 +830,7 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
                         }
                     },
-                    ValueBorrowRef::Mutable(..) =&gt; {
+                    BorrowRefRepr::Mutable(..) =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
                     }
                 }

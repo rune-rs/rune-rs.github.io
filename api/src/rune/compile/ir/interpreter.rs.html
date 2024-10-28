@@ -456,7 +456,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, IrErrorKind, ItemId, ModId, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::hir;
 <span class="kw">use </span><span class="kw">crate</span>::query::{Query, Used};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{ConstValue, Mutable, Object, OwnedTuple, Value, ValueBorrowRef, ValueRef};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{BorrowRefRepr, ConstValue, Mutable, Object, OwnedTuple, RefRepr, Value};
 
 <span class="doccomment">/// The interpreter that executed [Ir][crate::ir::Ir].
 </span><span class="kw">pub struct </span>Interpreter&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; {
@@ -633,10 +633,10 @@
             ir::IrTargetKind::Name(name) =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.get_name(name, ir_target)<span class="question-mark">?</span>.clone()),
             ir::IrTargetKind::Field(ir_target, field) =&gt; {
                 <span class="kw">let </span>value = <span class="self">self</span>.get_target(ir_target)<span class="question-mark">?</span>;
-                <span class="kw">let </span>value = value.borrow_ref().with_span(ir_target)<span class="question-mark">?</span>;
+                <span class="kw">let </span>value = value.borrow_ref_repr().with_span(ir_target)<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>value = <span class="kw">match </span>value {
-                    ValueBorrowRef::Mutable(value) =&gt; value,
+                    BorrowRefRepr::Mutable(value) =&gt; value,
                     actual =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
                             ir_target,
@@ -668,10 +668,10 @@
             }
             ir::IrTargetKind::Index(target, index) =&gt; {
                 <span class="kw">let </span>value = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
-                <span class="kw">let </span>target = value.borrow_ref().with_span(ir_target)<span class="question-mark">?</span>;
+                <span class="kw">let </span>target = value.borrow_ref_repr().with_span(ir_target)<span class="question-mark">?</span>;
 
                 <span class="kw">match </span>target {
-                    ValueBorrowRef::Mutable(value) =&gt; {
+                    BorrowRefRepr::Mutable(value) =&gt; {
                         <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
                             Mutable::Vec(vec) =&gt; {
                                 <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = vec.get(<span class="kw-2">*</span>index) {
@@ -721,8 +721,8 @@
             ir::IrTargetKind::Field(target, field) =&gt; {
                 <span class="kw">let </span>target = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span><span class="kw-2">mut </span>target = <span class="kw">match </span>target.value_ref().with_span(ir_target)<span class="question-mark">? </span>{
-                    ValueRef::Mutable(current) =&gt; current.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>,
+                <span class="kw">let </span><span class="kw-2">mut </span>target = <span class="kw">match </span>target.as_ref_repr().with_span(ir_target)<span class="question-mark">? </span>{
+                    RefRepr::Mutable(current) =&gt; current.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>,
                     actual =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;Object&gt;(
                             ir_target,
@@ -749,8 +749,8 @@
             ir::IrTargetKind::Index(target, index) =&gt; {
                 <span class="kw">let </span>target = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span><span class="kw-2">mut </span>target = <span class="kw">match </span>target.value_ref().with_span(ir_target)<span class="question-mark">? </span>{
-                    ValueRef::Mutable(current) =&gt; current.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>,
+                <span class="kw">let </span><span class="kw-2">mut </span>target = <span class="kw">match </span>target.as_ref_repr().with_span(ir_target)<span class="question-mark">? </span>{
+                    RefRepr::Mutable(current) =&gt; current.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>,
                     actual =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
                             ir_target,
@@ -799,8 +799,8 @@
             ir::IrTargetKind::Field(target, field) =&gt; {
                 <span class="kw">let </span>value = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw">match </span>value.value_ref().with_span(ir_target)<span class="question-mark">? </span>{
-                    ValueRef::Mutable(value) =&gt; value.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>,
+                <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw">match </span>value.as_ref_repr().with_span(ir_target)<span class="question-mark">? </span>{
+                    RefRepr::Mutable(value) =&gt; value.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>,
                     actual =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;Object&gt;(
                             ir_target,
@@ -831,8 +831,8 @@
             ir::IrTargetKind::Index(target, index) =&gt; {
                 <span class="kw">let </span>current = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw">match </span>current.value_ref().with_span(ir_target)<span class="question-mark">? </span>{
-                    ValueRef::Mutable(value) =&gt; value.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>,
+                <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw">match </span>current.as_ref_repr().with_span(ir_target)<span class="question-mark">? </span>{
+                    RefRepr::Mutable(value) =&gt; value.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>,
                     actual =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
                             ir_target,

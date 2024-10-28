@@ -1754,9 +1754,9 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{String, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::compile::Named;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Bytes, Formatter, FromValue, Function, Hasher, Inline, MaybeTypeOf, Mutable, Panic, Range,
-    RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive, Ref, ToValue, TypeOf, Value,
-    ValueBorrowRef, VmErrorKind, VmResult,
+    BorrowRefRepr, Bytes, Formatter, FromValue, Function, Hasher, Inline, MaybeTypeOf, Mutable,
+    Panic, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive, Ref, ToValue,
+    TypeOf, Value, VmErrorKind, VmResult,
 };
 <span class="kw">use crate</span>::{Any, ContextError, Module, TypeHash};
 
@@ -2631,11 +2631,11 @@
 /// [`split_whitespace`]: str::split_whitespace
 </span><span class="attr">#[rune::function(instance, deprecated = <span class="string">"Use String::split instead"</span>)]
 </span><span class="kw">fn </span>split(this: Ref&lt;str&gt;, value: Value) -&gt; VmResult&lt;Value&gt; {
-    <span class="kw">let </span>split = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-        ValueBorrowRef::Inline(Inline::Char(c)) =&gt; {
+    <span class="kw">let </span>split = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+        BorrowRefRepr::Inline(Inline::Char(c)) =&gt; {
             <span class="macro">vm_try!</span>(rune::to_value(Split::new(this, <span class="kw-2">*</span>c)))
         }
-        ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
+        BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
             Mutable::Function(<span class="kw-2">ref </span>f) =&gt; {
                 <span class="macro">vm_try!</span>(rune::to_value(Split::new(this, <span class="macro">vm_try!</span>(f.try_clone()))))
             }
@@ -2646,7 +2646,7 @@
                 ])
             }
         },
-        ValueBorrowRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+        BorrowRefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
             String::HASH =&gt; {
                 <span class="kw">let </span>s = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;String&gt;());
 
@@ -2686,9 +2686,9 @@
 /// ```
 </span><span class="attr">#[rune::function(instance)]
 </span><span class="kw">fn </span>split_once(this: <span class="kw-2">&amp;</span>str, value: Value) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;(String, String)&gt;&gt; {
-    <span class="kw">let </span>outcome = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-        ValueBorrowRef::Inline(Inline::Char(pat)) =&gt; this.split_once(<span class="kw-2">*</span>pat),
-        ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
+    <span class="kw">let </span>outcome = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+        BorrowRefRepr::Inline(Inline::Char(pat)) =&gt; this.split_once(<span class="kw-2">*</span>pat),
+        BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
             Mutable::Function(f) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>err = <span class="prelude-val">None</span>;
 
@@ -2716,7 +2716,7 @@
                 ])
             }
         },
-        ValueBorrowRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+        BorrowRefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
             String::HASH =&gt; {
                 <span class="kw">let </span>s = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;String&gt;());
                 this.split_once(s.as_str())

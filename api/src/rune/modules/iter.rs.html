@@ -2512,8 +2512,8 @@
 </span><span class="kw">use </span><span class="kw">crate</span>::modules::collections::{HashMap, HashSet};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::range::RangeIter;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    FromValue, Function, Inline, InstAddress, Object, Output, OwnedTuple, Protocol, TypeHash,
-    Value, ValueBorrowRef, Vec, VmErrorKind, VmResult,
+    BorrowRefRepr, FromValue, Function, Inline, InstAddress, Object, Output, OwnedTuple, Protocol,
+    TypeHash, Value, Vec, VmErrorKind, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::shared::Caller;
 <span class="kw">use crate</span>::{Any, ContextError, Module, Params};
@@ -2989,17 +2989,17 @@
                         <span class="kw">let </span><span class="kw-2">mut </span>string = String::new();
 
                         <span class="kw">while let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(next.call((<span class="kw-2">&amp;</span>iter,))) {
-                            <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-                                ValueBorrowRef::Inline(Inline::Char(c)) =&gt; {
+                            <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+                                BorrowRefRepr::Inline(Inline::Char(c)) =&gt; {
                                     <span class="macro">vm_try!</span>(string.try_push(<span class="kw-2">*</span>c));
                                 }
-                                ValueBorrowRef::Inline(value) =&gt; {
+                                BorrowRefRepr::Inline(value) =&gt; {
                                     <span class="kw">return </span>VmResult::expected::&lt;String&gt;(value.type_info());
                                 }
-                                ValueBorrowRef::Mutable(value) =&gt; {
+                                BorrowRefRepr::Mutable(value) =&gt; {
                                     <span class="kw">return </span>VmResult::expected::&lt;String&gt;(value.type_info());
                                 }
-                                ValueBorrowRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                                BorrowRefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                                     String::HASH =&gt; {
                                         <span class="kw">let </span>s = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;String&gt;());
                                         <span class="macro">vm_try!</span>(string.try_push_str(<span class="kw-2">&amp;</span>s));

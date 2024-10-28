@@ -4005,9 +4005,7 @@
 <a href="#4004" id="4004">4004</a>
 <a href="#4005" id="4005">4005</a>
 <a href="#4006" id="4006">4006</a>
-<a href="#4007" id="4007">4007</a>
-<a href="#4008" id="4008">4008</a>
-<a href="#4009" id="4009">4009</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#4007" id="4007">4007</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -4020,20 +4018,18 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
 <span class="kw">use </span><span class="kw">crate</span>::hash::{Hash, IntoHash, ToTypeHash};
 <span class="kw">use </span><span class="kw">crate</span>::modules::{option, result};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::future::SelectFuture;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::unit::{UnitFn, UnitStorage};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    <span class="self">self</span>, Args, Awaited, BorrowMut, Bytes, Call, ControlFlow, DynArgs, DynGuardedArgs, EmptyStruct,
-    Format, FormatSpec, Formatter, FromValue, Function, Future, Generator, GuardedArgs, Inline,
-    Inst, InstAddress, InstAssignOp, InstOp, InstRange, InstTarget, InstValue, InstVariant,
-    Mutable, Object, Output, OwnedTuple, Pair, Panic, Protocol, Range, RangeFrom, RangeFull,
-    RangeInclusive, RangeTo, RangeToInclusive, RuntimeContext, Select, Stack, Stream, Struct, Type,
-    TypeCheck, TypeOf, Unit, Value, ValueBorrowRef, ValueMut, ValueRef, Variant, VariantData, Vec,
-    VmError, VmErrorKind, VmExecution, VmHalt, VmIntegerRepr, VmResult, VmSendExecution,
-};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{budget, ProtocolCaller};
 
-<span class="kw">use super</span>::{VmDiagnostics, VmDiagnosticsObj};
+<span class="kw">use super</span>::{
+    budget, static_type, Args, Awaited, BorrowMut, BorrowRefRepr, Bytes, Call, ControlFlow,
+    DynArgs, DynGuardedArgs, EmptyStruct, Format, FormatSpec, Formatter, FromValue, Function,
+    Future, Generator, GuardedArgs, Inline, Inst, InstAddress, InstAssignOp, InstOp, InstRange,
+    InstTarget, InstValue, InstVariant, MutRepr, Mutable, Object, Output, OwnedTuple, Pair, Panic,
+    Protocol, ProtocolCaller, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo,
+    RangeToInclusive, RefRepr, RuntimeContext, Select, SelectFuture, Stack, Stream, Struct, Type,
+    TypeCheck, TypeOf, Unit, UnitFn, UnitStorage, Value, Variant, VariantData, Vec, VmDiagnostics,
+    VmDiagnosticsObj, VmError, VmErrorKind, VmExecution, VmHalt, VmIntegerRepr, VmResult,
+    VmSendExecution,
+};
 
 <span class="doccomment">/// Helper to take a value, replacing the old one with empty.
 </span><span class="attr">#[inline(always)]
@@ -4842,7 +4838,7 @@
 
     <span class="doccomment">/// Implementation of getting a string index on an object-like type.
     </span><span class="kw">fn </span>try_object_like_index_get(target: <span class="kw-2">&amp;</span>Value, field: <span class="kw-2">&amp;</span>str) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
-        <span class="kw">let </span>ValueBorrowRef::Mutable(target) = <span class="macro">vm_try!</span>(target.borrow_ref()) <span class="kw">else </span>{
+        <span class="kw">let </span>BorrowRefRepr::Mutable(target) = <span class="macro">vm_try!</span>(target.borrow_ref_repr()) <span class="kw">else </span>{
             <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
         };
 
@@ -4870,12 +4866,12 @@
     </span><span class="kw">fn </span>try_tuple_like_index_get(target: <span class="kw-2">&amp;</span>Value, index: usize) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::runtime::GeneratorState::<span class="kw-2">*</span>;
 
-        <span class="kw">let </span>result = <span class="kw">match </span><span class="macro">vm_try!</span>(target.borrow_ref()) {
-            ValueBorrowRef::Inline(target) =&gt; <span class="kw">match </span>target {
+        <span class="kw">let </span>result = <span class="kw">match </span><span class="macro">vm_try!</span>(target.borrow_ref_repr()) {
+            BorrowRefRepr::Inline(target) =&gt; <span class="kw">match </span>target {
                 Inline::Unit =&gt; <span class="prelude-val">Err</span>(target.type_info()),
                 <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
             },
-            ValueBorrowRef::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>target {
+            BorrowRefRepr::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>target {
                 Mutable::Tuple(tuple) =&gt; <span class="kw">match </span>tuple.get(index) {
                     <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
                     <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(target.type_info()),
@@ -4911,7 +4907,7 @@
                 },
                 <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
             },
-            ValueBorrowRef::Any(..) =&gt; {
+            BorrowRefRepr::Any(..) =&gt; {
                 <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
             }
         };
@@ -4934,8 +4930,8 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>unsupported = <span class="bool-val">false</span>;
 
-        <span class="kw">let </span>result = <span class="kw">match </span><span class="macro">vm_try!</span>(target.value_ref()) {
-            ValueRef::Mutable(value) =&gt; BorrowMut::try_map(<span class="macro">vm_try!</span>(value.borrow_mut()), |kind| {
+        <span class="kw">let </span>result = <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref_repr()) {
+            RefRepr::Mutable(value) =&gt; BorrowMut::try_map(<span class="macro">vm_try!</span>(value.borrow_mut()), |kind| {
                 <span class="kw">match </span>kind {
                     Mutable::Tuple(tuple) =&gt; <span class="kw">return </span>tuple.get_mut(index),
                     Mutable::Vec(vec) =&gt; <span class="kw">return </span>vec.get_mut(index),
@@ -4987,12 +4983,12 @@
         target: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value,
         field: <span class="kw-2">&amp;</span>str,
     ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'a</span>, Value&gt;&gt;&gt; {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(target.value_ref()) {
-            ValueRef::Inline(actual) =&gt; err(VmErrorKind::MissingField {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref_repr()) {
+            RefRepr::Inline(actual) =&gt; err(VmErrorKind::MissingField {
                 target: actual.type_info(),
                 field: <span class="macro">vm_try!</span>(field.try_to_owned()),
             }),
-            ValueRef::Mutable(target) =&gt; {
+            RefRepr::Mutable(target) =&gt; {
                 <span class="kw">let </span>target = <span class="macro">vm_try!</span>(target.borrow_mut());
 
                 <span class="kw">let </span><span class="kw-2">mut </span>unsupported = <span class="bool-val">false</span>;
@@ -5030,18 +5026,18 @@
                     }),
                 }
             }
-            ValueRef::Any(..) =&gt; VmResult::Ok(<span class="prelude-val">None</span>),
+            RefRepr::Any(..) =&gt; VmResult::Ok(<span class="prelude-val">None</span>),
         }
     }
 
     <span class="doccomment">/// Implementation of getting a string index on an object-like type.
     </span><span class="kw">fn </span>try_tuple_like_index_set(target: <span class="kw-2">&amp;</span>Value, index: usize, value: <span class="kw-2">&amp;</span>Value) -&gt; VmResult&lt;bool&gt; {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(target.value_ref()) {
-            ValueRef::Inline(target) =&gt; <span class="kw">match </span>target {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref_repr()) {
+            RefRepr::Inline(target) =&gt; <span class="kw">match </span>target {
                 Inline::Unit =&gt; VmResult::Ok(<span class="bool-val">false</span>),
                 <span class="kw">_ </span>=&gt; VmResult::Ok(<span class="bool-val">false</span>),
             },
-            ValueRef::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(target.borrow_mut()) {
+            RefRepr::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(target.borrow_mut()) {
                 Mutable::Tuple(tuple) =&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(target) = tuple.get_mut(index) {
                         target.clone_from(value);
@@ -5097,7 +5093,7 @@
                 }
                 <span class="kw">_ </span>=&gt; VmResult::Ok(<span class="bool-val">false</span>),
             },
-            ValueRef::Any(..) =&gt; VmResult::Ok(<span class="bool-val">false</span>),
+            RefRepr::Any(..) =&gt; VmResult::Ok(<span class="bool-val">false</span>),
         }
     }
 
@@ -5111,11 +5107,11 @@
         <span class="kw">let </span>index = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_string(slot));
 
         <span class="lifetime">'fallback</span>: {
-            <span class="kw">match </span><span class="macro">vm_try!</span>(target.value_ref()) {
-                ValueRef::Inline(..) =&gt; {
+            <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref_repr()) {
+                RefRepr::Inline(..) =&gt; {
                     <span class="kw">return </span>VmResult::Ok(CallResult::Unsupported(target.clone()));
                 }
-                ValueRef::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(target.borrow_mut()) {
+                RefRepr::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(target.borrow_mut()) {
                     Mutable::Object(object) =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = object.get(index.as_str()) {
                             <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
@@ -5141,7 +5137,7 @@
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
                 },
-                ValueRef::Any(..) =&gt; <span class="kw">break </span><span class="lifetime">'fallback</span>,
+                RefRepr::Any(..) =&gt; <span class="kw">break </span><span class="lifetime">'fallback</span>,
             }
 
             <span class="kw">return </span>err(VmErrorKind::ObjectIndexMissing { slot });
@@ -5153,12 +5149,12 @@
     }
 
     <span class="kw">fn </span>try_object_slot_index_set(target: <span class="kw-2">&amp;</span>Value, field: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>Value) -&gt; VmResult&lt;bool&gt; {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(target.value_ref()) {
-            ValueRef::Inline(target) =&gt; err(VmErrorKind::MissingField {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref_repr()) {
+            RefRepr::Inline(target) =&gt; err(VmErrorKind::MissingField {
                 target: target.type_info(),
                 field: <span class="macro">vm_try!</span>(field.try_to_owned()),
             }),
-            ValueRef::Mutable(target) =&gt; {
+            RefRepr::Mutable(target) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>target = <span class="macro">vm_try!</span>(target.borrow_mut());
 
                 <span class="kw">match </span><span class="kw-2">&amp;mut *</span>target {
@@ -5191,7 +5187,7 @@
                     field: <span class="macro">vm_try!</span>(field.try_to_owned()),
                 })
             }
-            ValueRef::Any(..) =&gt; VmResult::Ok(<span class="bool-val">false</span>),
+            RefRepr::Any(..) =&gt; VmResult::Ok(<span class="bool-val">false</span>),
         }
     }
 
@@ -5201,12 +5197,12 @@
     {
         <span class="kw">use </span><span class="kw">crate</span>::runtime::GeneratorState::<span class="kw-2">*</span>;
 
-        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-            ValueBorrowRef::Inline(value) =&gt; <span class="kw">match </span>(ty, value) {
+        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+            BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>(ty, value) {
                 (TypeCheck::Unit, Inline::Unit) =&gt; <span class="prelude-val">Some</span>(f(<span class="kw-2">&amp;</span>[])),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
-            ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span>(ty, <span class="kw-2">&amp;*</span>value) {
+            BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span>(ty, <span class="kw-2">&amp;*</span>value) {
                 (TypeCheck::Tuple, Mutable::Tuple(tuple)) =&gt; <span class="prelude-val">Some</span>(f(tuple)),
                 (TypeCheck::Vec, Mutable::Vec(vec)) =&gt; <span class="prelude-val">Some</span>(f(vec)),
                 (TypeCheck::Result(v), Mutable::Result(result)) =&gt; <span class="prelude-val">Some</span>(<span class="kw">match </span>(v, result) {
@@ -5228,7 +5224,7 @@
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
-            ValueBorrowRef::Any(..) =&gt; <span class="prelude-val">None</span>,
+            BorrowRefRepr::Any(..) =&gt; <span class="prelude-val">None</span>,
         })
     }
 
@@ -5237,7 +5233,7 @@
         <span class="kw">let </span>b = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(rhs));
         <span class="kw">let </span>a = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(lhs));
 
-        <span class="kw">let </span>ValueRef::Inline(Inline::Type(ty)) = <span class="macro">vm_try!</span>(b.value_ref()) <span class="kw">else </span>{
+        <span class="kw">let </span>RefRepr::Inline(Inline::Type(ty)) = <span class="macro">vm_try!</span>(b.as_ref_repr()) <span class="kw">else </span>{
             <span class="kw">return </span>err(VmErrorKind::UnsupportedIs {
                 value: <span class="macro">vm_try!</span>(a.type_info()),
                 test_type: <span class="macro">vm_try!</span>(b.type_info()),
@@ -5247,9 +5243,9 @@
         <span class="macro">macro_rules!</span> convert {
             (<span class="macro-nonterminal">$from</span>:ty, <span class="macro-nonterminal">$value</span>:expr) =&gt; {
                 <span class="kw">match </span>ty.into_hash() {
-                    runtime::static_type::FLOAT_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>f64),
-                    runtime::static_type::BYTE_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>u8),
-                    runtime::static_type::INTEGER_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>i64),
+                    static_type::FLOAT_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>f64),
+                    static_type::BYTE_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>u8),
+                    static_type::INTEGER_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>i64),
                     ty =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedAs {
                             value: &lt;<span class="macro-nonterminal">$from </span><span class="kw">as </span>TypeOf&gt;::type_info(),
@@ -5260,10 +5256,10 @@
             };
         }
 
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(a.value_ref()) {
-            ValueRef::Inline(Inline::Integer(a)) =&gt; <span class="macro">convert!</span>(i64, <span class="kw-2">*</span>a),
-            ValueRef::Inline(Inline::Float(a)) =&gt; <span class="macro">convert!</span>(f64, <span class="kw-2">*</span>a),
-            ValueRef::Inline(Inline::Byte(a)) =&gt; <span class="macro">convert!</span>(u8, <span class="kw-2">*</span>a),
+        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(a.as_ref_repr()) {
+            RefRepr::Inline(Inline::Integer(a)) =&gt; <span class="macro">convert!</span>(i64, <span class="kw-2">*</span>a),
+            RefRepr::Inline(Inline::Float(a)) =&gt; <span class="macro">convert!</span>(f64, <span class="kw-2">*</span>a),
+            RefRepr::Inline(Inline::Byte(a)) =&gt; <span class="macro">convert!</span>(u8, <span class="kw-2">*</span>a),
             value =&gt; {
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedAs {
                     value: <span class="macro">vm_try!</span>(value.type_info()),
@@ -5301,8 +5297,8 @@
         <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(rhs));
         <span class="kw">let </span>lhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(lhs));
 
-        <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.value_ref()), <span class="macro">vm_try!</span>(rhs.value_ref())) {
-            (ValueRef::Inline(lhs), ValueRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+        <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_ref_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
+            (RefRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                 (Inline::Bool(lhs), Inline::Bool(rhs)) =&gt; Inline::Bool(bool_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs)),
                 (lhs, rhs) =&gt; {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
@@ -5441,18 +5437,18 @@
 
         <span class="kw">let </span>fallback = <span class="kw">match </span><span class="macro">target_value!</span>(<span class="self">self</span>, target, guard, lhs, rhs) {
             TargetValue::Same(value) =&gt; {
-                <span class="kw">match </span><span class="macro">vm_try!</span>(value.value_mut()) {
-                    ValueMut::Inline(Inline::Integer(value)) =&gt; {
+                <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_mut_repr()) {
+                    MutRepr::Inline(Inline::Integer(value)) =&gt; {
                         <span class="kw">let </span>out = <span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>value, <span class="kw-2">*</span>value).ok_or_else(error));
                         <span class="kw-2">*</span>value = out;
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ValueMut::Inline(Inline::Float(value)) =&gt; {
+                    MutRepr::Inline(Inline::Float(value)) =&gt; {
                         <span class="kw">let </span>out = float_op(<span class="kw-2">*</span>value, <span class="kw-2">*</span>value);
                         <span class="kw-2">*</span>value = out;
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ValueMut::Inline(value) =&gt; {
+                    MutRepr::Inline(value) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: value.type_info(),
@@ -5465,8 +5461,8 @@
                 TargetFallback::Value(value.clone(), value.clone())
             }
             TargetValue::Pair(lhs, rhs) =&gt; {
-                <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.value_mut()), <span class="macro">vm_try!</span>(rhs.value_ref())) {
-                    (ValueMut::Inline(lhs), ValueRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+                <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
+                    (MutRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                         (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
                             <span class="kw">let </span>out = <span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs).ok_or_else(error));
                             <span class="kw-2">*</span>lhs = out;
@@ -5485,7 +5481,7 @@
                             });
                         }
                     },
-                    (ValueMut::Inline(lhs), rhs) =&gt; {
+                    (MutRepr::Inline(lhs), rhs) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: lhs.type_info(),
@@ -5584,8 +5580,8 @@
         <span class="kw">let </span>lhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(lhs));
 
         <span class="lifetime">'fallback</span>: {
-            <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.value_ref()), <span class="macro">vm_try!</span>(rhs.value_ref())) {
-                (ValueRef::Inline(lhs), ValueRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+            <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_ref_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
+                (RefRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                     (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
                         Inline::Integer(<span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs).ok_or_else(error)))
                     }
@@ -5598,7 +5594,7 @@
                         });
                     }
                 },
-                (ValueRef::Inline(lhs), rhs) =&gt; {
+                (RefRepr::Inline(lhs), rhs) =&gt; {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                         op: protocol.name,
                         lhs: lhs.type_info(),
@@ -5648,8 +5644,8 @@
         <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(rhs));
 
         <span class="lifetime">'fallback</span>: {
-            <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.value_ref()), <span class="macro">vm_try!</span>(rhs.value_ref())) {
-                (ValueRef::Inline(lhs), ValueRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+            <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_ref_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
+                (RefRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                     (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
                         Inline::Integer(integer_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs))
                     }
@@ -5663,7 +5659,7 @@
                         });
                     }
                 },
-                (ValueRef::Inline(lhs), rhs) =&gt; {
+                (RefRepr::Inline(lhs), rhs) =&gt; {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                         op: protocol.name,
                         lhs: lhs.type_info(),
@@ -5711,23 +5707,23 @@
 
         <span class="kw">let </span>fallback = <span class="kw">match </span><span class="macro">target_value!</span>(<span class="self">self</span>, target, guard, lhs, rhs) {
             TargetValue::Same(value) =&gt; {
-                <span class="kw">match </span><span class="macro">vm_try!</span>(value.value_mut()) {
-                    ValueMut::Inline(Inline::Integer(value)) =&gt; {
+                <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_mut_repr()) {
+                    MutRepr::Inline(Inline::Integer(value)) =&gt; {
                         <span class="kw">let </span>rhs = <span class="kw-2">*</span>value;
                         integer_op(value, rhs);
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ValueMut::Inline(Inline::Byte(value)) =&gt; {
+                    MutRepr::Inline(Inline::Byte(value)) =&gt; {
                         <span class="kw">let </span>rhs = <span class="kw-2">*</span>value;
                         byte_op(value, rhs);
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ValueMut::Inline(Inline::Bool(value)) =&gt; {
+                    MutRepr::Inline(Inline::Bool(value)) =&gt; {
                         <span class="kw">let </span>rhs = <span class="kw-2">*</span>value;
                         bool_op(value, rhs);
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ValueMut::Inline(value) =&gt; {
+                    MutRepr::Inline(value) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: value.type_info(),
@@ -5740,8 +5736,8 @@
                 TargetFallback::Value(value.clone(), value.clone())
             }
             TargetValue::Pair(lhs, rhs) =&gt; {
-                <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.value_mut()), <span class="macro">vm_try!</span>(rhs.value_ref())) {
-                    (ValueMut::Inline(lhs), ValueRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+                <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
+                    (MutRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                         (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
                             integer_op(lhs, <span class="kw-2">*</span>rhs);
                             <span class="kw">return </span>VmResult::Ok(());
@@ -5762,7 +5758,7 @@
                             });
                         }
                     },
-                    (ValueMut::Inline(lhs), rhs) =&gt; {
+                    (MutRepr::Inline(lhs), rhs) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: lhs.type_info(),
@@ -5794,7 +5790,7 @@
             <span class="kw">let </span>inline = <span class="lifetime">'inline</span>: {
                 <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pair(lhs, rhs)) {
                     Pair::Same(value) =&gt; {
-                        <span class="kw">if let </span>ValueMut::Inline(lhs) = <span class="macro">vm_try!</span>(value.value_mut()) {
+                        <span class="kw">if let </span>MutRepr::Inline(lhs) = <span class="macro">vm_try!</span>(value.as_mut_repr()) {
                             <span class="kw">match </span>lhs {
                                 Inline::Integer(value) =&gt; {
                                     <span class="kw">break </span><span class="lifetime">'inline </span>Inline::Integer(<span class="macro">vm_try!</span>(integer_op(
@@ -5815,8 +5811,8 @@
                         <span class="kw">break </span><span class="lifetime">'fallback </span>(value.clone(), value.clone());
                     }
                     Pair::Pair(lhs, rhs) =&gt; {
-                        <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.value_mut()), <span class="macro">vm_try!</span>(rhs.value_ref())) {
-                            (ValueMut::Inline(lhs), ValueRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+                        <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
+                            (MutRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                                 (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
                                     <span class="kw">break </span><span class="lifetime">'inline </span>Inline::Integer(<span class="macro">vm_try!</span>(
                                         integer_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs).ok_or_else(error)
@@ -5835,7 +5831,7 @@
                                     });
                                 }
                             },
-                            (ValueMut::Inline(lhs), rhs) =&gt; {
+                            (MutRepr::Inline(lhs), rhs) =&gt; {
                                 <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                                     op: protocol.name,
                                     lhs: lhs.type_info(),
@@ -5883,13 +5879,13 @@
 
         <span class="kw">let </span>fallback = <span class="kw">match </span><span class="macro">target_value!</span>(<span class="self">self</span>, target, guard, lhs, rhs) {
             TargetValue::Same(value) =&gt; {
-                <span class="kw">match </span><span class="macro">vm_try!</span>(value.value_mut()) {
-                    ValueMut::Inline(Inline::Integer(value)) =&gt; {
+                <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_mut_repr()) {
+                    MutRepr::Inline(Inline::Integer(value)) =&gt; {
                         <span class="kw">let </span>out = <span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>value, <span class="kw-2">*</span>value).ok_or_else(error));
                         <span class="kw-2">*</span>value = out;
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ValueMut::Inline(value) =&gt; {
+                    MutRepr::Inline(value) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: value.type_info(),
@@ -5902,8 +5898,8 @@
                 TargetFallback::Value(value.clone(), value.clone())
             }
             TargetValue::Pair(lhs, rhs) =&gt; {
-                <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.value_mut()), <span class="macro">vm_try!</span>(rhs.value_ref())) {
-                    (ValueMut::Inline(lhs), ValueRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+                <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
+                    (MutRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                         (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
                             <span class="kw">let </span>out = <span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs).ok_or_else(error));
                             <span class="kw-2">*</span>lhs = out;
@@ -5922,7 +5918,7 @@
                             });
                         }
                     },
-                    (ValueMut::Inline(lhs), rhs) =&gt; {
+                    (MutRepr::Inline(lhs), rhs) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: lhs.type_info(),
@@ -6116,8 +6112,8 @@
     </span><span class="kw">fn </span>op_not(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operand: InstAddress, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(operand));
 
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-            ValueBorrowRef::Inline(value) =&gt; <span class="kw">match </span>value {
+        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+            BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
                 Inline::Bool(value) =&gt; Value::from(!value),
                 Inline::Integer(value) =&gt; Value::from(!value),
                 Inline::Byte(value) =&gt; Value::from(!value),
@@ -6140,8 +6136,8 @@
     </span><span class="kw">fn </span>op_neg(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-            ValueBorrowRef::Inline(value) =&gt; <span class="kw">match </span>value {
+        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+            BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
                 Inline::Float(value) =&gt; Value::from(-value),
                 Inline::Integer(value) =&gt; Value::from(-value),
                 actual =&gt; {
@@ -6639,8 +6635,8 @@
             <span class="kw">let </span>index = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(index));
             <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(target));
 
-            <span class="kw">match </span><span class="macro">vm_try!</span>(index.value_ref()) {
-                ValueRef::Inline(Inline::Integer(index)) =&gt; {
+            <span class="kw">match </span><span class="macro">vm_try!</span>(index.as_ref_repr()) {
+                RefRepr::Inline(Inline::Integer(index)) =&gt; {
                     <span class="kw">let </span><span class="prelude-val">Ok</span>(index) = usize::try_from(<span class="kw-2">*</span>index) <span class="kw">else </span>{
                         <span class="kw">return </span>err(VmErrorKind::MissingIndexInteger {
                             target: <span class="macro">vm_try!</span>(target.type_info()),
@@ -6652,7 +6648,7 @@
                         <span class="kw">break </span><span class="lifetime">'store </span>value;
                     }
                 }
-                ValueRef::Any(value) =&gt; {
+                RefRepr::Any(value) =&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = <span class="macro">vm_try!</span>(value.try_borrow_ref::&lt;String&gt;()) {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) =
                             <span class="macro">vm_try!</span>(<span class="self">Self</span>::try_object_like_index_get(target, index.as_str()))
@@ -6940,14 +6936,14 @@
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: usize, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>string = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_string(slot));
-        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || String::try_from(string.as_str())));
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, string.as_str()));
         VmResult::Ok(())
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: usize, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>bytes = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_bytes(slot));
-        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || Bytes::try_from(bytes)));
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, bytes));
         VmResult::Ok(())
     }
 
@@ -6996,7 +6992,7 @@
             <span class="kw">let </span>value = {
                 <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-                <span class="kw">if let </span>ValueBorrowRef::Mutable(value) = <span class="macro">vm_try!</span>(value.borrow_ref()) {
+                <span class="kw">if let </span>BorrowRefRepr::Mutable(value) = <span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
                     <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
                         Mutable::Result(result) =&gt; <span class="kw">break </span><span class="lifetime">'out </span><span class="macro">vm_try!</span>(result::result_try(result)),
                         Mutable::Option(option) =&gt; <span class="kw">break </span><span class="lifetime">'out </span><span class="macro">vm_try!</span>(option::option_try(option)),
@@ -7159,8 +7155,8 @@
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
         <span class="kw">let </span>is_match = <span class="lifetime">'out</span>: {
-            <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-                ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
+            <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+                BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
                     Mutable::Variant(variant) =&gt; {
                         <span class="kw">break </span><span class="lifetime">'out </span>variant.rtti().hash == variant_hash;
                     }
@@ -7168,7 +7164,7 @@
                         <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
                     }
                 },
-                ValueBorrowRef::Any(any) =&gt; {
+                BorrowRefRepr::Any(any) =&gt; {
                     <span class="kw">if </span>any.type_hash() != enum_hash {
                         <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
                     }
@@ -7205,12 +7201,12 @@
 
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-            ValueBorrowRef::Inline(value) =&gt; <span class="kw">match </span>(type_check, value) {
+        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+            BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>(type_check, value) {
                 (TypeCheck::Unit, Inline::Unit) =&gt; <span class="bool-val">true</span>,
                 <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
             },
-            ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span>(type_check, <span class="kw-2">&amp;*</span>value) {
+            BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span>(type_check, <span class="kw-2">&amp;*</span>value) {
                 (TypeCheck::Tuple, Mutable::Tuple(..)) =&gt; <span class="bool-val">true</span>,
                 (TypeCheck::Vec, Mutable::Vec(..)) =&gt; <span class="bool-val">true</span>,
                 (TypeCheck::Result(v), Mutable::Result(result)) =&gt; <span class="kw">match </span>(v, result) {
@@ -7232,7 +7228,7 @@
                 }
                 <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
             },
-            ValueBorrowRef::Any(..) =&gt; <span class="bool-val">false</span>,
+            BorrowRefRepr::Any(..) =&gt; <span class="bool-val">false</span>,
         };
 
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
@@ -7267,8 +7263,8 @@
 
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-            ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
+        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+            BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
                 Mutable::Object(object) =&gt; {
                     <span class="kw">let </span>keys = <span class="macro">vm_try!</span>(<span class="self">self
                         </span>.unit
@@ -7532,10 +7528,10 @@
         }
 
         <span class="kw">let </span>function = function.clone();
-        <span class="kw">let </span>function = <span class="macro">vm_try!</span>(function.borrow_ref());
+        <span class="kw">let </span>function = <span class="macro">vm_try!</span>(function.borrow_ref_repr());
 
         <span class="kw">match </span>function {
-            ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
+            BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
                 Mutable::Function(function) =&gt; function.call_with_vm(<span class="self">self</span>, addr, args, out),
                 actual =&gt; err(VmErrorKind::UnsupportedCallFn {
                     actual: actual.type_info(),
@@ -7551,8 +7547,8 @@
     </span><span class="kw">fn </span>op_iter_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, jump: usize, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>some = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-            ValueBorrowRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
+        <span class="kw">let </span>some = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+            BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
                 Mutable::Option(option) =&gt; <span class="kw">match </span>option {
                     <span class="prelude-val">Some</span>(some) =&gt; some.clone(),
                     <span class="prelude-val">None </span>=&gt; {
