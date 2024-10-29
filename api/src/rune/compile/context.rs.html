@@ -1263,7 +1263,36 @@
 <a href="#1262" id="1262">1262</a>
 <a href="#1263" id="1263">1263</a>
 <a href="#1264" id="1264">1264</a>
-<a href="#1265" id="1265">1265</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>::rust_alloc::sync::Arc;
 
@@ -1285,8 +1314,8 @@
     TypeSpecification,
 };
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    ConstValue, FunctionHandler, InstAddress, Memory, Output, Protocol, RuntimeContext, StaticType,
-    TypeCheck, TypeInfo, VariantRtti, VmResult,
+    ConstConstruct, ConstContext, ConstValue, FunctionHandler, InstAddress, Memory, Output,
+    Protocol, RuntimeContext, StaticType, TypeCheck, TypeInfo, VariantRtti, VmResult,
 };
 <span class="kw">use crate</span>::{Hash, Item, ItemBuf};
 
@@ -1543,6 +1572,8 @@
     </span>crates: HashSet&lt;Box&lt;str&gt;&gt;,
     <span class="doccomment">/// Constants visible in this context
     </span>constants: hash::Map&lt;ConstValue&gt;,
+    <span class="doccomment">/// Constant constructor.
+    </span>construct: hash::Map&lt;Arc&lt;<span class="kw">dyn </span>ConstConstruct&gt;&gt;,
 }
 
 <span class="kw">impl </span>Context {
@@ -1639,6 +1670,7 @@
         <span class="prelude-val">Ok</span>(RuntimeContext::new(
             <span class="self">self</span>.functions.try_clone()<span class="question-mark">?</span>,
             <span class="self">self</span>.constants.try_clone()<span class="question-mark">?</span>,
+            <span class="self">self</span>.construct.try_clone()<span class="question-mark">?</span>,
         ))
     }
 
@@ -1674,7 +1706,7 @@
         }
 
         <span class="kw">for </span>item <span class="kw">in </span><span class="kw-2">&amp;</span>module.items {
-            <span class="self">self</span>.install_item(module, item)<span class="question-mark">?</span>;
+            <span class="self">self</span>.install_item(item)<span class="question-mark">?</span>;
         }
 
         <span class="kw">for </span>assoc <span class="kw">in </span><span class="kw-2">&amp;</span>module.associated {
@@ -1687,6 +1719,10 @@
 
         <span class="kw">for </span>r <span class="kw">in </span><span class="kw-2">&amp;</span>module.reexports {
             <span class="self">self</span>.install_reexport(r)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">for </span>(hash, type_info, construct) <span class="kw">in </span><span class="kw-2">&amp;</span>module.construct {
+            <span class="self">self</span>.install_construct(<span class="kw-2">*</span>hash, type_info, construct)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -2192,6 +2228,25 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Install a constant constructor.
+    </span><span class="kw">fn </span>install_construct(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        hash: Hash,
+        type_info: <span class="kw-2">&amp;</span>TypeInfo,
+        construct: <span class="kw-2">&amp;</span>Arc&lt;<span class="kw">dyn </span>ConstConstruct&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
+        <span class="kw">let </span>old = <span class="self">self</span>.construct.try_insert(hash, construct.clone())<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>old.is_some() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ContextError::ConflictingConstConstruct {
+                type_info: type_info.try_clone()<span class="question-mark">?</span>,
+                hash,
+            });
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="kw">fn </span>install_type_info(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: ContextType) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
         <span class="kw">let </span>item_hash = Hash::type_hash(<span class="kw-2">&amp;</span>ty.item).with_type_parameters(ty.type_parameters);
 
@@ -2206,7 +2261,7 @@
 
         <span class="self">self</span>.constants.try_insert(
             Hash::associated_function(ty.hash, Protocol::INTO_TYPE_NAME),
-            ConstValue::String(ty.item.try_to_string()<span class="question-mark">?</span>),
+            ConstValue::from(ty.item.try_to_string()<span class="question-mark">?</span>),
         )<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = <span class="self">self</span>.types.try_insert(ty.hash, ty)<span class="question-mark">? </span>{
@@ -2221,12 +2276,8 @@
     }
 
     <span class="doccomment">/// Install a function and check for duplicates.
-    </span><span class="kw">fn </span>install_item(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        module: <span class="kw-2">&amp;</span>Module,
-        module_item: <span class="kw-2">&amp;</span>ModuleItem,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
-        <span class="kw">let </span>item = module.item.join(<span class="kw-2">&amp;</span>module_item.item)<span class="question-mark">?</span>;
+    </span><span class="kw">fn </span>install_item(<span class="kw-2">&amp;mut </span><span class="self">self</span>, module_item: <span class="kw-2">&amp;</span>ModuleItem) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContextError&gt; {
+        <span class="kw">let </span>item = module_item.item.try_clone()<span class="question-mark">?</span>;
         <span class="self">self</span>.names.insert(<span class="kw-2">&amp;</span>item)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>hash = Hash::type_hash(<span class="kw-2">&amp;</span>item);
@@ -2239,7 +2290,7 @@
             rune::module::ModuleItemKind::Function(f) =&gt; {
                 <span class="self">self</span>.constants.try_insert(
                     Hash::associated_function(hash, Protocol::INTO_TYPE_NAME),
-                    ConstValue::String(item.try_to_string()<span class="question-mark">?</span>),
+                    ConstValue::from(item.try_to_string()<span class="question-mark">?</span>),
                 )<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>signature = meta::Signature::from_context(<span class="kw-2">&amp;</span>f.doc, <span class="kw-2">&amp;</span>module_item.common)<span class="question-mark">?</span>;
@@ -2411,8 +2462,8 @@
 
         <span class="kw">let </span>kind = <span class="kw">match </span><span class="kw-2">&amp;</span>assoc.kind {
             ModuleAssociatedKind::Constant(value) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>((hash, ..)) = <span class="kw-2">&amp;</span>item {
-                    <span class="self">self</span>.constants.try_insert(<span class="kw-2">*</span>hash, value.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>((hash, ..)) = item {
+                    <span class="self">self</span>.constants.try_insert(hash, value.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 }
 
                 <span class="self">self</span>.constants.try_insert(hash, value.try_clone()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
@@ -2424,7 +2475,7 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>((hash, item)) = <span class="kw-2">&amp;</span>item {
                     <span class="self">self</span>.constants.try_insert(
                         Hash::associated_function(<span class="kw-2">*</span>hash, Protocol::INTO_TYPE_NAME),
-                        ConstValue::String(item.try_to_string()<span class="question-mark">?</span>),
+                        ConstValue::from(item.try_to_string()<span class="question-mark">?</span>),
                     )<span class="question-mark">?</span>;
 
                     <span class="self">self</span>.insert_native_fn(<span class="kw-2">*</span>hash, <span class="kw-2">&amp;</span>f.handler, assoc.common.deprecated.as_deref())<span class="question-mark">?</span>;
@@ -2490,6 +2541,13 @@
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Context {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">"Context"</span>)
+    }
+}
+
+<span class="kw">impl </span>ConstContext <span class="kw">for </span>Context {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>ConstConstruct&gt; {
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;**</span><span class="self">self</span>.construct.get(<span class="kw-2">&amp;</span>hash)<span class="question-mark">?</span>)
     }
 }
 

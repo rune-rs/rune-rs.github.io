@@ -307,8 +307,8 @@
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    EnvProtocolCaller, FromValue, Inline, ProtocolCaller, RefRepr, ToValue, Value, VmErrorKind,
-    VmResult,
+    EnvProtocolCaller, FromValue, Inline, ProtocolCaller, RefRepr, RuntimeError, ToValue, Value,
+    VmErrorKind, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -576,10 +576,10 @@
 <span class="kw">where
     </span>Idx: ToValue,
 {
-    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        <span class="kw">let </span>start = <span class="macro">vm_try!</span>(<span class="self">self</span>.start.to_value());
+    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="kw">let </span>start = <span class="self">self</span>.start.to_value()<span class="question-mark">?</span>;
         <span class="kw">let </span>range = RangeFrom::new(start);
-        VmResult::Ok(<span class="macro">vm_try!</span>(Value::new(range)))
+        <span class="prelude-val">Ok</span>(Value::new(range)<span class="question-mark">?</span>)
     }
 }
 
@@ -588,10 +588,10 @@
     </span>Idx: FromValue,
 {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>range = <span class="macro">vm_try!</span>(value.into_any::&lt;RangeFrom&gt;());
-        <span class="kw">let </span>start = <span class="macro">vm_try!</span>(Idx::from_value(range.start));
-        VmResult::Ok(ops::RangeFrom { start })
+    </span><span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+        <span class="kw">let </span>range = value.into_any::&lt;RangeFrom&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>start = Idx::from_value(range.start)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(ops::RangeFrom { start })
     }
 }
 

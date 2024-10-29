@@ -197,16 +197,16 @@
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::ops;
+<a href="#199" id="199">199</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::ops;
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
-<span class="kw">use super</span>::{EnvProtocolCaller, Formatter, FromValue, ProtocolCaller, ToValue, Value, VmResult};
+<span class="kw">use super</span>::{
+    EnvProtocolCaller, Formatter, FromValue, ProtocolCaller, RuntimeError, ToValue, Value, VmResult,
+};
 
 <span class="doccomment">/// Used to tell an operation whether it should exit early or go on as usual.
 ///
@@ -371,15 +371,13 @@
     C: ToValue,
 {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
+    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
         <span class="kw">let </span>value = <span class="kw">match </span><span class="self">self </span>{
-            ops::ControlFlow::Continue(value) =&gt; {
-                ControlFlow::Continue(<span class="macro">vm_try!</span>(ToValue::to_value(value)))
-            }
-            ops::ControlFlow::Break(value) =&gt; ControlFlow::Break(<span class="macro">vm_try!</span>(ToValue::to_value(value))),
+            ops::ControlFlow::Continue(value) =&gt; ControlFlow::Continue(C::to_value(value)<span class="question-mark">?</span>),
+            ops::ControlFlow::Break(value) =&gt; ControlFlow::Break(B::to_value(value)<span class="question-mark">?</span>),
         };
 
-        VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(value)))
+        <span class="prelude-val">Ok</span>(Value::try_from(value)<span class="question-mark">?</span>)
     }
 }
 
@@ -389,14 +387,12 @@
     C: FromValue,
 {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        VmResult::Ok(<span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_ref::&lt;ControlFlow&gt;()) {
+    </span><span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="kw-2">&amp;*</span>value.borrow_ref::&lt;ControlFlow&gt;()<span class="question-mark">? </span>{
             ControlFlow::Continue(value) =&gt; {
-                ops::ControlFlow::Continue(<span class="macro">vm_try!</span>(C::from_value(value.clone())))
+                ops::ControlFlow::Continue(C::from_value(value.clone())<span class="question-mark">?</span>)
             }
-            ControlFlow::Break(value) =&gt; {
-                ops::ControlFlow::Break(<span class="macro">vm_try!</span>(B::from_value(value.clone())))
-            }
+            ControlFlow::Break(value) =&gt; ops::ControlFlow::Break(B::from_value(value.clone())<span class="question-mark">?</span>),
         })
     }
 }

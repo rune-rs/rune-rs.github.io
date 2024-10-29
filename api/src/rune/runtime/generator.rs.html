@@ -174,7 +174,7 @@
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{GeneratorState, Value, Vm, VmErrorKind, VmExecution, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{GeneratorState, Value, Vm, VmError, VmErrorKind, VmExecution, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
 <span class="doccomment">/// The return value of a function producing a generator.
@@ -283,7 +283,7 @@
 }
 
 <span class="kw">impl </span>IntoIterator <span class="kw">for </span>Generator&lt;Vm&gt; {
-    <span class="kw">type </span>Item = VmResult&lt;Value&gt;;
+    <span class="kw">type </span>Item = <span class="prelude-ty">Result</span>&lt;Value, VmError&gt;;
     <span class="kw">type </span>IntoIter = Iter;
 
     <span class="attr">#[inline]
@@ -300,21 +300,21 @@
 
 <span class="kw">impl </span>Iter {
     <span class="attr">#[rune::function(instance, keep, protocol = NEXT)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;VmResult&lt;Value&gt;&gt; {
-        <span class="kw">match </span><span class="self">self</span>.generator.next() {
-            VmResult::Ok(<span class="prelude-val">Some</span>(value)) =&gt; <span class="prelude-val">Some</span>(VmResult::Ok(value)),
-            VmResult::Ok(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">None</span>,
-            VmResult::Err(error) =&gt; <span class="prelude-val">Some</span>(VmResult::Err(error)),
-        }
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
+        <span class="self">self</span>.generator.next()
     }
 }
 
 <span class="kw">impl </span>iter::Iterator <span class="kw">for </span>Iter {
-    <span class="kw">type </span>Item = VmResult&lt;Value&gt;;
+    <span class="kw">type </span>Item = <span class="prelude-ty">Result</span>&lt;Value, VmError&gt;;
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;VmResult&lt;Value&gt;&gt; {
-        Iter::next(<span class="self">self</span>)
+    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;Value, VmError&gt;&gt; {
+        <span class="kw">match </span>Iter::next(<span class="self">self</span>) {
+            VmResult::Ok(<span class="prelude-val">Some</span>(value)) =&gt; <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(value)),
+            VmResult::Ok(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">None</span>,
+            VmResult::Err(error) =&gt; <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(error)),
+        }
     }
 }
 

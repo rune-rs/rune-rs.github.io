@@ -795,7 +795,8 @@
 <a href="#794" id="794">794</a>
 <a href="#795" id="795">795</a>
 <a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">use </span>proc_macro2::TokenStream;
 <span class="kw">use </span>quote::{quote, quote_spanned, ToTokens};
@@ -1075,9 +1076,11 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ()&gt; {
     <span class="kw">let </span>Tokens {
         protocol,
+        runtime_error,
         to_value,
         type_of,
         vm_result,
+        vm_try,
         ..
     } = tokens;
 
@@ -1133,9 +1136,9 @@
                         <span class="kw">let </span>fields = field_fns.entry(f_name).or_default();
 
                         <span class="kw">let </span>value = <span class="kw">if </span>attrs.copy {
-                            <span class="macro">quote!</span>(#to_value::to_value(<span class="kw-2">*</span>#f_ident))
+                            <span class="macro">quote!</span>(#vm_result::Ok(#<span class="macro">vm_try!</span>(#to_value::to_value(<span class="kw-2">*</span>#f_ident))))
                         } <span class="kw">else </span>{
-                            <span class="macro">quote!</span>(#to_value::to_value(#f_ident.clone()))
+                            <span class="macro">quote!</span>(#vm_result::Ok(#<span class="macro">vm_try!</span>(#to_value::to_value(#f_ident.clone()))))
                         };
 
                         fields.push(<span class="macro">quote!</span>(#ident::#variant_ident { #f_ident, .. } =&gt; #value));
@@ -1161,9 +1164,9 @@
                         <span class="kw">let </span>n = syn::LitInt::new(<span class="kw-2">&amp;</span>n.to_string(), span);
 
                         <span class="kw">let </span>value = <span class="kw">if </span>attrs.copy {
-                            <span class="macro">quote!</span>(#to_value::to_value(<span class="kw-2">*</span>value))
+                            <span class="macro">quote!</span>(#vm_result::Ok(#<span class="macro">vm_try!</span>(#to_value::to_value(<span class="kw-2">*</span>value))))
                         } <span class="kw">else </span>{
-                            <span class="macro">quote!</span>(#to_value::to_value(value.clone()))
+                            <span class="macro">quote!</span>(#vm_result::Ok(#<span class="macro">vm_try!</span>(#to_value::to_value(value.clone()))))
                         };
 
                         fields.push(<span class="macro">quote!</span>(#ident::#variant_ident { #n: value, .. } =&gt; #value));
@@ -1219,7 +1222,7 @@
             module.field_function(#protocol::GET, #field, |this: <span class="kw-2">&amp;</span><span class="self">Self</span>| {
                 <span class="kw">match </span>this {
                     #(#matches,)*
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span>#vm_result::__rune_macros__unsupported_object_field_get(&lt;<span class="self">Self </span><span class="kw">as </span>#type_of&gt;::type_info()),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span>#vm_result::err(#runtime_error::__rune_macros__unsupported_object_field_get(&lt;<span class="self">Self </span><span class="kw">as </span>#type_of&gt;::type_info())),
                 }
             })<span class="question-mark">?</span>;
         });
@@ -1230,7 +1233,7 @@
             module.index_function(#protocol::GET, #index, |this: <span class="kw-2">&amp;</span><span class="self">Self</span>| {
                 <span class="kw">match </span>this {
                     #(#matches,)*
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span>#vm_result::__rune_macros__unsupported_tuple_index_get(&lt;<span class="self">Self </span><span class="kw">as </span>#type_of&gt;::type_info(), #index),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span>#vm_result::err(#runtime_error::__rune_macros__unsupported_tuple_index_get(&lt;<span class="self">Self </span><span class="kw">as </span>#type_of&gt;::type_info(), #index)),
                 }
             })<span class="question-mark">?</span>;
         });
@@ -1330,6 +1333,8 @@
             value,
             vm_result,
             vm_try,
+            runtime_error,
+            result,
             ..
         } = <span class="kw-2">&amp;</span>tokens;
 
@@ -1508,9 +1513,8 @@
 
                 <span class="prelude-val">Some</span>(<span class="macro">quote!</span> {
                     <span class="kw">impl </span>#from_value <span class="kw">for </span>#ty {
-                        <span class="kw">fn </span>from_value(value: Value) -&gt; #vm_result&lt;<span class="self">Self</span>&gt; {
-                            <span class="kw">let </span>value = #<span class="macro">vm_try!</span>(#path(value));
-                            #vm_result::Ok(value)
+                        <span class="kw">fn </span>from_value(value: Value) -&gt; #result&lt;<span class="self">Self</span>, #runtime_error&gt; {
+                            #path(value)
                         }
                     }
                 })
@@ -1539,9 +1543,8 @@
                     }
 
                     <span class="kw">impl </span>#from_value <span class="kw">for </span>#ref_&lt;#ty&gt; {
-                        <span class="kw">fn </span>from_value(value: Value) -&gt; #vm_result&lt;<span class="self">Self</span>&gt; {
-                            <span class="kw">let </span>value = #<span class="macro">vm_try!</span>(#path(value));
-                            #vm_result::Ok(value)
+                        <span class="kw">fn </span>from_value(value: #value) -&gt; #result&lt;<span class="self">Self</span>, #runtime_error&gt; {
+                            #path(value)
                         }
                     }
                 })
@@ -1570,9 +1573,8 @@
                     }
 
                     <span class="kw">impl </span>#from_value <span class="kw">for </span>#mut_&lt;#ty&gt; {
-                        <span class="kw">fn </span>from_value(value: Value) -&gt; #vm_result&lt;<span class="self">Self</span>&gt; {
-                            <span class="kw">let </span>value = #<span class="macro">vm_try!</span>(#path(value));
-                            #vm_result::Ok(value)
+                        <span class="kw">fn </span>from_value(value: #value) -&gt; #result&lt;<span class="self">Self</span>, #runtime_error&gt; {
+                            #path(value)
                         }
                     }
                 })

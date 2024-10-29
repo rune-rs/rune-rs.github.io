@@ -56,8 +56,13 @@
 <a href="#55" id="55">55</a>
 <a href="#56" id="56">56</a>
 <a href="#57" id="57">57</a>
-<a href="#58" id="58">58</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{FromValue, ToValue, Value, VmErrorKind, VmResult};
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{FromValue, RuntimeError, ToValue, Value, VmErrorKind};
 
 <span class="doccomment">/// A helper type to deserialize arrays with different interior types.
 ///
@@ -84,17 +89,17 @@
         <span class="kw">where
             </span>$(<span class="macro-nonterminal">$ty</span>: FromValue,)*
         {
-            <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-                <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.into_vec_ref());
+            <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+                <span class="kw">let </span>vec = value.into_vec_ref()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>[$(<span class="macro-nonterminal">$var</span>,)<span class="kw-2">*</span>] = vec.as_slice() <span class="kw">else </span>{
-                    <span class="kw">return </span>VmResult::err(VmErrorKind::ExpectedTupleLength {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(RuntimeError::new(VmErrorKind::ExpectedTupleLength {
                         actual: vec.len(),
                         expected: <span class="macro-nonterminal">$count</span>,
-                    });
+                    }));
                 };
 
-                VmResult::Ok(VecTuple(($(<span class="macro">vm_try!</span>(&lt;<span class="macro-nonterminal">$ty</span>&gt;::from_value(<span class="macro-nonterminal">$var</span>.clone())),)<span class="kw-2">*</span>)))
+                <span class="prelude-val">Ok</span>(VecTuple(($(&lt;<span class="macro-nonterminal">$ty</span>&gt;::from_value(<span class="macro-nonterminal">$var</span>.clone())<span class="question-mark">?</span>,)<span class="kw-2">*</span>)))
             }
         }
 
@@ -103,11 +108,16 @@
             </span>$(<span class="macro-nonterminal">$ty</span>: ToValue,)*
         {
             <span class="attr">#[allow(unused_mut)]
-            </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
+            </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
                 <span class="kw">let </span>($(<span class="macro-nonterminal">$var</span>,)<span class="kw-2">*</span>) = <span class="self">self</span>.<span class="number">0</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>vec = <span class="macro">vm_try!</span>(Vec::try_with_capacity(<span class="macro-nonterminal">$count</span>));
-                $(<span class="macro">vm_try!</span>(vec.try_push(<span class="macro">vm_try!</span>(<span class="macro-nonterminal">$var</span>.to_value())));)*
-                Value::vec(vec)
+                <span class="kw">let </span><span class="kw-2">mut </span>vec = Vec::try_with_capacity(<span class="macro-nonterminal">$count</span>)<span class="question-mark">?</span>;
+
+                $(
+                    <span class="kw">let </span><span class="macro-nonterminal">$var </span>= <span class="macro-nonterminal">$var</span>.to_value()<span class="question-mark">?</span>;
+                    vec.try_push(<span class="macro-nonterminal">$var</span>)<span class="question-mark">?</span>;
+                )*
+
+                <span class="prelude-val">Ok</span>(Value::vec(vec)<span class="question-mark">?</span>)
             }
         }
     };

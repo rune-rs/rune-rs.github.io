@@ -3146,7 +3146,32 @@
 <a href="#3145" id="3145">3145</a>
 <a href="#3146" id="3146">3146</a>
 <a href="#3147" id="3147">3147</a>
-<a href="#3148" id="3148">3148</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#3148" id="3148">3148</a>
+<a href="#3149" id="3149">3149</a>
+<a href="#3150" id="3150">3150</a>
+<a href="#3151" id="3151">3151</a>
+<a href="#3152" id="3152">3152</a>
+<a href="#3153" id="3153">3153</a>
+<a href="#3154" id="3154">3154</a>
+<a href="#3155" id="3155">3155</a>
+<a href="#3156" id="3156">3156</a>
+<a href="#3157" id="3157">3157</a>
+<a href="#3158" id="3158">3158</a>
+<a href="#3159" id="3159">3159</a>
+<a href="#3160" id="3160">3160</a>
+<a href="#3161" id="3161">3161</a>
+<a href="#3162" id="3162">3162</a>
+<a href="#3163" id="3163">3163</a>
+<a href="#3164" id="3164">3164</a>
+<a href="#3165" id="3165">3165</a>
+<a href="#3166" id="3166">3166</a>
+<a href="#3167" id="3167">3167</a>
+<a href="#3168" id="3168">3168</a>
+<a href="#3169" id="3169">3169</a>
+<a href="#3170" id="3170">3170</a>
+<a href="#3171" id="3171">3171</a>
+<a href="#3172" id="3172">3172</a>
+<a href="#3173" id="3173">3173</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::take;
 <span class="kw">use </span>core::slice;
 
@@ -3160,8 +3185,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::hir;
 <span class="kw">use </span><span class="kw">crate</span>::query::{ConstFn, Query, Used};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    ConstValue, Inst, InstAddress, InstAssignOp, InstOp, InstRange, InstTarget, InstValue,
-    InstVariant, Label, Output, PanicReason, Protocol, TypeCheck,
+    ConstValue, ConstValueKind, Inline, Inst, InstAddress, InstAssignOp, InstOp, InstRange,
+    InstTarget, InstValue, InstVariant, Label, Output, PanicReason, Protocol, TypeCheck,
 };
 <span class="kw">use </span><span class="kw">crate</span>::shared::FixedVec;
 <span class="kw">use crate</span>::{Hash, SourceId};
@@ -4247,34 +4272,42 @@
 
     <span class="kw">let </span>out = addr.output();
 
-    <span class="kw">match </span><span class="kw-2">*</span>value {
-        ConstValue::Unit =&gt; {
-            cx.asm.push(Inst::unit(out), span)<span class="question-mark">?</span>;
-        }
-        ConstValue::Byte(v) =&gt; {
-            cx.asm.push(Inst::byte(v, out), span)<span class="question-mark">?</span>;
-        }
-        ConstValue::Char(v) =&gt; {
-            cx.asm.push(Inst::char(v, out), span)<span class="question-mark">?</span>;
-        }
-        ConstValue::Integer(v) =&gt; {
-            cx.asm.push(Inst::integer(v, out), span)<span class="question-mark">?</span>;
-        }
-        ConstValue::Float(v) =&gt; {
-            cx.asm.push(Inst::float(v, out), span)<span class="question-mark">?</span>;
-        }
-        ConstValue::Bool(v) =&gt; {
-            cx.asm.push(Inst::bool(v, out), span)<span class="question-mark">?</span>;
-        }
-        ConstValue::String(<span class="kw-2">ref </span>s) =&gt; {
+    <span class="kw">match </span><span class="kw-2">*</span>value.as_kind() {
+        ConstValueKind::Inline(value) =&gt; <span class="kw">match </span>value {
+            Inline::Unit =&gt; {
+                cx.asm.push(Inst::unit(out), span)<span class="question-mark">?</span>;
+            }
+            Inline::Byte(v) =&gt; {
+                cx.asm.push(Inst::byte(v, out), span)<span class="question-mark">?</span>;
+            }
+            Inline::Char(v) =&gt; {
+                cx.asm.push(Inst::char(v, out), span)<span class="question-mark">?</span>;
+            }
+            Inline::Integer(v) =&gt; {
+                cx.asm.push(Inst::integer(v, out), span)<span class="question-mark">?</span>;
+            }
+            Inline::Float(v) =&gt; {
+                cx.asm.push(Inst::float(v, out), span)<span class="question-mark">?</span>;
+            }
+            Inline::Bool(v) =&gt; {
+                cx.asm.push(Inst::bool(v, out), span)<span class="question-mark">?</span>;
+            }
+            Inline::Type(v) =&gt; {
+                cx.asm.push(Inst::ty(v, out), span)<span class="question-mark">?</span>;
+            }
+            Inline::Ordering(v) =&gt; {
+                cx.asm.push(Inst::ordering(v, out), span)<span class="question-mark">?</span>;
+            }
+        },
+        ConstValueKind::String(<span class="kw-2">ref </span>s) =&gt; {
             <span class="kw">let </span>slot = cx.q.unit.new_static_string(span, s)<span class="question-mark">?</span>;
             cx.asm.push(Inst::String { slot, out }, span)<span class="question-mark">?</span>;
         }
-        ConstValue::Bytes(<span class="kw-2">ref </span>b) =&gt; {
+        ConstValueKind::Bytes(<span class="kw-2">ref </span>b) =&gt; {
             <span class="kw">let </span>slot = cx.q.unit.new_static_bytes(span, b)<span class="question-mark">?</span>;
             cx.asm.push(Inst::Bytes { slot, out }, span)<span class="question-mark">?</span>;
         }
-        ConstValue::Option(<span class="kw-2">ref </span>option) =&gt; <span class="kw">match </span>option {
+        ConstValueKind::Option(<span class="kw-2">ref </span>option) =&gt; <span class="kw">match </span>option {
             <span class="prelude-val">Some</span>(value) =&gt; {
                 const_(cx, value, span, addr)<span class="question-mark">?</span>;
 
@@ -4298,7 +4331,7 @@
                 )<span class="question-mark">?</span>;
             }
         },
-        ConstValue::Vec(<span class="kw-2">ref </span>vec) =&gt; {
+        ConstValueKind::Vec(<span class="kw-2">ref </span>vec) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>linear = cx.scopes.linear(span, vec.len())<span class="question-mark">?</span>;
 
             <span class="kw">for </span>(value, needs) <span class="kw">in </span>vec.iter().zip(<span class="kw-2">&amp;mut </span>linear) {
@@ -4316,7 +4349,7 @@
 
             linear.free_non_dangling()<span class="question-mark">?</span>;
         }
-        ConstValue::Tuple(<span class="kw-2">ref </span>tuple) =&gt; {
+        ConstValueKind::Tuple(<span class="kw-2">ref </span>tuple) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>linear = cx.scopes.linear(span, tuple.len())<span class="question-mark">?</span>;
 
             <span class="kw">for </span>(value, needs) <span class="kw">in </span>tuple.iter().zip(<span class="kw-2">&amp;mut </span>linear) {
@@ -4334,7 +4367,7 @@
 
             linear.free_non_dangling()<span class="question-mark">?</span>;
         }
-        ConstValue::Object(<span class="kw-2">ref </span>object) =&gt; {
+        ConstValueKind::Object(<span class="kw-2">ref </span>object) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>linear = cx.scopes.linear(span, object.len())<span class="question-mark">?</span>;
 
             <span class="kw">let </span><span class="kw-2">mut </span>entries = object.iter().try_collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
@@ -4358,6 +4391,23 @@
             )<span class="question-mark">?</span>;
 
             linear.free_non_dangling()<span class="question-mark">?</span>;
+        }
+        ConstValueKind::Struct(hash, <span class="kw-2">ref </span>values) =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>linear = cx.scopes.linear(span, values.len())<span class="question-mark">?</span>;
+
+            <span class="kw">for </span>(value, needs) <span class="kw">in </span>values.iter().zip(<span class="kw-2">&amp;mut </span>linear) {
+                const_(cx, value, span, needs)<span class="question-mark">?</span>;
+            }
+
+            cx.asm.push(
+                Inst::ConstConstruct {
+                    addr: linear.addr(),
+                    hash,
+                    count: values.len(),
+                    out,
+                },
+                span,
+            )<span class="question-mark">?</span>;
         }
     }
 

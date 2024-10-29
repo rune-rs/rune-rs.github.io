@@ -130,7 +130,13 @@
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a></pre></div><pre class="rust"><code><span class="doccomment">//! Asynchronous computations.
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a></pre></div><pre class="rust"><code><span class="doccomment">//! Asynchronous computations.
 
 </span><span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
@@ -242,15 +248,21 @@
             ]),
         },
         BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">*</span>value {
-            Mutable::Tuple(<span class="kw-2">ref </span>tuple) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(
-                try_join_impl(tuple.iter(), tuple.len(), |vec| VmResult::Ok(<span class="macro">vm_try!</span>(
-                    Value::tuple(vec)
-                )))
-                .<span class="kw">await
-            </span>)),
-            Mutable::Vec(<span class="kw-2">ref </span>vec) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(
-                try_join_impl(vec.iter(), vec.len(), Value::vec).<span class="kw">await
-            </span>)),
+            Mutable::Tuple(<span class="kw-2">ref </span>tuple) =&gt; {
+                <span class="kw">let </span>result = try_join_impl(tuple.iter(), tuple.len(), |vec| {
+                    VmResult::Ok(<span class="macro">vm_try!</span>(Value::tuple(vec)))
+                })
+                .<span class="kw">await</span>;
+
+                VmResult::Ok(<span class="macro">vm_try!</span>(result))
+            }
+            Mutable::Vec(<span class="kw-2">ref </span>vec) =&gt; {
+                <span class="kw">let </span>result = try_join_impl(vec.iter(), vec.len(), |vec| {
+                    VmResult::Ok(<span class="macro">vm_try!</span>(Value::vec(vec)))
+                })
+                .<span class="kw">await</span>;
+                VmResult::Ok(<span class="macro">vm_try!</span>(result))
+            }
             <span class="kw-2">ref </span>value =&gt; VmResult::err([
                 VmErrorKind::bad_argument(<span class="number">0</span>),
                 VmErrorKind::expected::&lt;<span class="kw">crate</span>::runtime::Vec&gt;(value.type_info()),

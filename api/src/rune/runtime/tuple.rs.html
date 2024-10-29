@@ -421,7 +421,10 @@
 <a href="#420" id="420">420</a>
 <a href="#421" id="421">421</a>
 <a href="#422" id="422">422</a>
-<a href="#423" id="423">423</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::ops;
 <span class="kw">use </span>core::slice;
 
@@ -429,8 +432,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    ConstValue, FromValue, Mut, Mutable, OwnedRepr, RawAnyGuard, Ref, ToValue, UnsafeToMut,
-    UnsafeToRef, Value, ValueShared, VmErrorKind, VmResult,
+    ConstValue, EmptyConstContext, FromValue, Mut, Mutable, OwnedRepr, RawAnyGuard, Ref,
+    RuntimeError, ToValue, UnsafeToMut, UnsafeToRef, Value, ValueShared, VmErrorKind, VmResult,
 };
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::runtime::{Hasher, ProtocolCaller};
@@ -649,9 +652,9 @@
 }
 
 <span class="kw">impl </span>TryFrom&lt;alloc::Box&lt;[ConstValue]&gt;&gt; <span class="kw">for </span>OwnedTuple {
-    <span class="kw">type </span>Error = alloc::Error;
+    <span class="kw">type </span>Error = RuntimeError;
 
-    <span class="kw">fn </span>try_from(inner: alloc::Box&lt;[ConstValue]&gt;) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">fn </span>try_from(inner: alloc::Box&lt;[ConstValue]&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
         <span class="kw">if </span>inner.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(OwnedTuple::new());
         }
@@ -659,7 +662,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>out = alloc::Vec::try_with_capacity(inner.len())<span class="question-mark">?</span>;
 
         <span class="kw">for </span>value <span class="kw">in </span>inner.iter() {
-            out.try_push(value.to_value()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+            out.try_push(value.to_value_with(<span class="kw-2">&amp;</span>EmptyConstContext)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
@@ -682,9 +685,9 @@
 
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">impl </span>TryFrom&lt;::rust_alloc::boxed::Box&lt;[ConstValue]&gt;&gt; <span class="kw">for </span>OwnedTuple {
-    <span class="kw">type </span>Error = alloc::Error;
+    <span class="kw">type </span>Error = RuntimeError;
 
-    <span class="kw">fn </span>try_from(inner: ::rust_alloc::boxed::Box&lt;[ConstValue]&gt;) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">fn </span>try_from(inner: ::rust_alloc::boxed::Box&lt;[ConstValue]&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
         <span class="kw">if </span>inner.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(OwnedTuple::new());
         }
@@ -692,7 +695,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>out = alloc::Vec::try_with_capacity(inner.len())<span class="question-mark">?</span>;
 
         <span class="kw">for </span>value <span class="kw">in </span>inner.iter() {
-            out.try_push(value.to_value()<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+            out.try_push(value.to_value_with(<span class="kw-2">&amp;</span>EmptyConstContext)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
@@ -702,11 +705,11 @@
 }
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>OwnedTuple {
-    <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(value.take_repr()) {
-            OwnedRepr::Inline(Inline::Unit) =&gt; VmResult::Ok(<span class="self">Self</span>::new()),
-            OwnedRepr::Mutable(Mutable::Tuple(tuple)) =&gt; VmResult::Ok(tuple),
-            value =&gt; VmResult::expected::&lt;<span class="self">Self</span>&gt;(value.type_info()),
+    <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+        <span class="kw">match </span>value.take_repr()<span class="question-mark">? </span>{
+            OwnedRepr::Inline(Inline::Unit) =&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::new()),
+            OwnedRepr::Mutable(Mutable::Tuple(tuple)) =&gt; <span class="prelude-val">Ok</span>(tuple),
+            value =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected::&lt;<span class="self">Self</span>&gt;(value.type_info())),
         }
     }
 }
@@ -717,14 +720,16 @@
         <span class="macro">impl_static_type!</span>((), <span class="kw">crate</span>::runtime::static_type::TUPLE, <span class="kw">crate</span>::runtime::static_type::TUPLE_HASH);
 
         <span class="kw">impl </span>FromValue <span class="kw">for </span>() {
-            <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-                VmResult::Ok(<span class="macro">vm_try!</span>(value.into_unit()))
+            <span class="attr">#[inline]
+            </span><span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+                value.into_unit()
             }
         }
 
         <span class="kw">impl </span>ToValue <span class="kw">for </span>() {
-            <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-                VmResult::Ok(Value::unit())
+            <span class="attr">#[inline]
+            </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+                <span class="prelude-val">Ok</span>(Value::unit())
             }
         }
     };
@@ -736,17 +741,17 @@
         <span class="kw">where
             </span>$(<span class="macro-nonterminal">$ty</span>: FromValue,)*
         {
-            <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-                <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(value.into_tuple_ref());
+            <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+                <span class="kw">let </span>tuple = value.into_tuple_ref()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>[$(<span class="macro-nonterminal">$var</span>,)<span class="kw-2">*</span>] = <span class="kw-2">&amp;</span>tuple[..] <span class="kw">else </span>{
-                    <span class="kw">return </span>VmResult::err(VmErrorKind::ExpectedTupleLength {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(RuntimeError::new(VmErrorKind::ExpectedTupleLength {
                         actual: tuple.len(),
                         expected: <span class="macro-nonterminal">$count</span>,
-                    });
+                    }));
                 };
 
-                VmResult::Ok(($(<span class="macro">vm_try!</span>(&lt;<span class="macro-nonterminal">$ty</span>&gt;::from_value(<span class="macro-nonterminal">$var</span>.clone())),)<span class="kw-2">*</span>))
+                <span class="prelude-val">Ok</span>(($(&lt;<span class="macro-nonterminal">$ty </span><span class="kw">as </span>FromValue&gt;::from_value(<span class="macro-nonterminal">$var</span>.clone())<span class="question-mark">?</span>,)<span class="kw-2">*</span>))
             }
         }
 
@@ -754,12 +759,13 @@
         <span class="kw">where
             </span>$(<span class="macro-nonterminal">$ty</span>: ToValue,)*
         {
-            <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
+            <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
                 <span class="kw">let </span>($(<span class="macro-nonterminal">$var</span>,)<span class="kw-2">*</span>) = <span class="self">self</span>;
-                $(<span class="kw">let </span><span class="macro-nonterminal">$var </span>= <span class="macro">vm_try!</span>(<span class="macro-nonterminal">$var</span>.to_value());)*
-                <span class="kw">let </span><span class="kw-2">mut </span>vec = <span class="macro">vm_try!</span>(alloc::Vec::try_with_capacity(<span class="macro-nonterminal">$count</span>));
-                $(<span class="macro">vm_try!</span>(vec.try_push(<span class="macro-nonterminal">$var</span>));)*
-                VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(<span class="macro">vm_try!</span>(OwnedTuple::try_from(vec)))))
+                $(<span class="kw">let </span><span class="macro-nonterminal">$var </span>= <span class="macro-nonterminal">$var</span>.to_value()<span class="question-mark">?</span>;)*
+                <span class="kw">let </span><span class="kw-2">mut </span>vec = alloc::Vec::try_with_capacity(<span class="macro-nonterminal">$count</span>)<span class="question-mark">?</span>;
+                $(vec.try_push(<span class="macro-nonterminal">$var</span>)<span class="question-mark">?</span>;)*
+                <span class="kw">let </span>tuple = OwnedTuple::try_from(vec)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(Value::try_from(tuple)<span class="question-mark">?</span>)
             }
         }
     };
@@ -768,14 +774,14 @@
 <span class="macro">repeat_macro!</span>(impl_tuple);
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>Ref&lt;Tuple&gt; {
-    <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>result = <span class="kw">match </span><span class="macro">vm_try!</span>(value.into_value_shared()) {
+    <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+        <span class="kw">let </span>result = <span class="kw">match </span>value.into_value_shared()<span class="question-mark">? </span>{
             ValueShared::Inline(value) =&gt; <span class="kw">match </span>value {
                 Inline::Unit =&gt; <span class="prelude-val">Ok</span>(Ref::from_static(Tuple::new(<span class="kw-2">&amp;</span>[]))),
                 actual =&gt; <span class="prelude-val">Err</span>(actual.type_info()),
             },
             ValueShared::Mutable(value) =&gt; {
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.into_ref());
+                <span class="kw">let </span>value = value.into_ref()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>result = Ref::try_map(value, |value| <span class="kw">match </span>value {
                     Mutable::Tuple(tuple) =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;**</span>tuple),
@@ -791,21 +797,21 @@
         };
 
         <span class="kw">match </span>result {
-            <span class="prelude-val">Ok</span>(tuple) =&gt; VmResult::Ok(tuple),
-            <span class="prelude-val">Err</span>(actual) =&gt; VmResult::expected::&lt;<span class="self">Self</span>&gt;(actual),
+            <span class="prelude-val">Ok</span>(tuple) =&gt; <span class="prelude-val">Ok</span>(tuple),
+            <span class="prelude-val">Err</span>(actual) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected::&lt;<span class="self">Self</span>&gt;(actual)),
         }
     }
 }
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>Mut&lt;Tuple&gt; {
-    <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>result = <span class="kw">match </span><span class="macro">vm_try!</span>(value.into_value_shared()) {
+    <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+        <span class="kw">let </span>result = <span class="kw">match </span>value.into_value_shared()<span class="question-mark">? </span>{
             ValueShared::Inline(value) =&gt; <span class="kw">match </span>value {
                 Inline::Unit =&gt; <span class="prelude-val">Ok</span>(Mut::from_static(Tuple::new_mut(<span class="kw-2">&amp;mut </span>[]))),
                 actual =&gt; <span class="prelude-val">Err</span>(actual.type_info()),
             },
             ValueShared::Mutable(value) =&gt; {
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(value.clone().into_mut());
+                <span class="kw">let </span>value = value.into_mut()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>result = Mut::try_map(value, |kind| <span class="kw">match </span>kind {
                     Mutable::Tuple(tuple) =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut **</span>tuple),
@@ -821,8 +827,8 @@
         };
 
         <span class="kw">match </span>result {
-            <span class="prelude-val">Ok</span>(tuple) =&gt; VmResult::Ok(tuple),
-            <span class="prelude-val">Err</span>(actual) =&gt; VmResult::expected::&lt;<span class="self">Self</span>&gt;(actual),
+            <span class="prelude-val">Ok</span>(tuple) =&gt; <span class="prelude-val">Ok</span>(tuple),
+            <span class="prelude-val">Err</span>(actual) =&gt; <span class="prelude-val">Err</span>(RuntimeError::expected::&lt;<span class="self">Self</span>&gt;(actual)),
         }
     }
 }

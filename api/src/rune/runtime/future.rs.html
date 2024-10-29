@@ -140,7 +140,10 @@
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future;
 <span class="kw">use </span>core::pin::Pin;
 <span class="kw">use </span>core::ptr::NonNull;
@@ -187,7 +190,10 @@
                 poll: |future, cx| <span class="kw">unsafe </span>{
                     <span class="kw">match </span>Pin::new_unchecked(<span class="kw-2">&amp;mut *</span>future.cast::&lt;T&gt;()).poll(cx) {
                         Poll::Pending =&gt; Poll::Pending,
-                        Poll::Ready(VmResult::Ok(result)) =&gt; Poll::Ready(result.to_value()),
+                        Poll::Ready(VmResult::Ok(result)) =&gt; <span class="kw">match </span>result.to_value() {
+                            <span class="prelude-val">Ok</span>(value) =&gt; Poll::Ready(VmResult::Ok(value)),
+                            <span class="prelude-val">Err</span>(err) =&gt; Poll::Ready(VmResult::Err(err.into())),
+                        },
                         Poll::Ready(VmResult::Err(err)) =&gt; Poll::Ready(VmResult::Err(err)),
                     }
                 },

@@ -315,8 +315,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::meta;
 <span class="kw">use </span><span class="kw">crate</span>::hash::Hash;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    <span class="self">self</span>, FromValue, InstAddress, MaybeTypeOf, Memory, Output, ToValue, TypeHash, TypeInfo, TypeOf,
-    UnsafeToMut, UnsafeToRef, Value, VmErrorKind, VmResult,
+    <span class="self">self</span>, FromValue, InstAddress, MaybeTypeOf, Memory, Output, ToReturn, TypeHash, TypeInfo,
+    TypeOf, UnsafeToMut, UnsafeToRef, Value, VmErrorKind, VmResult,
 };
 
 <span class="comment">// Expand to function variable bindings.
@@ -549,7 +549,7 @@
         <span class="kw">impl</span>&lt;T, U, $(<span class="macro-nonterminal">$ty</span>,)<span class="kw-2">*</span>&gt; Function&lt;($(<span class="macro-nonterminal">$place</span>,)<span class="kw-2">*</span>), Plain&gt; <span class="kw">for </span>T
         <span class="kw">where
             </span>T: <span class="lifetime">'static </span>+ Send + Sync + Fn($($(<span class="macro-nonterminal">$</span><span class="kw-2">mut</span>)* <span class="macro-nonterminal">$ty</span>),<span class="kw-2">*</span>) -&gt; U,
-            U: ToValue,
+            U: ToReturn,
             $(<span class="macro-nonterminal">$ty</span>: $(<span class="macro-nonterminal">$</span><span class="kw">trait</span>)<span class="kw-2">*</span>,)*
         {
             <span class="kw">type </span><span class="macro-nonterminal">Return </span>= U;
@@ -567,7 +567,7 @@
                 </span><span class="kw">let </span>ret = <span class="self">self</span>($(<span class="macro-nonterminal">$var</span>.<span class="number">0</span>),<span class="kw-2">*</span>);
                 $(drop(<span class="macro-nonterminal">$var</span>.<span class="number">1</span>);)*
 
-                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(ToValue::to_value(ret));
+                <span class="kw">let </span>value = <span class="macro">vm_try!</span>(ToReturn::to_return(ret));
                 <span class="macro">vm_try!</span>(out.store(memory, value));
                 VmResult::Ok(())
             }
@@ -577,7 +577,7 @@
         <span class="kw">where
             </span>T: <span class="lifetime">'static </span>+ Send + Sync + Fn($($(<span class="macro-nonterminal">$</span><span class="kw-2">mut</span>)* <span class="macro-nonterminal">$ty</span>),<span class="kw-2">*</span>) -&gt; U,
             U: <span class="lifetime">'static </span>+ Future,
-            U::Output: ToValue,
+            U::Output: ToReturn,
             $(<span class="macro-nonterminal">$ty</span>: $(<span class="macro-nonterminal">$</span><span class="kw">trait</span>)<span class="kw-2">*</span>,)*
         {
             <span class="kw">type </span><span class="macro-nonterminal">Return </span>= U::Output;
@@ -599,7 +599,7 @@
 
                 <span class="kw">let </span>ret = <span class="macro">vm_try!</span>(runtime::Future::new(<span class="kw">async move </span>{
                     <span class="kw">let </span>output = fut.<span class="kw">await</span>;
-                    VmResult::Ok(<span class="macro">vm_try!</span>(output.to_value()))
+                    VmResult::Ok(<span class="macro">vm_try!</span>(ToReturn::to_return(output)))
                 }));
 
                 <span class="kw">let </span>value = <span class="macro">vm_try!</span>(Value::try_from(ret));

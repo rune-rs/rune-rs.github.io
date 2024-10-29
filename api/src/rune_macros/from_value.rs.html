@@ -291,7 +291,8 @@
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
 <a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::context::{Context, Tokens};
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::context::{Context, Tokens};
 <span class="kw">use </span>proc_macro2::TokenStream;
 <span class="kw">use </span>quote::{quote, quote_spanned};
 <span class="kw">use </span>syn::spanned::Spanned <span class="kw">as _</span>;
@@ -314,9 +315,9 @@
             value,
             type_value,
             from_value,
-            vm_result,
+            result,
             tuple,
-            vm_try,
+            runtime_error,
             ..
         } = <span class="kw-2">&amp;</span><span class="self">self</span>.tokens;
 
@@ -324,10 +325,10 @@
             syn::Fields::Unit =&gt; {
                 <span class="kw">let </span>expanded = <span class="macro">quote!</span> {
                     #type_value::Unit =&gt; {
-                        #vm_result::Ok(<span class="self">Self</span>)
+                        #result::Ok(<span class="self">Self</span>)
                     }
                     #type_value::EmptyStruct(..) =&gt; {
-                        #vm_result::Ok(<span class="self">Self</span>)
+                        #result::Ok(<span class="self">Self</span>)
                     }
                 };
 
@@ -339,13 +340,13 @@
                 <span class="kw">let </span>expanded = <span class="macro">quote!</span> {
                     #type_value::Unit =&gt; {
                         <span class="kw">let </span>tuple = #tuple::new(<span class="kw-2">&amp;</span>[]);
-                        #vm_result::Ok(<span class="self">Self</span>(#expanded))
+                        #result::Ok(<span class="self">Self</span>(#expanded))
                     }
                     #type_value::Tuple(tuple) =&gt; {
-                        #vm_result::Ok(<span class="self">Self</span>(#expanded))
+                        #result::Ok(<span class="self">Self</span>(#expanded))
                     }
                     #type_value::TupleStruct(tuple) =&gt; {
-                        #vm_result::Ok(<span class="self">Self</span>(#expanded))
+                        #result::Ok(<span class="self">Self</span>(#expanded))
                     }
                 };
 
@@ -356,10 +357,10 @@
 
                 <span class="kw">let </span>expanded = <span class="macro">quote!</span> {
                     #type_value::Object(object) =&gt; {
-                        #vm_result::Ok(<span class="self">Self </span>{ #expanded })
+                        #result::Ok(<span class="self">Self </span>{ #expanded })
                     }
                     #type_value::Struct(object) =&gt; {
-                        #vm_result::Ok(<span class="self">Self </span>{ #expanded })
+                        #result::Ok(<span class="self">Self </span>{ #expanded })
                     }
                 };
 
@@ -370,11 +371,11 @@
         <span class="prelude-val">Ok</span>(<span class="macro">quote!</span> {
             <span class="attr">#[automatically_derived]
             </span><span class="kw">impl </span>#from_value <span class="kw">for </span>#ident {
-                <span class="kw">fn </span>from_value(value: #value) -&gt; #vm_result&lt;<span class="self">Self</span>&gt; {
-                    <span class="kw">match </span>#<span class="macro">vm_try!</span>(#value::into_type_value(value)) {
+                <span class="kw">fn </span>from_value(value: #value) -&gt; #result&lt;<span class="self">Self</span>, #runtime_error&gt; {
+                    <span class="kw">match </span>#value::into_type_value(value)<span class="question-mark">? </span>{
                         #expanded
                         actual =&gt; {
-                            #vm_result::expected::&lt;#expected&gt;(#type_value::type_info(<span class="kw-2">&amp;</span>actual))
+                            #result::Err(#runtime_error::expected::&lt;#expected&gt;(#type_value::type_info(<span class="kw-2">&amp;</span>actual)))
                         }
                     }
                 }
@@ -399,8 +400,8 @@
             from_value,
             variant_data,
             value,
-            vm_result,
-            vm_try,
+            result,
+            runtime_error,
             ..
         } = <span class="kw-2">&amp;</span><span class="self">self</span>.tokens;
 
@@ -411,37 +412,38 @@
             <span class="kw">match </span><span class="kw-2">&amp;</span>variant.fields {
                 syn::Fields::Unit =&gt; {
                     unit_matches.push(<span class="macro">quote!</span> {
-                        #lit_str =&gt; #vm_result::Ok(<span class="self">Self</span>::#ident)
+                        #lit_str =&gt; #result::Ok(<span class="self">Self</span>::#ident)
                     });
                 }
                 syn::Fields::Unnamed(named) =&gt; {
                     <span class="kw">let </span>expanded = <span class="self">self</span>.expand_unnamed(named)<span class="question-mark">?</span>;
 
                     unnamed_matches.push(<span class="macro">quote!</span> {
-                        #lit_str =&gt; #vm_result::Ok(<span class="self">Self</span>::#ident ( #expanded ))
+                        #lit_str =&gt; #result::Ok(<span class="self">Self</span>::#ident ( #expanded ))
                     });
                 }
                 syn::Fields::Named(named) =&gt; {
                     <span class="kw">let </span>expanded = <span class="self">self</span>.expand_named(named)<span class="question-mark">?</span>;
 
                     named_matches.push(<span class="macro">quote!</span> {
-                        #lit_str =&gt; #vm_result::Ok(<span class="self">Self</span>::#ident { #expanded })
+                        #lit_str =&gt; #result::Ok(<span class="self">Self</span>::#ident { #expanded })
                     });
                 }
             }
         }
 
         <span class="kw">let </span>missing = <span class="macro">quote!</span> {
-            name =&gt; #<span class="macro">vm_try!</span>(#vm_result::__rune_macros__missing_variant(name))
+            name =&gt; {
+                <span class="kw">return </span>#result::Err(#runtime_error::__rune_macros__missing_variant(name)<span class="question-mark">?</span>);
+            }
         };
 
         <span class="kw">let </span>variant = <span class="macro">quote!</span> {
             #type_value::Variant(variant) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>it = variant.rtti().item.iter();
 
-                <span class="kw">let </span>name = <span class="kw">match </span>it.next_back_str() {
-                    <span class="prelude-val">Some</span>(name) =&gt; name,
-                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>#vm_result::__rune_macros__missing_variant_name(),
+                <span class="kw">let </span><span class="prelude-val">Some</span>(name) = it.next_back_str() <span class="kw">else </span>{
+                    <span class="kw">return </span>#result::Err(#runtime_error::__rune_macros__missing_variant_name());
                 };
 
                 <span class="kw">match </span>variant.data() {
@@ -461,11 +463,11 @@
         <span class="prelude-val">Ok</span>(<span class="macro">quote!</span> {
             <span class="attr">#[automatically_derived]
             </span><span class="kw">impl </span>#from_value <span class="kw">for </span>#ident {
-                <span class="kw">fn </span>from_value(value: #value) -&gt; #vm_result&lt;<span class="self">Self</span>&gt; {
-                    <span class="kw">match </span>#<span class="macro">vm_try!</span>(#value::into_type_value(value)) {
+                <span class="kw">fn </span>from_value(value: #value) -&gt; #result&lt;<span class="self">Self</span>, #runtime_error&gt; {
+                    <span class="kw">match </span>#value::into_type_value(value)<span class="question-mark">? </span>{
                         #variant,
                         actual =&gt; {
-                            #vm_result::__rune_macros__expected_variant(#type_value::type_info(<span class="kw-2">&amp;</span>actual))
+                            #result::Err(#runtime_error::__rune_macros__expected_variant(#type_value::type_info(<span class="kw-2">&amp;</span>actual)))
                         }
                     }
                 }
@@ -493,10 +495,10 @@
 
         <span class="kw">let </span>Tokens {
             from_value,
-            vm_result,
+            result,
             type_name,
-            vm_try,
             try_clone,
+            runtime_error,
             ..
         } = <span class="kw-2">&amp;</span><span class="self">self</span>.tokens;
 
@@ -506,11 +508,11 @@
             from_values.push(<span class="macro">quote!</span> {
                 <span class="kw">match </span>tuple.get(#index) {
                     <span class="prelude-val">Some</span>(value) =&gt; {
-                        <span class="kw">let </span>value = #<span class="macro">vm_try!</span>(#try_clone::try_clone(value));
-                        #<span class="macro">vm_try!</span>(#from_value::from_value(value))
-                    }
+                        <span class="kw">let </span>value = #try_clone::try_clone(value)<span class="question-mark">?</span>;
+                        #from_value::from_value(value)<span class="question-mark">?
+                    </span>}
                     <span class="prelude-val">None </span>=&gt; {
-                        <span class="kw">return </span>#vm_result::__rune_macros__missing_tuple_index(#type_name::&lt;<span class="self">Self</span>&gt;(), #index);
+                        <span class="kw">return </span>#result::Err(#runtime_error::__rune_macros__missing_tuple_index(#type_name::&lt;<span class="self">Self</span>&gt;(), #index));
                     }
                 }
             });
@@ -531,24 +533,24 @@
 
             <span class="kw">let </span>Tokens {
                 from_value,
-                vm_result,
+                result,
+                runtime_error,
                 type_name,
-                vm_try,
                 ..
             } = <span class="kw-2">&amp;</span><span class="self">self</span>.tokens;
 
             from_values.push(<span class="macro">quote_spanned!</span> {
                 field.span() =&gt;
                 #ident: <span class="kw">match </span>object.get(#name) {
-                    <span class="prelude-val">Some</span>(value) =&gt; #<span class="macro">vm_try!</span>(#from_value::from_value(value.clone())),
+                    <span class="prelude-val">Some</span>(value) =&gt; #from_value::from_value(value.clone())<span class="question-mark">?</span>,
                     <span class="prelude-val">None </span>=&gt; {
-                        <span class="kw">return </span>#vm_result::__rune_macros__missing_struct_field(#type_name::&lt;<span class="self">Self</span>&gt;(), #name);
+                        <span class="kw">return </span>#result::Err(#runtime_error::__rune_macros__missing_struct_field(#type_name::&lt;<span class="self">Self</span>&gt;(), #name));
                     }
                 }
             });
         }
 
-        <span class="prelude-val">Ok</span>(<span class="macro">quote_spanned!</span>(named.span() =&gt; #(#from_values),* ))
+        <span class="prelude-val">Ok</span>(<span class="macro">quote!</span>(#(#from_values),<span class="kw-2">*</span>))
     }
 }
 

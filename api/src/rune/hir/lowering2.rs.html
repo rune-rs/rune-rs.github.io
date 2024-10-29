@@ -2797,7 +2797,10 @@
 <a href="#2796" id="2796">2796</a>
 <a href="#2797" id="2797">2797</a>
 <a href="#2798" id="2798">2798</a>
-<a href="#2799" id="2799">2799</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::replace;
+<a href="#2799" id="2799">2799</a>
+<a href="#2800" id="2800">2800</a>
+<a href="#2801" id="2801">2801</a>
+<a href="#2802" id="2802">2802</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::num::NonZero;
 <span class="kw">use </span>core::ops::Neg;
 
@@ -2817,7 +2820,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::hir;
 <span class="kw">use </span><span class="kw">crate</span>::parse::{NonZeroId, Resolve};
 <span class="kw">use </span><span class="kw">crate</span>::query::{<span class="self">self</span>, GenericsParameters, Named2, Named2Kind, Used};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{format, ConstValue, Type, TypeCheck};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{format, ConstValue, ConstValueKind, Inline, Type, TypeCheck};
 <span class="kw">use </span><span class="kw">crate</span>::Hash;
 
 <span class="kw">use super</span>::{Ctxt, Needs};
@@ -5350,14 +5353,27 @@
     <span class="macro">alloc_with!</span>(cx, span);
 
     <span class="kw">let </span>kind = <span class="lifetime">'kind</span>: {
-        <span class="kw">let </span>lit = <span class="kw">match </span><span class="kw-2">*</span>const_value {
-            ConstValue::Bool(b) =&gt; hir::Lit::Bool(b),
-            ConstValue::Byte(b) =&gt; hir::Lit::Byte(b),
-            ConstValue::Char(ch) =&gt; hir::Lit::Char(ch),
-            ConstValue::String(<span class="kw-2">ref </span>string) =&gt; hir::Lit::Str(<span class="macro">alloc_str!</span>(string.as_ref())),
-            ConstValue::Bytes(<span class="kw-2">ref </span>bytes) =&gt; hir::Lit::ByteStr(<span class="macro">alloc_bytes!</span>(bytes.as_ref())),
-            ConstValue::Integer(integer) =&gt; hir::Lit::Integer(integer),
-            ConstValue::Vec(<span class="kw-2">ref </span>items) =&gt; {
+        <span class="kw">let </span>lit = <span class="kw">match </span><span class="kw-2">*</span>const_value.as_kind() {
+            ConstValueKind::Inline(value) =&gt; <span class="kw">match </span>value {
+                Inline::Unit =&gt; {
+                    <span class="kw">break </span><span class="lifetime">'kind </span>hir::PatKind::Sequence(<span class="macro">alloc!</span>(hir::PatSequence {
+                        kind: hir::PatSequenceKind::Anonymous {
+                            type_check: TypeCheck::Unit,
+                            count: <span class="number">0</span>,
+                            is_open: <span class="bool-val">false</span>,
+                        },
+                        items: <span class="kw-2">&amp;</span>[],
+                    }));
+                }
+                Inline::Bool(b) =&gt; hir::Lit::Bool(b),
+                Inline::Byte(b) =&gt; hir::Lit::Byte(b),
+                Inline::Char(ch) =&gt; hir::Lit::Char(ch),
+                Inline::Integer(value) =&gt; hir::Lit::Integer(value),
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::msg(span, <span class="string">"Unsupported constant value in pattern"</span>)),
+            },
+            ConstValueKind::String(<span class="kw-2">ref </span>string) =&gt; hir::Lit::Str(<span class="macro">alloc_str!</span>(string.as_ref())),
+            ConstValueKind::Bytes(<span class="kw-2">ref </span>bytes) =&gt; hir::Lit::ByteStr(<span class="macro">alloc_bytes!</span>(bytes.as_ref())),
+            ConstValueKind::Vec(<span class="kw-2">ref </span>items) =&gt; {
                 <span class="kw">let </span>items = <span class="macro">iter!</span>(items.iter(), items.len(), |value| pat_const_value(
                     cx, value, span
                 )<span class="question-mark">?</span>);
@@ -5371,17 +5387,7 @@
                     items,
                 }));
             }
-            ConstValue::Unit =&gt; {
-                <span class="kw">break </span><span class="lifetime">'kind </span>hir::PatKind::Sequence(<span class="macro">alloc!</span>(hir::PatSequence {
-                    kind: hir::PatSequenceKind::Anonymous {
-                        type_check: TypeCheck::Unit,
-                        count: <span class="number">0</span>,
-                        is_open: <span class="bool-val">false</span>,
-                    },
-                    items: <span class="kw-2">&amp;</span>[],
-                }));
-            }
-            ConstValue::Tuple(<span class="kw-2">ref </span>items) =&gt; {
+            ConstValueKind::Tuple(<span class="kw-2">ref </span>items) =&gt; {
                 <span class="kw">let </span>items = <span class="macro">iter!</span>(items.iter(), items.len(), |value| pat_const_value(
                     cx, value, span
                 )<span class="question-mark">?</span>);
@@ -5395,7 +5401,7 @@
                     items,
                 }));
             }
-            ConstValue::Object(<span class="kw-2">ref </span>fields) =&gt; {
+            ConstValueKind::Object(<span class="kw-2">ref </span>fields) =&gt; {
                 <span class="kw">let </span>bindings = <span class="macro">iter!</span>(fields.iter(), fields.len(), |(key, value)| {
                     <span class="kw">let </span>pat = <span class="macro">alloc!</span>(pat_const_value(cx, value, span)<span class="question-mark">?</span>);
 

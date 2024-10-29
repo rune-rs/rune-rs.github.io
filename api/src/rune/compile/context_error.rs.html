@@ -362,11 +362,28 @@
 <a href="#361" id="361">361</a>
 <a href="#362" id="362">362</a>
 <a href="#363" id="363">363</a>
-<a href="#364" id="364">364</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{TypeInfo, VmError};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{RuntimeError, TypeInfo};
 <span class="kw">use crate</span>::{Hash, ItemBuf};
 
 <span class="doccomment">/// An error raised when building the context.
@@ -376,6 +393,9 @@
 </span><span class="kw">pub enum </span>ContextError {
     AllocError {
         error: alloc::Error,
+    },
+    RuntimeError {
+        error: RuntimeError,
     },
     UnitAlreadyPresent,
     InternalAlreadyPresent {
@@ -474,12 +494,13 @@
     ConstructorConflict {
         type_info: TypeInfo,
     },
-    ValueError {
-        error: VmError,
-    },
     VariantConstructorConflict {
         type_info: TypeInfo,
         index: usize,
+    },
+    ConflictingConstConstruct {
+        type_info: TypeInfo,
+        hash: Hash,
     },
     MissingType {
         item: ItemBuf,
@@ -518,6 +539,13 @@
     }
 }
 
+<span class="kw">impl </span>From&lt;RuntimeError&gt; <span class="kw">for </span>ContextError {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from(error: RuntimeError) -&gt; <span class="self">Self </span>{
+        ContextError::RuntimeError { error }
+    }
+}
+
 <span class="kw">impl </span>From&lt;alloc::alloc::AllocError&gt; <span class="kw">for </span>ContextError {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(error: alloc::alloc::AllocError) -&gt; <span class="self">Self </span>{
@@ -531,6 +559,9 @@
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
             ContextError::AllocError { error } =&gt; {
+                error.fmt(f)<span class="question-mark">?</span>;
+            }
+            ContextError::RuntimeError { error } =&gt; {
                 error.fmt(f)<span class="question-mark">?</span>;
             }
             ContextError::UnitAlreadyPresent {} =&gt; {
@@ -670,13 +701,16 @@
                     <span class="string">"Constructor for type `{type_info}` has already been registered"
                 </span>)<span class="question-mark">?</span>;
             }
-            ContextError::ValueError { error } =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"Error when converting to constant value: {error}"</span>)<span class="question-mark">?</span>;
-            }
             ContextError::VariantConstructorConflict { type_info, index } =&gt; {
                 <span class="macro">write!</span>(
                     f,
                     <span class="string">"Constructor for variant {index} in `{type_info}` has already been registered"
+                </span>)<span class="question-mark">?</span>;
+            }
+            ContextError::ConflictingConstConstruct { type_info, hash } =&gt; {
+                <span class="macro">write!</span>(
+                    f,
+                    <span class="string">"Conflicting constant constructor with hash {hash} for type {type_info}"
                 </span>)<span class="question-mark">?</span>;
             }
             ContextError::MissingType { item, type_info } =&gt; {

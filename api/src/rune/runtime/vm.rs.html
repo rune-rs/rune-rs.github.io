@@ -4005,7 +4005,35 @@
 <a href="#4004" id="4004">4004</a>
 <a href="#4005" id="4005">4005</a>
 <a href="#4006" id="4006">4006</a>
-<a href="#4007" id="4007">4007</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#4007" id="4007">4007</a>
+<a href="#4008" id="4008">4008</a>
+<a href="#4009" id="4009">4009</a>
+<a href="#4010" id="4010">4010</a>
+<a href="#4011" id="4011">4011</a>
+<a href="#4012" id="4012">4012</a>
+<a href="#4013" id="4013">4013</a>
+<a href="#4014" id="4014">4014</a>
+<a href="#4015" id="4015">4015</a>
+<a href="#4016" id="4016">4016</a>
+<a href="#4017" id="4017">4017</a>
+<a href="#4018" id="4018">4018</a>
+<a href="#4019" id="4019">4019</a>
+<a href="#4020" id="4020">4020</a>
+<a href="#4021" id="4021">4021</a>
+<a href="#4022" id="4022">4022</a>
+<a href="#4023" id="4023">4023</a>
+<a href="#4024" id="4024">4024</a>
+<a href="#4025" id="4025">4025</a>
+<a href="#4026" id="4026">4026</a>
+<a href="#4027" id="4027">4027</a>
+<a href="#4028" id="4028">4028</a>
+<a href="#4029" id="4029">4029</a>
+<a href="#4030" id="4030">4030</a>
+<a href="#4031" id="4031">4031</a>
+<a href="#4032" id="4032">4032</a>
+<a href="#4033" id="4033">4033</a>
+<a href="#4034" id="4034">4034</a>
+<a href="#4035" id="4035">4035</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -5938,7 +5966,7 @@
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_await(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress) -&gt; VmResult&lt;Future&gt; {
-        <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr)).clone().into_future()
+        VmResult::Ok(<span class="macro">vm_try!</span>(<span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr)).clone().into_future()))
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
@@ -6899,6 +6927,26 @@
         VmResult::Ok(())
     }
 
+    <span class="doccomment">/// Operation to allocate a constant value from an array of values.
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
+    </span><span class="kw">fn </span>op_const_construct(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        addr: InstAddress,
+        hash: Hash,
+        count: usize,
+        out: Output,
+    ) -&gt; VmResult&lt;()&gt; {
+        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, count));
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(construct) = <span class="self">self</span>.context.construct(hash) <span class="kw">else </span>{
+            <span class="kw">return </span>err(VmErrorKind::MissingConstantConstructor { hash });
+        };
+
+        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(construct.runtime_construct(values));
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, value));
+        VmResult::Ok(())
+    }
+
     <span class="doccomment">/// Operation to allocate an object variant.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_struct_variant(
@@ -7817,6 +7865,14 @@
                     out,
                 } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_struct(addr, hash, slot, out));
+                }
+                Inst::ConstConstruct {
+                    addr,
+                    hash,
+                    count,
+                    out,
+                } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_const_construct(addr, hash, count, out));
                 }
                 Inst::StructVariant {
                     addr,

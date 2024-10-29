@@ -1077,8 +1077,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::vm::Isolated;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
     Args, Call, ConstValue, FromValue, FunctionHandler, GuardedArgs, InstAddress, Mutable, Output,
-    OwnedTuple, RefRepr, Rtti, RuntimeContext, Stack, Unit, Value, VariantRtti, Vm, VmCall,
-    VmErrorKind, VmHalt, VmResult,
+    OwnedTuple, RefRepr, Rtti, RuntimeContext, RuntimeError, Stack, Unit, Value, VariantRtti, Vm,
+    VmCall, VmErrorKind, VmHalt, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::shared::AssertSend;
 <span class="kw">use </span><span class="kw">crate</span>::Any;
@@ -1386,7 +1386,7 @@
     /// let pony: Function = rune::from_value(pony)?;
     ///
     /// // This is fine, since `pony` is a free function.
-    /// let pony = pony.into_sync().into_result()?;
+    /// let pony = pony.into_sync()?;
     ///
     /// assert_eq!(pony.type_hash(), Hash::type_hash(["pony"]));
     /// # Ok::&lt;_, rune::support::Error&gt;(())
@@ -1427,8 +1427,8 @@
     /// assert!(closure.into_sync().is_err());
     /// # Ok::&lt;_, rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>into_sync(<span class="self">self</span>) -&gt; VmResult&lt;SyncFunction&gt; {
-        VmResult::Ok(SyncFunction(<span class="macro">vm_try!</span>(<span class="self">self</span>.<span class="number">0</span>.into_sync())))
+    </span><span class="kw">pub fn </span>into_sync(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SyncFunction, RuntimeError&gt; {
+        <span class="prelude-val">Ok</span>(SyncFunction(<span class="self">self</span>.<span class="number">0</span>.into_sync()<span class="question-mark">?</span>))
     }
 }
 
@@ -1631,7 +1631,7 @@
             }
         };
 
-        T::from_value(value)
+        VmResult::Ok(<span class="macro">vm_try!</span>(T::from_value(value)))
     }
 
     <span class="kw">fn </span>async_send_call&lt;<span class="lifetime">'a</span>, A, T&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, args: A) -&gt; <span class="kw">impl </span>Future&lt;Output = VmResult&lt;T&gt;&gt; + Send + <span class="lifetime">'a
@@ -1654,7 +1654,7 @@
                 value
             };
 
-            T::from_value(value)
+            VmResult::Ok(<span class="macro">vm_try!</span>(T::from_value(value)))
         };
 
         <span class="comment">// Safety: Future is send because there is no way to call this
@@ -1841,18 +1841,18 @@
 
 <span class="kw">impl </span>FunctionImpl&lt;Value&gt; {
     <span class="doccomment">/// Try to convert into a [SyncFunction].
-    </span><span class="kw">fn </span>into_sync(<span class="self">self</span>) -&gt; VmResult&lt;FunctionImpl&lt;ConstValue&gt;&gt; {
+    </span><span class="kw">fn </span>into_sync(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;FunctionImpl&lt;ConstValue&gt;, RuntimeError&gt; {
         <span class="kw">let </span>inner = <span class="kw">match </span><span class="self">self</span>.inner {
             Inner::FnClosureOffset(closure) =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>env = <span class="macro">vm_try!</span>(Vec::try_with_capacity(closure.environment.len()));
+                <span class="kw">let </span><span class="kw-2">mut </span>env = Vec::try_with_capacity(closure.environment.len())<span class="question-mark">?</span>;
 
                 <span class="kw">for </span>value <span class="kw">in </span>Vec::from(closure.environment) {
-                    <span class="macro">vm_try!</span>(env.try_push(<span class="macro">vm_try!</span>(FromValue::from_value(value))));
+                    env.try_push(FromValue::from_value(value)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
                 }
 
                 Inner::FnClosureOffset(FnClosureOffset {
                     fn_offset: closure.fn_offset,
-                    environment: <span class="macro">vm_try!</span>(env.try_into_boxed_slice()),
+                    environment: env.try_into_boxed_slice()<span class="question-mark">?</span>,
                 })
             }
             Inner::FnHandler(inner) =&gt; Inner::FnHandler(inner),
@@ -1863,7 +1863,7 @@
             Inner::FnTupleVariant(inner) =&gt; Inner::FnTupleVariant(inner),
         };
 
-        VmResult::Ok(FunctionImpl { inner })
+        <span class="prelude-val">Ok</span>(FunctionImpl { inner })
     }
 }
 
@@ -2090,8 +2090,8 @@
 
 <span class="kw">impl </span>FromValue <span class="kw">for </span>SyncFunction {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="macro">vm_try!</span>(value.into_function()).into_sync()
+    </span><span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+        value.into_function()<span class="question-mark">?</span>.into_sync()
     }
 }
 

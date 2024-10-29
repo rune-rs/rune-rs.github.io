@@ -606,7 +606,10 @@
 <a href="#605" id="605">605</a>
 <a href="#606" id="606">606</a>
 <a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp;
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp;
 <span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::ops;
@@ -625,7 +628,8 @@
 <span class="kw">use </span><span class="kw">super</span>::EnvProtocolCaller;
 <span class="kw">use super</span>::{
     Formatter, FromValue, ProtocolCaller, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo,
-    RangeToInclusive, RawAnyGuard, Ref, ToValue, UnsafeToRef, Value, VmErrorKind, VmResult,
+    RangeToInclusive, RawAnyGuard, Ref, RuntimeError, ToValue, UnsafeToRef, Value, VmErrorKind,
+    VmResult,
 };
 
 <span class="doccomment">/// Struct representing a dynamic vector.
@@ -1142,16 +1146,16 @@
 <span class="kw">where
     </span>T: FromValue,
 {
-    <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.into_vec());
+    <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+        <span class="kw">let </span>vec = value.into_vec()<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>output = ::rust_alloc::vec::Vec::with_capacity(vec.len());
 
         <span class="kw">for </span>value <span class="kw">in </span>vec {
-            output.push(<span class="macro">vm_try!</span>(T::from_value(value)));
+            output.push(T::from_value(value)<span class="question-mark">?</span>);
         }
 
-        VmResult::Ok(output)
+        <span class="prelude-val">Ok</span>(output)
     }
 }
 
@@ -1159,16 +1163,16 @@
 <span class="kw">where
     </span>T: FromValue,
 {
-    <span class="kw">fn </span>from_value(value: Value) -&gt; VmResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.into_vec());
+    <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+        <span class="kw">let </span>vec = value.into_vec()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="macro">vm_try!</span>(alloc::Vec::try_with_capacity(vec.len()));
+        <span class="kw">let </span><span class="kw-2">mut </span>output = alloc::Vec::try_with_capacity(vec.len())<span class="question-mark">?</span>;
 
         <span class="kw">for </span>value <span class="kw">in </span>vec {
-            <span class="macro">vm_try!</span>(output.try_push(<span class="macro">vm_try!</span>(T::from_value(value))));
+            output.try_push(T::from_value(value)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
         }
 
-        VmResult::Ok(output)
+        <span class="prelude-val">Ok</span>(output)
     }
 }
 
@@ -1188,14 +1192,15 @@
 <span class="kw">where
     </span>T: ToValue,
 {
-    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="macro">vm_try!</span>(alloc::Vec::try_with_capacity(<span class="self">self</span>.len()));
+    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = alloc::Vec::try_with_capacity(<span class="self">self</span>.len())<span class="question-mark">?</span>;
 
         <span class="kw">for </span>value <span class="kw">in </span><span class="self">self </span>{
-            <span class="macro">vm_try!</span>(inner.try_push(<span class="macro">vm_try!</span>(value.to_value())));
+            <span class="kw">let </span>value = value.to_value()<span class="question-mark">?</span>;
+            inner.try_push(value)<span class="question-mark">?</span>;
         }
 
-        VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(Vec { inner })))
+        <span class="prelude-val">Ok</span>(Value::try_from(Vec { inner })<span class="question-mark">?</span>)
     }
 }
 
@@ -1204,14 +1209,15 @@
 <span class="kw">where
     </span>T: ToValue,
 {
-    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="macro">vm_try!</span>(alloc::Vec::try_with_capacity(<span class="self">self</span>.len()));
+    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = alloc::Vec::try_with_capacity(<span class="self">self</span>.len())<span class="question-mark">?</span>;
 
         <span class="kw">for </span>value <span class="kw">in </span><span class="self">self </span>{
-            <span class="macro">vm_try!</span>(inner.try_push(<span class="macro">vm_try!</span>(value.to_value())));
+            <span class="kw">let </span>value = value.to_value()<span class="question-mark">?</span>;
+            inner.try_push(value)<span class="question-mark">?</span>;
         }
 
-        VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(Vec { inner })))
+        <span class="prelude-val">Ok</span>(Value::try_from(Vec { inner })<span class="question-mark">?</span>)
     }
 }
 </code></pre></div></section></main></body></html>

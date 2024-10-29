@@ -287,27 +287,9 @@
 <a href="#286" id="286">286</a>
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
-<a href="#289" id="289">289</a>
-<a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
-<a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
-<a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a>
-<a href="#304" id="304">304</a>
-<a href="#305" id="305">305</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any;
-
-<span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
+<a href="#289" id="289">289</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, HashMap};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{AnyObj, Object, Value, VmError, VmErrorKind, VmIntegerRepr, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{AnyObj, Object, RuntimeError, Value, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
 <span class="doccomment">/// Derive macro for the [`ToValue`] trait for converting types into the dynamic
@@ -373,11 +355,11 @@
 /// assert_eq!(foo, 43);
 /// # Ok::&lt;_, rune::support::Error&gt;(())
 /// ```
-</span><span class="kw">pub fn </span>to_value&lt;T&gt;(value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Value, VmError&gt;
+</span><span class="kw">pub fn </span>to_value&lt;T&gt;(value: T) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt;
 <span class="kw">where
     </span>T: ToValue,
 {
-    T::to_value(value).into_result()
+    T::to_value(value)
 }
 
 <span class="doccomment">/// Trait for converting types into the dynamic [`Value`] container.
@@ -412,7 +394,43 @@
 /// ```
 </span><span class="kw">pub trait </span>ToValue: Sized {
     <span class="doccomment">/// Convert into a value.
-    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt;;
+    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt;;
+}
+
+<span class="doccomment">/// Trait governing things that can be returned from native functions.
+</span><span class="kw">pub trait </span>ToReturn: Sized {
+    <span class="doccomment">/// Convert something into a return value.
+    </span><span class="kw">fn </span>to_return(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt;;
+}
+
+<span class="kw">impl</span>&lt;T&gt; ToReturn <span class="kw">for </span>VmResult&lt;T&gt;
+<span class="kw">where
+    </span>T: ToValue,
+{
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>to_return(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            VmResult::Ok(value) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(value.to_value())),
+            VmResult::Err(error) =&gt; VmResult::Err(error),
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;T&gt; ToReturn <span class="kw">for </span>T
+<span class="kw">where
+    </span>T: ToValue,
+{
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>to_return(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
+        VmResult::Ok(<span class="macro">vm_try!</span>(T::to_value(<span class="self">self</span>)))
+    }
+}
+
+<span class="kw">impl </span>ToValue <span class="kw">for </span>Value {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>)
+    }
 }
 
 <span class="doccomment">/// Trait for converting types into values.
@@ -438,8 +456,8 @@
     </span>T: Any,
 {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        VmResult::Ok(Value::from(<span class="macro">vm_try!</span>(AnyObj::new(<span class="self">self</span>))))
+    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="prelude-val">Ok</span>(Value::from(AnyObj::new(<span class="self">self</span>)<span class="question-mark">?</span>))
     }
 }
 
@@ -460,8 +478,8 @@
 
 <span class="kw">impl </span>ToValue <span class="kw">for </span><span class="kw-2">&amp;</span>Value {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        VmResult::Ok(<span class="self">self</span>.clone())
+    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.clone())
     }
 }
 
@@ -471,59 +489,45 @@
 <span class="kw">where
     </span>T: ToValue,
 {
-    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
+    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
         <span class="kw">let </span>option = <span class="kw">match </span><span class="self">self </span>{
-            <span class="prelude-val">Some</span>(some) =&gt; <span class="prelude-val">Some</span>(<span class="macro">vm_try!</span>(some.to_value())),
+            <span class="prelude-val">Some</span>(some) =&gt; <span class="prelude-val">Some</span>(some.to_value()<span class="question-mark">?</span>),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         };
 
-        VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(option)))
+        <span class="prelude-val">Ok</span>(Value::try_from(option)<span class="question-mark">?</span>)
     }
 }
 
 <span class="comment">// String impls
 
 </span><span class="kw">impl </span>ToValue <span class="kw">for </span>alloc::Box&lt;str&gt; {
-    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
+    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
         <span class="kw">let </span>this = alloc::String::from(<span class="self">self</span>);
-        VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(this)))
+        <span class="prelude-val">Ok</span>(Value::new(this)<span class="question-mark">?</span>)
     }
 }
 
 <span class="kw">impl </span>ToValue <span class="kw">for </span><span class="kw-2">&amp;</span>str {
-    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        <span class="kw">let </span>this = <span class="macro">vm_try!</span>(alloc::String::try_from(<span class="self">self</span>));
-        VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(this)))
+    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="kw">let </span>this = alloc::String::try_from(<span class="self">self</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(Value::new(this)<span class="question-mark">?</span>)
     }
 }
 
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">impl </span>ToValue <span class="kw">for </span>::rust_alloc::boxed::Box&lt;str&gt; {
-    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        <span class="kw">let </span>this = <span class="macro">vm_try!</span>(<span class="self">self</span>.try_to_string());
-        VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(this)))
+    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.try_to_string()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(Value::new(this)<span class="question-mark">?</span>)
     }
 }
 
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">impl </span>ToValue <span class="kw">for </span>::rust_alloc::string::String {
-    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        <span class="kw">let </span>string = <span class="macro">vm_try!</span>(alloc::String::try_from(<span class="self">self</span>));
-        <span class="kw">let </span>value = <span class="macro">vm_try!</span>(Value::try_from(string));
-        VmResult::Ok(value)
-    }
-}
-
-<span class="kw">impl</span>&lt;T&gt; ToValue <span class="kw">for </span>VmResult&lt;T&gt;
-<span class="kw">where
-    </span>T: ToValue,
-{
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        <span class="kw">match </span><span class="self">self </span>{
-            VmResult::Ok(value) =&gt; value.to_value(),
-            VmResult::Err(error) =&gt; VmResult::Err(error),
-        }
+    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="kw">let </span>string = alloc::String::try_from(<span class="self">self</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(Value::new(string)<span class="question-mark">?</span>)
     }
 }
 
@@ -532,50 +536,13 @@
     </span>T: ToValue,
     E: ToValue,
 {
-    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
+    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
         <span class="kw">let </span>result = <span class="kw">match </span><span class="self">self </span>{
-            <span class="prelude-val">Ok</span>(ok) =&gt; <span class="prelude-val">Ok</span>(<span class="macro">vm_try!</span>(ok.to_value())),
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(<span class="macro">vm_try!</span>(err.to_value())),
+            <span class="prelude-val">Ok</span>(ok) =&gt; <span class="prelude-val">Ok</span>(ok.to_value()<span class="question-mark">?</span>),
+            <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(err.to_value()<span class="question-mark">?</span>),
         };
 
-        VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(result)))
-    }
-}
-
-<span class="comment">// number impls
-
-</span><span class="macro">macro_rules!</span> number_value_trait {
-    (<span class="macro-nonterminal">$ty</span>:ty) =&gt; {
-        <span class="kw">impl </span>ToValue <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
-            <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-                <span class="kw">match </span>&lt;i64&gt;::try_from(<span class="self">self</span>) {
-                    <span class="prelude-val">Ok</span>(number) =&gt; VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(number))),
-                    <span class="attr">#[allow(unreachable_patterns)]
-                    </span><span class="prelude-val">Err</span>(..) =&gt; VmResult::err(VmErrorKind::IntegerToValueCoercionError {
-                        from: VmIntegerRepr::from(<span class="self">self</span>),
-                        to: any::type_name::&lt;i64&gt;(),
-                    }),
-                }
-            }
-        }
-    };
-}
-
-<span class="macro">number_value_trait!</span>(u16);
-<span class="macro">number_value_trait!</span>(u32);
-<span class="macro">number_value_trait!</span>(u64);
-<span class="macro">number_value_trait!</span>(u128);
-<span class="macro">number_value_trait!</span>(usize);
-<span class="macro">number_value_trait!</span>(i8);
-<span class="macro">number_value_trait!</span>(i16);
-<span class="macro">number_value_trait!</span>(i32);
-<span class="macro">number_value_trait!</span>(i128);
-<span class="macro">number_value_trait!</span>(isize);
-
-<span class="kw">impl </span>ToValue <span class="kw">for </span>f32 {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-        VmResult::Ok(Value::from(<span class="self">self </span><span class="kw">as </span>f64))
+        <span class="prelude-val">Ok</span>(Value::try_from(result)<span class="question-mark">?</span>)
     }
 }
 
@@ -587,15 +554,16 @@
         </span><span class="kw">where
             </span>T: ToValue,
         {
-            <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="macro">vm_try!</span>(Object::with_capacity(<span class="self">self</span>.len()));
+            <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>output = Object::with_capacity(<span class="self">self</span>.len())<span class="question-mark">?</span>;
 
                 <span class="kw">for </span>(key, value) <span class="kw">in </span><span class="self">self </span>{
-                    <span class="kw">let </span>key = <span class="macro">vm_try!</span>(alloc::String::try_from(key));
-                    <span class="macro">vm_try!</span>(output.insert(key, <span class="macro">vm_try!</span>(value.to_value())));
+                    <span class="kw">let </span>key = alloc::String::try_from(key)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>value = value.to_value()<span class="question-mark">?</span>;
+                    output.insert(key, value)<span class="question-mark">?</span>;
                 }
 
-                VmResult::Ok(<span class="macro">vm_try!</span>(Value::try_from(output)))
+                <span class="prelude-val">Ok</span>(Value::try_from(output)<span class="question-mark">?</span>)
             }
         }
     };

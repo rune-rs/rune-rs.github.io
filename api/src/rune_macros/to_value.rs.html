@@ -150,8 +150,7 @@
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::context::{Context, Tokens};
+<a href="#152" id="152">152</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::context::{Context, Tokens};
 <span class="kw">use </span>proc_macro2::TokenStream;
 <span class="kw">use </span>quote::quote;
 
@@ -173,15 +172,16 @@
 
         <span class="kw">let </span>Tokens {
             value,
-            vm_result,
             to_value,
+            result,
+            runtime_error,
             ..
         } = <span class="kw-2">&amp;</span><span class="self">self</span>.tokens;
 
         <span class="prelude-val">Ok</span>(<span class="macro">quote!</span> {
             <span class="attr">#[automatically_derived]
             </span><span class="kw">impl </span>#to_value <span class="kw">for </span>#ident {
-                <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; #vm_result&lt;#value&gt; {
+                <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; #result&lt;#value, #runtime_error&gt; {
                     #inner
                 }
             }
@@ -211,8 +211,7 @@
             to_value,
             value,
             owned_tuple,
-            vm_result,
-            vm_try,
+            result,
             try_from,
             vec,
             ..
@@ -221,16 +220,16 @@
         <span class="kw">for </span>(index, f) <span class="kw">in </span>unnamed.unnamed.iter().enumerate() {
             <span class="kw">let _ </span>= <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>f.attrs)<span class="question-mark">?</span>;
             <span class="kw">let </span>index = syn::Index::from(index);
-            to_values.push(<span class="macro">quote!</span>(#<span class="macro">vm_try!</span>(#vec::try_push(<span class="kw-2">&amp;mut </span>tuple, #<span class="macro">vm_try!</span>(#to_value::to_value(<span class="self">self</span>.#index))))));
+            to_values.push(<span class="macro">quote!</span>(#vec::try_push(<span class="kw-2">&amp;mut </span>tuple, #to_value::to_value(<span class="self">self</span>.#index)<span class="question-mark">?</span>)<span class="question-mark">?</span>));
         }
 
         <span class="kw">let </span>cap = unnamed.unnamed.len();
 
         <span class="prelude-val">Ok</span>(<span class="macro">quote!</span> {
-            <span class="kw">let </span><span class="kw-2">mut </span>tuple = #<span class="macro">vm_try!</span>(#vec::try_with_capacity(#cap));
+            <span class="kw">let </span><span class="kw-2">mut </span>tuple = #vec::try_with_capacity(#cap)<span class="question-mark">?</span>;
             #(#to_values;)*
-            <span class="kw">let </span>tuple = #<span class="macro">vm_try!</span>(&lt;#owned_tuple <span class="kw">as </span>#try_from&lt;<span class="kw">_</span>&gt;&gt;::try_from(tuple));
-            #vm_result::Ok(#<span class="macro">vm_try!</span>(&lt;#value <span class="kw">as </span>#try_from&lt;<span class="kw">_</span>&gt;&gt;::try_from(tuple)))
+            <span class="kw">let </span>tuple = &lt;#owned_tuple <span class="kw">as </span>#try_from&lt;<span class="kw">_</span>&gt;&gt;::try_from(tuple)<span class="question-mark">?</span>;
+            #result::Ok(&lt;#value <span class="kw">as </span>#try_from&lt;<span class="kw">_</span>&gt;&gt;::try_from(tuple)<span class="question-mark">?</span>)
         })
     }
 
@@ -240,8 +239,7 @@
             to_value,
             value,
             object,
-            vm_result,
-            vm_try,
+            result,
             string,
             try_from,
             ..
@@ -256,14 +254,14 @@
             <span class="kw">let </span>name = <span class="kw-2">&amp;</span>syn::LitStr::new(<span class="kw-2">&amp;</span>ident.to_string(), ident.span());
 
             to_values.push(<span class="macro">quote!</span> {
-                object.insert(#<span class="macro">vm_try!</span>(&lt;#string <span class="kw">as </span>#try_from&lt;<span class="kw">_</span>&gt;&gt;::try_from(#name)), #<span class="macro">vm_try!</span>(#to_value::to_value(<span class="self">self</span>.#ident)))
+                object.insert(&lt;#string <span class="kw">as </span>#try_from&lt;<span class="kw">_</span>&gt;&gt;::try_from(#name)<span class="question-mark">?</span>, #to_value::to_value(<span class="self">self</span>.#ident)<span class="question-mark">?</span>)
             });
         }
 
         <span class="prelude-val">Ok</span>(<span class="macro">quote!</span> {
             <span class="kw">let </span><span class="kw-2">mut </span>object = &lt;#object&gt;::new();
             #(#to_values;)*
-            #vm_result::Ok(#<span class="macro">vm_try!</span>(&lt;#value <span class="kw">as </span>#try_from&lt;<span class="kw">_</span>&gt;&gt;::try_from(object)))
+            #result::Ok(&lt;#value <span class="kw">as </span>#try_from&lt;<span class="kw">_</span>&gt;&gt;::try_from(object)<span class="question-mark">?</span>)
         })
     }
 }
