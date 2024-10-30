@@ -606,10 +606,7 @@
 <a href="#605" id="605">605</a>
 <a href="#606" id="606">606</a>
 <a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a>
-<a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp;
+<a href="#608" id="608">608</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp;
 <span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::ops;
@@ -651,8 +648,7 @@
 /// ```
 </span><span class="attr">#[derive(Default, Any)]
 #[repr(transparent)]
-#[rune(builtin, static_type = VEC)]
-#[rune(from_value = Value::into_vec, from_value_ref = Value::into_vec_ref, from_value_mut = Value::into_vec_mut)]
+#[rune(static_type = VEC)]
 </span><span class="kw">pub struct </span>Vec {
     inner: alloc::Vec&lt;Value&gt;,
 }
@@ -1147,7 +1143,7 @@
     </span>T: FromValue,
 {
     <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
-        <span class="kw">let </span>vec = value.into_vec()<span class="question-mark">?</span>;
+        <span class="kw">let </span>vec = value.into_any::&lt;Vec&gt;()<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>output = ::rust_alloc::vec::Vec::with_capacity(vec.len());
 
@@ -1164,7 +1160,7 @@
     </span>T: FromValue,
 {
     <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
-        <span class="kw">let </span>vec = value.into_vec()<span class="question-mark">?</span>;
+        <span class="kw">let </span>vec = value.into_any::&lt;Vec&gt;()<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>output = alloc::Vec::try_with_capacity(vec.len())<span class="question-mark">?</span>;
 
@@ -1180,11 +1176,9 @@
     <span class="kw">type </span>Guard = RawAnyGuard;
 
     <span class="kw">unsafe fn </span>unsafe_to_ref&lt;<span class="lifetime">'a</span>&gt;(value: Value) -&gt; VmResult&lt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">Self</span>, <span class="self">Self</span>::Guard)&gt; {
-        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.into_vec_ref());
+        <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.into_any_ref::&lt;Vec&gt;());
         <span class="kw">let </span>(vec, guard) = Ref::into_raw(vec);
-        <span class="comment">// SAFETY: we're holding onto the guard for the vector here, so it is
-        // live.
-        </span>VmResult::Ok((vec.as_ref().as_slice(), guard))
+        VmResult::Ok((vec.as_ref().as_slice(), guard))
     }
 }
 

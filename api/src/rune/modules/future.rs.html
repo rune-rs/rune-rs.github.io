@@ -136,15 +136,18 @@
 <a href="#135" id="135">135</a>
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a></pre></div><pre class="rust"><code><span class="doccomment">//! Asynchronous computations.
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a></pre></div><pre class="rust"><code><span class="doccomment">//! Asynchronous computations.
 
 </span><span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    BorrowRefRepr, Future, Inline, Mut, Mutable, RefRepr, SelectFuture, Value, VmErrorKind,
+    <span class="self">self</span>, BorrowRefRepr, Future, Inline, Mut, Mutable, RefRepr, SelectFuture, Value, VmErrorKind,
     VmResult,
 };
-<span class="kw">use crate</span>::{ContextError, Module};
+<span class="kw">use crate</span>::{ContextError, Module, TypeHash};
 
 <span class="doccomment">/// Asynchronous computations.
 </span><span class="attr">#[rune::module(::std::future)]
@@ -244,7 +247,7 @@
             Inline::Unit =&gt; VmResult::Ok(Value::unit()),
             value =&gt; VmResult::err([
                 VmErrorKind::bad_argument(<span class="number">0</span>),
-                VmErrorKind::expected::&lt;<span class="kw">crate</span>::runtime::Vec&gt;(value.type_info()),
+                VmErrorKind::expected::&lt;runtime::Vec&gt;(value.type_info()),
             ]),
         },
         BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">*</span>value {
@@ -256,22 +259,25 @@
 
                 VmResult::Ok(<span class="macro">vm_try!</span>(result))
             }
-            Mutable::Vec(<span class="kw-2">ref </span>vec) =&gt; {
+            <span class="kw-2">ref </span>value =&gt; VmResult::err([
+                VmErrorKind::bad_argument(<span class="number">0</span>),
+                VmErrorKind::expected::&lt;runtime::Vec&gt;(value.type_info()),
+            ]),
+        },
+        BorrowRefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+            runtime::Vec::HASH =&gt; {
+                <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;runtime::Vec&gt;());
                 <span class="kw">let </span>result = try_join_impl(vec.iter(), vec.len(), |vec| {
                     VmResult::Ok(<span class="macro">vm_try!</span>(Value::vec(vec)))
                 })
                 .<span class="kw">await</span>;
                 VmResult::Ok(<span class="macro">vm_try!</span>(result))
             }
-            <span class="kw-2">ref </span>value =&gt; VmResult::err([
+            <span class="kw">_ </span>=&gt; VmResult::err([
                 VmErrorKind::bad_argument(<span class="number">0</span>),
-                VmErrorKind::expected::&lt;<span class="kw">crate</span>::runtime::Vec&gt;(value.type_info()),
+                VmErrorKind::expected::&lt;runtime::Vec&gt;(value.type_info()),
             ]),
         },
-        BorrowRefRepr::Any(value) =&gt; VmResult::err([
-            VmErrorKind::bad_argument(<span class="number">0</span>),
-            VmErrorKind::expected::&lt;<span class="kw">crate</span>::runtime::Vec&gt;(value.type_info()),
-        ]),
     }
 }
 </code></pre></div></section></main></body></html>

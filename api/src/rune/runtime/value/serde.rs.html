@@ -307,11 +307,12 @@
 <a href="#306" id="306">306</a>
 <a href="#307" id="307">307</a>
 <a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{BorrowRefRepr, Bytes, Inline, Mutable, Object, Vec};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{<span class="self">self</span>, BorrowRefRepr, Bytes, Inline, Mutable, Object, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::TypeHash;
 
 <span class="kw">use </span>serde::de::{<span class="self">self</span>, Deserialize <span class="kw">as _</span>, Error <span class="kw">as _</span>};
@@ -347,15 +348,6 @@
                 Inline::Ordering(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize orderings"</span>)),
             },
             BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                Mutable::Vec(vec) =&gt; {
-                    <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_seq(<span class="prelude-val">Some</span>(vec.len()))<span class="question-mark">?</span>;
-
-                    <span class="kw">for </span>value <span class="kw">in </span>vec {
-                        serializer.serialize_element(value)<span class="question-mark">?</span>;
-                    }
-
-                    serializer.end()
-                }
                 Mutable::Tuple(tuple) =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_seq(<span class="prelude-val">Some</span>(tuple.len()))<span class="question-mark">?</span>;
 
@@ -399,6 +391,16 @@
                 Bytes::HASH =&gt; {
                     <span class="kw">let </span>bytes = value.borrow_ref::&lt;Bytes&gt;().map_err(S::Error::custom)<span class="question-mark">?</span>;
                     serializer.serialize_bytes(bytes.as_slice())
+                }
+                runtime::Vec::HASH =&gt; {
+                    <span class="kw">let </span>vec = value.borrow_ref::&lt;Vec&gt;().map_err(S::Error::custom)<span class="question-mark">?</span>;
+                    <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_seq(<span class="prelude-val">Some</span>(vec.len()))<span class="question-mark">?</span>;
+
+                    <span class="kw">for </span>value <span class="kw">in </span>vec.iter() {
+                        serializer.serialize_element(value)<span class="question-mark">?</span>;
+                    }
+
+                    serializer.end()
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize external references"</span>)),
             },

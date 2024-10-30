@@ -447,7 +447,41 @@
 <a href="#446" id="446">446</a>
 <a href="#447" id="447">447</a>
 <a href="#448" id="448">448</a>
-<a href="#449" id="449">449</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{try_format, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::ast::Spanned;
 <span class="kw">use </span><span class="kw">crate</span>::compile::ir;
@@ -456,7 +490,10 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, IrErrorKind, ItemId, ModId, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::hir;
 <span class="kw">use </span><span class="kw">crate</span>::query::{Query, Used};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{BorrowRefRepr, ConstValue, Mutable, Object, OwnedTuple, RefRepr, Value};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{
+    <span class="self">self</span>, BorrowRefRepr, ConstValue, Mutable, Object, OwnedTuple, RefRepr, Value,
+};
+<span class="kw">use </span><span class="kw">crate</span>::TypeHash;
 
 <span class="doccomment">/// The interpreter that executed [Ir][crate::ir::Ir].
 </span><span class="kw">pub struct </span>Interpreter&lt;<span class="lifetime">'a</span>, <span class="lifetime">'arena</span>&gt; {
@@ -673,11 +710,6 @@
                 <span class="kw">match </span>target {
                     BorrowRefRepr::Mutable(value) =&gt; {
                         <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                            Mutable::Vec(vec) =&gt; {
-                                <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = vec.get(<span class="kw-2">*</span>index) {
-                                    <span class="kw">return </span><span class="prelude-val">Ok</span>(value.clone());
-                                }
-                            }
                             Mutable::Tuple(tuple) =&gt; {
                                 <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = tuple.get(<span class="kw-2">*</span>index) {
                                     <span class="kw">return </span><span class="prelude-val">Ok</span>(value.clone());
@@ -691,11 +723,26 @@
                             }
                         };
                     }
-                    actual =&gt; {
+                    BorrowRefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                        runtime::Vec::HASH =&gt; {
+                            <span class="kw">let </span>vec = value.borrow_ref::&lt;runtime::Vec&gt;().with_span(ir_target)<span class="question-mark">?</span>;
+
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = vec.get(<span class="kw-2">*</span>index) {
+                                <span class="kw">return </span><span class="prelude-val">Ok</span>(value.clone());
+                            }
+                        }
+                        <span class="kw">_ </span>=&gt; {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
+                                ir_target,
+                                value.type_info(),
+                            ));
+                        }
+                    },
+                    value =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
                             ir_target,
-                            actual.type_info(),
-                        ))
+                            value.type_info(),
+                        ));
                     }
                 }
 
@@ -749,35 +796,47 @@
             ir::IrTargetKind::Index(target, index) =&gt; {
                 <span class="kw">let </span>target = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span><span class="kw-2">mut </span>target = <span class="kw">match </span>target.as_ref_repr().with_span(ir_target)<span class="question-mark">? </span>{
-                    RefRepr::Mutable(current) =&gt; current.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>,
-                    actual =&gt; {
+                <span class="kw">match </span>target.as_ref_repr().with_span(ir_target)<span class="question-mark">? </span>{
+                    RefRepr::Inline(value) =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
                             ir_target,
-                            actual.type_info().with_span(ir_target)<span class="question-mark">?</span>,
+                            value.type_info(),
                         ));
                     }
-                };
+                    RefRepr::Mutable(current) =&gt; {
+                        <span class="kw">let </span><span class="kw-2">mut </span>mutable = current.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>;
 
-                <span class="kw">match </span><span class="kw-2">&amp;mut *</span>target {
-                    Mutable::Vec(vec) =&gt; {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = vec.get_mut(<span class="kw-2">*</span>index) {
-                            <span class="kw-2">*</span>current = value;
-                            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                        <span class="kw">match </span><span class="kw-2">&amp;mut *</span>mutable {
+                            Mutable::Tuple(tuple) =&gt; {
+                                <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = tuple.get_mut(<span class="kw-2">*</span>index) {
+                                    <span class="kw-2">*</span>current = value;
+                                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                                }
+                            }
+                            value =&gt; {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
+                                    ir_target,
+                                    value.type_info(),
+                                ));
+                            }
+                        };
+                    }
+                    RefRepr::Any(any) =&gt; <span class="kw">match </span>any.type_hash() {
+                        runtime::Vec::HASH =&gt; {
+                            <span class="kw">let </span><span class="kw-2">mut </span>vec = any.borrow_mut::&lt;runtime::Vec&gt;().with_span(ir_target)<span class="question-mark">?</span>;
+
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = vec.get_mut(<span class="kw-2">*</span>index) {
+                                <span class="kw-2">*</span>current = value;
+                                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                            }
                         }
-                    }
-                    Mutable::Tuple(tuple) =&gt; {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = tuple.get_mut(<span class="kw-2">*</span>index) {
-                            <span class="kw-2">*</span>current = value;
-                            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                        <span class="kw">_ </span>=&gt; {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
+                                ir_target,
+                                any.type_info(),
+                            ));
                         }
-                    }
-                    actual =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
-                            ir_target,
-                            actual.type_info(),
-                        ));
-                    }
+                    },
                 };
 
                 <span class="prelude-val">Err</span>(compile::Error::msg(ir_target, <span class="string">"missing index"</span>))
@@ -831,40 +890,49 @@
             ir::IrTargetKind::Index(target, index) =&gt; {
                 <span class="kw">let </span>current = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw">match </span>current.as_ref_repr().with_span(ir_target)<span class="question-mark">? </span>{
-                    RefRepr::Mutable(value) =&gt; value.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>,
-                    actual =&gt; {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
+                <span class="kw">match </span>current.as_ref_repr().with_span(ir_target)<span class="question-mark">? </span>{
+                    RefRepr::Mutable(value) =&gt; {
+                        <span class="kw">let </span><span class="kw-2">mut </span>value = value.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>;
+
+                        <span class="kw">match </span><span class="kw-2">&amp;mut *</span>value {
+                            Mutable::Tuple(tuple) =&gt; {
+                                <span class="kw">let </span>value = tuple.get_mut(<span class="kw-2">*</span>index).ok_or_else(|| {
+                                    compile::Error::new(
+                                        ir_target,
+                                        IrErrorKind::MissingIndex { index: <span class="kw-2">*</span>index },
+                                    )
+                                })<span class="question-mark">?</span>;
+
+                                op(value)
+                            }
+                            actual =&gt; <span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
+                                ir_target,
+                                actual.type_info(),
+                            )),
+                        }
+                    }
+                    RefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                        runtime::Vec::HASH =&gt; {
+                            <span class="kw">let </span><span class="kw-2">mut </span>vec =
+                                value.borrow_mut::&lt;runtime::Vec&gt;().with_span(ir_target)<span class="question-mark">?</span>;
+
+                            <span class="kw">let </span>value = vec.get_mut(<span class="kw-2">*</span>index).ok_or_else(|| {
+                                compile::Error::new(
+                                    ir_target,
+                                    IrErrorKind::MissingIndex { index: <span class="kw-2">*</span>index },
+                                )
+                            })<span class="question-mark">?</span>;
+
+                            op(value)
+                        }
+                        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
                             ir_target,
-                            actual.type_info().with_span(ir_target)<span class="question-mark">?</span>,
-                        ));
-                    }
-                };
-
-                <span class="kw">match </span><span class="kw-2">&amp;mut *</span>value {
-                    Mutable::Vec(vec) =&gt; {
-                        <span class="kw">let </span>value = vec.get_mut(<span class="kw-2">*</span>index).ok_or_else(|| {
-                            compile::Error::new(
-                                ir_target,
-                                IrErrorKind::MissingIndex { index: <span class="kw-2">*</span>index },
-                            )
-                        })<span class="question-mark">?</span>;
-
-                        op(value)
-                    }
-                    Mutable::Tuple(tuple) =&gt; {
-                        <span class="kw">let </span>value = tuple.get_mut(<span class="kw-2">*</span>index).ok_or_else(|| {
-                            compile::Error::new(
-                                ir_target,
-                                IrErrorKind::MissingIndex { index: <span class="kw-2">*</span>index },
-                            )
-                        })<span class="question-mark">?</span>;
-
-                        op(value)
-                    }
+                            value.type_info(),
+                        )),
+                    },
                     actual =&gt; <span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
                         ir_target,
-                        actual.type_info(),
+                        actual.type_info().with_span(ir_target)<span class="question-mark">?</span>,
                     )),
                 }
             }
