@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["any","bytes","capture_io","char","clone","cmp","collections","core","disable_io","f64","fmt","future","generator","hash","i64","io","iter","macros","mem","num","object","ops","option","result","slice","stream","string","test","tuple","vec"]};
+window.SIDEBAR_ITEMS = {"mod":["any","bytes","capture_io","char","clone","cmp","collections","core","disable_io","f64","fmt","future","generator","hash","i64","io","iter","macros","mem","num","object","ops","option","result","slice","stream","string","test","tuple","u64","vec"]};

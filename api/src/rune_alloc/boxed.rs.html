@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/boxed.rs`."><title>boxed.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-198729e5.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (3f1be1ec7 2024-10-28)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune_alloc/</div>boxed.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/boxed.rs`."><title>boxed.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune_alloc/</div>boxed.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -1098,7 +1098,44 @@
 <a href="#1097" id="1097">1097</a>
 <a href="#1098" id="1098">1098</a>
 <a href="#1099" id="1099">1099</a>
-<a href="#1100" id="1100">1100</a></pre></div><pre class="rust"><code><span class="doccomment">//! The `Box&lt;T&gt;` type for heap allocation.
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a></pre></div><pre class="rust"><code><span class="doccomment">//! The `Box&lt;T&gt;` type for heap allocation.
 //!
 //! [`Box&lt;T&gt;`], casually referred to as a 'box', provides the simplest form of
 //! heap allocation in Rust. Boxes provide ownership for this allocation, and
@@ -1974,6 +2011,43 @@
         }
 
         vec.try_into_boxed_slice()
+    }
+}
+
+<span class="doccomment">/// Casts a boxed slice to a boxed array.
+///
+/// # Safety
+///
+/// `boxed_slice.len()` must be exactly `N`.
+</span><span class="kw">unsafe fn </span>boxed_slice_as_array_unchecked&lt;T, A: Allocator, <span class="kw">const </span>N: usize&gt;(
+    boxed_slice: Box&lt;[T], A&gt;,
+) -&gt; Box&lt;[T; N], A&gt; {
+    <span class="macro">debug_assert_eq!</span>(boxed_slice.len(), N);
+
+    <span class="kw">let </span>(ptr, alloc) = Box::into_raw_with_allocator(boxed_slice);
+    <span class="comment">// SAFETY: Pointer and allocator came from an existing box,
+    // and our safety condition requires that the length is exactly `N`
+    </span><span class="kw">unsafe </span>{ Box::from_raw_in(ptr <span class="kw">as </span><span class="kw-2">*mut </span>[T; N], alloc) }
+}
+
+<span class="kw">impl</span>&lt;T, <span class="kw">const </span>N: usize&gt; TryFrom&lt;Box&lt;[T]&gt;&gt; <span class="kw">for </span>Box&lt;[T; N]&gt; {
+    <span class="kw">type </span>Error = Box&lt;[T]&gt;;
+
+    <span class="doccomment">/// Attempts to convert a `Box&lt;[T]&gt;` into a `Box&lt;[T; N]&gt;`.
+    ///
+    /// The conversion occurs in-place and does not require a
+    /// new memory allocation.
+    ///
+    /// # Errors
+    ///
+    /// Returns the old `Box&lt;[T]&gt;` in the `Err` variant if
+    /// `boxed_slice.len()` does not equal `N`.
+    </span><span class="kw">fn </span>try_from(boxed_slice: Box&lt;[T]&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">if </span>boxed_slice.len() == N {
+            <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ boxed_slice_as_array_unchecked(boxed_slice) })
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(boxed_slice)
+        }
     }
 }
 

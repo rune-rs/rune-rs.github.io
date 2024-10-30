@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/error.rs`."><title>error.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-198729e5.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (3f1be1ec7 2024-10-28)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/</div>error.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/error.rs`."><title>error.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/</div>error.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -1544,7 +1544,11 @@
 <a href="#1543" id="1543">1543</a>
 <a href="#1544" id="1544">1544</a>
 <a href="#1545" id="1545">1545</a>
-<a href="#1546" id="1546">1546</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::convert::Infallible;
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::convert::Infallible;
 <span class="kw">use </span>core::fmt;
 
 <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
@@ -1879,7 +1883,7 @@
     UnsupportedAssignExpr,
     UnsupportedBinaryExpr,
     UnsupportedRef,
-    UnsupportedArgumentCount {
+    BadArgumentCount {
         expected: usize,
         actual: usize,
     },
@@ -2024,9 +2028,12 @@
         c: char,
     },
     PrecedenceGroupRequired,
-    BadByteNeg,
-    BadByteOutOfBounds,
-    BadNumberOutOfBounds,
+    BadSignedOutOfBounds {
+        size: ast::NumberSize,
+    },
+    BadUnsignedOutOfBounds {
+        size: ast::NumberSize,
+    },
     BadFieldAccess,
     ExpectedMacroCloseDelimiter {
         expected: ast::Kind,
@@ -2325,11 +2332,8 @@
             ErrorKind::UnsupportedRef =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"Cannot take reference of expression"</span>)<span class="question-mark">?</span>;
             }
-            ErrorKind::UnsupportedArgumentCount { expected, actual } =&gt; {
-                <span class="macro">write!</span>(
-                    f,
-                    <span class="string">"Wrong number of arguments, expected `{expected}` but got `{actual}`"</span>,
-                )<span class="question-mark">?</span>;
+            ErrorKind::BadArgumentCount { expected, actual } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"Wrong number of arguments {actual}, expected {expected}"</span>,)<span class="question-mark">?</span>;
             }
             ErrorKind::UnsupportedPatternExpr =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"This kind of expression is not supported as a pattern"</span>)<span class="question-mark">?</span>;
@@ -2573,17 +2577,21 @@
             ErrorKind::PrecedenceGroupRequired =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"Group required in expression to determine precedence"</span>)<span class="question-mark">?</span>;
             }
-            ErrorKind::BadByteNeg =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"Byte literals cannot be negated"</span>)<span class="question-mark">?</span>;
-            }
-            ErrorKind::BadByteOutOfBounds =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"Byte literal out of bounds `0` to `255`"</span>)<span class="question-mark">?</span>;
-            }
-            ErrorKind::BadNumberOutOfBounds =&gt; {
+            ErrorKind::BadSignedOutOfBounds { size } =&gt; {
                 <span class="macro">write!</span>(
                     f,
-                    <span class="string">"Number literal out of bounds `-9223372036854775808` to `9223372036854775807`"
-                </span>)<span class="question-mark">?</span>;
+                    <span class="string">"Number literal out of bounds `{}` to `{}`"</span>,
+                    size.signed_min(),
+                    size.signed_max(),
+                )<span class="question-mark">?</span>;
+            }
+            ErrorKind::BadUnsignedOutOfBounds { size } =&gt; {
+                <span class="macro">write!</span>(
+                    f,
+                    <span class="string">"Number literal out of bounds `{}` to `{}`"</span>,
+                    size.unsigned_min(),
+                    size.unsigned_max(),
+                )<span class="question-mark">?</span>;
             }
             ErrorKind::BadFieldAccess =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"Unsupported field access"</span>)<span class="question-mark">?</span>;
@@ -2687,7 +2695,7 @@
             ErrorKind::UnsupportedSuffix =&gt; {
                 <span class="macro">write!</span>(
                     f,
-                    <span class="string">"Unsupported suffix, expected one of `u8`, `i64`, or `f64`"
+                    <span class="string">"Unsupported suffix, expected one of `u8`, `i64`, `u64`, or `f64`"
                 </span>)<span class="question-mark">?</span>;
             }
             ErrorKind::ClosureInConst =&gt; {

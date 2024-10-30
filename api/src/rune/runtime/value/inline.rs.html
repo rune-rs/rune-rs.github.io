@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value/inline.rs`."><title>inline.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-198729e5.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (3f1be1ec7 2024-10-28)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/value/</div>inline.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value/inline.rs`."><title>inline.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/value/</div>inline.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -170,14 +170,64 @@
 <a href="#169" id="169">169</a>
 <a href="#170" id="170">170</a>
 <a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any;
+<span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>musli::{Decode, Encode};
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use </span><span class="kw">crate</span>::hash::Hash;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{static_type, Protocol, Type, TypeInfo, VmErrorKind, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{
+    static_type, Protocol, RuntimeError, Type, TypeInfo, VmErrorKind, VmIntegerRepr, VmResult,
+};
 
 <span class="kw">use </span><span class="kw">super</span>::err;
 
@@ -188,12 +238,12 @@
     </span>Unit,
     <span class="doccomment">/// A boolean.
     </span>Bool(bool),
-    <span class="doccomment">/// A single byte.
-    </span>Byte(u8),
     <span class="doccomment">/// A character.
     </span>Char(char),
     <span class="doccomment">/// A number.
-    </span>Integer(i64),
+    </span>Signed(i64),
+    <span class="doccomment">/// An unsigned number.
+    </span>Unsigned(u64),
     <span class="doccomment">/// A float.
     </span>Float(f64),
     <span class="doccomment">/// A type hash. Describes a type in the virtual machine.
@@ -207,22 +257,56 @@
 }
 
 <span class="kw">impl </span>Inline {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_integer&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, RuntimeError&gt;
+    <span class="kw">where
+        </span>T: TryFrom&lt;u64&gt; + TryFrom&lt;i64&gt;,
+    {
+        <span class="kw">match </span><span class="self">self </span>{
+            Inline::Unsigned(value) =&gt; <span class="kw">match </span>value.try_into() {
+                <span class="prelude-val">Ok</span>(number) =&gt; <span class="prelude-val">Ok</span>(number),
+                <span class="prelude-val">Err</span>(..) =&gt; <span class="prelude-val">Err</span>(RuntimeError::new(
+                    VmErrorKind::ValueToIntegerCoercionError {
+                        from: VmIntegerRepr::from(value),
+                        to: any::type_name::&lt;T&gt;(),
+                    },
+                )),
+            },
+            Inline::Signed(value) =&gt; <span class="kw">match </span>value.try_into() {
+                <span class="prelude-val">Ok</span>(number) =&gt; <span class="prelude-val">Ok</span>(number),
+                <span class="prelude-val">Err</span>(..) =&gt; <span class="prelude-val">Err</span>(RuntimeError::new(
+                    VmErrorKind::ValueToIntegerCoercionError {
+                        from: VmIntegerRepr::from(value),
+                        to: any::type_name::&lt;T&gt;(),
+                    },
+                )),
+            },
+            <span class="kw-2">ref </span>value =&gt; <span class="prelude-val">Err</span>(RuntimeError::new(VmErrorKind::ExpectedNumber {
+                actual: value.type_info(),
+            })),
+        }
+    }
+
     <span class="doccomment">/// Perform a partial equality check over two inline values.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>partial_eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; VmResult&lt;bool&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>partial_eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, RuntimeError&gt; {
         <span class="kw">match </span>(<span class="self">self</span>, other) {
-            (Inline::Unit, Inline::Unit) =&gt; VmResult::Ok(<span class="bool-val">true</span>),
-            (Inline::Bool(a), Inline::Bool(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
-            (Inline::Byte(a), Inline::Byte(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
-            (Inline::Char(a), Inline::Char(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
-            (Inline::Integer(a), Inline::Integer(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
-            (Inline::Float(a), Inline::Float(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
-            (Inline::Type(a), Inline::Type(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
-            (Inline::Ordering(a), Inline::Ordering(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
-            (lhs, rhs) =&gt; err(VmErrorKind::UnsupportedBinaryOperation {
-                op: Protocol::PARTIAL_EQ.name,
-                lhs: lhs.type_info(),
-                rhs: rhs.type_info(),
-            }),
+            (Inline::Unit, Inline::Unit) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+            (Inline::Bool(a), Inline::Bool(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (Inline::Char(a), Inline::Char(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (Inline::Signed(a), Inline::Signed(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (Inline::Signed(a), rhs) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == rhs.as_integer::&lt;i64&gt;()<span class="question-mark">?</span>),
+            (Inline::Unsigned(a), Inline::Unsigned(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (Inline::Unsigned(a), rhs) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == rhs.as_integer::&lt;u64&gt;()<span class="question-mark">?</span>),
+            (Inline::Float(a), Inline::Float(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (Inline::Type(a), Inline::Type(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (Inline::Ordering(a), Inline::Ordering(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (lhs, rhs) =&gt; <span class="prelude-val">Err</span>(RuntimeError::from(
+                VmErrorKind::UnsupportedBinaryOperation {
+                    op: Protocol::PARTIAL_EQ.name,
+                    lhs: lhs.type_info(),
+                    rhs: rhs.type_info(),
+                },
+            )),
         }
     }
 
@@ -231,8 +315,9 @@
         <span class="kw">match </span>(<span class="self">self</span>, other) {
             (Inline::Unit, Inline::Unit) =&gt; VmResult::Ok(<span class="bool-val">true</span>),
             (Inline::Bool(a), Inline::Bool(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
-            (Inline::Byte(a), Inline::Byte(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
             (Inline::Char(a), Inline::Char(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (Inline::Unsigned(a), Inline::Unsigned(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (Inline::Signed(a), Inline::Signed(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
             (Inline::Float(a), Inline::Float(b)) =&gt; {
                 <span class="kw">let </span><span class="prelude-val">Some</span>(ordering) = a.partial_cmp(b) <span class="kw">else </span>{
                     <span class="kw">return </span>VmResult::err(VmErrorKind::IllegalFloatComparison { lhs: <span class="kw-2">*</span>a, rhs: <span class="kw-2">*</span>b });
@@ -240,7 +325,6 @@
 
                 VmResult::Ok(<span class="macro">matches!</span>(ordering, Ordering::Equal))
             }
-            (Inline::Integer(a), Inline::Integer(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
             (Inline::Type(a), Inline::Type(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
             (Inline::Ordering(a), Inline::Ordering(b)) =&gt; VmResult::Ok(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
             (lhs, rhs) =&gt; err(VmErrorKind::UnsupportedBinaryOperation {
@@ -252,21 +336,31 @@
     }
 
     <span class="doccomment">/// Partial comparison implementation for inline.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Ordering&gt;&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Ordering&gt;, RuntimeError&gt; {
         <span class="kw">match </span>(<span class="self">self</span>, other) {
-            (Inline::Unit, Inline::Unit) =&gt; VmResult::Ok(<span class="prelude-val">Some</span>(Ordering::Equal)),
-            (Inline::Bool(lhs), Inline::Bool(rhs)) =&gt; VmResult::Ok(lhs.partial_cmp(rhs)),
-            (Inline::Byte(lhs), Inline::Byte(rhs)) =&gt; VmResult::Ok(lhs.partial_cmp(rhs)),
-            (Inline::Char(lhs), Inline::Char(rhs)) =&gt; VmResult::Ok(lhs.partial_cmp(rhs)),
-            (Inline::Float(lhs), Inline::Float(rhs)) =&gt; VmResult::Ok(lhs.partial_cmp(rhs)),
-            (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; VmResult::Ok(lhs.partial_cmp(rhs)),
-            (Inline::Type(lhs), Inline::Type(rhs)) =&gt; VmResult::Ok(lhs.partial_cmp(rhs)),
-            (Inline::Ordering(lhs), Inline::Ordering(rhs)) =&gt; VmResult::Ok(lhs.partial_cmp(rhs)),
-            (lhs, rhs) =&gt; err(VmErrorKind::UnsupportedBinaryOperation {
-                op: Protocol::PARTIAL_CMP.name,
-                lhs: lhs.type_info(),
-                rhs: rhs.type_info(),
-            }),
+            (Inline::Unit, Inline::Unit) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Ordering::Equal)),
+            (Inline::Bool(lhs), Inline::Bool(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
+            (Inline::Char(lhs), Inline::Char(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
+            (Inline::Unsigned(lhs), Inline::Unsigned(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
+            (Inline::Unsigned(lhs), rhs) =&gt; {
+                <span class="kw">let </span>rhs = rhs.as_integer::&lt;u64&gt;()<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(lhs.partial_cmp(<span class="kw-2">&amp;</span>rhs))
+            }
+            (Inline::Signed(lhs), Inline::Signed(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
+            (Inline::Signed(lhs), rhs) =&gt; {
+                <span class="kw">let </span>rhs = rhs.as_integer::&lt;i64&gt;()<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(lhs.partial_cmp(<span class="kw-2">&amp;</span>rhs))
+            }
+            (Inline::Float(lhs), Inline::Float(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
+            (Inline::Type(lhs), Inline::Type(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
+            (Inline::Ordering(lhs), Inline::Ordering(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
+            (lhs, rhs) =&gt; <span class="prelude-val">Err</span>(RuntimeError::from(
+                VmErrorKind::UnsupportedBinaryOperation {
+                    op: Protocol::PARTIAL_CMP.name,
+                    lhs: lhs.type_info(),
+                    rhs: rhs.type_info(),
+                },
+            )),
         }
     }
 
@@ -275,8 +369,9 @@
         <span class="kw">match </span>(<span class="self">self</span>, other) {
             (Inline::Unit, Inline::Unit) =&gt; VmResult::Ok(Ordering::Equal),
             (Inline::Bool(a), Inline::Bool(b)) =&gt; VmResult::Ok(a.cmp(b)),
-            (Inline::Byte(a), Inline::Byte(b)) =&gt; VmResult::Ok(a.cmp(b)),
             (Inline::Char(a), Inline::Char(b)) =&gt; VmResult::Ok(a.cmp(b)),
+            (Inline::Unsigned(a), Inline::Unsigned(b)) =&gt; VmResult::Ok(a.cmp(b)),
+            (Inline::Signed(a), Inline::Signed(b)) =&gt; VmResult::Ok(a.cmp(b)),
             (Inline::Float(a), Inline::Float(b)) =&gt; {
                 <span class="kw">let </span><span class="prelude-val">Some</span>(ordering) = a.partial_cmp(b) <span class="kw">else </span>{
                     <span class="kw">return </span>VmResult::err(VmErrorKind::IllegalFloatComparison { lhs: <span class="kw-2">*</span>a, rhs: <span class="kw-2">*</span>b });
@@ -284,7 +379,6 @@
 
                 VmResult::Ok(ordering)
             }
-            (Inline::Integer(a), Inline::Integer(b)) =&gt; VmResult::Ok(a.cmp(b)),
             (Inline::Type(a), Inline::Type(b)) =&gt; VmResult::Ok(a.cmp(b)),
             (Inline::Ordering(a), Inline::Ordering(b)) =&gt; VmResult::Ok(a.cmp(b)),
             (lhs, rhs) =&gt; VmResult::err(VmErrorKind::UnsupportedBinaryOperation {
@@ -301,9 +395,9 @@
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             Inline::Unit =&gt; <span class="macro">write!</span>(f, <span class="string">"()"</span>),
             Inline::Bool(value) =&gt; value.fmt(f),
-            Inline::Byte(value) =&gt; value.fmt(f),
             Inline::Char(value) =&gt; value.fmt(f),
-            Inline::Integer(value) =&gt; value.fmt(f),
+            Inline::Unsigned(value) =&gt; value.fmt(f),
+            Inline::Signed(value) =&gt; value.fmt(f),
             Inline::Float(value) =&gt; value.fmt(f),
             Inline::Type(value) =&gt; value.fmt(f),
             Inline::Ordering(value) =&gt; value.fmt(f),
@@ -316,9 +410,9 @@
         <span class="kw">match </span><span class="self">self </span>{
             Inline::Unit =&gt; TypeInfo::static_type(static_type::TUPLE),
             Inline::Bool(..) =&gt; TypeInfo::static_type(static_type::BOOL),
-            Inline::Byte(..) =&gt; TypeInfo::static_type(static_type::BYTE),
             Inline::Char(..) =&gt; TypeInfo::static_type(static_type::CHAR),
-            Inline::Integer(..) =&gt; TypeInfo::static_type(static_type::INTEGER),
+            Inline::Unsigned(..) =&gt; TypeInfo::static_type(static_type::UNSIGNED),
+            Inline::Signed(..) =&gt; TypeInfo::static_type(static_type::SIGNED),
             Inline::Float(..) =&gt; TypeInfo::static_type(static_type::FLOAT),
             Inline::Type(..) =&gt; TypeInfo::static_type(static_type::TYPE),
             Inline::Ordering(..) =&gt; TypeInfo::static_type(static_type::ORDERING),
@@ -333,9 +427,9 @@
         <span class="kw">match </span><span class="self">self </span>{
             Inline::Unit =&gt; static_type::TUPLE.hash,
             Inline::Bool(..) =&gt; static_type::BOOL.hash,
-            Inline::Byte(..) =&gt; static_type::BYTE.hash,
             Inline::Char(..) =&gt; static_type::CHAR.hash,
-            Inline::Integer(..) =&gt; static_type::INTEGER.hash,
+            Inline::Signed(..) =&gt; static_type::SIGNED.hash,
+            Inline::Unsigned(..) =&gt; static_type::UNSIGNED.hash,
             Inline::Float(..) =&gt; static_type::FLOAT.hash,
             Inline::Type(..) =&gt; static_type::TYPE.hash,
             Inline::Ordering(..) =&gt; static_type::ORDERING.hash,

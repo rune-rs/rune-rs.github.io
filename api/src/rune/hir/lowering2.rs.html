@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/lowering2.rs`."><title>lowering2.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-198729e5.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (3f1be1ec7 2024-10-28)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/hir/</div>lowering2.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/lowering2.rs`."><title>lowering2.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/hir/</div>lowering2.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -2800,7 +2800,31 @@
 <a href="#2799" id="2799">2799</a>
 <a href="#2800" id="2800">2800</a>
 <a href="#2801" id="2801">2801</a>
-<a href="#2802" id="2802">2802</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::replace;
+<a href="#2802" id="2802">2802</a>
+<a href="#2803" id="2803">2803</a>
+<a href="#2804" id="2804">2804</a>
+<a href="#2805" id="2805">2805</a>
+<a href="#2806" id="2806">2806</a>
+<a href="#2807" id="2807">2807</a>
+<a href="#2808" id="2808">2808</a>
+<a href="#2809" id="2809">2809</a>
+<a href="#2810" id="2810">2810</a>
+<a href="#2811" id="2811">2811</a>
+<a href="#2812" id="2812">2812</a>
+<a href="#2813" id="2813">2813</a>
+<a href="#2814" id="2814">2814</a>
+<a href="#2815" id="2815">2815</a>
+<a href="#2816" id="2816">2816</a>
+<a href="#2817" id="2817">2817</a>
+<a href="#2818" id="2818">2818</a>
+<a href="#2819" id="2819">2819</a>
+<a href="#2820" id="2820">2820</a>
+<a href="#2821" id="2821">2821</a>
+<a href="#2822" id="2822">2822</a>
+<a href="#2823" id="2823">2823</a>
+<a href="#2824" id="2824">2824</a>
+<a href="#2825" id="2825">2825</a>
+<a href="#2826" id="2826">2826</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::num::NonZero;
 <span class="kw">use </span>core::ops::Neg;
 
@@ -2811,7 +2835,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, HashMap, HashSet};
-<span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Delimiter, Kind, Span, Spanned};
+<span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, Delimiter, Kind, NumberSize, Span, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{meta, Error, ErrorKind, ItemId, <span class="prelude-ty">Result</span>, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::grammar::{
     classify, object_key, Ignore, MaybeNode, NodeClass, Remaining, Stream, StreamBuf, Tree,
@@ -3121,7 +3145,7 @@
                         <span class="kw">if </span>args &gt; <span class="number">0 </span>{
                             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                                 <span class="self">self</span>.span,
-                                ErrorKind::UnsupportedArgumentCount {
+                                ErrorKind::BadArgumentCount {
                                     expected: <span class="number">0</span>,
                                     actual: args,
                                 },
@@ -3139,7 +3163,7 @@
                         <span class="kw">if </span><span class="kw-2">*</span>expected != args {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                                 <span class="self">self</span>.span,
-                                ErrorKind::UnsupportedArgumentCount {
+                                ErrorKind::BadArgumentCount {
                                     expected: <span class="kw-2">*</span>expected,
                                     actual: args,
                                 },
@@ -3481,11 +3505,16 @@
                 <span class="prelude-val">Ok</span>(hir::ExprKind::Lit(hir::Lit::Str(lit)))
             }
             query::BuiltInMacro2::Line(line) =&gt; {
-                <span class="kw">let </span><span class="prelude-val">Some</span>(n) = line.to_i64() <span class="kw">else </span>{
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(<span class="kw-2">&amp;*</span>p, ErrorKind::BadNumberOutOfBounds));
+                <span class="kw">let </span><span class="prelude-val">Some</span>(n) = line.to_u64() <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                        <span class="kw-2">&amp;*</span>p,
+                        ErrorKind::BadUnsignedOutOfBounds {
+                            size: NumberSize::S64,
+                        },
+                    ));
                 };
 
-                <span class="prelude-val">Ok</span>(hir::ExprKind::Lit(hir::Lit::Integer(n)))
+                <span class="prelude-val">Ok</span>(hir::ExprKind::Lit(hir::Lit::Unsigned(n)))
             }
             query::BuiltInMacro2::Format(tree) =&gt; expr_format_macro(cx, p, tree),
             query::BuiltInMacro2::Template(tree, literal) =&gt; {
@@ -5101,7 +5130,7 @@
         <span class="kw">if </span>!(args == items.len() || items.len() &lt; args &amp;&amp; is_open) {
             cx.error(Error::new(
                 span,
-                ErrorKind::UnsupportedArgumentCount {
+                ErrorKind::BadArgumentCount {
                     expected: args,
                     actual: items.len(),
                 },
@@ -5366,9 +5395,9 @@
                     }));
                 }
                 Inline::Bool(b) =&gt; hir::Lit::Bool(b),
-                Inline::Byte(b) =&gt; hir::Lit::Byte(b),
                 Inline::Char(ch) =&gt; hir::Lit::Char(ch),
-                Inline::Integer(value) =&gt; hir::Lit::Integer(value),
+                Inline::Unsigned(value) =&gt; hir::Lit::Unsigned(value),
+                Inline::Signed(value) =&gt; hir::Lit::Signed(value),
                 <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::msg(span, <span class="string">"Unsupported constant value in pattern"</span>)),
             },
             ConstValueKind::String(<span class="kw-2">ref </span>string) =&gt; hir::Lit::Str(<span class="macro">alloc_str!</span>(string.as_ref())),
@@ -5548,35 +5577,54 @@
             <span class="kw">match </span>(n.value, n.suffix) {
                 (ast::NumberValue::Float(n), <span class="kw">_</span>) =&gt; {
                     <span class="kw">let </span>n = <span class="kw">if </span>neg { -n } <span class="kw">else </span>{ n };
-
                     <span class="prelude-val">Ok</span>(hir::Lit::Float(n))
                 }
-                (ast::NumberValue::Integer(int), <span class="prelude-val">Some</span>(ast::NumberSuffix::Byte(..))) =&gt; {
-                    <span class="kw">if </span>neg {
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(lit, ErrorKind::BadByteNeg));
-                    }
+                (ast::NumberValue::Integer(int), <span class="prelude-val">Some</span>(ast::NumberSuffix::Unsigned(<span class="kw">_</span>, size))) =&gt; {
+                    <span class="kw">let </span>int = <span class="kw">if </span>neg { int.neg() } <span class="kw">else </span>{ int };
 
-                    <span class="kw">let </span><span class="prelude-val">Some</span>(n) = int.to_u8() <span class="kw">else </span>{
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(lit, ErrorKind::BadByteOutOfBounds));
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(n) = int.to_u64() <span class="kw">else </span>{
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(lit, ErrorKind::BadUnsignedOutOfBounds { size }));
                     };
 
-                    <span class="prelude-val">Ok</span>(hir::Lit::Byte(n))
+                    <span class="kw">if </span>!size.unsigned_in(n) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(lit, ErrorKind::BadUnsignedOutOfBounds { size }));
+                    }
+
+                    <span class="prelude-val">Ok</span>(hir::Lit::Unsigned(n))
+                }
+                (ast::NumberValue::Integer(int), <span class="prelude-val">Some</span>(ast::NumberSuffix::Signed(<span class="kw">_</span>, size))) =&gt; {
+                    <span class="kw">let </span>int = <span class="kw">if </span>neg { int.neg() } <span class="kw">else </span>{ int };
+
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(n) = int.to_u64() <span class="kw">else </span>{
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(lit, ErrorKind::BadUnsignedOutOfBounds { size }));
+                    };
+
+                    <span class="kw">if </span>!size.unsigned_in(n) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(lit, ErrorKind::BadUnsignedOutOfBounds { size }));
+                    }
+
+                    <span class="prelude-val">Ok</span>(hir::Lit::Unsigned(n))
                 }
                 (ast::NumberValue::Integer(int), <span class="kw">_</span>) =&gt; {
                     <span class="kw">let </span>int = <span class="kw">if </span>neg { int.neg() } <span class="kw">else </span>{ int };
 
                     <span class="kw">let </span><span class="prelude-val">Some</span>(n) = int.to_i64() <span class="kw">else </span>{
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(lit, ErrorKind::BadNumberOutOfBounds));
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                            lit,
+                            ErrorKind::BadSignedOutOfBounds {
+                                size: NumberSize::S64,
+                            },
+                        ));
                     };
 
-                    <span class="prelude-val">Ok</span>(hir::Lit::Integer(n))
+                    <span class="prelude-val">Ok</span>(hir::Lit::Signed(n))
                 }
             }
         }
         <span class="macro">K!</span>[byte] =&gt; {
             <span class="kw">let </span>lit = p.ast::&lt;ast::LitByte&gt;()<span class="question-mark">?</span>;
             <span class="kw">let </span>b = lit.resolve(<span class="macro">resolve_context!</span>(cx.q))<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(hir::Lit::Byte(b))
+            <span class="prelude-val">Ok</span>(hir::Lit::Unsigned(b <span class="kw">as </span>u64))
         }
         <span class="macro">K!</span>[char] =&gt; {
             <span class="kw">let </span>lit = p.ast::&lt;ast::LitChar&gt;()<span class="question-mark">?</span>;

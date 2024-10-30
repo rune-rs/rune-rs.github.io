@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value.rs`."><title>value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-198729e5.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (3f1be1ec7 2024-10-28)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>value.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value.rs`."><title>value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>value.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -2150,11 +2150,7 @@
 <a href="#2149" id="2149">2149</a>
 <a href="#2150" id="2150">2150</a>
 <a href="#2151" id="2151">2151</a>
-<a href="#2152" id="2152">2152</a>
-<a href="#2153" id="2153">2153</a>
-<a href="#2154" id="2154">2154</a>
-<a href="#2155" id="2155">2155</a>
-<a href="#2156" id="2156">2156</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2152" id="2152">2152</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>inline;
@@ -2171,6 +2167,8 @@
 <span class="kw">use </span>core::any;
 <span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
+<span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
+</span><span class="kw">use </span>core::hash::Hasher <span class="kw">as _</span>;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ptr::NonNull;
 
@@ -2517,7 +2515,11 @@
                     Inline::Char(c) =&gt; {
                         <span class="macro">vm_try!</span>(f.push(<span class="kw-2">*</span>c));
                     }
-                    Inline::Integer(integer) =&gt; {
+                    Inline::Unsigned(byte) =&gt; {
+                        <span class="kw">let </span><span class="kw-2">mut </span>buffer = itoa::Buffer::new();
+                        <span class="macro">vm_try!</span>(f.push_str(buffer.format(<span class="kw-2">*</span>byte)));
+                    }
+                    Inline::Signed(integer) =&gt; {
                         <span class="kw">let </span><span class="kw-2">mut </span>buffer = itoa::Buffer::new();
                         <span class="macro">vm_try!</span>(f.push_str(buffer.format(<span class="kw-2">*</span>integer)));
                     }
@@ -2527,10 +2529,6 @@
                     }
                     Inline::Bool(bool) =&gt; {
                         <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{bool}"</span>));
-                    }
-                    Inline::Byte(byte) =&gt; {
-                        <span class="kw">let </span><span class="kw-2">mut </span>buffer = itoa::Buffer::new();
-                        <span class="macro">vm_try!</span>(f.push_str(buffer.format(<span class="kw-2">*</span>byte)));
                     }
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
@@ -2844,7 +2842,7 @@
     <span class="doccomment">/// Try to coerce value into a usize.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>as_usize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize, RuntimeError&gt; {
-        <span class="self">self</span>.try_as_integer()
+        <span class="self">self</span>.as_integer()
     }
 
     <span class="doccomment">/// Get the value as a string.
@@ -2917,13 +2915,6 @@
     }
 
     <span class="macro">inline_into!</span> {
-        <span class="doccomment">/// Coerce into [`u8`] byte.
-        </span>Byte(u8),
-        as_byte,
-        as_byte_mut,
-    }
-
-    <span class="macro">inline_into!</span> {
         <span class="doccomment">/// Coerce into [`char`].
         </span>Char(char),
         as_char,
@@ -2932,9 +2923,16 @@
 
     <span class="macro">inline_into!</span> {
         <span class="doccomment">/// Coerce into [`i64`] integer.
-        </span>Integer(i64),
-        as_integer,
-        as_integer_mut,
+        </span>Signed(i64),
+        as_signed,
+        as_signed_mut,
+    }
+
+    <span class="macro">inline_into!</span> {
+        <span class="doccomment">/// Coerce into [`u64`] unsigned integer.
+        </span>Unsigned(u64),
+        as_unsigned,
+        as_unsigned_mut,
     }
 
     <span class="macro">inline_into!</span> {
@@ -3283,7 +3281,7 @@
 
             <span class="kw">let </span>a = <span class="kw">match </span>(<span class="kw-2">&amp;</span>a, <span class="macro">vm_try!</span>(b.borrow_ref_repr())) {
                 (BorrowRefRepr::Inline(a), BorrowRefRepr::Inline(b)) =&gt; {
-                    <span class="kw">return </span>a.partial_eq(b);
+                    <span class="kw">return </span>VmResult::Ok(<span class="macro">vm_try!</span>(a.partial_eq(b)));
                 }
                 (BorrowRefRepr::Inline(lhs), rhs) =&gt; {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
@@ -3388,12 +3386,12 @@
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_ref_repr()) {
             BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
-                Inline::Integer(value) =&gt; {
-                    hasher.write_i64(<span class="kw-2">*</span>value);
+                Inline::Unsigned(value) =&gt; {
+                    hasher.write_u64(<span class="kw-2">*</span>value);
                     <span class="kw">return </span>VmResult::Ok(());
                 }
-                Inline::Byte(value) =&gt; {
-                    hasher.write_u8(<span class="kw-2">*</span>value);
+                Inline::Signed(value) =&gt; {
+                    hasher.write_i64(<span class="kw-2">*</span>value);
                     <span class="kw">return </span>VmResult::Ok(());
                 }
                 <span class="comment">// Care must be taken whan hashing floats, to ensure that `hash(v1)
@@ -3566,7 +3564,9 @@
             <span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_ref_repr()),
             <span class="macro">vm_try!</span>(b.borrow_ref_repr()),
         ) {
-            (BorrowRefRepr::Inline(a), BorrowRefRepr::Inline(b)) =&gt; <span class="kw">return </span>a.partial_cmp(b),
+            (BorrowRefRepr::Inline(a), BorrowRefRepr::Inline(b)) =&gt; {
+                <span class="kw">return </span>VmResult::Ok(<span class="macro">vm_try!</span>(a.partial_cmp(b)))
+            }
             (BorrowRefRepr::Inline(lhs), rhs) =&gt; {
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                     op: Protocol::PARTIAL_CMP.name,
@@ -3748,30 +3748,26 @@
     /// # Examples
     ///
     /// ```
-    /// use rune::runtime::{Value, VmResult};
-    ///
     /// let value = rune::to_value(u32::MAX)?;
     ///
-    /// assert_eq!(value.try_as_integer::&lt;u64&gt;()?, u32::MAX as u64);
-    /// assert!(value.try_as_integer::&lt;i32&gt;().is_err());
+    /// assert_eq!(value.as_integer::&lt;u64&gt;()?, u32::MAX as u64);
+    /// assert!(value.as_integer::&lt;i32&gt;().is_err());
     ///
     /// # Ok::&lt;(), rune::support::Error&gt;(())
     /// ```
-    </span><span class="kw">pub fn </span>try_as_integer&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, RuntimeError&gt;
+    </span><span class="kw">pub fn </span>as_integer&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, RuntimeError&gt;
     <span class="kw">where
-        </span>T: TryFrom&lt;i64&gt;,
-        VmIntegerRepr: From&lt;i64&gt;,
+        </span>T: TryFrom&lt;u64&gt; + TryFrom&lt;i64&gt;,
     {
-        <span class="kw">let </span>integer = <span class="self">self</span>.as_integer()<span class="question-mark">?</span>;
-
-        <span class="kw">match </span>integer.try_into() {
-            <span class="prelude-val">Ok</span>(number) =&gt; <span class="prelude-val">Ok</span>(number),
-            <span class="prelude-val">Err</span>(..) =&gt; <span class="prelude-val">Err</span>(RuntimeError::new(
-                VmErrorKind::ValueToIntegerCoercionError {
-                    from: VmIntegerRepr::from(integer),
-                    to: any::type_name::&lt;T&gt;(),
-                },
-            )),
+        <span class="kw">match </span><span class="self">self</span>.repr {
+            Repr::Empty =&gt; <span class="prelude-val">Err</span>(RuntimeError::from(AccessError::empty())),
+            Repr::Inline(value) =&gt; value.as_integer(),
+            Repr::Mutable(<span class="kw-2">ref </span>value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::new(VmErrorKind::ExpectedNumber {
+                actual: value.borrow_ref()<span class="question-mark">?</span>.type_info(),
+            })),
+            Repr::Any(<span class="kw-2">ref </span>value) =&gt; <span class="prelude-val">Err</span>(RuntimeError::new(VmErrorKind::ExpectedNumber {
+                actual: value.type_info(),
+            })),
         }
     }
 
@@ -4073,10 +4069,10 @@
 }
 
 <span class="macro">inline_from!</span> {
-    Byte =&gt; u8,
     Bool =&gt; bool,
     Char =&gt; char,
-    Integer =&gt; i64,
+    Signed =&gt; i64,
+    Unsigned =&gt; u64,
     Float =&gt; f64,
     Type =&gt; Type,
     Ordering =&gt; Ordering,
@@ -4109,13 +4105,9 @@
     <span class="prelude-ty">Result </span>=&gt; <span class="prelude-ty">Result</span>&lt;Value, Value&gt;,
 }
 
-<span class="macro">number_value_trait!</span> {
-    u16, u32, u64, u128, usize, i8, i16, i32, i128, isize,
-}
-
-<span class="macro">float_value_trait!</span> {
-    f32,
-}
+<span class="macro">signed_value_trait!</span>(i8, i16, i32, i128, isize);
+<span class="macro">unsigned_value_trait!</span>(u8, u16, u32, u128, usize);
+<span class="macro">float_value_trait!</span>(f32);
 
 <span class="kw">impl </span>MaybeTypeOf <span class="kw">for </span>Value {
     <span class="attr">#[inline]

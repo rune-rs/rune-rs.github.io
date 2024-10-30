@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-198729e5.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (3f1be1ec7 2024-10-28)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -4033,7 +4033,48 @@
 <a href="#4032" id="4032">4032</a>
 <a href="#4033" id="4033">4033</a>
 <a href="#4034" id="4034">4034</a>
-<a href="#4035" id="4035">4035</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#4035" id="4035">4035</a>
+<a href="#4036" id="4036">4036</a>
+<a href="#4037" id="4037">4037</a>
+<a href="#4038" id="4038">4038</a>
+<a href="#4039" id="4039">4039</a>
+<a href="#4040" id="4040">4040</a>
+<a href="#4041" id="4041">4041</a>
+<a href="#4042" id="4042">4042</a>
+<a href="#4043" id="4043">4043</a>
+<a href="#4044" id="4044">4044</a>
+<a href="#4045" id="4045">4045</a>
+<a href="#4046" id="4046">4046</a>
+<a href="#4047" id="4047">4047</a>
+<a href="#4048" id="4048">4048</a>
+<a href="#4049" id="4049">4049</a>
+<a href="#4050" id="4050">4050</a>
+<a href="#4051" id="4051">4051</a>
+<a href="#4052" id="4052">4052</a>
+<a href="#4053" id="4053">4053</a>
+<a href="#4054" id="4054">4054</a>
+<a href="#4055" id="4055">4055</a>
+<a href="#4056" id="4056">4056</a>
+<a href="#4057" id="4057">4057</a>
+<a href="#4058" id="4058">4058</a>
+<a href="#4059" id="4059">4059</a>
+<a href="#4060" id="4060">4060</a>
+<a href="#4061" id="4061">4061</a>
+<a href="#4062" id="4062">4062</a>
+<a href="#4063" id="4063">4063</a>
+<a href="#4064" id="4064">4064</a>
+<a href="#4065" id="4065">4065</a>
+<a href="#4066" id="4066">4066</a>
+<a href="#4067" id="4067">4067</a>
+<a href="#4068" id="4068">4068</a>
+<a href="#4069" id="4069">4069</a>
+<a href="#4070" id="4070">4070</a>
+<a href="#4071" id="4071">4071</a>
+<a href="#4072" id="4072">4072</a>
+<a href="#4073" id="4073">4073</a>
+<a href="#4074" id="4074">4074</a>
+<a href="#4075" id="4075">4075</a>
+<a href="#4076" id="4076">4076</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -4776,7 +4817,7 @@
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>internal_boolean_ops(
+    </span><span class="kw">fn </span>internal_cmp(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         match_ordering: <span class="kw">fn</span>(Ordering) -&gt; bool,
         lhs: InstAddress,
@@ -5272,8 +5313,8 @@
             (<span class="macro-nonterminal">$from</span>:ty, <span class="macro-nonterminal">$value</span>:expr) =&gt; {
                 <span class="kw">match </span>ty.into_hash() {
                     static_type::FLOAT_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>f64),
-                    static_type::BYTE_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>u8),
-                    static_type::INTEGER_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>i64),
+                    static_type::UNSIGNED_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>u64),
+                    static_type::SIGNED_HASH =&gt; Value::from(<span class="macro-nonterminal">$value </span><span class="kw">as </span>i64),
                     ty =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedAs {
                             value: &lt;<span class="macro-nonterminal">$from </span><span class="kw">as </span>TypeOf&gt;::type_info(),
@@ -5285,9 +5326,9 @@
         }
 
         <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(a.as_ref_repr()) {
-            RefRepr::Inline(Inline::Integer(a)) =&gt; <span class="macro">convert!</span>(i64, <span class="kw-2">*</span>a),
+            RefRepr::Inline(Inline::Unsigned(a)) =&gt; <span class="macro">convert!</span>(u64, <span class="kw-2">*</span>a),
+            RefRepr::Inline(Inline::Signed(a)) =&gt; <span class="macro">convert!</span>(i64, <span class="kw-2">*</span>a),
             RefRepr::Inline(Inline::Float(a)) =&gt; <span class="macro">convert!</span>(f64, <span class="kw-2">*</span>a),
-            RefRepr::Inline(Inline::Byte(a)) =&gt; <span class="macro">convert!</span>(u8, <span class="kw-2">*</span>a),
             value =&gt; {
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedAs {
                     value: <span class="macro">vm_try!</span>(value.type_info()),
@@ -5314,7 +5355,7 @@
         VmResult::Ok(<span class="macro">vm_try!</span>(a.type_hash()) == ty.into_hash())
     }
 
-    <span class="kw">fn </span>internal_boolean_op(
+    <span class="kw">fn </span>internal_bool(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         bool_op: <span class="kw">impl </span>FnOnce(bool, bool) -&gt; bool,
         op: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
@@ -5456,7 +5497,8 @@
         target: InstTarget,
         protocol: Protocol,
         error: <span class="kw">fn</span>() -&gt; VmErrorKind,
-        integer_op: <span class="kw">fn</span>(i64, i64) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt;,
+        signed_op: <span class="kw">fn</span>(i64, i64) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt;,
+        unsigned_op: <span class="kw">fn</span>(u64, u64) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt;,
         float_op: <span class="kw">fn</span>(f64, f64) -&gt; f64,
         rhs: InstAddress,
     ) -&gt; VmResult&lt;()&gt; {
@@ -5466,8 +5508,13 @@
         <span class="kw">let </span>fallback = <span class="kw">match </span><span class="macro">target_value!</span>(<span class="self">self</span>, target, guard, lhs, rhs) {
             TargetValue::Same(value) =&gt; {
                 <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_mut_repr()) {
-                    MutRepr::Inline(Inline::Integer(value)) =&gt; {
-                        <span class="kw">let </span>out = <span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>value, <span class="kw-2">*</span>value).ok_or_else(error));
+                    MutRepr::Inline(Inline::Signed(value)) =&gt; {
+                        <span class="kw">let </span>out = <span class="macro">vm_try!</span>(signed_op(<span class="kw-2">*</span>value, <span class="kw-2">*</span>value).ok_or_else(error));
+                        <span class="kw-2">*</span>value = out;
+                        <span class="kw">return </span>VmResult::Ok(());
+                    }
+                    MutRepr::Inline(Inline::Unsigned(value)) =&gt; {
+                        <span class="kw">let </span>out = <span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>value, <span class="kw-2">*</span>value).ok_or_else(error));
                         <span class="kw-2">*</span>value = out;
                         <span class="kw">return </span>VmResult::Ok(());
                     }
@@ -5491,8 +5538,15 @@
             TargetValue::Pair(lhs, rhs) =&gt; {
                 <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
                     (MutRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
-                        (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
-                            <span class="kw">let </span>out = <span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs).ok_or_else(error));
+                        (Inline::Signed(lhs), rhs) =&gt; {
+                            <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                            <span class="kw">let </span>out = <span class="macro">vm_try!</span>(signed_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
+                            <span class="kw-2">*</span>lhs = out;
+                            <span class="kw">return </span>VmResult::Ok(());
+                        }
+                        (Inline::Unsigned(lhs), rhs) =&gt; {
+                            <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                            <span class="kw">let </span>out = <span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
                             <span class="kw-2">*</span>lhs = out;
                             <span class="kw">return </span>VmResult::Ok(());
                         }
@@ -5598,7 +5652,8 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         protocol: Protocol,
         error: <span class="kw">fn</span>() -&gt; VmErrorKind,
-        integer_op: <span class="kw">fn</span>(i64, i64) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt;,
+        signed_op: <span class="kw">fn</span>(i64, i64) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt;,
+        unsigned_op: <span class="kw">fn</span>(u64, u64) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt;,
         float_op: <span class="kw">fn</span>(f64, f64) -&gt; f64,
         lhs: InstAddress,
         rhs: InstAddress,
@@ -5610,8 +5665,13 @@
         <span class="lifetime">'fallback</span>: {
             <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_ref_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
                 (RefRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
-                    (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
-                        Inline::Integer(<span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs).ok_or_else(error)))
+                    (Inline::Unsigned(lhs), rhs) =&gt; {
+                        <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                        Inline::Unsigned(<span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error)))
+                    }
+                    (Inline::Signed(lhs), rhs) =&gt; {
+                        <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                        Inline::Signed(<span class="macro">vm_try!</span>(signed_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error)))
                     }
                     (Inline::Float(lhs), Inline::Float(rhs)) =&gt; Inline::Float(float_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs)),
                     (lhs, rhs) =&gt; {
@@ -5658,11 +5718,11 @@
 
     <span class="doccomment">/// Internal impl of a numeric operation.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>internal_infallible_bitwise_bool(
+    </span><span class="kw">fn </span>internal_bit(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         protocol: Protocol,
-        integer_op: <span class="kw">fn</span>(i64, i64) -&gt; i64,
-        byte_op: <span class="kw">fn</span>(u8, u8) -&gt; u8,
+        signed_op: <span class="kw">fn</span>(i64, i64) -&gt; i64,
+        unsigned_op: <span class="kw">fn</span>(u64, u64) -&gt; u64,
         bool_op: <span class="kw">fn</span>(bool, bool) -&gt; bool,
         lhs: InstAddress,
         rhs: InstAddress,
@@ -5674,10 +5734,14 @@
         <span class="lifetime">'fallback</span>: {
             <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_ref_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
                 (RefRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
-                    (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
-                        Inline::Integer(integer_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs))
+                    (Inline::Unsigned(lhs), rhs) =&gt; {
+                        <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                        Inline::Unsigned(unsigned_op(<span class="kw-2">*</span>lhs, rhs))
                     }
-                    (Inline::Byte(lhs), Inline::Byte(rhs)) =&gt; Inline::Byte(byte_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs)),
+                    (Inline::Signed(lhs), rhs) =&gt; {
+                        <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                        Inline::Signed(signed_op(<span class="kw-2">*</span>lhs, rhs))
+                    }
                     (Inline::Bool(lhs), Inline::Bool(rhs)) =&gt; Inline::Bool(bool_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs)),
                     (lhs, rhs) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
@@ -5725,8 +5789,8 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         target: InstTarget,
         protocol: Protocol,
-        integer_op: <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>i64, i64),
-        byte_op: <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>u8, u8),
+        signed_op: <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>i64, i64),
+        unsigned_op: <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>u64, u64),
         bool_op: <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>bool, bool),
         rhs: InstAddress,
     ) -&gt; VmResult&lt;()&gt; {
@@ -5736,14 +5800,14 @@
         <span class="kw">let </span>fallback = <span class="kw">match </span><span class="macro">target_value!</span>(<span class="self">self</span>, target, guard, lhs, rhs) {
             TargetValue::Same(value) =&gt; {
                 <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_mut_repr()) {
-                    MutRepr::Inline(Inline::Integer(value)) =&gt; {
+                    MutRepr::Inline(Inline::Unsigned(value)) =&gt; {
                         <span class="kw">let </span>rhs = <span class="kw-2">*</span>value;
-                        integer_op(value, rhs);
+                        unsigned_op(value, rhs);
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    MutRepr::Inline(Inline::Byte(value)) =&gt; {
+                    MutRepr::Inline(Inline::Signed(value)) =&gt; {
                         <span class="kw">let </span>rhs = <span class="kw-2">*</span>value;
-                        byte_op(value, rhs);
+                        signed_op(value, rhs);
                         <span class="kw">return </span>VmResult::Ok(());
                     }
                     MutRepr::Inline(Inline::Bool(value)) =&gt; {
@@ -5766,12 +5830,14 @@
             TargetValue::Pair(lhs, rhs) =&gt; {
                 <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
                     (MutRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
-                        (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
-                            integer_op(lhs, <span class="kw-2">*</span>rhs);
+                        (Inline::Unsigned(lhs), rhs) =&gt; {
+                            <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                            unsigned_op(lhs, rhs);
                             <span class="kw">return </span>VmResult::Ok(());
                         }
-                        (Inline::Byte(lhs), Inline::Byte(rhs)) =&gt; {
-                            byte_op(lhs, <span class="kw-2">*</span>rhs);
+                        (Inline::Signed(lhs), rhs) =&gt; {
+                            <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                            signed_op(lhs, rhs);
                             <span class="kw">return </span>VmResult::Ok(());
                         }
                         (Inline::Bool(lhs), Inline::Bool(rhs)) =&gt; {
@@ -5804,12 +5870,12 @@
         <span class="self">self</span>.target_fallback_assign(fallback, protocol)
     }
 
-    <span class="kw">fn </span>internal_bitwise(
+    <span class="kw">fn </span>internal_shift(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         protocol: Protocol,
         error: <span class="kw">fn</span>() -&gt; VmErrorKind,
-        integer_op: <span class="kw">fn</span>(i64, i64) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt;,
-        byte_op: <span class="kw">fn</span>(u8, i64) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt;,
+        signed_op: <span class="kw">fn</span>(i64, u32) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt;,
+        unsigned_op: <span class="kw">fn</span>(u64, u32) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt;,
         lhs: InstAddress,
         rhs: InstAddress,
         out: Output,
@@ -5820,11 +5886,18 @@
                     Pair::Same(value) =&gt; {
                         <span class="kw">if let </span>MutRepr::Inline(lhs) = <span class="macro">vm_try!</span>(value.as_mut_repr()) {
                             <span class="kw">match </span>lhs {
-                                Inline::Integer(value) =&gt; {
-                                    <span class="kw">break </span><span class="lifetime">'inline </span>Inline::Integer(<span class="macro">vm_try!</span>(integer_op(
-                                        <span class="kw-2">*</span>value, <span class="kw-2">*</span>value
-                                    )
-                                    .ok_or_else(error)));
+                                Inline::Unsigned(value) =&gt; {
+                                    <span class="kw">let </span>shift =
+                                        <span class="macro">vm_try!</span>(u32::try_from(<span class="kw-2">*</span>value).ok().ok_or_else(error));
+                                    <span class="kw">let </span>value =
+                                        <span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>value, shift).ok_or_else(error));
+                                    <span class="kw">break </span><span class="lifetime">'inline </span>Inline::Unsigned(value);
+                                }
+                                Inline::Signed(value) =&gt; {
+                                    <span class="kw">let </span>shift =
+                                        <span class="macro">vm_try!</span>(u32::try_from(<span class="kw-2">*</span>value).ok().ok_or_else(error));
+                                    <span class="kw">let </span>value = <span class="macro">vm_try!</span>(signed_op(<span class="kw-2">*</span>value, shift).ok_or_else(error));
+                                    <span class="kw">break </span><span class="lifetime">'inline </span>Inline::Signed(value);
                                 }
                                 value =&gt; {
                                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
@@ -5841,15 +5914,15 @@
                     Pair::Pair(lhs, rhs) =&gt; {
                         <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
                             (MutRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
-                                (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
-                                    <span class="kw">break </span><span class="lifetime">'inline </span>Inline::Integer(<span class="macro">vm_try!</span>(
-                                        integer_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs).ok_or_else(error)
-                                    ));
+                                (Inline::Unsigned(lhs), rhs) =&gt; {
+                                    <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                                    <span class="kw">let </span>value = <span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
+                                    <span class="kw">break </span><span class="lifetime">'inline </span>Inline::Unsigned(value);
                                 }
-                                (Inline::Byte(lhs), Inline::Integer(rhs)) =&gt; {
-                                    <span class="kw">break </span><span class="lifetime">'inline </span>Inline::Byte(<span class="macro">vm_try!</span>(
-                                        byte_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs).ok_or_else(error)
-                                    ));
+                                (Inline::Signed(lhs), rhs) =&gt; {
+                                    <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                                    <span class="kw">let </span>value = <span class="macro">vm_try!</span>(signed_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
+                                    <span class="kw">break </span><span class="lifetime">'inline </span>Inline::Signed(value);
                                 }
                                 (lhs, rhs) =&gt; {
                                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
@@ -5898,8 +5971,8 @@
         target: InstTarget,
         protocol: Protocol,
         error: <span class="kw">fn</span>() -&gt; VmErrorKind,
-        integer_op: <span class="kw">fn</span>(i64, i64) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt;,
-        byte_op: <span class="kw">fn</span>(u8, i64) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt;,
+        signed_op: <span class="kw">fn</span>(i64, u32) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt;,
+        unsigned_op: <span class="kw">fn</span>(u64, u32) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt;,
         rhs: InstAddress,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>lhs;
@@ -5908,8 +5981,15 @@
         <span class="kw">let </span>fallback = <span class="kw">match </span><span class="macro">target_value!</span>(<span class="self">self</span>, target, guard, lhs, rhs) {
             TargetValue::Same(value) =&gt; {
                 <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_mut_repr()) {
-                    MutRepr::Inline(Inline::Integer(value)) =&gt; {
-                        <span class="kw">let </span>out = <span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>value, <span class="kw-2">*</span>value).ok_or_else(error));
+                    MutRepr::Inline(Inline::Unsigned(value)) =&gt; {
+                        <span class="kw">let </span>shift = <span class="macro">vm_try!</span>(u32::try_from(<span class="kw-2">*</span>value).ok().ok_or_else(error));
+                        <span class="kw">let </span>out = <span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>value, shift).ok_or_else(error));
+                        <span class="kw-2">*</span>value = out;
+                        <span class="kw">return </span>VmResult::Ok(());
+                    }
+                    MutRepr::Inline(Inline::Signed(value)) =&gt; {
+                        <span class="kw">let </span>shift = <span class="macro">vm_try!</span>(u32::try_from(<span class="kw-2">*</span>value).ok().ok_or_else(error));
+                        <span class="kw">let </span>out = <span class="macro">vm_try!</span>(signed_op(<span class="kw-2">*</span>value, shift).ok_or_else(error));
                         <span class="kw-2">*</span>value = out;
                         <span class="kw">return </span>VmResult::Ok(());
                     }
@@ -5928,13 +6008,15 @@
             TargetValue::Pair(lhs, rhs) =&gt; {
                 <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut_repr()), <span class="macro">vm_try!</span>(rhs.as_ref_repr())) {
                     (MutRepr::Inline(lhs), RefRepr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
-                        (Inline::Integer(lhs), Inline::Integer(rhs)) =&gt; {
-                            <span class="kw">let </span>out = <span class="macro">vm_try!</span>(integer_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs).ok_or_else(error));
+                        (Inline::Unsigned(lhs), rhs) =&gt; {
+                            <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                            <span class="kw">let </span>out = <span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
                             <span class="kw-2">*</span>lhs = out;
                             <span class="kw">return </span>VmResult::Ok(());
                         }
-                        (Inline::Byte(lhs), Inline::Integer(rhs)) =&gt; {
-                            <span class="kw">let </span>out = <span class="macro">vm_try!</span>(byte_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs).ok_or_else(error));
+                        (Inline::Signed(lhs), rhs) =&gt; {
+                            <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
+                            <span class="kw">let </span>out = <span class="macro">vm_try!</span>(signed_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
                             <span class="kw-2">*</span>lhs = out;
                             <span class="kw">return </span>VmResult::Ok(());
                         }
@@ -6143,8 +6225,8 @@
         <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
             BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
                 Inline::Bool(value) =&gt; Value::from(!value),
-                Inline::Integer(value) =&gt; Value::from(!value),
-                Inline::Byte(value) =&gt; Value::from(!value),
+                Inline::Unsigned(value) =&gt; Value::from(!value),
+                Inline::Signed(value) =&gt; Value::from(!value),
                 actual =&gt; {
                     <span class="kw">let </span>operand = actual.type_info();
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedUnaryOperation { op: <span class="string">"!"</span>, operand });
@@ -6167,7 +6249,7 @@
         <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
             BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
                 Inline::Float(value) =&gt; Value::from(-value),
-                Inline::Integer(value) =&gt; Value::from(-value),
+                Inline::Signed(value) =&gt; Value::from(-value),
                 actual =&gt; {
                     <span class="kw">let </span>operand = actual.type_info();
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedUnaryOperation { op: <span class="string">"-"</span>, operand });
@@ -6197,6 +6279,7 @@
                     Protocol::ADD,
                     || VmErrorKind::Overflow,
                     i64::checked_add,
+                    u64::checked_add,
                     ops::Add::add,
                     lhs,
                     rhs,
@@ -6208,6 +6291,7 @@
                     Protocol::SUB,
                     || VmErrorKind::Underflow,
                     i64::checked_sub,
+                    u64::checked_sub,
                     ops::Sub::sub,
                     lhs,
                     rhs,
@@ -6219,6 +6303,7 @@
                     Protocol::MUL,
                     || VmErrorKind::Overflow,
                     i64::checked_mul,
+                    u64::checked_mul,
                     ops::Mul::mul,
                     lhs,
                     rhs,
@@ -6230,6 +6315,7 @@
                     Protocol::DIV,
                     || VmErrorKind::DivideByZero,
                     i64::checked_div,
+                    u64::checked_div,
                     ops::Div::div,
                     lhs,
                     rhs,
@@ -6241,6 +6327,7 @@
                     Protocol::REM,
                     || VmErrorKind::DivideByZero,
                     i64::checked_rem,
+                    u64::checked_rem,
                     ops::Rem::rem,
                     lhs,
                     rhs,
@@ -6249,10 +6336,10 @@
             }
             InstOp::BitAnd =&gt; {
                 <span class="kw">use </span>ops::BitAnd <span class="kw">as _</span>;
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_infallible_bitwise_bool(
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_bit(
                     Protocol::BIT_AND,
                     i64::bitand,
-                    u8::bitand,
+                    u64::bitand,
                     bool::bitand,
                     lhs,
                     rhs,
@@ -6261,10 +6348,10 @@
             }
             InstOp::BitXor =&gt; {
                 <span class="kw">use </span>ops::BitXor <span class="kw">as _</span>;
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_infallible_bitwise_bool(
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_bit(
                     Protocol::BIT_XOR,
                     i64::bitxor,
-                    u8::bitxor,
+                    u64::bitxor,
                     bool::bitxor,
                     lhs,
                     rhs,
@@ -6273,10 +6360,10 @@
             }
             InstOp::BitOr =&gt; {
                 <span class="kw">use </span>ops::BitOr <span class="kw">as _</span>;
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_infallible_bitwise_bool(
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_bit(
                     Protocol::BIT_OR,
                     i64::bitor,
-                    u8::bitor,
+                    u64::bitor,
                     bool::bitor,
                     lhs,
                     rhs,
@@ -6284,37 +6371,32 @@
                 ));
             }
             InstOp::Shl =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_bitwise(
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_shift(
                     Protocol::SHL,
                     || VmErrorKind::Overflow,
-                    |a, b| a.checked_shl(u32::try_from(b).ok()<span class="question-mark">?</span>),
-                    |a, b| a.checked_shl(u32::try_from(b).ok()<span class="question-mark">?</span>),
+                    i64::checked_shl,
+                    u64::checked_shl,
                     lhs,
                     rhs,
                     out,
                 ));
             }
             InstOp::Shr =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_bitwise(
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_shift(
                     Protocol::SHR,
                     || VmErrorKind::Underflow,
-                    |a, b| a.checked_shr(u32::try_from(b).ok()<span class="question-mark">?</span>),
-                    |a, b| a.checked_shr(u32::try_from(b).ok()<span class="question-mark">?</span>),
+                    i64::checked_shr,
+                    u64::checked_shr,
                     lhs,
                     rhs,
                     out
                 ));
             }
             InstOp::Gt =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_ops(
-                    |o| <span class="macro">matches!</span>(o, Ordering::Greater),
-                    lhs,
-                    rhs,
-                    out
-                ));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_cmp(|o| <span class="macro">matches!</span>(o, Ordering::Greater), lhs, rhs, out));
             }
             InstOp::Gte =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_ops(
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_cmp(
                     |o| <span class="macro">matches!</span>(o, Ordering::Greater | Ordering::Equal),
                     lhs,
                     rhs,
@@ -6322,10 +6404,10 @@
                 ));
             }
             InstOp::Lt =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_ops(|o| <span class="macro">matches!</span>(o, Ordering::Less), lhs, rhs, out));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_cmp(|o| <span class="macro">matches!</span>(o, Ordering::Less), lhs, rhs, out));
             }
             InstOp::Lte =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_ops(
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_cmp(
                     |o| <span class="macro">matches!</span>(o, Ordering::Less | Ordering::Equal),
                     lhs,
                     rhs,
@@ -6365,10 +6447,10 @@
                 <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, !test));
             }
             InstOp::And =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_op(|a, b| a &amp;&amp; b, <span class="string">"&amp;&amp;"</span>, lhs, rhs, out));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_bool(|a, b| a &amp;&amp; b, <span class="string">"&amp;&amp;"</span>, lhs, rhs, out));
             }
             InstOp::Or =&gt; {
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_boolean_op(|a, b| a || b, <span class="string">"||"</span>, lhs, rhs, out));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.internal_bool(|a, b| a || b, <span class="string">"||"</span>, lhs, rhs, out));
             }
             InstOp::As =&gt; {
                 <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.as_op(lhs, rhs));
@@ -6401,6 +6483,7 @@
                     Protocol::ADD_ASSIGN,
                     || VmErrorKind::Overflow,
                     i64::checked_add,
+                    u64::checked_add,
                     ops::Add::add,
                     value,
                 ));
@@ -6411,6 +6494,7 @@
                     Protocol::SUB_ASSIGN,
                     || VmErrorKind::Underflow,
                     i64::checked_sub,
+                    u64::checked_sub,
                     ops::Sub::sub,
                     value,
                 ));
@@ -6421,6 +6505,7 @@
                     Protocol::MUL_ASSIGN,
                     || VmErrorKind::Overflow,
                     i64::checked_mul,
+                    u64::checked_mul,
                     ops::Mul::mul,
                     value,
                 ));
@@ -6431,6 +6516,7 @@
                     Protocol::DIV_ASSIGN,
                     || VmErrorKind::DivideByZero,
                     i64::checked_div,
+                    u64::checked_div,
                     ops::Div::div,
                     value,
                 ));
@@ -6441,6 +6527,7 @@
                     Protocol::REM_ASSIGN,
                     || VmErrorKind::DivideByZero,
                     i64::checked_rem,
+                    u64::checked_rem,
                     ops::Rem::rem,
                     value,
                 ));
@@ -6480,8 +6567,8 @@
                     target,
                     Protocol::SHL_ASSIGN,
                     || VmErrorKind::Overflow,
-                    |a, b| a.checked_shl(u32::try_from(b).ok()<span class="question-mark">?</span>),
-                    |a, b| a.checked_shl(u32::try_from(b).ok()<span class="question-mark">?</span>),
+                    i64::checked_shl,
+                    u64::checked_shl,
                     value,
                 ));
             }
@@ -6490,8 +6577,8 @@
                     target,
                     Protocol::SHR_ASSIGN,
                     || VmErrorKind::Underflow,
-                    |a, b| a.checked_shr(u32::try_from(b).ok()<span class="question-mark">?</span>),
-                    |a, b| a.checked_shr(u32::try_from(b).ok()<span class="question-mark">?</span>),
+                    i64::checked_shr,
+                    u64::checked_shr,
                     value,
                 ));
             }
@@ -6664,13 +6751,8 @@
             <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(target));
 
             <span class="kw">match </span><span class="macro">vm_try!</span>(index.as_ref_repr()) {
-                RefRepr::Inline(Inline::Integer(index)) =&gt; {
-                    <span class="kw">let </span><span class="prelude-val">Ok</span>(index) = usize::try_from(<span class="kw-2">*</span>index) <span class="kw">else </span>{
-                        <span class="kw">return </span>err(VmErrorKind::MissingIndexInteger {
-                            target: <span class="macro">vm_try!</span>(target.type_info()),
-                            index: VmIntegerRepr::from(<span class="kw-2">*</span>index),
-                        });
-                    };
+                RefRepr::Inline(inline) =&gt; {
+                    <span class="kw">let </span>index = <span class="macro">vm_try!</span>(inline.as_integer::&lt;usize&gt;());
 
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(<span class="self">Self</span>::try_tuple_like_index_get(target, index)) {
                         <span class="kw">break </span><span class="lifetime">'store </span>value;
@@ -7071,19 +7153,6 @@
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_eq_byte(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: u8, out: Output) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
-
-        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(v.as_inline()) {
-            <span class="prelude-val">Some</span>(Inline::Byte(actual)) =&gt; <span class="kw-2">*</span>actual == value,
-            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-        };
-
-        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
-        VmResult::Ok(())
-    }
-
-    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_eq_character(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: char, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
@@ -7097,11 +7166,24 @@
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_eq_integer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: i64, out: Output) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>op_eq_unsigned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: u64, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
         <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(v.as_inline()) {
-            <span class="prelude-val">Some</span>(Inline::Integer(actual)) =&gt; <span class="kw-2">*</span>actual == value,
+            <span class="prelude-val">Some</span>(Inline::Unsigned(actual)) =&gt; <span class="kw-2">*</span>actual == value,
+            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+        };
+
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
+        VmResult::Ok(())
+    }
+
+    <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
+    </span><span class="kw">fn </span>op_eq_signed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: i64, out: Output) -&gt; VmResult&lt;()&gt; {
+        <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
+
+        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(v.as_inline()) {
+            <span class="prelude-val">Some</span>(Inline::Signed(actual)) =&gt; <span class="kw-2">*</span>actual == value,
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
 
@@ -7907,14 +7989,14 @@
                         <span class="kw">return </span>VmResult::Ok(VmHalt::Exited(out.as_addr()));
                     }
                 }
-                Inst::EqByte { addr, value, out } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_byte(addr, value, out));
-                }
                 Inst::EqChar { addr, value, out } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_character(addr, value, out));
                 }
-                Inst::EqInteger { addr, value, out } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_integer(addr, value, out));
+                Inst::EqUnsigned { addr, value, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_unsigned(addr, value, out));
+                }
+                Inst::EqSigned { addr, value, out } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_eq_signed(addr, value, out));
                 }
                 Inst::EqBool {
                     addr,

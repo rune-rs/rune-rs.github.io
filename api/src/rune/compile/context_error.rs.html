@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/context_error.rs`."><title>context_error.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-198729e5.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (3f1be1ec7 2024-10-28)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/</div>context_error.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/context_error.rs`."><title>context_error.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/</div>context_error.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -379,10 +379,21 @@
 <a href="#378" id="378">378</a>
 <a href="#379" id="379">379</a>
 <a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::compile::meta::AssociatedKind;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{RuntimeError, TypeInfo};
 <span class="kw">use crate</span>::{Hash, ItemBuf};
 
@@ -394,8 +405,14 @@
     AllocError {
         error: alloc::Error,
     },
-    RuntimeError {
-        error: RuntimeError,
+    InvalidConstValue {
+        item: ItemBuf,
+        error: Box&lt;RuntimeError&gt;,
+    },
+    InvalidAssociatedConstValue {
+        container: TypeInfo,
+        kind: Box&lt;AssociatedKind&gt;,
+        error: Box&lt;RuntimeError&gt;,
     },
     UnitAlreadyPresent,
     InternalAlreadyPresent {
@@ -539,13 +556,6 @@
     }
 }
 
-<span class="kw">impl </span>From&lt;RuntimeError&gt; <span class="kw">for </span>ContextError {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>from(error: RuntimeError) -&gt; <span class="self">Self </span>{
-        ContextError::RuntimeError { error }
-    }
-}
-
 <span class="kw">impl </span>From&lt;alloc::alloc::AllocError&gt; <span class="kw">for </span>ContextError {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(error: alloc::alloc::AllocError) -&gt; <span class="self">Self </span>{
@@ -561,8 +571,18 @@
             ContextError::AllocError { error } =&gt; {
                 error.fmt(f)<span class="question-mark">?</span>;
             }
-            ContextError::RuntimeError { error } =&gt; {
-                error.fmt(f)<span class="question-mark">?</span>;
+            ContextError::InvalidConstValue { item, error } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"Error when building constant {item}: {error}"</span>)<span class="question-mark">?</span>;
+            }
+            ContextError::InvalidAssociatedConstValue {
+                container,
+                kind,
+                error,
+            } =&gt; {
+                <span class="macro">write!</span>(
+                    f,
+                    <span class="string">"Error when building associated constant in {container}::{kind}: {error}"
+                </span>)<span class="question-mark">?</span>;
             }
             ContextError::UnitAlreadyPresent {} =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"Unit `()` type is already present"</span>)<span class="question-mark">?</span>;

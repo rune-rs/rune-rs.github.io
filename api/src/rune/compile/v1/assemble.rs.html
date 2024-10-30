@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-198729e5.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (3f1be1ec7 2024-10-28)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/v1/</div>assemble.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/v1/</div>assemble.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -3272,7 +3272,7 @@
         <span class="kw">if </span>query_const_fn.ir_fn.args.len() != args.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                 span,
-                ErrorKind::UnsupportedArgumentCount {
+                ErrorKind::BadArgumentCount {
                     expected: query_const_fn.ir_fn.args.len(),
                     actual: args.len(),
                 },
@@ -3781,7 +3781,6 @@
     <span class="kw">let </span>out = cond.output();
 
     <span class="kw">let </span>inst = <span class="kw">match </span>lit {
-        hir::Lit::Byte(value) =&gt; Inst::EqByte { addr, value, out },
         hir::Lit::Char(value) =&gt; Inst::EqChar { addr, value, out },
         hir::Lit::Str(string) =&gt; Inst::EqString {
             addr,
@@ -3793,7 +3792,8 @@
             slot: cx.q.unit.new_static_bytes(hir, bytes)<span class="question-mark">?</span>,
             out,
         },
-        hir::Lit::Integer(value) =&gt; Inst::EqInteger { addr, value, out },
+        hir::Lit::Unsigned(value) =&gt; Inst::EqUnsigned { addr, value, out },
+        hir::Lit::Signed(value) =&gt; Inst::EqSigned { addr, value, out },
         hir::Lit::Bool(value) =&gt; Inst::EqBool { addr, value, out },
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
     };
@@ -4277,14 +4277,14 @@
             Inline::Unit =&gt; {
                 cx.asm.push(Inst::unit(out), span)<span class="question-mark">?</span>;
             }
-            Inline::Byte(v) =&gt; {
-                cx.asm.push(Inst::byte(v, out), span)<span class="question-mark">?</span>;
-            }
             Inline::Char(v) =&gt; {
                 cx.asm.push(Inst::char(v, out), span)<span class="question-mark">?</span>;
             }
-            Inline::Integer(v) =&gt; {
-                cx.asm.push(Inst::integer(v, out), span)<span class="question-mark">?</span>;
+            Inline::Signed(v) =&gt; {
+                cx.asm.push(Inst::signed(v, out), span)<span class="question-mark">?</span>;
+            }
+            Inline::Unsigned(v) =&gt; {
+                cx.asm.push(Inst::unsigned(v, out), span)<span class="question-mark">?</span>;
             }
             Inline::Float(v) =&gt; {
                 cx.asm.push(Inst::float(v, out), span)<span class="question-mark">?</span>;
@@ -6298,14 +6298,14 @@
         hir::Lit::Bool(v) =&gt; {
             cx.asm.push(Inst::bool(v, out), span)<span class="question-mark">?</span>;
         }
-        hir::Lit::Byte(v) =&gt; {
-            cx.asm.push(Inst::byte(v, out), span)<span class="question-mark">?</span>;
-        }
         hir::Lit::Char(v) =&gt; {
             cx.asm.push(Inst::char(v, out), span)<span class="question-mark">?</span>;
         }
-        hir::Lit::Integer(v) =&gt; {
-            cx.asm.push(Inst::integer(v, out), span)<span class="question-mark">?</span>;
+        hir::Lit::Unsigned(v) =&gt; {
+            cx.asm.push(Inst::unsigned(v, out), span)<span class="question-mark">?</span>;
+        }
+        hir::Lit::Signed(v) =&gt; {
+            cx.asm.push(Inst::signed(v, out), span)<span class="question-mark">?</span>;
         }
         hir::Lit::Float(v) =&gt; {
             cx.asm.push(Inst::float(v, out), span)<span class="question-mark">?</span>;
