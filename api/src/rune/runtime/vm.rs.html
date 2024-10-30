@@ -4061,22 +4061,7 @@
 <a href="#4060" id="4060">4060</a>
 <a href="#4061" id="4061">4061</a>
 <a href="#4062" id="4062">4062</a>
-<a href="#4063" id="4063">4063</a>
-<a href="#4064" id="4064">4064</a>
-<a href="#4065" id="4065">4065</a>
-<a href="#4066" id="4066">4066</a>
-<a href="#4067" id="4067">4067</a>
-<a href="#4068" id="4068">4068</a>
-<a href="#4069" id="4069">4069</a>
-<a href="#4070" id="4070">4070</a>
-<a href="#4071" id="4071">4071</a>
-<a href="#4072" id="4072">4072</a>
-<a href="#4073" id="4073">4073</a>
-<a href="#4074" id="4074">4074</a>
-<a href="#4075" id="4075">4075</a>
-<a href="#4076" id="4076">4076</a>
-<a href="#4077" id="4077">4077</a>
-<a href="#4078" id="4078">4078</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#4063" id="4063">4063</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -7102,13 +7087,15 @@
         <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at(addr, len));
         <span class="kw">let </span>values = <span class="macro">vm_try!</span>(values.iter().cloned().try_collect::&lt;alloc::Vec&lt;<span class="kw">_</span>&gt;&gt;());
 
-        <span class="kw">let </span><span class="kw-2">mut </span>f = <span class="macro">vm_try!</span>(Formatter::with_capacity(size_hint));
+        <span class="kw">let </span><span class="kw-2">mut </span>s = <span class="macro">vm_try!</span>(String::try_with_capacity(size_hint));
+        <span class="comment">// SAFETY: Formatter does not outlive the string it references.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>f = <span class="kw">unsafe </span>{ Formatter::new(NonNull::from(<span class="kw-2">&amp;mut </span>s)) };
 
         <span class="kw">for </span>value <span class="kw">in </span>values {
             <span class="macro">vm_try!</span>(value.string_display_with(<span class="kw-2">&amp;mut </span>f, <span class="kw-2">&amp;mut *</span><span class="self">self</span>));
         }
 
-        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, f.string));
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, s));
         VmResult::Ok(())
     }
 
@@ -7713,30 +7700,13 @@
     /// [Value::string_display] which requires access to a virtual machine.
     ///
     /// ```no_run
-    /// use rune::{Context, Unit};
-    /// use rune::runtime::Formatter;
-    /// use std::sync::Arc;
+    /// use rune::{Value, Vm};
+    /// use rune::runtime::{Formatter, VmError};
     ///
-    /// let context = Context::with_default_modules()?;
-    /// let context = Arc::new(context.runtime()?);
-    ///
-    /// // Normally the unit would be created by compiling some source,
-    /// // and since this one is empty it'll just error.
-    /// let unit = Arc::new(Unit::default());
-    ///
-    /// let mut vm = rune::Vm::new(context, unit);
-    ///
-    /// let output = vm.call(["main"], ())?;
-    ///
-    /// // Call the string_display protocol on `output`. This requires
-    /// // access to a virtual machine since it might use functions
-    /// // registered in the unit associated with it.
-    /// let mut f = Formatter::new();
-    ///
-    /// // Note: We do an extra unwrap because the return value is
-    /// // `fmt::Result`.
-    /// vm.with(|| output.string_display(&amp;mut f)).into_result()?;
-    /// # Ok::&lt;_, rune::support::Error&gt;(())
+    /// fn use_with(vm: &amp;Vm, output: &amp;Value, f: &amp;mut Formatter) -&gt; Result&lt;(), VmError&gt; {
+    ///     vm.with(|| output.string_display(f)).into_result()?;
+    ///     Ok(())
+    /// }
     /// ```
     </span><span class="kw">pub fn </span>with&lt;F, T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, f: F) -&gt; T
     <span class="kw">where

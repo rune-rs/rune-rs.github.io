@@ -2103,7 +2103,9 @@
 <a href="#2102" id="2102">2102</a>
 <a href="#2103" id="2103">2103</a>
 <a href="#2104" id="2104">2104</a>
-<a href="#2105" id="2105">2105</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2105" id="2105">2105</a>
+<a href="#2106" id="2106">2106</a>
+<a href="#2107" id="2107">2107</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>inline;
@@ -2466,19 +2468,19 @@
             <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.borrow_ref_repr()) {
                 BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
                     Inline::Char(c) =&gt; {
-                        <span class="macro">vm_try!</span>(f.push(<span class="kw-2">*</span>c));
+                        <span class="macro">vm_try!</span>(f.try_write_char(<span class="kw-2">*</span>c));
                     }
                     Inline::Unsigned(byte) =&gt; {
                         <span class="kw">let </span><span class="kw-2">mut </span>buffer = itoa::Buffer::new();
-                        <span class="macro">vm_try!</span>(f.push_str(buffer.format(<span class="kw-2">*</span>byte)));
+                        <span class="macro">vm_try!</span>(f.try_write_str(buffer.format(<span class="kw-2">*</span>byte)));
                     }
                     Inline::Signed(integer) =&gt; {
                         <span class="kw">let </span><span class="kw-2">mut </span>buffer = itoa::Buffer::new();
-                        <span class="macro">vm_try!</span>(f.push_str(buffer.format(<span class="kw-2">*</span>integer)));
+                        <span class="macro">vm_try!</span>(f.try_write_str(buffer.format(<span class="kw-2">*</span>integer)));
                     }
                     Inline::Float(float) =&gt; {
                         <span class="kw">let </span><span class="kw-2">mut </span>buffer = ryu::Buffer::new();
-                        <span class="macro">vm_try!</span>(f.push_str(buffer.format(<span class="kw-2">*</span>float)));
+                        <span class="macro">vm_try!</span>(f.try_write_str(buffer.format(<span class="kw-2">*</span>float)));
                     }
                     Inline::Bool(bool) =&gt; {
                         <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{bool}"</span>));
@@ -3873,7 +3875,9 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>o = Formatter::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
+        <span class="comment">// SAFETY: Formatter does not outlive the string it references.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>o = <span class="kw">unsafe </span>{ Formatter::new(NonNull::from(<span class="kw-2">&amp;mut </span>s)) };
 
         <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.string_debug(<span class="kw-2">&amp;mut </span>o).into_result() {
             <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
@@ -3901,7 +3905,7 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        f.write_str(o.as_str())<span class="question-mark">?</span>;
+        f.write_str(s.as_str())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }

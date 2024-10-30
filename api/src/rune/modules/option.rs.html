@@ -461,9 +461,17 @@
 <a href="#460" id="460">460</a>
 <a href="#461" id="461">461</a>
 <a href="#462" id="462">462</a>
-<a href="#463" id="463">463</a></pre></div><pre class="rust"><code><span class="doccomment">//! The [`Option`] type.
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a></pre></div><pre class="rust"><code><span class="doccomment">//! The [`Option`] type.
 
-</span><span class="kw">use crate as </span>rune;
+</span><span class="kw">use </span>core::ptr::NonNull;
+
+<span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::String;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{ControlFlow, Formatter, Function, Panic, Value, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 <span class="kw">use crate</span>::{ContextError, Module};
@@ -546,9 +554,11 @@
     <span class="kw">match </span>option {
         <span class="prelude-val">Some</span>(some) =&gt; VmResult::Ok(some),
         <span class="prelude-val">None </span>=&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>f = Formatter::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
+            <span class="comment">// SAFETY: Formatter does not outlive the string it references.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>f = <span class="kw">unsafe </span>{ Formatter::new(NonNull::from(<span class="kw-2">&amp;mut </span>s)) };
             <span class="macro">vm_try!</span>(message.string_display(<span class="kw-2">&amp;mut </span>f));
-            VmResult::err(Panic::custom(f.into_string()))
+            VmResult::err(Panic::custom(s))
         }
     }
 }

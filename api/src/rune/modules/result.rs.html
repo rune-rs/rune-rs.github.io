@@ -279,9 +279,15 @@
 <a href="#278" id="278">278</a>
 <a href="#279" id="279">279</a>
 <a href="#280" id="280">280</a>
-<a href="#281" id="281">281</a></pre></div><pre class="rust"><code><span class="doccomment">//! The [`Result`] type.
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a></pre></div><pre class="rust"><code><span class="doccomment">//! The [`Result`] type.
 
-</span><span class="kw">use crate as </span>rune;
+</span><span class="kw">use </span>core::ptr::NonNull;
+
+<span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{ControlFlow, Formatter, Function, Panic, Value, VmResult};
@@ -482,11 +488,13 @@
     <span class="kw">match </span>result {
         <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(value),
         <span class="prelude-val">Err</span>(err) =&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>f = Formatter::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
+            <span class="comment">// SAFETY: Formatter does not outlive the string it references.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>f = <span class="kw">unsafe </span>{ Formatter::new(NonNull::from(<span class="kw-2">&amp;mut </span>s)) };
             <span class="macro">vm_try!</span>(message.string_display(<span class="kw-2">&amp;mut </span>f));
             <span class="macro">vm_try!</span>(f.try_write_str(<span class="string">": "</span>));
             <span class="macro">vm_try!</span>(err.string_debug(<span class="kw-2">&amp;mut </span>f));
-            VmResult::err(Panic::custom(f.into_string()))
+            VmResult::err(Panic::custom(s))
         }
     }
 }
