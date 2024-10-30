@@ -4074,7 +4074,9 @@
 <a href="#4073" id="4073">4073</a>
 <a href="#4074" id="4074">4074</a>
 <a href="#4075" id="4075">4075</a>
-<a href="#4076" id="4076">4076</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#4076" id="4076">4076</a>
+<a href="#4077" id="4077">4077</a>
+<a href="#4078" id="4078">4078</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -4087,17 +4089,18 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
 <span class="kw">use </span><span class="kw">crate</span>::hash::{Hash, IntoHash, ToTypeHash};
 <span class="kw">use </span><span class="kw">crate</span>::modules::{option, result};
+<span class="kw">use </span><span class="kw">crate</span>::Any;
 
 <span class="kw">use super</span>::{
     budget, static_type, Args, Awaited, BorrowMut, BorrowRefRepr, Bytes, Call, ControlFlow,
     DynArgs, DynGuardedArgs, EmptyStruct, Format, FormatSpec, Formatter, FromValue, Function,
-    Future, Generator, GuardedArgs, Inline, Inst, InstAddress, InstAssignOp, InstOp, InstRange,
-    InstTarget, InstValue, InstVariant, MutRepr, Mutable, Object, Output, OwnedTuple, Pair, Panic,
-    Protocol, ProtocolCaller, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo,
-    RangeToInclusive, RefRepr, RuntimeContext, Select, SelectFuture, Stack, Stream, Struct, Type,
-    TypeCheck, TypeOf, Unit, UnitFn, UnitStorage, Value, Variant, VariantData, Vec, VmDiagnostics,
-    VmDiagnosticsObj, VmError, VmErrorKind, VmExecution, VmHalt, VmIntegerRepr, VmResult,
-    VmSendExecution,
+    Future, Generator, GeneratorState, GuardedArgs, Inline, Inst, InstAddress, InstAssignOp,
+    InstOp, InstRange, InstTarget, InstValue, InstVariant, MutRepr, Mutable, Object, Output,
+    OwnedTuple, Pair, Panic, Protocol, ProtocolCaller, Range, RangeFrom, RangeFull, RangeInclusive,
+    RangeTo, RangeToInclusive, RefRepr, RuntimeContext, Select, SelectFuture, Stack, Stream,
+    Struct, Type, TypeCheck, TypeHash, TypeInfo, TypeOf, Unit, UnitFn, UnitStorage, Value, Variant,
+    VariantData, Vec, VmDiagnostics, VmDiagnosticsObj, VmError, VmErrorKind, VmExecution, VmHalt,
+    VmIntegerRepr, VmResult, VmSendExecution,
 };
 
 <span class="doccomment">/// Helper to take a value, replacing the old one with empty.
@@ -4933,8 +4936,6 @@
 
     <span class="doccomment">/// Implementation of getting a string index on an object-like type.
     </span><span class="kw">fn </span>try_tuple_like_index_get(target: <span class="kw-2">&amp;</span>Value, index: usize) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
-        <span class="kw">use </span><span class="kw">crate</span>::runtime::GeneratorState::<span class="kw-2">*</span>;
-
         <span class="kw">let </span>result = <span class="kw">match </span><span class="macro">vm_try!</span>(target.borrow_ref_repr()) {
             BorrowRefRepr::Inline(target) =&gt; <span class="kw">match </span>target {
                 Inline::Unit =&gt; <span class="prelude-val">Err</span>(target.type_info()),
@@ -4958,11 +4959,6 @@
                     (<span class="number">0</span>, <span class="prelude-val">Some</span>(value)) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(target.type_info()),
                 },
-                Mutable::GeneratorState(state) =&gt; <span class="kw">match </span>(index, state) {
-                    (<span class="number">0</span>, Yielded(value)) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
-                    (<span class="number">0</span>, Complete(value)) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
-                    <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(target.type_info()),
-                },
                 Mutable::TupleStruct(tuple_struct) =&gt; <span class="kw">match </span>tuple_struct.data().get(index) {
                     <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
                     <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(target.type_info()),
@@ -4976,9 +4972,16 @@
                 },
                 <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
             },
-            BorrowRefRepr::Any(..) =&gt; {
-                <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
-            }
+            BorrowRefRepr::Any(target) =&gt; <span class="kw">match </span>target.type_hash() {
+                GeneratorState::HASH =&gt; <span class="kw">match </span>(index, <span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(target.borrow_ref())) {
+                    (<span class="number">0</span>, GeneratorState::Yielded(value)) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
+                    (<span class="number">0</span>, GeneratorState::Complete(value)) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
+                    <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(target.type_info()),
+                },
+                <span class="kw">_ </span>=&gt; {
+                    <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
+                }
+            },
         };
 
         <span class="kw">match </span>result {
@@ -4995,55 +4998,72 @@
         target: <span class="kw-2">&amp;</span>Value,
         index: usize,
     ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'_</span>, Value&gt;&gt;&gt; {
-        <span class="kw">use </span><span class="kw">crate</span>::runtime::GeneratorState::<span class="kw-2">*</span>;
+        <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref_repr()) {
+            RefRepr::Mutable(value) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>unsupported = <span class="bool-val">false</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>unsupported = <span class="bool-val">false</span>;
-
-        <span class="kw">let </span>result = <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref_repr()) {
-            RefRepr::Mutable(value) =&gt; BorrowMut::try_map(<span class="macro">vm_try!</span>(value.borrow_mut()), |kind| {
-                <span class="kw">match </span>kind {
-                    Mutable::Tuple(tuple) =&gt; <span class="kw">return </span>tuple.get_mut(index),
-                    Mutable::Vec(vec) =&gt; <span class="kw">return </span>vec.get_mut(index),
-                    Mutable::Result(result) =&gt; <span class="kw">match </span>(index, result) {
-                        (<span class="number">0</span>, <span class="prelude-val">Ok</span>(value)) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(value),
-                        (<span class="number">0</span>, <span class="prelude-val">Err</span>(value)) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(value),
-                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-                    },
-                    Mutable::Option(option) =&gt; <span class="kw">match </span>(index, option) {
-                        (<span class="number">0</span>, <span class="prelude-val">Some</span>(value)) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(value),
-                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-                    },
-                    Mutable::GeneratorState(state) =&gt; <span class="kw">match </span>(index, state) {
-                        (<span class="number">0</span>, Yielded(value)) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(value),
-                        (<span class="number">0</span>, Complete(value)) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(value),
-                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-                    },
-                    Mutable::TupleStruct(tuple_struct) =&gt; <span class="kw">return </span>tuple_struct.get_mut(index),
-                    Mutable::Variant(Variant {
-                        data: VariantData::Tuple(tuple),
-                        ..
-                    }) =&gt; {
-                        <span class="kw">return </span>tuple.get_mut(index);
+                <span class="kw">let </span>result = BorrowMut::try_map(<span class="macro">vm_try!</span>(value.borrow_mut()), |kind| {
+                    <span class="kw">match </span>kind {
+                        Mutable::Tuple(tuple) =&gt; <span class="kw">return </span>tuple.get_mut(index),
+                        Mutable::Vec(vec) =&gt; <span class="kw">return </span>vec.get_mut(index),
+                        Mutable::Result(result) =&gt; <span class="kw">match </span>(index, result) {
+                            (<span class="number">0</span>, <span class="prelude-val">Ok</span>(value)) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(value),
+                            (<span class="number">0</span>, <span class="prelude-val">Err</span>(value)) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(value),
+                            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+                        },
+                        Mutable::Option(option) =&gt; <span class="kw">match </span>(index, option) {
+                            (<span class="number">0</span>, <span class="prelude-val">Some</span>(value)) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(value),
+                            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+                        },
+                        Mutable::TupleStruct(tuple_struct) =&gt; <span class="kw">return </span>tuple_struct.get_mut(index),
+                        Mutable::Variant(Variant {
+                            data: VariantData::Tuple(tuple),
+                            ..
+                        }) =&gt; {
+                            <span class="kw">return </span>tuple.get_mut(index);
+                        }
+                        <span class="kw">_ </span>=&gt; {}
                     }
-                    <span class="kw">_ </span>=&gt; {}
+
+                    unsupported = <span class="bool-val">true</span>;
+                    <span class="prelude-val">None
+                </span>});
+
+                <span class="kw">if </span>unsupported {
+                    <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
                 }
 
-                unsupported = <span class="bool-val">true</span>;
-                <span class="prelude-val">None
-            </span>}),
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
-        };
+                <span class="kw">match </span>result {
+                    <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(<span class="prelude-val">Some</span>(value)),
+                    <span class="prelude-val">Err</span>(actual) =&gt; err(VmErrorKind::MissingIndexInteger {
+                        target: actual.type_info(),
+                        index: VmIntegerRepr::from(index),
+                    }),
+                }
+            }
+            RefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                GeneratorState::HASH =&gt; {
+                    <span class="kw">let </span>result = BorrowMut::try_map(
+                        <span class="macro">vm_try!</span>(value.borrow_mut::&lt;GeneratorState&gt;()),
+                        |value| <span class="kw">match </span>(index, value) {
+                            (<span class="number">0</span>, GeneratorState::Yielded(value)) =&gt; <span class="prelude-val">Some</span>(value),
+                            (<span class="number">0</span>, GeneratorState::Complete(value)) =&gt; <span class="prelude-val">Some</span>(value),
+                            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                        },
+                    );
 
-        <span class="kw">if </span>unsupported {
-            <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
-        }
+                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(value) = result {
+                        <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">Some</span>(value));
+                    }
 
-        <span class="kw">match </span>result {
-            <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(<span class="prelude-val">Some</span>(value)),
-            <span class="prelude-val">Err</span>(actual) =&gt; err(VmErrorKind::MissingIndexInteger {
-                target: actual.type_info(),
-                index: VmIntegerRepr::from(index),
-            }),
+                    err(VmErrorKind::MissingIndexInteger {
+                        target: TypeInfo::from(GeneratorState::INFO),
+                        index: VmIntegerRepr::from(index),
+                    })
+                }
+                <span class="kw">_ </span>=&gt; VmResult::Ok(<span class="prelude-val">None</span>),
+            },
+            <span class="kw">_ </span>=&gt; VmResult::Ok(<span class="prelude-val">None</span>),
         }
     }
 
@@ -5264,9 +5284,7 @@
     <span class="kw">where
         </span>F: FnOnce(<span class="kw-2">&amp;</span>[Value]) -&gt; O,
     {
-        <span class="kw">use </span><span class="kw">crate</span>::runtime::GeneratorState::<span class="kw-2">*</span>;
-
-        VmResult::Ok(<span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
+        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
             BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>(ty, value) {
                 (TypeCheck::Unit, Inline::Unit) =&gt; <span class="prelude-val">Some</span>(f(<span class="kw-2">&amp;</span>[])),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -5274,27 +5292,22 @@
             BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span>(ty, <span class="kw-2">&amp;*</span>value) {
                 (TypeCheck::Tuple, Mutable::Tuple(tuple)) =&gt; <span class="prelude-val">Some</span>(f(tuple)),
                 (TypeCheck::Vec, Mutable::Vec(vec)) =&gt; <span class="prelude-val">Some</span>(f(vec)),
-                (TypeCheck::Result(v), Mutable::Result(result)) =&gt; <span class="prelude-val">Some</span>(<span class="kw">match </span>(v, result) {
-                    (<span class="number">0</span>, <span class="prelude-val">Ok</span>(ok)) =&gt; f(slice::from_ref(ok)),
-                    (<span class="number">1</span>, <span class="prelude-val">Err</span>(err)) =&gt; f(slice::from_ref(err)),
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
-                }),
-                (TypeCheck::Option(v), Mutable::Option(option)) =&gt; <span class="prelude-val">Some</span>(<span class="kw">match </span>(v, option) {
-                    (<span class="number">0</span>, <span class="prelude-val">Some</span>(some)) =&gt; f(slice::from_ref(some)),
-                    (<span class="number">1</span>, <span class="prelude-val">None</span>) =&gt; f(<span class="kw-2">&amp;</span>[]),
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
-                }),
-                (TypeCheck::GeneratorState(v), Mutable::GeneratorState(state)) =&gt; {
-                    <span class="prelude-val">Some</span>(<span class="kw">match </span>(v, state) {
-                        (<span class="number">0</span>, Complete(complete)) =&gt; f(slice::from_ref(complete)),
-                        (<span class="number">1</span>, Yielded(yielded)) =&gt; f(slice::from_ref(yielded)),
-                        <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
-                    })
-                }
+                (TypeCheck::Result(v), Mutable::Result(result)) =&gt; <span class="kw">match </span>(v, result) {
+                    (<span class="number">0</span>, <span class="prelude-val">Ok</span>(ok)) =&gt; <span class="prelude-val">Some</span>(f(slice::from_ref(ok))),
+                    (<span class="number">1</span>, <span class="prelude-val">Err</span>(err)) =&gt; <span class="prelude-val">Some</span>(f(slice::from_ref(err))),
+                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                },
+                (TypeCheck::Option(v), Mutable::Option(option)) =&gt; <span class="kw">match </span>(v, option) {
+                    (<span class="number">0</span>, <span class="prelude-val">Some</span>(some)) =&gt; <span class="prelude-val">Some</span>(f(slice::from_ref(some))),
+                    (<span class="number">1</span>, <span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Some</span>(f(<span class="kw-2">&amp;</span>[])),
+                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                },
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
             BorrowRefRepr::Any(..) =&gt; <span class="prelude-val">None</span>,
-        })
+        };
+
+        VmResult::Ok(value)
     }
 
     <span class="doccomment">/// Internal implementation of the instance check.
@@ -7327,8 +7340,6 @@
         addr: InstAddress,
         out: Output,
     ) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">use </span><span class="kw">crate</span>::runtime::GeneratorState::<span class="kw-2">*</span>;
-
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
         <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
@@ -7349,13 +7360,6 @@
                     (<span class="number">1</span>, <span class="prelude-val">None</span>) =&gt; <span class="bool-val">true</span>,
                     <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                 },
-                (TypeCheck::GeneratorState(v), Mutable::GeneratorState(state)) =&gt; {
-                    <span class="kw">match </span>(v, state) {
-                        (<span class="number">0</span>, Complete(..)) =&gt; <span class="bool-val">true</span>,
-                        (<span class="number">1</span>, Yielded(..)) =&gt; <span class="bool-val">true</span>,
-                        <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-                    }
-                }
                 <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
             },
             BorrowRefRepr::Any(..) =&gt; <span class="bool-val">false</span>,
