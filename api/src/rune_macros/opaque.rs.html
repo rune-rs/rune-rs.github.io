@@ -106,10 +106,7 @@
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::context::{Context, Tokens};
+<a href="#108" id="108">108</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::context::{Context, Tokens};
 <span class="kw">use </span>proc_macro2::TokenStream;
 <span class="kw">use </span>quote::quote;
 
@@ -127,42 +124,39 @@
 }
 
 <span class="kw">impl </span>Derive {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expand(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, Vec&lt;syn::Error&gt;&gt; {
-        <span class="kw">let </span>cx = Context::new();
-        <span class="kw">let </span>tokens = cx.tokens_with_module(<span class="prelude-val">None</span>);
-
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expand(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>Context) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, ()&gt; {
+        <span class="kw">let </span>attr = cx.type_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>.input.attrs);
+        <span class="kw">let </span>tokens = cx.tokens_with_module(attr.module.as_ref());
         <span class="kw">let </span><span class="kw-2">mut </span>expander = Expander { cx, tokens };
 
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.input.data {
-            syn::Data::Struct(st) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Ok</span>(stream) = expander.expand_struct(<span class="kw-2">&amp;</span><span class="self">self</span>.input, st) {
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(stream);
-                }
-            }
+            syn::Data::Struct(st) =&gt; <span class="prelude-val">Ok</span>(expander.expand_struct(<span class="kw-2">&amp;</span><span class="self">self</span>.input, st)<span class="question-mark">?</span>),
             syn::Data::Enum(en) =&gt; {
                 expander.cx.error(syn::Error::new_spanned(
                     en.enum_token,
                     <span class="string">"not supported on enums"</span>,
                 ));
+
+                <span class="prelude-val">Err</span>(())
             }
             syn::Data::Union(un) =&gt; {
                 expander.cx.error(syn::Error::new_spanned(
                     un.union_token,
                     <span class="string">"not supported on unions"</span>,
                 ));
+
+                <span class="prelude-val">Err</span>(())
             }
         }
-
-        <span class="prelude-val">Err</span>(expander.cx.errors.into_inner())
     }
 }
 
-<span class="kw">struct </span>Expander {
-    cx: Context,
+<span class="kw">struct </span>Expander&lt;<span class="lifetime">'cx</span>&gt; {
+    cx: <span class="kw-2">&amp;</span><span class="lifetime">'cx </span>Context,
     tokens: Tokens,
 }
 
-<span class="kw">impl </span>Expander {
+<span class="kw">impl </span>Expander&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Expand on a struct.
     </span><span class="kw">fn </span>expand_struct(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -192,7 +186,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>field = <span class="prelude-val">None</span>;
 
         <span class="kw">for </span>(n, f) <span class="kw">in </span>fields.iter().enumerate() {
-            <span class="kw">let </span>attrs = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>f.attrs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>attrs = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>f.attrs);
 
             <span class="kw">if </span>attrs.id.is_some() {
                 <span class="kw">if </span>field.is_some() {

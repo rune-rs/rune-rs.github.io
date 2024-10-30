@@ -264,8 +264,7 @@
 <a href="#263" id="263">263</a>
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::add_trait_bounds;
+<a href="#266" id="266">266</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::add_trait_bounds;
 <span class="kw">use </span><span class="kw">crate</span>::context::{Context, Tokens};
 <span class="kw">use </span>proc_macro2::TokenStream;
 <span class="kw">use </span>quote::{quote, quote_spanned};
@@ -285,8 +284,7 @@
 }
 
 <span class="kw">impl </span>Derive {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expand(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, Vec&lt;syn::Error&gt;&gt; {
-        <span class="kw">let </span>cx = Context::new();
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expand(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>Context) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, ()&gt; {
         <span class="kw">let </span>tokens = cx.tokens_with_module(<span class="prelude-val">None</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>expander = Expander { cx, tokens };
@@ -310,23 +308,23 @@
             }
         }
 
-        <span class="prelude-val">Err</span>(expander.cx.errors.into_inner())
+        <span class="prelude-val">Err</span>(())
     }
 }
 
-<span class="kw">struct </span>Expander {
-    cx: Context,
+<span class="kw">struct </span>Expander&lt;<span class="lifetime">'cx</span>&gt; {
+    cx: <span class="kw-2">&amp;</span><span class="lifetime">'cx </span>Context,
     tokens: Tokens,
 }
 
-<span class="kw">impl </span>Expander {
+<span class="kw">impl </span>Expander&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Expand on a struct.
     </span><span class="kw">fn </span>expand_struct(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         input: <span class="kw-2">&amp;</span>syn::DeriveInput,
         st: <span class="kw-2">&amp;</span>syn::DataStruct,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, ()&gt; {
-        <span class="kw">let _ </span>= <span class="self">self</span>.cx.type_attrs(<span class="kw-2">&amp;</span>input.attrs)<span class="question-mark">?</span>;
+        <span class="kw">_ </span>= <span class="self">self</span>.cx.type_attrs(<span class="kw-2">&amp;</span>input.attrs);
         <span class="self">self</span>.expand_struct_fields(input, <span class="kw-2">&amp;</span>st.fields)
     }
 
@@ -336,7 +334,7 @@
         input: <span class="kw-2">&amp;</span>syn::DeriveInput,
         st: <span class="kw-2">&amp;</span>syn::DataEnum,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, ()&gt; {
-        <span class="kw">let _ </span>= <span class="self">self</span>.cx.type_attrs(<span class="kw-2">&amp;</span>input.attrs)<span class="question-mark">?</span>;
+        <span class="kw">_ </span>= <span class="self">self</span>.cx.type_attrs(<span class="kw-2">&amp;</span>input.attrs);
 
         <span class="kw">let </span><span class="kw-2">mut </span>impl_into_tokens = Vec::new();
 
@@ -430,7 +428,7 @@
 
         <span class="kw">for </span>field <span class="kw">in </span><span class="kw-2">&amp;</span>named.named {
             <span class="kw">let </span>ident = <span class="self">self</span>.cx.field_ident(field)<span class="question-mark">?</span>;
-            <span class="kw">let </span>attrs = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>attrs = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs);
 
             <span class="kw">if </span>attrs.skip() {
                 <span class="kw">continue</span>;
@@ -475,7 +473,7 @@
 
         <span class="kw">for </span>field <span class="kw">in </span><span class="kw-2">&amp;</span>named.named {
             <span class="kw">let </span>ident = <span class="self">self</span>.cx.field_ident(field)<span class="question-mark">?</span>;
-            <span class="kw">let </span>attrs = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>attrs = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs);
             idents.push(ident);
 
             <span class="kw">if </span>attrs.skip() {
@@ -505,7 +503,7 @@
 
         <span class="kw">for </span>(n, field) <span class="kw">in </span>named.unnamed.iter().enumerate() {
             <span class="kw">let </span>ident = syn::Ident::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"f{}"</span>, n), field.span());
-            <span class="kw">let </span>attrs = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>attrs = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs);
 
             idents.push(ident.clone());
 

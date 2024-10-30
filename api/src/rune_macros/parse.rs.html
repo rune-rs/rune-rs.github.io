@@ -209,9 +209,7 @@
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
 <a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#211" id="211">211</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     add_trait_bounds,
     context::{Context, ParseKind, Tokens},
 };
@@ -233,42 +231,40 @@
 }
 
 <span class="kw">impl </span>Derive {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expand(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, Vec&lt;syn::Error&gt;&gt; {
-        <span class="kw">let </span>cx = Context::new();
-        <span class="kw">let </span>tokens = cx.tokens_with_module(<span class="prelude-val">None</span>);
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expand(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>Context) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, ()&gt; {
+        <span class="kw">let </span>attr = cx.type_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>.input.attrs);
+        <span class="kw">let </span>tokens = cx.tokens_with_module(attr.module.as_ref());
 
         <span class="kw">let </span><span class="kw-2">mut </span>expander = Expander { cx, tokens };
 
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.input.data {
-            syn::Data::Struct(st) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Ok</span>(stream) = expander.expand_struct(<span class="kw-2">&amp;</span><span class="self">self</span>.input, st) {
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(stream);
-                }
-            }
+            syn::Data::Struct(st) =&gt; expander.expand_struct(<span class="kw-2">&amp;</span><span class="self">self</span>.input, st),
             syn::Data::Enum(en) =&gt; {
                 expander.cx.error(syn::Error::new_spanned(
                     en.enum_token,
                     <span class="string">"not supported on enums"</span>,
                 ));
+
+                <span class="prelude-val">Err</span>(())
             }
             syn::Data::Union(un) =&gt; {
                 expander.cx.error(syn::Error::new_spanned(
                     un.union_token,
                     <span class="string">"not supported on unions"</span>,
                 ));
+
+                <span class="prelude-val">Err</span>(())
             }
         }
-
-        <span class="prelude-val">Err</span>(expander.cx.errors.into_inner())
     }
 }
 
-<span class="kw">struct </span>Expander {
-    cx: Context,
+<span class="kw">struct </span>Expander&lt;<span class="lifetime">'cx</span>&gt; {
+    cx: <span class="kw-2">&amp;</span><span class="lifetime">'cx </span>Context,
     tokens: Tokens,
 }
 
-<span class="kw">impl </span>Expander {
+<span class="kw">impl </span>Expander&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Expand on a struct.
     </span><span class="kw">fn </span>expand_struct(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -316,11 +312,11 @@
         <span class="kw">let </span><span class="kw-2">mut </span>meta_parse = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>meta_fields = Vec::new();
 
-        <span class="kw">let </span>ty_attrs = <span class="self">self</span>.cx.type_attrs(<span class="kw-2">&amp;</span>input.attrs)<span class="question-mark">?</span>;
+        <span class="kw">let </span>ty_attrs = <span class="self">self</span>.cx.type_attrs(<span class="kw-2">&amp;</span>input.attrs);
         <span class="kw">let </span><span class="kw-2">mut </span>skipped = <span class="number">0</span>;
 
         <span class="kw">for </span>(i, field) <span class="kw">in </span>named.named.iter().enumerate() {
-            <span class="kw">let </span>field_attrs = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>field_attrs = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs);
             <span class="kw">let </span>ident = <span class="self">self</span>.cx.field_ident(field)<span class="question-mark">?</span>;
 
             <span class="kw">if </span>field_attrs.id.is_some() {

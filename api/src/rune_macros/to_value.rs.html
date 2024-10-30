@@ -142,24 +142,16 @@
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
 <a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::context::{Context, Tokens};
+<a href="#144" id="144">144</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::context::{Context, Tokens};
 <span class="kw">use </span>proc_macro2::TokenStream;
 <span class="kw">use </span>quote::quote;
 
-<span class="kw">struct </span>Expander {
-    cx: Context,
+<span class="kw">struct </span>Expander&lt;<span class="lifetime">'cx</span>&gt; {
+    cx: <span class="kw-2">&amp;</span><span class="lifetime">'cx </span>Context,
     tokens: Tokens,
 }
 
-<span class="kw">impl </span>Expander {
+<span class="kw">impl </span>Expander&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Expand on a struct.
     </span><span class="kw">fn </span>expand_struct(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -218,7 +210,7 @@
         } = <span class="kw-2">&amp;</span><span class="self">self</span>.tokens;
 
         <span class="kw">for </span>(index, f) <span class="kw">in </span>unnamed.unnamed.iter().enumerate() {
-            <span class="kw">let _ </span>= <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>f.attrs)<span class="question-mark">?</span>;
+            <span class="kw">_ </span>= <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>f.attrs);
             <span class="kw">let </span>index = syn::Index::from(index);
             to_values.push(<span class="macro">quote!</span>(#vec::try_push(<span class="kw-2">&amp;mut </span>tuple, #to_value::to_value(<span class="self">self</span>.#index)<span class="question-mark">?</span>)<span class="question-mark">?</span>));
         }
@@ -249,7 +241,7 @@
 
         <span class="kw">for </span>f <span class="kw">in </span><span class="kw-2">&amp;</span>named.named {
             <span class="kw">let </span>ident = <span class="self">self</span>.cx.field_ident(f)<span class="question-mark">?</span>;
-            <span class="kw">let _ </span>= <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>f.attrs)<span class="question-mark">?</span>;
+            <span class="kw">_ </span>= <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>f.attrs);
 
             <span class="kw">let </span>name = <span class="kw-2">&amp;</span>syn::LitStr::new(<span class="kw-2">&amp;</span>ident.to_string(), ident.span());
 
@@ -266,19 +258,11 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expand(input: <span class="kw-2">&amp;</span>syn::DeriveInput) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, Vec&lt;syn::Error&gt;&gt; {
-    <span class="kw">let </span>cx = Context::new();
-
-    <span class="kw">let </span><span class="prelude-val">Ok</span>(attr) = cx.type_attrs(<span class="kw-2">&amp;</span>input.attrs) <span class="kw">else </span>{
-        <span class="kw">return </span><span class="prelude-val">Err</span>(cx.errors.into_inner());
-    };
-
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expand(cx: <span class="kw-2">&amp;</span>Context, input: <span class="kw-2">&amp;</span>syn::DeriveInput) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, ()&gt; {
+    <span class="kw">let </span>attr = cx.type_attrs(<span class="kw-2">&amp;</span>input.attrs);
     <span class="kw">let </span>tokens = cx.tokens_with_module(attr.module.as_ref());
 
-    <span class="kw">let </span><span class="kw-2">mut </span>expander = Expander {
-        cx: Context::new(),
-        tokens,
-    };
+    <span class="kw">let </span><span class="kw-2">mut </span>expander = Expander { cx, tokens };
 
     <span class="kw">match </span><span class="kw-2">&amp;</span>input.data {
         syn::Data::Struct(st) =&gt; {
@@ -300,6 +284,6 @@
         }
     }
 
-    <span class="prelude-val">Err</span>(expander.cx.errors.into_inner())
+    <span class="prelude-val">Err</span>(())
 }
 </code></pre></div></section></main></body></html>

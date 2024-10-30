@@ -876,7 +876,24 @@
 <a href="#875" id="875">875</a>
 <a href="#876" id="876">876</a>
 <a href="#877" id="877">877</a>
-<a href="#878" id="878">878</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::cell::RefCell;
+<a href="#878" id="878">878</a>
+<a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::cell::RefCell;
 
 <span class="kw">use </span><span class="kw">crate</span>::internals::<span class="kw-2">*</span>;
 <span class="kw">use </span>proc_macro2::Span;
@@ -890,6 +907,7 @@
 
 <span class="doccomment">/// Parsed `#[rune(..)]` field attributes.
 </span><span class="attr">#[derive(Default)]
+#[must_use = <span class="string">"Attributes must be used or explicitly ignored"</span>]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>FieldAttrs {
     <span class="doccomment">/// A field that is an identifier. Should use `Default::default` to be
     /// constructed and ignored during `ToTokens` and `Spanned`.
@@ -924,6 +942,7 @@
 
 <span class="doccomment">/// Parsed #[const_value(..)] field attributes.
 </span><span class="attr">#[derive(Default)]
+#[must_use = <span class="string">"Attributes must be used or explicitly ignored"</span>]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ConstValueFieldAttrs {
     <span class="doccomment">/// Define a custom parsing method.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) with: <span class="prelude-ty">Option</span>&lt;syn::Path&gt;,
@@ -946,6 +965,7 @@
 
 <span class="doccomment">/// Parsed field attributes.
 </span><span class="attr">#[derive(Default)]
+#[must_use = <span class="string">"Attributes must be used or explicitly ignored"</span>]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TypeAttr {
     <span class="doccomment">/// `#[rune(name = TypeName)]` to override the default type name.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) name: <span class="prelude-ty">Option</span>&lt;syn::Ident&gt;,
@@ -958,7 +978,7 @@
     <span class="doccomment">/// `#[rune(item = &lt;path&gt;)]`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) item: <span class="prelude-ty">Option</span>&lt;syn::Path&gt;,
     <span class="doccomment">/// `#[rune(constructor)]`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) constructor: bool,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) constructor: <span class="prelude-ty">Option</span>&lt;Span&gt;,
     <span class="doccomment">/// Parsed documentation.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) docs: Vec&lt;syn::Expr&gt;,
     <span class="doccomment">/// Indicates that this is a builtin type, so don't generate an `Any`
@@ -978,6 +998,7 @@
 
 <span class="doccomment">/// Parsed #[const_value(..)] field attributes.
 </span><span class="attr">#[derive(Default)]
+#[must_use = <span class="string">"Attributes must be used or explicitly ignored"</span>]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ConstValueTypeAttr {
     <span class="doccomment">/// `#[const_value(module = &lt;path&gt;)]`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) module: <span class="prelude-ty">Option</span>&lt;syn::Path&gt;,
@@ -985,9 +1006,10 @@
 
 <span class="doccomment">/// Parsed variant attributes.
 </span><span class="attr">#[derive(Default)]
+#[must_use = <span class="string">"Attributes must be used or explicitly ignored"</span>]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>VariantAttrs {
     <span class="doccomment">/// `#[rune(constructor)]`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) constructor: bool,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) constructor: <span class="prelude-ty">Option</span>&lt;Span&gt;,
     <span class="doccomment">/// Discovered documentation.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) docs: Vec&lt;syn::Expr&gt;,
 }
@@ -1047,6 +1069,47 @@
         }
     }
 
+    <span class="doccomment">/// Helper to build using a function that takes a context.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>build(f: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, ()&gt;) -&gt; TokenStream {
+        <span class="kw">let </span>cx = <span class="self">Self</span>::new();
+        cx.build_inner(f)
+    }
+
+    <span class="doccomment">/// Helper to build using a function that takes a context internally.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>build_with_crate(
+        f: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, ()&gt;,
+    ) -&gt; TokenStream {
+        <span class="kw">let </span>cx = <span class="self">Self</span>::with_crate();
+        cx.build_inner(f)
+    }
+
+    <span class="kw">fn </span>build_inner(<span class="self">self</span>, f: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, ()&gt;) -&gt; TokenStream {
+        <span class="kw">fn </span>to_compile_errors&lt;I&gt;(errors: I) -&gt; TokenStream
+        <span class="kw">where
+            </span>I: IntoIterator&lt;Item = syn::Error&gt;,
+        {
+            <span class="kw">let </span><span class="kw-2">mut </span>stream = TokenStream::default();
+
+            <span class="kw">for </span>error <span class="kw">in </span>errors {
+                stream.extend(error.into_compile_error());
+            }
+
+            stream
+        }
+
+        <span class="kw">let </span><span class="prelude-val">Ok</span>(builder) = f(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="kw">else </span>{
+            <span class="kw">return </span>to_compile_errors(<span class="self">self</span>.errors.into_inner());
+        };
+
+        <span class="kw">let </span>errors = <span class="self">self</span>.errors.into_inner();
+
+        <span class="kw">if </span>!errors.is_empty() {
+            <span class="kw">return </span>to_compile_errors(errors);
+        }
+
+        builder
+    }
+
     <span class="doccomment">/// Register an error.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>error(<span class="kw-2">&amp;</span><span class="self">self</span>, error: syn::Error) {
         <span class="self">self</span>.errors.borrow_mut().push(error)
@@ -1070,11 +1133,7 @@
         <span class="prelude-val">Ok</span>(ident)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>const_value_field_attrs(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        input: <span class="kw-2">&amp;</span>[syn::Attribute],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ConstValueFieldAttrs, ()&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>error = <span class="bool-val">false</span>;
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>const_value_field_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[syn::Attribute]) -&gt; ConstValueFieldAttrs {
         <span class="kw">let </span><span class="kw-2">mut </span>attr = ConstValueFieldAttrs::default();
 
         <span class="kw">for </span>a <span class="kw">in </span>input {
@@ -1096,20 +1155,15 @@
             });
 
             <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = result {
-                error = <span class="bool-val">true</span>;
                 <span class="self">self</span>.error(e);
             };
         }
 
-        <span class="kw">if </span>error {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(());
-        }
-
-        <span class="prelude-val">Ok</span>(attr)
+        attr
     }
 
     <span class="doccomment">/// Parse field attributes.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>field_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[syn::Attribute]) -&gt; <span class="prelude-ty">Result</span>&lt;FieldAttrs, ()&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>field_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[syn::Attribute]) -&gt; FieldAttrs {
         <span class="macro">macro_rules!</span> generate_assign {
             (<span class="macro-nonterminal">$proto</span>:ident, <span class="macro-nonterminal">$op</span>:tt) =&gt; {
                 |g| {
@@ -1155,7 +1209,6 @@
             };
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>error = <span class="bool-val">false</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>attr = FieldAttrs::default();
 
         <span class="kw">for </span>a <span class="kw">in </span>input {
@@ -1335,23 +1388,14 @@
             });
 
             <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = result {
-                error = <span class="bool-val">true</span>;
                 <span class="self">self</span>.error(e);
             }
         }
 
-        <span class="kw">if </span>error {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(());
-        }
-
-        <span class="prelude-val">Ok</span>(attr)
+        attr
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>const_value_type_attrs(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        input: <span class="kw-2">&amp;</span>[syn::Attribute],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ConstValueTypeAttr, ()&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>error = <span class="bool-val">false</span>;
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>const_value_type_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[syn::Attribute]) -&gt; ConstValueTypeAttr {
         <span class="kw">let </span><span class="kw-2">mut </span>attr = ConstValueTypeAttr::default();
 
         <span class="kw">for </span>a <span class="kw">in </span>input {
@@ -1378,21 +1422,15 @@
             });
 
             <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = result {
-                error = <span class="bool-val">true</span>;
                 <span class="self">self</span>.error(e);
             };
         }
 
-        <span class="kw">if </span>error {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(());
-        }
-
-        <span class="prelude-val">Ok</span>(attr)
+        attr
     }
 
     <span class="doccomment">/// Parse field attributes.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[syn::Attribute]) -&gt; <span class="prelude-ty">Result</span>&lt;TypeAttr, ()&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>error = <span class="bool-val">false</span>;
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[syn::Attribute]) -&gt; TypeAttr {
         <span class="kw">let </span><span class="kw-2">mut </span>attr = TypeAttr::default();
 
         <span class="kw">for </span>a <span class="kw">in </span>input {
@@ -1445,7 +1483,14 @@
                         </span>meta.input.parse::&lt;<span class="macro">Token!</span>[=]&gt;()<span class="question-mark">?</span>;
                         attr.install_with = <span class="prelude-val">Some</span>(parse_path_compat(meta.input)<span class="question-mark">?</span>);
                     } <span class="kw">else if </span>meta.path == CONSTRUCTOR {
-                        attr.constructor = <span class="bool-val">true</span>;
+                        <span class="kw">if </span>attr.constructor.is_some() {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(syn::Error::new(
+                                meta.path.span(),
+                                <span class="string">"#[rune(constructor)] must only be used once"</span>,
+                            ));
+                        }
+
+                        attr.constructor = <span class="prelude-val">Some</span>(meta.path.span());
                     } <span class="kw">else if </span>meta.path == BUILTIN {
                         attr.builtin = <span class="prelude-val">Some</span>(meta.path.span());
                     } <span class="kw">else if </span>meta.path == STATIC_TYPE {
@@ -1477,23 +1522,17 @@
                 });
 
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = result {
-                    error = <span class="bool-val">true</span>;
                     <span class="self">self</span>.error(e);
                 };
             }
         }
 
-        <span class="kw">if </span>error {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(());
-        }
-
-        <span class="prelude-val">Ok</span>(attr)
+        attr
     }
 
     <span class="doccomment">/// Parse and extract variant attributes.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>variant_attr(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[syn::Attribute]) -&gt; <span class="prelude-ty">Result</span>&lt;VariantAttrs, ()&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>variant_attr(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw-2">&amp;</span>[syn::Attribute]) -&gt; VariantAttrs {
         <span class="kw">let </span><span class="kw-2">mut </span>attr = VariantAttrs::default();
-        <span class="kw">let </span><span class="kw-2">mut </span>error = <span class="bool-val">false</span>;
 
         <span class="kw">for </span>a <span class="kw">in </span>input {
             <span class="kw">if </span>a.path().is_ident(<span class="string">"doc"</span>) {
@@ -1507,14 +1546,14 @@
             <span class="kw">if </span>a.path() == RUNE {
                 <span class="kw">let </span>result = a.parse_nested_meta(|meta| {
                     <span class="kw">if </span>meta.path == CONSTRUCTOR {
-                        <span class="kw">if </span>attr.constructor {
-                            <span class="kw">return </span><span class="prelude-val">Err</span>(syn::Error::new_spanned(
-                                <span class="kw-2">&amp;</span>meta.path,
+                        <span class="kw">if </span>attr.constructor.is_some() {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(syn::Error::new(
+                                meta.path.span(),
                                 <span class="string">"#[rune(constructor)] must only be used once"</span>,
                             ));
                         }
 
-                        attr.constructor = <span class="bool-val">true</span>;
+                        attr.constructor = <span class="prelude-val">Some</span>(meta.path.span());
                     } <span class="kw">else </span>{
                         <span class="kw">return </span><span class="prelude-val">Err</span>(syn::Error::new_spanned(<span class="kw-2">&amp;</span>meta.path, <span class="string">"Unsupported attribute"</span>));
                     }
@@ -1523,17 +1562,12 @@
                 });
 
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = result {
-                    error = <span class="bool-val">true</span>;
                     <span class="self">self</span>.error(e);
                 };
             }
         }
 
-        <span class="kw">if </span>error {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(());
-        }
-
-        <span class="prelude-val">Ok</span>(attr)
+        attr
     }
 
     <span class="doccomment">/// Parse path to custom field function.

@@ -295,23 +295,7 @@
 <a href="#294" id="294">294</a>
 <a href="#295" id="295">295</a>
 <a href="#296" id="296">296</a>
-<a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a>
-<a href="#304" id="304">304</a>
-<a href="#305" id="305">305</a>
-<a href="#306" id="306">306</a>
-<a href="#307" id="307">307</a>
-<a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a>
-<a href="#311" id="311">311</a>
-<a href="#312" id="312">312</a>
-<a href="#313" id="313">313</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#297" id="297">297</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     add_trait_bounds,
     context::{Context, Tokens},
 };
@@ -333,42 +317,26 @@
 }
 
 <span class="kw">impl </span>Derive {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expand(<span class="self">self</span>, is_option_spanned: bool) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, Vec&lt;syn::Error&gt;&gt; {
-        <span class="kw">let </span>cx = Context::new();
-        <span class="kw">let </span>tokens = cx.tokens_with_module(<span class="prelude-val">None</span>);
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>expand(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>Context, is_option_spanned: bool) -&gt; <span class="prelude-ty">Result</span>&lt;TokenStream, ()&gt; {
+        <span class="kw">let </span>attr = cx.type_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>.input.attrs);
+        <span class="kw">let </span>tokens = cx.tokens_with_module(attr.module.as_ref());
 
         <span class="kw">let </span><span class="kw-2">mut </span>expander = Expander { cx, tokens };
 
-        <span class="kw">if </span>expander.cx.type_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>.input.attrs).is_err() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(expander.cx.errors.into_inner());
-        }
-
         <span class="kw">let </span>inner = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.input.data {
-            syn::Data::Struct(st) =&gt; {
-                <span class="kw">let </span><span class="prelude-val">Ok</span>(inner) = expander.expand_struct_fields(
-                    <span class="kw-2">&amp;</span>st.fields,
-                    |member| <span class="macro">quote!</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.#member),
-                    is_option_spanned,
-                ) <span class="kw">else </span>{
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(expander.cx.errors.into_inner());
-                };
-
-                inner
-            }
-            syn::Data::Enum(enum_) =&gt; {
-                <span class="kw">let </span><span class="prelude-val">Ok</span>(inner) = expander.expand_enum(enum_, is_option_spanned) <span class="kw">else </span>{
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(expander.cx.errors.into_inner());
-                };
-
-                inner
-            }
+            syn::Data::Struct(st) =&gt; expander.expand_struct_fields(
+                <span class="kw-2">&amp;</span>st.fields,
+                |member| <span class="macro">quote!</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.#member),
+                is_option_spanned,
+            )<span class="question-mark">?</span>,
+            syn::Data::Enum(enum_) =&gt; expander.expand_enum(enum_, is_option_spanned)<span class="question-mark">?</span>,
             syn::Data::Union(un) =&gt; {
                 expander.cx.error(syn::Error::new_spanned(
                     un.union_token,
                     <span class="string">"not supported on unions"</span>,
                 ));
 
-                <span class="kw">return </span><span class="prelude-val">Err</span>(expander.cx.errors.into_inner());
+                <span class="kw">return </span><span class="prelude-val">Err</span>(());
             }
         };
 
@@ -427,12 +395,12 @@
     }
 }
 
-<span class="kw">struct </span>Expander {
-    cx: Context,
+<span class="kw">struct </span>Expander&lt;<span class="lifetime">'cx</span>&gt; {
+    cx: <span class="kw-2">&amp;</span><span class="lifetime">'cx </span>Context,
     tokens: Tokens,
 }
 
-<span class="kw">impl </span>Expander {
+<span class="kw">impl </span>Expander&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Expand on a struct.
     </span><span class="kw">fn </span>expand_enum(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -526,7 +494,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>definite_span = <span class="bool-val">false</span>;
 
         <span class="kw">for </span>(index, field) <span class="kw">in </span>fields.iter().enumerate() {
-            <span class="kw">let </span>attr = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>attr = <span class="self">self</span>.cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs);
 
             <span class="kw">if </span>attr.id.is_some() || attr.skip.is_some() {
                 <span class="kw">continue</span>;

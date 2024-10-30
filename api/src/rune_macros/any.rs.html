@@ -796,7 +796,14 @@
 <a href="#795" id="795">795</a>
 <a href="#796" id="796">796</a>
 <a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">use </span>proc_macro2::TokenStream;
 <span class="kw">use </span>quote::{quote, quote_spanned, ToTokens};
@@ -882,13 +889,21 @@
 
 <span class="kw">impl </span>Derive {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>into_any_builder(<span class="self">self</span>, cx: <span class="kw-2">&amp;</span>Context) -&gt; <span class="prelude-ty">Result</span>&lt;TypeBuilder&lt;syn::Ident&gt;, ()&gt; {
-        <span class="kw">let </span>attr = cx.type_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>.input.attrs)<span class="question-mark">?</span>;
-
+        <span class="kw">let </span>attr = cx.type_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>.input.attrs);
         <span class="kw">let </span>tokens = cx.tokens_with_module(attr.module.as_ref());
 
         <span class="kw">let </span><span class="kw-2">mut </span>installers = Vec::new();
 
         expand_install_with(cx, <span class="kw-2">&amp;</span><span class="self">self</span>.input, <span class="kw-2">&amp;</span>tokens, <span class="kw-2">&amp;</span>attr, <span class="kw-2">&amp;mut </span>installers)<span class="question-mark">?</span>;
+
+        <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.input.data, syn::Data::Enum(..)) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = attr.constructor {
+                cx.error(syn::Error::new(
+                    span,
+                    <span class="string">"#[rune(constructor)] is not supported on enums, only its variants"</span>,
+                ));
+            }
+        }
 
         <span class="kw">let </span>name = <span class="kw">match </span><span class="kw-2">&amp;</span>attr.name {
             <span class="prelude-val">Some</span>(name) =&gt; name,
@@ -972,7 +987,7 @@
     attr: <span class="kw-2">&amp;</span>TypeAttr,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ()&gt; {
     <span class="kw">for </span>(n, field) <span class="kw">in </span>st.fields.iter().enumerate() {
-        <span class="kw">let </span>attrs = cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs)<span class="question-mark">?</span>;
+        <span class="kw">let </span>attrs = cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs);
         <span class="kw">let </span>name;
         <span class="kw">let </span>index;
 
@@ -1022,6 +1037,7 @@
         syn::Fields::Named(fields) =&gt; {
             <span class="kw">let </span>constructor = attr
                 .constructor
+                .is_some()
                 .then(|| {
                     <span class="kw">let </span>args = fields.named.iter().map(|f| {
                         <span class="kw">let </span>ident = f.ident.as_ref().expect(<span class="string">"named fields must have an Ident"</span>);
@@ -1099,7 +1115,7 @@
     <span class="kw">for </span>(variant_index, variant) <span class="kw">in </span>en.variants.iter().enumerate() {
         <span class="kw">let </span>span = variant.fields.span();
 
-        <span class="kw">let </span>variant_attr = cx.variant_attr(<span class="kw-2">&amp;</span>variant.attrs)<span class="question-mark">?</span>;
+        <span class="kw">let </span>variant_attr = cx.variant_attr(<span class="kw-2">&amp;</span>variant.attrs);
 
         <span class="kw">let </span><span class="kw-2">mut </span>variant_docs = syn::ExprArray {
             attrs: Vec::new(),
@@ -1121,7 +1137,7 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>field_names = Vec::new();
 
                 <span class="kw">for </span>f <span class="kw">in </span><span class="kw-2">&amp;</span>fields.named {
-                    <span class="kw">let </span>attrs = cx.field_attrs(<span class="kw-2">&amp;</span>f.attrs)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>attrs = cx.field_attrs(<span class="kw-2">&amp;</span>f.attrs);
 
                     <span class="kw">let </span><span class="prelude-val">Some</span>(f_ident) = <span class="kw-2">&amp;</span>f.ident <span class="kw">else </span>{
                         cx.error(syn::Error::new_spanned(f, <span class="string">"Missing field name"</span>));
@@ -1156,7 +1172,7 @@
 
                 <span class="kw">for </span>(n, field) <span class="kw">in </span>fields.unnamed.iter().enumerate() {
                     <span class="kw">let </span>span = field.span();
-                    <span class="kw">let </span>attrs = cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>attrs = cx.field_attrs(<span class="kw-2">&amp;</span>field.attrs);
 
                     <span class="kw">if </span>attrs.field {
                         fields_len += <span class="number">1</span>;
@@ -1177,16 +1193,14 @@
                     enum_.variant_mut(#variant_index)<span class="question-mark">?</span>.make_unnamed(#fields_len)<span class="question-mark">?</span>.static_docs(<span class="kw-2">&amp;</span>#variant_docs)<span class="question-mark">?
                 </span>});
 
-                <span class="kw">let </span>constructor = <span class="kw">if </span>variant_attr.constructor {
-                    <span class="kw">if </span>fields_len != fields.unnamed.len() {
-                        cx.error(syn::Error::new_spanned(fields, <span class="string">"#[rune(constructor)] can only be used if all fields are marked with #[rune(get)"</span>));
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(());
-                    }
+                <span class="kw">if </span>variant_attr.constructor.is_some() &amp;&amp; fields_len != fields.unnamed.len() {
+                    cx.error(syn::Error::new_spanned(fields, <span class="string">"#[rune(constructor)] can only be used if all fields are marked with #[rune(get)"</span>));
+                }
 
-                    <span class="prelude-val">Some</span>(<span class="macro">quote!</span>(#ident #type_generics :: #variant_ident))
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">None
-                </span>};
+                <span class="kw">let </span>constructor = variant_attr
+                    .constructor
+                    .is_some()
+                    .then(|| <span class="macro">quote!</span>(#ident #type_generics :: #variant_ident));
 
                 variants.push((constructor, variant_attr));
             }
@@ -1195,7 +1209,7 @@
                     enum_.variant_mut(#variant_index)<span class="question-mark">?</span>.make_empty()<span class="question-mark">?</span>.static_docs(<span class="kw-2">&amp;</span>#variant_docs)<span class="question-mark">?
                 </span>});
 
-                <span class="kw">let </span>constructor = <span class="kw">if </span>variant_attr.constructor {
+                <span class="kw">let </span>constructor = <span class="kw">if </span>variant_attr.constructor.is_some() {
                     <span class="prelude-val">Some</span>(<span class="macro">quote!</span>(|| #ident #type_generics :: #variant_ident))
                 } <span class="kw">else </span>{
                     <span class="prelude-val">None
