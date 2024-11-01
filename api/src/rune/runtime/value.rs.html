@@ -2094,7 +2094,11 @@
 <a href="#2093" id="2093">2093</a>
 <a href="#2094" id="2094">2094</a>
 <a href="#2095" id="2095">2095</a>
-<a href="#2096" id="2096">2096</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2096" id="2096">2096</a>
+<a href="#2097" id="2097">2097</a>
+<a href="#2098" id="2098">2098</a>
+<a href="#2099" id="2099">2099</a>
+<a href="#2100" id="2100">2100</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>inline;
@@ -2525,9 +2529,6 @@
                     Mutable::TupleStruct(value) =&gt; Mutable::TupleStruct(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Struct(value) =&gt; Mutable::Struct(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Variant(value) =&gt; Mutable::Variant(<span class="macro">vm_try!</span>(value.try_clone())),
-                    <span class="kw">_ </span>=&gt; {
-                        <span class="kw">break </span><span class="lifetime">'fallback</span>;
-                    }
                 },
                 RefRepr::Any(..) =&gt; {
                     <span class="kw">break </span><span class="lifetime">'fallback</span>;
@@ -2584,9 +2585,6 @@
 
             <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_ref()) {
                 Mutable::Object(value) =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
-                }
-                Mutable::Future(value) =&gt; {
                     <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Option(value) =&gt; {
@@ -2915,15 +2913,6 @@
         into_object,
     }
 
-    <span class="macro">into_base!</span> {
-        <span class="doccomment">/// Coerce into a [`Future`].
-        </span>Future(Future),
-        into_future_ref,
-        into_future_mut,
-        borrow_future_ref,
-        borrow_future_mut,
-    }
-
     <span class="doccomment">/// Borrow as a tuple.
     ///
     /// This ensures that the value has read access to the underlying value
@@ -3052,11 +3041,15 @@
     /// [`Vm`]: crate::Vm
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>into_future(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Future, RuntimeError&gt; {
-        <span class="kw">let </span>target = <span class="kw">match </span><span class="self">self</span>.take_repr()<span class="question-mark">? </span>{
-            OwnedRepr::Mutable(Mutable::Future(future)) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(future),
-            OwnedRepr::Inline(value) =&gt; Value::from(value),
-            OwnedRepr::Mutable(value) =&gt; Value::try_from(value)<span class="question-mark">?</span>,
-            OwnedRepr::Any(value) =&gt; Value::from(value),
+        <span class="kw">let </span>target = <span class="kw">match </span><span class="self">self</span>.repr {
+            Repr::Empty =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(RuntimeError::from(AccessError::empty())),
+            Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                Future::HASH =&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(value.downcast::&lt;Future&gt;()<span class="question-mark">?</span>);
+                }
+                <span class="kw">_ </span>=&gt; Value::from(value),
+            },
+            repr =&gt; Value::from(repr),
         };
 
         <span class="kw">let </span>value = EnvProtocolCaller
@@ -3806,6 +3799,18 @@
         }
     }
 
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_borrow_mut&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'_</span>, T&gt;&gt;, AccessError&gt;
+    <span class="kw">where
+        </span>T: Any,
+    {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
+            Repr::Inline(..) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            Repr::Mutable(..) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            Repr::Any(value) =&gt; value.try_borrow_mut(),
+            Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
+        }
+    }
+
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>protocol_into_iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VmResult&lt;Value&gt; {
         EnvProtocolCaller.call_protocol_fn(Protocol::INTO_ITER, <span class="self">self</span>.clone(), <span class="kw-2">&amp;mut </span>())
     }
@@ -3904,6 +3909,13 @@
     }
 }
 
+<span class="kw">impl </span>From&lt;Repr&gt; <span class="kw">for </span>Value {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from(repr: Repr) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ repr }
+    }
+}
+
 <span class="kw">impl </span>From&lt;()&gt; <span class="kw">for </span>Value {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from((): ()) -&gt; <span class="self">Self </span>{
@@ -3992,7 +4004,6 @@
     Struct =&gt; Struct,
     Variant =&gt; Variant,
     Object =&gt; Object,
-    Future =&gt; Future,
 }
 
 <span class="macro">any_from!</span> {
@@ -4006,6 +4017,7 @@
     <span class="kw">super</span>::Generator,
     <span class="kw">super</span>::Stream,
     <span class="kw">super</span>::Function,
+    <span class="kw">super</span>::Future,
 }
 
 <span class="macro">from_container!</span> {
@@ -4131,8 +4143,6 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Mutable {
     <span class="doccomment">/// An object.
     </span>Object(Object),
-    <span class="doccomment">/// A stored future.
-    </span>Future(Future),
     <span class="doccomment">/// An empty value indicating nothing.
     </span><span class="prelude-ty">Option</span>(<span class="prelude-ty">Option</span>&lt;Value&gt;),
     <span class="doccomment">/// A stored result in a slot.
@@ -4151,7 +4161,6 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
         <span class="kw">match </span><span class="self">self </span>{
             Mutable::Object(..) =&gt; TypeInfo::static_type(static_type::OBJECT),
-            Mutable::Future(..) =&gt; TypeInfo::static_type(static_type::FUTURE),
             Mutable::Option(..) =&gt; TypeInfo::static_type(static_type::OPTION),
             Mutable::Result(..) =&gt; TypeInfo::static_type(static_type::RESULT),
             Mutable::EmptyStruct(empty) =&gt; empty.type_info(),
@@ -4168,7 +4177,6 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
         <span class="kw">match </span><span class="self">self </span>{
             Mutable::Object(..) =&gt; static_type::OBJECT.hash,
-            Mutable::Future(..) =&gt; static_type::FUTURE.hash,
             Mutable::Result(..) =&gt; static_type::RESULT.hash,
             Mutable::Option(..) =&gt; static_type::OPTION.hash,
             Mutable::EmptyStruct(empty) =&gt; empty.rtti.hash,

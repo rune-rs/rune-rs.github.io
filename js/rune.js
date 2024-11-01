@@ -160,7 +160,7 @@ var rune = (function (exports) {
       }
   }
   function __wbg_adapter_60(arg0, arg1, arg2, arg3) {
-      wasm$1.closure269_externref_shim(arg0, arg1, arg2, arg3);
+      wasm$1.closure270_externref_shim(arg0, arg1, arg2, arg3);
   }
 
   function notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }
@@ -412,7 +412,7 @@ var rune = (function (exports) {
           return ret;
       };
       imports.wbg.__wbg_queueMicrotask_c5419c06eab41e73 = typeof queueMicrotask == 'function' ? queueMicrotask : notDefined('queueMicrotask');
-      imports.wbg.__wbindgen_closure_wrapper6101 = function(arg0, arg1, arg2) {
+      imports.wbg.__wbindgen_closure_wrapper6117 = function(arg0, arg1, arg2) {
           const ret = makeMutClosure(arg0, arg1, 1209, __wbg_adapter_26);
           return ret;
       };
@@ -498,7 +498,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-9bbb3fe3.wasm";
+                  let path = "/js/assets/rune_wasm-224eb647.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];

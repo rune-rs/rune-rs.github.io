@@ -1088,13 +1088,7 @@
 <a href="#1087" id="1087">1087</a>
 <a href="#1088" id="1088">1088</a>
 <a href="#1089" id="1089">1089</a>
-<a href="#1090" id="1090">1090</a>
-<a href="#1091" id="1091">1091</a>
-<a href="#1092" id="1092">1092</a>
-<a href="#1093" id="1093">1093</a>
-<a href="#1094" id="1094">1094</a>
-<a href="#1095" id="1095">1095</a>
-<a href="#1096" id="1096">1096</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#1090" id="1090">1090</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future::Future;
 
 <span class="kw">use </span>::rust_alloc::sync::Arc;
@@ -1104,6 +1098,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::function;
+<span class="kw">use </span><span class="kw">crate</span>::runtime;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::vm::Isolated;
 <span class="kw">use </span><span class="kw">crate</span>::shared::AssertSend;
 <span class="kw">use </span><span class="kw">crate</span>::Any;
@@ -1111,8 +1106,8 @@
 
 <span class="kw">use super</span>::{
     Args, Call, ConstValue, Formatter, FromValue, FunctionHandler, GuardedArgs, InstAddress,
-    Mutable, Output, OwnedTuple, RefRepr, Rtti, RuntimeContext, RuntimeError, Stack, Unit, Value,
-    VariantRtti, Vm, VmCall, VmErrorKind, VmHalt, VmResult,
+    Output, OwnedTuple, Rtti, RuntimeContext, RuntimeError, Stack, Unit, Value, VariantRtti, Vm,
+    VmCall, VmErrorKind, VmHalt, VmResult,
 };
 
 <span class="doccomment">/// The type of a function in Rune.
@@ -1707,16 +1702,9 @@
         <span class="kw">let </span>future = <span class="kw">async move </span>{
             <span class="kw">let </span>value: Value = <span class="macro">vm_try!</span>(<span class="self">self</span>.call(args));
 
-            <span class="kw">let </span>value = <span class="lifetime">'out</span>: {
-                <span class="kw">if let </span>RefRepr::Mutable(value) = <span class="macro">vm_try!</span>(value.as_ref_repr()) {
-                    <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="macro">vm_try!</span>(value.borrow_mut());
-
-                    <span class="kw">if let </span>Mutable::Future(future) = <span class="kw-2">&amp;mut *</span>value {
-                        <span class="kw">break </span><span class="lifetime">'out </span><span class="macro">vm_try!</span>(future.<span class="kw">await</span>);
-                    }
-                }
-
-                value
+            <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.try_borrow_mut::&lt;runtime::Future&gt;()) {
+                <span class="prelude-val">Some</span>(future) =&gt; <span class="macro">vm_try!</span>(future.<span class="kw">await</span>),
+                <span class="prelude-val">None </span>=&gt; value,
             };
 
             VmResult::Ok(<span class="macro">vm_try!</span>(T::from_value(value)))

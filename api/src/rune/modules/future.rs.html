@@ -136,15 +136,11 @@
 <a href="#135" id="135">135</a>
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a></pre></div><pre class="rust"><code><span class="doccomment">//! Asynchronous computations.
+<a href="#138" id="138">138</a></pre></div><pre class="rust"><code><span class="doccomment">//! Asynchronous computations.
 
 </span><span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    <span class="self">self</span>, Future, Inline, Mut, Mutable, RefRepr, SelectFuture, Value, VmErrorKind, VmResult,
-};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{<span class="self">self</span>, Future, Inline, RefRepr, SelectFuture, Value, VmErrorKind, VmResult};
 <span class="kw">use crate</span>::{ContextError, Module, TypeHash};
 
 <span class="doccomment">/// Asynchronous computations.
@@ -152,7 +148,7 @@
 </span><span class="kw">pub fn </span>module() -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>module = Module::from_meta(<span class="self">self</span>::module_meta)<span class="question-mark">?</span>;
     module.ty::&lt;Future&gt;()<span class="question-mark">?</span>;
-    module.function_meta(join)<span class="question-mark">?</span>;
+    module.function_meta(join__meta)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(module)
 }
 
@@ -167,39 +163,33 @@
     <span class="kw">let </span><span class="kw-2">mut </span>results = <span class="macro">vm_try!</span>(Vec::try_with_capacity(len));
 
     <span class="kw">for </span>(index, value) <span class="kw">in </span>values.into_iter().enumerate() {
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref_repr()) {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref_repr()) {
             RefRepr::Inline(value) =&gt; {
                 <span class="kw">return </span>VmResult::err([
                     VmErrorKind::expected::&lt;Future&gt;(value.type_info()),
                     VmErrorKind::bad_argument(index),
                 ]);
             }
-            RefRepr::Mutable(value) =&gt; <span class="macro">vm_try!</span>(value.clone().into_mut()),
-            RefRepr::Any(value) =&gt; {
+            RefRepr::Mutable(value) =&gt; {
                 <span class="kw">return </span>VmResult::err([
-                    VmErrorKind::expected::&lt;Future&gt;(value.type_info()),
+                    VmErrorKind::expected::&lt;Future&gt;(<span class="macro">vm_try!</span>(value.borrow_ref()).type_info()),
                     VmErrorKind::bad_argument(index),
                 ]);
             }
-        };
-
-        <span class="kw">let </span>future = Mut::try_map(value, |kind| <span class="kw">match </span>kind {
-            Mutable::Future(future) =&gt; <span class="prelude-val">Some</span>(future),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-        });
-
-        <span class="kw">let </span>future = <span class="kw">match </span>future {
-            <span class="prelude-val">Ok</span>(future) =&gt; future,
-            <span class="prelude-val">Err</span>(actual) =&gt; {
-                <span class="kw">return </span>VmResult::err([
-                    VmErrorKind::expected::&lt;Future&gt;(actual.type_info()),
-                    VmErrorKind::bad_argument(index),
-                ]);
-            }
-        };
-
-        futures.push(SelectFuture::new(index, future));
-        <span class="macro">vm_try!</span>(results.try_push(Value::empty()));
+            RefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                Future::HASH =&gt; {
+                    <span class="kw">let </span>future = <span class="macro">vm_try!</span>(Value::from(value.clone()).into_future());
+                    futures.push(SelectFuture::new(index, future));
+                    <span class="macro">vm_try!</span>(results.try_push(Value::empty()));
+                }
+                <span class="kw">_ </span>=&gt; {
+                    <span class="kw">return </span>VmResult::err([
+                        VmErrorKind::expected::&lt;Future&gt;(value.type_info()),
+                        VmErrorKind::bad_argument(index),
+                    ]);
+                }
+            },
+        }
     }
 
     <span class="kw">while </span>!futures.is_empty() {
@@ -215,9 +205,11 @@
 /// # Examples
 ///
 /// ```rune
+/// use std::future;
+///
 /// let a = async { 1 };
 /// let b = async { 2 };
-/// let (a, b) = std::future::join((a, b)).await;
+/// let (a, b) = future::join((a, b)).await;
 /// assert_eq!(1, a);
 /// assert_eq!(2, b);
 /// ```
@@ -225,9 +217,11 @@
 /// Using a vector:
 ///
 /// ```rune
+/// use std::future;
+///
 /// let a = async { 1 };
 /// let b = async { 2 };
-/// let [a, b] = std::future::join([a, b]).await;
+/// let [a, b] = future::join([a, b]).await;
 /// assert_eq!(1, a);
 /// assert_eq!(2, b);
 /// ```
@@ -235,10 +229,12 @@
 /// Joining an empty collection:
 ///
 /// ```rune
-/// let () = std::future::join(()).await;
-/// let [] = std::future::join([]).await;
+/// use std::future;
+///
+/// let () = future::join(()).await;
+/// let [] = future::join([]).await;
 /// ```
-</span><span class="attr">#[rune::function]
+</span><span class="attr">#[rune::function(keep)]
 </span><span class="kw">async fn </span>join(value: Value) -&gt; VmResult&lt;Value&gt; {
     <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref_repr()) {
         RefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
