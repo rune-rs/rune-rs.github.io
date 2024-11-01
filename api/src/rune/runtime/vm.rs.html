@@ -4103,8 +4103,7 @@
 <a href="#4102" id="4102">4102</a>
 <a href="#4103" id="4103">4103</a>
 <a href="#4104" id="4104">4104</a>
-<a href="#4105" id="4105">4105</a>
-<a href="#4106" id="4106">4106</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#4105" id="4105">4105</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -7518,7 +7517,7 @@
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_load_fn(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>function = <span class="macro">vm_try!</span>(<span class="self">self</span>.lookup_function_by_hash(hash));
-        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, Mutable::Function(function)));
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, function));
         VmResult::Ok(())
     }
 
@@ -7570,7 +7569,7 @@
             hash,
         );
 
-        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, Mutable::Function(function)));
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, function));
         VmResult::Ok(())
     }
 
@@ -7735,19 +7734,18 @@
             <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
         }
 
-        <span class="kw">let </span>function = function.clone();
-        <span class="kw">let </span>function = <span class="macro">vm_try!</span>(function.borrow_ref_repr());
-
-        <span class="kw">match </span>function {
-            BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                Mutable::Function(function) =&gt; function.call_with_vm(<span class="self">self</span>, addr, args, out),
-                actual =&gt; err(VmErrorKind::UnsupportedCallFn {
-                    actual: actual.type_info(),
-                }),
-            },
-            actual =&gt; err(VmErrorKind::UnsupportedCallFn {
-                actual: actual.type_info(),
+        <span class="kw">match </span><span class="macro">vm_try!</span>(function.as_ref_repr()) {
+            RefRepr::Inline(value) =&gt; err(VmErrorKind::UnsupportedCallFn {
+                actual: value.type_info(),
             }),
+            RefRepr::Mutable(value) =&gt; err(VmErrorKind::UnsupportedCallFn {
+                actual: <span class="macro">vm_try!</span>(value.borrow_ref()).type_info(),
+            }),
+            RefRepr::Any(value) =&gt; {
+                <span class="kw">let </span>value = value.clone();
+                <span class="kw">let </span>f = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;Function&gt;());
+                f.call_with_vm(<span class="self">self</span>, addr, args, out)
+            }
         }
     }
 

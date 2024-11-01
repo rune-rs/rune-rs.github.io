@@ -1066,24 +1066,54 @@
 <a href="#1065" id="1065">1065</a>
 <a href="#1066" id="1066">1066</a>
 <a href="#1067" id="1067">1067</a>
-<a href="#1068" id="1068">1068</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future::Future;
 
 <span class="kw">use </span>::rust_alloc::sync::Arc;
 
 <span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::function;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::vm::Isolated;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Args, Call, ConstValue, FromValue, FunctionHandler, GuardedArgs, InstAddress, Mutable, Output,
-    OwnedTuple, RefRepr, Rtti, RuntimeContext, RuntimeError, Stack, Unit, Value, VariantRtti, Vm,
-    VmCall, VmErrorKind, VmHalt, VmResult,
-};
 <span class="kw">use </span><span class="kw">crate</span>::shared::AssertSend;
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 <span class="kw">use </span><span class="kw">crate</span>::Hash;
+
+<span class="kw">use super</span>::{
+    Args, Call, ConstValue, Formatter, FromValue, FunctionHandler, GuardedArgs, InstAddress,
+    Mutable, Output, OwnedTuple, RefRepr, Rtti, RuntimeContext, RuntimeError, Stack, Unit, Value,
+    VariantRtti, Vm, VmCall, VmErrorKind, VmHalt, VmResult,
+};
 
 <span class="doccomment">/// The type of a function in Rune.
 ///
@@ -1112,7 +1142,6 @@
 /// ```
 </span><span class="attr">#[derive(Any, TryClone)]
 #[repr(transparent)]
-#[rune(builtin, static_type = FUNCTION)]
 #[rune(item = ::std::ops)]
 </span><span class="kw">pub struct </span>Function(FunctionImpl&lt;Value&gt;);
 
@@ -1431,6 +1460,40 @@
     /// ```
     </span><span class="kw">pub fn </span>into_sync(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SyncFunction, RuntimeError&gt; {
         <span class="prelude-val">Ok</span>(SyncFunction(<span class="self">self</span>.<span class="number">0</span>.into_sync()<span class="question-mark">?</span>))
+    }
+
+    <span class="doccomment">/// Clone a function.
+    ///
+    /// # Examples
+    ///
+    /// ```rune
+    /// fn function() {
+    ///     42
+    /// }
+    ///
+    /// let a = function;
+    /// let b = a.clone();
+    /// assert_eq!(a(), b());
+    /// ```
+    </span><span class="attr">#[rune::function(keep, protocol = CLONE)]
+    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VmResult&lt;Function&gt; {
+        VmResult::Ok(<span class="macro">vm_try!</span>(<span class="self">self</span>.try_clone()))
+    }
+
+    <span class="doccomment">/// Debug format a function.
+    ///
+    /// # Examples
+    ///
+    /// ```rune
+    /// fn function() {
+    ///     42
+    /// }
+    ///
+    /// println!("{function:?}");
+    /// ``
+    </span><span class="attr">#[rune::function(keep, protocol = DEBUG_FMT)]
+    </span><span class="kw">fn </span>debug_fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
+        <span class="macro">vm_write!</span>(f, <span class="string">"{self:?}"</span>)
     }
 }
 
@@ -2093,16 +2156,9 @@
 <span class="kw">impl </span>FromValue <span class="kw">for </span>SyncFunction {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
-        value.into_function()<span class="question-mark">?</span>.into_sync()
+        value.into_any::&lt;Function&gt;()<span class="question-mark">?</span>.into_sync()
     }
 }
-
-<span class="macro">from_value2!</span>(
-    Function,
-    into_function_ref,
-    into_function_mut,
-    into_function
-);
 
 <span class="kw">fn </span>check_args(actual: usize, expected: usize) -&gt; VmResult&lt;()&gt; {
     <span class="kw">if </span>actual != expected {

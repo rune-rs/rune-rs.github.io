@@ -2094,25 +2094,7 @@
 <a href="#2093" id="2093">2093</a>
 <a href="#2094" id="2094">2094</a>
 <a href="#2095" id="2095">2095</a>
-<a href="#2096" id="2096">2096</a>
-<a href="#2097" id="2097">2097</a>
-<a href="#2098" id="2098">2098</a>
-<a href="#2099" id="2099">2099</a>
-<a href="#2100" id="2100">2100</a>
-<a href="#2101" id="2101">2101</a>
-<a href="#2102" id="2102">2102</a>
-<a href="#2103" id="2103">2103</a>
-<a href="#2104" id="2104">2104</a>
-<a href="#2105" id="2105">2105</a>
-<a href="#2106" id="2106">2106</a>
-<a href="#2107" id="2107">2107</a>
-<a href="#2108" id="2108">2108</a>
-<a href="#2109" id="2109">2109</a>
-<a href="#2110" id="2110">2110</a>
-<a href="#2111" id="2111">2111</a>
-<a href="#2112" id="2112">2112</a>
-<a href="#2113" id="2113">2113</a>
-<a href="#2114" id="2114">2114</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2096" id="2096">2096</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>inline;
@@ -2146,10 +2128,10 @@
 <span class="kw">use </span><span class="kw">super</span>::static_type;
 <span class="kw">use super</span>::{
     AccessError, AnyObj, AnyObjDrop, BorrowMut, BorrowRef, CallResultOnly, ConstValue,
-    ConstValueKind, DynGuardedArgs, EnvProtocolCaller, Formatter, FromValue, Function, Future,
-    IntoOutput, Iterator, MaybeTypeOf, Mut, Object, OwnedTuple, Protocol, ProtocolCaller,
-    RawAnyObjGuard, Ref, RuntimeError, Shared, Snapshot, Type, TypeInfo, Variant, Vec, VmErrorKind,
-    VmIntegerRepr, VmResult,
+    ConstValueKind, DynGuardedArgs, EnvProtocolCaller, Formatter, FromValue, Future, IntoOutput,
+    Iterator, MaybeTypeOf, Mut, Object, OwnedTuple, Protocol, ProtocolCaller, RawAnyObjGuard, Ref,
+    RuntimeError, Shared, Snapshot, Type, TypeInfo, Variant, Vec, VmErrorKind, VmIntegerRepr,
+    VmResult,
 };
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">use super</span>::{Hasher, Tuple};
@@ -2543,7 +2525,6 @@
                     Mutable::TupleStruct(value) =&gt; Mutable::TupleStruct(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Struct(value) =&gt; Mutable::Struct(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Variant(value) =&gt; Mutable::Variant(<span class="macro">vm_try!</span>(value.try_clone())),
-                    Mutable::Function(value) =&gt; Mutable::Function(<span class="macro">vm_try!</span>(value.try_clone())),
                     <span class="kw">_ </span>=&gt; {
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
@@ -2624,9 +2605,6 @@
                     <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
                 Mutable::Variant(value) =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
-                }
-                Mutable::Function(value) =&gt; {
                     <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
             };
@@ -2915,16 +2893,6 @@
         borrow_result_ref,
         borrow_result_mut,
         as_result,
-    }
-
-    <span class="macro">into!</span> {
-        <span class="doccomment">/// Coerce into a [`Function`].
-        </span>Function(Function),
-        into_function_ref,
-        into_function_mut,
-        borrow_function_ref,
-        borrow_function_mut,
-        into_function,
     }
 
     <span class="macro">into!</span> {
@@ -4019,7 +3987,6 @@
 }
 
 <span class="macro">from!</span> {
-    Function =&gt; Function,
     EmptyStruct =&gt; EmptyStruct,
     TupleStruct =&gt; TupleStruct,
     Struct =&gt; Struct,
@@ -4038,6 +4005,7 @@
     <span class="kw">super</span>::OwnedTuple,
     <span class="kw">super</span>::Generator,
     <span class="kw">super</span>::Stream,
+    <span class="kw">super</span>::Function,
 }
 
 <span class="macro">from_container!</span> {
@@ -4177,8 +4145,6 @@
     </span>Struct(Struct),
     <span class="doccomment">/// The variant of an enum.
     </span>Variant(Variant),
-    <span class="doccomment">/// A stored function pointer.
-    </span>Function(Function),
 }
 
 <span class="kw">impl </span>Mutable {
@@ -4188,7 +4154,6 @@
             Mutable::Future(..) =&gt; TypeInfo::static_type(static_type::FUTURE),
             Mutable::Option(..) =&gt; TypeInfo::static_type(static_type::OPTION),
             Mutable::Result(..) =&gt; TypeInfo::static_type(static_type::RESULT),
-            Mutable::Function(..) =&gt; TypeInfo::static_type(static_type::FUNCTION),
             Mutable::EmptyStruct(empty) =&gt; empty.type_info(),
             Mutable::TupleStruct(tuple) =&gt; tuple.type_info(),
             Mutable::Struct(object) =&gt; object.type_info(),
@@ -4206,7 +4171,6 @@
             Mutable::Future(..) =&gt; static_type::FUTURE.hash,
             Mutable::Result(..) =&gt; static_type::RESULT.hash,
             Mutable::Option(..) =&gt; static_type::OPTION.hash,
-            Mutable::Function(..) =&gt; static_type::FUNCTION.hash,
             Mutable::EmptyStruct(empty) =&gt; empty.rtti.hash,
             Mutable::TupleStruct(tuple) =&gt; tuple.rtti.hash,
             Mutable::Struct(object) =&gt; object.rtti.hash,
