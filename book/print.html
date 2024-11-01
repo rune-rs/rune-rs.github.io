@@ -942,8 +942,8 @@ dbg!(`I am ${age} years old!`);
 </code></pre>
 <p>Template strings are accelerated by the Vm, each argument uses a <em>display
 protocol</em> and it can be very efficient to build complex strings out of it.</p>
-<h2 id="the-string_display-protocol"><a class="header" href="#the-string_display-protocol">The <code>STRING_DISPLAY</code> protocol</a></h2>
-<p>The <code>STRING_DISPLAY</code> protocol is a function that can be implemented by any
+<h2 id="the-display_fmt-protocol"><a class="header" href="#the-display_fmt-protocol">The <code>DISPLAY_FMT</code> protocol</a></h2>
+<p>The <code>DISPLAY_FMT</code> protocol is a function that can be implemented by any
 <em>external</em> type which allows it to be used in a template string.</p>
 <p>It expects a function with the signature <code>fn(&amp;self, buf: &amp;mut String) -&gt; fmt::Result</code>.</p>
 <pre><code class="language-rust noplaypen">use rune::{ContextError, Module};
@@ -957,15 +957,15 @@ pub struct StatusCode {
 }
 
 impl StatusCode {
-    #[rune::function(protocol = STRING_DISPLAY)]
-    fn string_display(&amp;self, f: &amp;mut Formatter) -&gt; fmt::Result {
+    #[rune::function(protocol = DISPLAY_FMT)]
+    fn display_fmt(&amp;self, f: &amp;mut Formatter) -&gt; fmt::Result {
         write!(f, "{}", self.inner)
     }
 }
 
 pub fn module() -&gt; Result&lt;Module, ContextError&gt; {
     let mut module = Module::new(["http"]);
-    module.function_meta(StatusCode::string_display)?;
+    module.function_meta(StatusCode::display_fmt)?;
     Ok(module)
 }</code></pre>
 <p>This is what allows status codes to be formatted into template strings, any
@@ -974,12 +974,12 @@ types which do not implement this protocol will fail to run.</p>
 dbg!(`${vec}`);
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/template_literals/not_a_template.rn
-== ! (`Vec` does not implement the `string_display` protocol (at 5)) (77.7µs)
+== ! (`Vec` does not implement the `display_fmt` protocol (at 5)) (77.7µs)
 error: virtual machine error
   ┌─ scripts/book/template_literals/not_a_template.rn:3:9
   │
 3 │     dbg!(`${vec}`);
-  │          ^^^^^^^^ `Vec` does not implement the `string_display` protocol
+  │          ^^^^^^^^ `Vec` does not implement the `display_fmt` protocol
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="instance-functions"><a class="header" href="#instance-functions">Instance functions</a></h1>
 <p>Instance functions are functions that are associated to a specific type of
@@ -1330,16 +1330,8 @@ let mut t = m.define_trait(["Iterator"])?;
 
 t.handler(|cx| {
     let next = cx.find(Protocol::NEXT)?;
-    cx.function_handler("next", &amp;next)?;
 
-    let size_hint = if let Some(size_hint) = cx.try_find(Protocol::SIZE_HINT)? {
-        cx.function_handler("size_hint", &amp;size_hint)?;
-        size_hint
-    } else {
-        let size_hint = cx.function("size_hint", |_: Value| (0usize, None::&lt;usize&gt;))?;
-        cx.function_handler(Protocol::SIZE_HINT, &amp;size_hint)?;
-        size_hint
-    };
+    let size_hint = cx.find_or_define(Protocol::SIZE_HINT, |_: Value| (0usize, None::&lt;usize&gt;))?;
 
     /* more methods */
     Ok(())

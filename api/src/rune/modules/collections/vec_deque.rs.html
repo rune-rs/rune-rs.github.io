@@ -843,13 +843,7 @@
 <a href="#842" id="842">842</a>
 <a href="#843" id="843">843</a>
 <a href="#844" id="844">844</a>
-<a href="#845" id="845">845</a>
-<a href="#846" id="846">846</a>
-<a href="#847" id="847">847</a>
-<a href="#848" id="848">848</a>
-<a href="#849" id="849">849</a>
-<a href="#850" id="850">850</a>
-<a href="#851" id="851">851</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#845" id="845">845</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::iter;
 
 <span class="kw">use crate as </span>rune;
@@ -867,28 +861,7 @@
 </span><span class="kw">pub fn </span>module() -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>m = Module::from_meta(<span class="self">self</span>::module_meta)<span class="question-mark">?</span>;
 
-    m.ty::&lt;VecDeque&gt;()<span class="question-mark">?</span>.docs(<span class="macro">docstring!</span> {
-        <span class="doccomment">/// A double-ended queue implemented with a growable ring buffer.
-        ///
-        /// The "default" usage of this type as a queue is to use [`push_back`]
-        /// to add to the queue, and [`pop_front`] to remove from the queue.
-        /// [`extend`] and [`append`] push onto the back in this manner, and
-        /// iterating over `VecDeque` goes front to back.
-        ///
-        /// A `VecDeque` with a known list of items can be initialized from an
-        /// array:
-        ///
-        /// ```rune
-        /// use std::collections::VecDeque;
-        ///
-        /// let deq = VecDeque::from::&lt;Vec&gt;([-1, 0, 1]);
-        /// ```
-        ///
-        /// [`push_back`]: VecDeque::push_back
-        /// [`pop_front`]: VecDeque::pop_front
-        /// [`extend`]: VecDeque::extend
-        /// [`append`]: VecDeque::append
-    </span>})<span class="question-mark">?</span>;
+    m.ty::&lt;VecDeque&gt;()<span class="question-mark">?</span>;
 
     m.function_meta(VecDeque::new)<span class="question-mark">?</span>;
     m.function_meta(VecDeque::with_capacity__meta)<span class="question-mark">?</span>;
@@ -915,7 +888,7 @@
     m.associated_function(Protocol::INDEX_GET, VecDeque::get)<span class="question-mark">?</span>;
     m.associated_function(Protocol::INDEX_SET, VecDeque::set)<span class="question-mark">?</span>;
 
-    m.function_meta(VecDeque::string_debug)<span class="question-mark">?</span>;
+    m.function_meta(VecDeque::debug_fmt)<span class="question-mark">?</span>;
 
     m.function_meta(VecDeque::partial_eq__meta)<span class="question-mark">?</span>;
     m.implement_trait::&lt;VecDeque&gt;(<span class="macro">rune::item!</span>(::std::cmp::PartialEq))<span class="question-mark">?</span>;
@@ -943,7 +916,26 @@
     <span class="prelude-val">Ok</span>(m)
 }
 
-<span class="attr">#[derive(Any, Default)]
+<span class="doccomment">/// A double-ended queue implemented with a growable ring buffer.
+///
+/// The "default" usage of this type as a queue is to use [`push_back`] to add
+/// to the queue, and [`pop_front`] to remove from the queue. [`extend`] and
+/// [`append`] push onto the back in this manner, and iterating over `VecDeque`
+/// goes front to back.
+///
+/// A `VecDeque` with a known list of items can be initialized from an array:
+///
+/// ```rune
+/// use std::collections::VecDeque;
+///
+/// let deq = VecDeque::from::&lt;Vec&gt;([-1, 0, 1]);
+/// ```
+///
+/// [`push_back`]: VecDeque::push_back
+/// [`pop_front`]: VecDeque::pop_front
+/// [`extend`]: VecDeque::extend
+/// [`append`]: VecDeque::append
+</span><span class="attr">#[derive(Any, Default)]
 #[rune(module = <span class="kw">crate</span>, item = ::std::collections::vec_deque)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>VecDeque {
     inner: alloc::VecDeque&lt;Value&gt;,
@@ -1415,7 +1407,7 @@
 
     <span class="doccomment">/// Write a debug representation to a string.
     ///
-    /// This calls the [`STRING_DEBUG`] protocol over all elements of the
+    /// This calls the [`DEBUG_FMT`] protocol over all elements of the
     /// collection.
     ///
     /// # Examples
@@ -1426,23 +1418,19 @@
     /// let deque = VecDeque::from::&lt;Vec&gt;([1, 2, 3]);
     /// assert_eq!(format!("{:?}", deque), "[1, 2, 3]");
     /// ```
-    </span><span class="attr">#[rune::function(protocol = STRING_DEBUG)]
-    </span><span class="kw">fn </span>string_debug(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
-        <span class="self">self</span>.string_debug_with(f, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
+    </span><span class="attr">#[rune::function(protocol = DEBUG_FMT)]
+    </span><span class="kw">fn </span>debug_fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
+        <span class="self">self</span>.debug_fmt_with(f, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>string_debug_with(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        f: <span class="kw-2">&amp;mut </span>Formatter,
-        caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
-    ) -&gt; VmResult&lt;()&gt; {
+    </span><span class="kw">fn </span>debug_fmt_with(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter, caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>it = <span class="self">self</span>.inner.iter().peekable();
 
         <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"["</span>));
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>(value) = it.next() {
-            <span class="macro">vm_try!</span>(value.string_debug_with(f, caller));
+            <span class="macro">vm_try!</span>(value.debug_fmt_with(f, caller));
 
             <span class="kw">if </span>it.peek().is_some() {
                 <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">", "</span>));

@@ -2112,8 +2112,7 @@
 <a href="#2111" id="2111">2111</a>
 <a href="#2112" id="2112">2112</a>
 <a href="#2113" id="2113">2113</a>
-<a href="#2114" id="2114">2114</a>
-<a href="#2115" id="2115">2115</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2114" id="2114">2114</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>inline;
@@ -2444,7 +2443,7 @@
         <span class="self">Self </span>{ repr: Repr::Empty }
     }
 
-    <span class="doccomment">/// Format the value using the [Protocol::STRING_DISPLAY] protocol.
+    <span class="doccomment">/// Format the value using the [Protocol::DISPLAY_FMT] protocol.
     ///
     /// Requires a work buffer `buf` which will be used in case the value
     /// provided requires out-of-line formatting. This must be cleared between
@@ -2458,13 +2457,13 @@
     /// # Panics
     ///
     /// This function will panic if called outside of a virtual machine.
-    </span><span class="kw">pub fn </span>string_display(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
-        <span class="self">self</span>.string_display_with(f, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
+    </span><span class="kw">pub fn </span>display_fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
+        <span class="self">self</span>.display_fmt_with(f, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
     }
 
-    <span class="doccomment">/// Internal impl of string_display with a customizable caller.
+    <span class="doccomment">/// Internal impl of display_fmt with a customizable caller.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>string_display_with(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>display_fmt_with(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         f: <span class="kw-2">&amp;mut </span>Formatter,
         caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
@@ -2505,7 +2504,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((f,));
 
         <span class="kw">let </span>result =
-            <span class="macro">vm_try!</span>(caller.call_protocol_fn(Protocol::STRING_DISPLAY, <span class="self">self</span>.clone(), <span class="kw-2">&amp;mut </span>args));
+            <span class="macro">vm_try!</span>(caller.call_protocol_fn(Protocol::DISPLAY_FMT, <span class="self">self</span>.clone(), <span class="kw-2">&amp;mut </span>args));
 
         VmResult::Ok(<span class="macro">vm_try!</span>(&lt;()&gt;::from_value(result)))
     }
@@ -2566,7 +2565,7 @@
         )))
     }
 
-    <span class="doccomment">/// Debug format the value using the [`STRING_DEBUG`] protocol.
+    <span class="doccomment">/// Debug format the value using the [`DEBUG_FMT`] protocol.
     ///
     /// You must use [`Vm::with`] to specify which virtual machine this function
     /// is called inside.
@@ -2577,13 +2576,13 @@
     ///
     /// This function will panic if called outside of a virtual machine.
     ///
-    /// [`STRING_DEBUG`]: Protocol::STRING_DEBUG
-    </span><span class="kw">pub fn </span>string_debug(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
-        <span class="self">self</span>.string_debug_with(f, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
+    /// [`DEBUG_FMT`]: Protocol::DEBUG_FMT
+    </span><span class="kw">pub fn </span>debug_fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
+        <span class="self">self</span>.debug_fmt_with(f, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
     }
 
-    <span class="doccomment">/// Internal impl of string_debug with a customizable caller.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>string_debug_with(
+    <span class="doccomment">/// Internal impl of debug_fmt with a customizable caller.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>debug_fmt_with(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         f: <span class="kw-2">&amp;mut </span>Formatter,
         caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
@@ -2638,8 +2637,7 @@
         <span class="comment">// reborrow f to avoid moving it
         </span><span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;mut *</span>f,));
 
-        <span class="kw">match </span><span class="macro">vm_try!</span>(caller.try_call_protocol_fn(Protocol::STRING_DEBUG, <span class="self">self</span>.clone(), <span class="kw-2">&amp;mut </span>args))
-        {
+        <span class="kw">match </span><span class="macro">vm_try!</span>(caller.try_call_protocol_fn(Protocol::DEBUG_FMT, <span class="self">self</span>.clone(), <span class="kw-2">&amp;mut </span>args)) {
             CallResultOnly::Ok(value) =&gt; {
                 <span class="macro">vm_try!</span>(&lt;()&gt;::from_value(value));
             }
@@ -3907,7 +3905,7 @@
         <span class="comment">// SAFETY: Formatter does not outlive the string it references.
         </span><span class="kw">let </span><span class="kw-2">mut </span>o = <span class="kw">unsafe </span>{ Formatter::new(NonNull::from(<span class="kw-2">&amp;mut </span>s)) };
 
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.string_debug(<span class="kw-2">&amp;mut </span>o).into_result() {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.debug_fmt(<span class="kw-2">&amp;mut </span>o).into_result() {
             <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
                 Repr::Empty =&gt; {
                     <span class="macro">write!</span>(f, <span class="string">"&lt;empty: {e}&gt;"</span>)<span class="question-mark">?</span>;
