@@ -308,7 +308,10 @@
 <a href="#307" id="307">307</a>
 <a href="#308" id="308">308</a>
 <a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -348,15 +351,6 @@
                 Inline::Ordering(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize orderings"</span>)),
             },
             BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                Mutable::Tuple(tuple) =&gt; {
-                    <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_seq(<span class="prelude-val">Some</span>(tuple.len()))<span class="question-mark">?</span>;
-
-                    <span class="kw">for </span>value <span class="kw">in </span>tuple.iter() {
-                        serializer.serialize_element(value)<span class="question-mark">?</span>;
-                    }
-
-                    serializer.end()
-                }
                 Mutable::Object(object) =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_map(<span class="prelude-val">Some</span>(object.len()))<span class="question-mark">?</span>;
 
@@ -397,6 +391,18 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_seq(<span class="prelude-val">Some</span>(vec.len()))<span class="question-mark">?</span>;
 
                     <span class="kw">for </span>value <span class="kw">in </span>vec.iter() {
+                        serializer.serialize_element(value)<span class="question-mark">?</span>;
+                    }
+
+                    serializer.end()
+                }
+                runtime::OwnedTuple::HASH =&gt; {
+                    <span class="kw">let </span>tuple = value
+                        .borrow_ref::&lt;runtime::OwnedTuple&gt;()
+                        .map_err(S::Error::custom)<span class="question-mark">?</span>;
+                    <span class="kw">let </span><span class="kw-2">mut </span>serializer = serializer.serialize_seq(<span class="prelude-val">Some</span>(tuple.len()))<span class="question-mark">?</span>;
+
+                    <span class="kw">for </span>value <span class="kw">in </span>tuple.iter() {
                         serializer.serialize_element(value)<span class="question-mark">?</span>;
                     }
 

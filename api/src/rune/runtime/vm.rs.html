@@ -4087,7 +4087,24 @@
 <a href="#4086" id="4086">4086</a>
 <a href="#4087" id="4087">4087</a>
 <a href="#4088" id="4088">4088</a>
-<a href="#4089" id="4089">4089</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#4089" id="4089">4089</a>
+<a href="#4090" id="4090">4090</a>
+<a href="#4091" id="4091">4091</a>
+<a href="#4092" id="4092">4092</a>
+<a href="#4093" id="4093">4093</a>
+<a href="#4094" id="4094">4094</a>
+<a href="#4095" id="4095">4095</a>
+<a href="#4096" id="4096">4096</a>
+<a href="#4097" id="4097">4097</a>
+<a href="#4098" id="4098">4098</a>
+<a href="#4099" id="4099">4099</a>
+<a href="#4100" id="4100">4100</a>
+<a href="#4101" id="4101">4101</a>
+<a href="#4102" id="4102">4102</a>
+<a href="#4103" id="4103">4103</a>
+<a href="#4104" id="4104">4104</a>
+<a href="#4105" id="4105">4105</a>
+<a href="#4106" id="4106">4106</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -4953,10 +4970,6 @@
                 <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
             },
             BorrowRefRepr::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>target {
-                Mutable::Tuple(tuple) =&gt; <span class="kw">match </span>tuple.get(index) {
-                    <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
-                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(target.type_info()),
-                },
                 Mutable::Result(result) =&gt; <span class="kw">match </span>(index, result) {
                     (<span class="number">0</span>, <span class="prelude-val">Ok</span>(value)) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
                     (<span class="number">0</span>, <span class="prelude-val">Err</span>(value)) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
@@ -4993,6 +5006,14 @@
                         <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(target.type_info()),
                     }
                 }
+                runtime::OwnedTuple::HASH =&gt; {
+                    <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(target.borrow_ref::&lt;runtime::OwnedTuple&gt;());
+
+                    <span class="kw">match </span>tuple.get(index) {
+                        <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
+                        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(target.type_info()),
+                    }
+                }
                 <span class="kw">_ </span>=&gt; {
                     <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
                 }
@@ -5019,7 +5040,6 @@
 
                 <span class="kw">let </span>result = BorrowMut::try_map(<span class="macro">vm_try!</span>(value.borrow_mut()), |kind| {
                     <span class="kw">match </span>kind {
-                        Mutable::Tuple(tuple) =&gt; <span class="kw">return </span>tuple.get_mut(index),
                         Mutable::Result(result) =&gt; <span class="kw">match </span>(index, result) {
                             (<span class="number">0</span>, <span class="prelude-val">Ok</span>(value)) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(value),
                             (<span class="number">0</span>, <span class="prelude-val">Err</span>(value)) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(value),
@@ -5084,7 +5104,20 @@
                     }
 
                     err(VmErrorKind::MissingIndexInteger {
-                        target: TypeInfo::any::&lt;GeneratorState&gt;(),
+                        target: TypeInfo::any::&lt;runtime::Vec&gt;(),
+                        index: VmIntegerRepr::from(index),
+                    })
+                }
+                runtime::OwnedTuple::HASH =&gt; {
+                    <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(value.borrow_mut::&lt;runtime::OwnedTuple&gt;());
+                    <span class="kw">let </span>result = BorrowMut::try_map(tuple, |tuple| tuple.get_mut(index));
+
+                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(value) = result {
+                        <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">Some</span>(value));
+                    }
+
+                    err(VmErrorKind::MissingIndexInteger {
+                        target: TypeInfo::any::&lt;runtime::OwnedTuple&gt;(),
                         index: VmIntegerRepr::from(index),
                     })
                 }
@@ -5154,14 +5187,6 @@
                 <span class="kw">_ </span>=&gt; VmResult::Ok(<span class="bool-val">false</span>),
             },
             RefRepr::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(target.borrow_mut()) {
-                Mutable::Tuple(tuple) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(target) = tuple.get_mut(index) {
-                        target.clone_from(from);
-                        <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>);
-                    }
-
-                    VmResult::Ok(<span class="bool-val">false</span>)
-                }
                 Mutable::Result(result) =&gt; {
                     <span class="kw">let </span>target = <span class="kw">match </span>result {
                         <span class="prelude-val">Ok</span>(ok) <span class="kw">if </span>index == <span class="number">0 </span>=&gt; ok,
@@ -5206,6 +5231,16 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>vec = <span class="macro">vm_try!</span>(value.borrow_mut::&lt;runtime::Vec&gt;());
 
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(target) = vec.get_mut(index) {
+                        target.clone_from(from);
+                        <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>);
+                    }
+
+                    VmResult::Ok(<span class="bool-val">false</span>)
+                }
+                runtime::OwnedTuple::HASH =&gt; {
+                    <span class="kw">let </span><span class="kw-2">mut </span>tuple = <span class="macro">vm_try!</span>(value.borrow_mut::&lt;runtime::OwnedTuple&gt;());
+
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(target) = tuple.get_mut(index) {
                         target.clone_from(from);
                         <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>);
                     }
@@ -5321,7 +5356,6 @@
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
             BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span>(ty, <span class="kw-2">&amp;*</span>value) {
-                (TypeCheck::Tuple, Mutable::Tuple(tuple)) =&gt; <span class="prelude-val">Some</span>(f(tuple)),
                 (TypeCheck::Result(v), Mutable::Result(result)) =&gt; <span class="kw">match </span>(v, result) {
                     (<span class="number">0</span>, <span class="prelude-val">Ok</span>(ok)) =&gt; <span class="prelude-val">Some</span>(f(slice::from_ref(ok))),
                     (<span class="number">1</span>, <span class="prelude-val">Err</span>(err)) =&gt; <span class="prelude-val">Some</span>(f(slice::from_ref(err))),
@@ -5338,6 +5372,10 @@
                 (TypeCheck::Vec, runtime::Vec::HASH) =&gt; {
                     <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;runtime::Vec&gt;());
                     <span class="prelude-val">Some</span>(f(<span class="kw-2">&amp;</span>vec))
+                }
+                (TypeCheck::Tuple, runtime::OwnedTuple::HASH) =&gt; {
+                    <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;runtime::OwnedTuple&gt;());
+                    <span class="prelude-val">Some</span>(f(<span class="kw-2">&amp;</span>tuple))
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
@@ -6209,11 +6247,9 @@
             .map(take)
             .try_collect::&lt;alloc::Vec&lt;Value&gt;&gt;());
 
-        <span class="macro">vm_try!</span>(
-            out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || VmResult::Ok(Mutable::Tuple(<span class="macro">vm_try!</span>(
-                OwnedTuple::try_from(tuple)
-            ))))
-        );
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || VmResult::Ok(<span class="macro">vm_try!</span>(
+            OwnedTuple::try_from(tuple)
+        ))));
 
         VmResult::Ok(())
     }
@@ -6228,11 +6264,9 @@
             <span class="macro">vm_try!</span>(tuple.try_push(value));
         }
 
-        <span class="macro">vm_try!</span>(
-            out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || VmResult::Ok(Mutable::Tuple(<span class="macro">vm_try!</span>(
-                OwnedTuple::try_from(tuple)
-            ))))
-        );
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || VmResult::Ok(<span class="macro">vm_try!</span>(
+            OwnedTuple::try_from(tuple)
+        ))));
 
         VmResult::Ok(())
     }
@@ -7386,7 +7420,6 @@
                 <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
             },
             BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span>(type_check, <span class="kw-2">&amp;*</span>value) {
-                (TypeCheck::Tuple, Mutable::Tuple(..)) =&gt; <span class="bool-val">true</span>,
                 (TypeCheck::Result(v), Mutable::Result(result)) =&gt; <span class="kw">match </span>(v, result) {
                     (<span class="number">0</span>, <span class="prelude-val">Ok</span>(..)) =&gt; <span class="bool-val">true</span>,
                     (<span class="number">1</span>, <span class="prelude-val">Err</span>(..)) =&gt; <span class="bool-val">true</span>,
@@ -7401,6 +7434,7 @@
             },
             BorrowRefRepr::Any(value) =&gt; <span class="kw">match </span>(type_check, value.type_hash()) {
                 (TypeCheck::Vec, runtime::Vec::HASH) =&gt; <span class="bool-val">true</span>,
+                (TypeCheck::Tuple, runtime::OwnedTuple::HASH) =&gt; <span class="bool-val">true</span>,
                 <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
             },
         };

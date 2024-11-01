@@ -234,13 +234,56 @@
 <a href="#233" id="233">233</a>
 <a href="#234" id="234">234</a>
 <a href="#235" id="235">235</a>
-<a href="#236" id="236">236</a></pre></div><pre class="rust"><code><span class="doccomment">//! The [`Tuple`] fixed collection.
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a></pre></div><pre class="rust"><code><span class="doccomment">//! The [`Tuple`] fixed collection.
 
 </span><span class="kw">use </span>core::cmp::Ordering;
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::slice::Iter;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{EnvProtocolCaller, Hasher, Ref, Tuple, Value, Vec, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{
+    EnvProtocolCaller, Formatter, Hasher, OwnedTuple, Ref, Tuple, Value, Vec, VmResult,
+};
 <span class="kw">use crate</span>::{docstring, ContextError, Module};
 
 <span class="doccomment">/// The [`Tuple`] fixed collection.
@@ -278,7 +321,7 @@
 </span><span class="attr">#[rune::module(::std::tuple)]
 </span><span class="kw">pub fn </span>module() -&gt; <span class="prelude-ty">Result</span>&lt;Module, ContextError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>m = Module::from_meta(<span class="self">self</span>::module_meta)<span class="question-mark">?</span>;
-    m.ty::&lt;Tuple&gt;()<span class="question-mark">?</span>.docs(<span class="macro">docstring!</span> {
+    m.ty::&lt;OwnedTuple&gt;()<span class="question-mark">?</span>.docs(<span class="macro">docstring!</span> {
         <span class="doccomment">/// The tuple type.
     </span>})<span class="question-mark">?</span>;
     m.function_meta(len)<span class="question-mark">?</span>;
@@ -288,18 +331,22 @@
     m.function_meta(into_iter)<span class="question-mark">?</span>;
 
     m.function_meta(partial_eq__meta)<span class="question-mark">?</span>;
-    m.implement_trait::&lt;Tuple&gt;(<span class="macro">rune::item!</span>(::std::cmp::PartialEq))<span class="question-mark">?</span>;
+    m.implement_trait::&lt;OwnedTuple&gt;(<span class="macro">rune::item!</span>(::std::cmp::PartialEq))<span class="question-mark">?</span>;
 
     m.function_meta(eq__meta)<span class="question-mark">?</span>;
-    m.implement_trait::&lt;Tuple&gt;(<span class="macro">rune::item!</span>(::std::cmp::Eq))<span class="question-mark">?</span>;
+    m.implement_trait::&lt;OwnedTuple&gt;(<span class="macro">rune::item!</span>(::std::cmp::Eq))<span class="question-mark">?</span>;
 
     m.function_meta(partial_cmp__meta)<span class="question-mark">?</span>;
-    m.implement_trait::&lt;Tuple&gt;(<span class="macro">rune::item!</span>(::std::cmp::PartialOrd))<span class="question-mark">?</span>;
+    m.implement_trait::&lt;OwnedTuple&gt;(<span class="macro">rune::item!</span>(::std::cmp::PartialOrd))<span class="question-mark">?</span>;
 
     m.function_meta(cmp__meta)<span class="question-mark">?</span>;
-    m.implement_trait::&lt;Tuple&gt;(<span class="macro">rune::item!</span>(::std::cmp::Ord))<span class="question-mark">?</span>;
+    m.implement_trait::&lt;OwnedTuple&gt;(<span class="macro">rune::item!</span>(::std::cmp::Ord))<span class="question-mark">?</span>;
 
-    m.function_meta(hash)<span class="question-mark">?</span>;
+    m.function_meta(clone__meta)<span class="question-mark">?</span>;
+    m.implement_trait::&lt;OwnedTuple&gt;(<span class="macro">rune::item!</span>(::std::clone::Clone))<span class="question-mark">?</span>;
+
+    m.function_meta(hash__meta)<span class="question-mark">?</span>;
+    m.function_meta(string_debug__meta)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(m)
 }
 
@@ -466,8 +513,43 @@
 /// // Note: this is not guaranteed to be true forever, but it's true right now.
 /// assert_eq!(hash((0, 2, 3)), hash([0, 2, 3]));
 /// ```
-</span><span class="attr">#[rune::function(instance, protocol = HASH)]
+</span><span class="attr">#[rune::function(keep, instance, protocol = HASH)]
 </span><span class="kw">fn </span>hash(this: <span class="kw-2">&amp;</span>Tuple, hasher: <span class="kw-2">&amp;mut </span>Hasher) -&gt; VmResult&lt;()&gt; {
     Tuple::hash_with(this, hasher, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
+}
+
+<span class="doccomment">/// Clone a tuple.
+///
+/// # Examples
+///
+/// ```rune
+/// use std::ops::hash;
+///
+/// let a = (0, 2, 3);
+/// let b = a;
+/// let c = a.clone();
+///
+/// c.0 = 1;
+///
+/// assert_eq!(a, (0, 2, 3));
+/// assert_eq!(c, (1, 2, 3));
+/// ```
+</span><span class="attr">#[rune::function(keep, instance, protocol = CLONE)]
+</span><span class="kw">fn </span>clone(this: <span class="kw-2">&amp;</span>Tuple) -&gt; VmResult&lt;OwnedTuple&gt; {
+    VmResult::Ok(<span class="macro">vm_try!</span>(this.clone_with(<span class="kw-2">&amp;mut </span>EnvProtocolCaller)))
+}
+
+<span class="doccomment">/// Write a debug representation of a tuple.
+///
+/// # Examples
+///
+/// ```rune
+/// let a = (1, 2, 3);
+/// println!("{a:?}");
+/// ```
+</span><span class="attr">#[rune::function(keep, instance, protocol = STRING_DEBUG)]
+#[inline]
+</span><span class="kw">fn </span>string_debug(this: <span class="kw-2">&amp;</span>Tuple, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
+    this.string_debug_with(f, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
 }
 </code></pre></div></section></main></body></html>

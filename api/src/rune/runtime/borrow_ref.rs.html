@@ -122,12 +122,21 @@
 <a href="#121" id="121">121</a>
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::marker::PhantomData;
 <span class="kw">use </span>core::ops::Deref;
 <span class="kw">use </span>core::ptr::NonNull;
 
-<span class="kw">use </span><span class="kw">super</span>::AccessGuard;
+<span class="kw">use </span><span class="kw">super</span>::RawAccessGuard;
 
 <span class="doccomment">/// Guard for a data borrowed from a slot in the virtual machine.
 ///
@@ -135,11 +144,20 @@
 /// access depending on what we do. Releasing the guard releases the access.
 </span><span class="kw">pub struct </span>BorrowRef&lt;<span class="lifetime">'a</span>, T: <span class="question-mark">?</span>Sized + <span class="lifetime">'a</span>&gt; {
     data: NonNull&lt;T&gt;,
-    guard: AccessGuard&lt;<span class="lifetime">'a</span>&gt;,
+    guard: <span class="prelude-ty">Option</span>&lt;RawAccessGuard&gt;,
     _marker: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T: <span class="question-mark">?</span>Sized&gt; BorrowRef&lt;<span class="lifetime">'a</span>, T&gt; {
+    <span class="doccomment">/// Construct a borrow ref from static data.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_static(data: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>T) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            data: NonNull::from(data),
+            guard: <span class="prelude-val">None</span>,
+            _marker: PhantomData,
+        }
+    }
+
     <span class="doccomment">/// Construct a new shared guard.
     ///
     /// # Safety
@@ -148,10 +166,10 @@
     /// ensure that access has been acquired correctly using e.g.
     /// [Access::shared]. Otherwise access can be release incorrectly once
     /// this guard is dropped.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>new(data: NonNull&lt;T&gt;, guard: AccessGuard&lt;<span class="lifetime">'a</span>&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>new(data: NonNull&lt;T&gt;, guard: RawAccessGuard) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             data,
-            guard,
+            guard: <span class="prelude-val">Some</span>(guard),
             _marker: PhantomData,
         }
     }
