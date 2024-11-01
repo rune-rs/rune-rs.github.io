@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["hash","item","params","protocol","raw_str"]};
+window.SIDEBAR_ITEMS = {"mod":["hash","item","params","protocol"]};

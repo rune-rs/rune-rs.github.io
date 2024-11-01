@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/type_of.rs`."><title>type_of.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>type_of.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/type_of.rs`."><title>type_of.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (a0d98ff0e 2024-10-31)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>type_of.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -222,10 +222,34 @@
 <a href="#221" id="221">221</a>
 <a href="#222" id="222">222</a>
 <a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc;
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::compile::meta;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Mut, Ref, Shared, TypeInfo};
 <span class="kw">use </span><span class="kw">crate</span>::Hash;
+
+<span class="kw">use super</span>::{AnyTypeInfo, Mut, Ref, Shared, StaticType, TypeInfo};
 
 <span class="doccomment">/// Static type hash for a given type.
 ///
@@ -283,6 +307,39 @@
     <span class="kw">const </span>HASH: Hash = T::HASH;
 }
 
+<span class="doccomment">/// Static type information.
+</span><span class="attr">#[derive(Clone, Copy)]
+</span><span class="kw">pub struct </span>StaticTypeInfo {
+    kind: StaticTypeInfoKind,
+}
+
+<span class="kw">impl </span>StaticTypeInfo {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>into_kind(<span class="self">self</span>) -&gt; StaticTypeInfoKind {
+        <span class="self">self</span>.kind
+    }
+
+    <span class="attr">#[doc(hidden)]
+    </span><span class="kw">pub const fn </span>static_type(ty: StaticType) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            kind: StaticTypeInfoKind::StaticType(ty),
+        }
+    }
+
+    <span class="attr">#[doc(hidden)]
+    </span><span class="kw">pub const fn </span>any_type_info(ty: AnyTypeInfo) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            kind: StaticTypeInfoKind::AnyTypeInfo(ty),
+        }
+    }
+}
+
+<span class="attr">#[derive(Clone, Copy)]
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>StaticTypeInfoKind {
+    StaticType(StaticType),
+    AnyTypeInfo(AnyTypeInfo),
+}
+
 <span class="doccomment">/// Trait used for Rust types for which we can determine the runtime type of.
 </span><span class="kw">pub trait </span>TypeOf: TypeHash {
     <span class="doccomment">/// Type parameters for the type.
@@ -292,14 +349,23 @@
     /// [`ParametersBuilder`]: crate::hash::ParametersBuilder
     </span><span class="kw">const </span>PARAMETERS: Hash = Hash::EMPTY;
 
-    <span class="doccomment">/// Diagnostical type information for the current type.
+    <span class="doccomment">/// Access diagnostical type information for the current type.
     ///
-    /// Has reasonable [`Debug`] and [`Display`] implementations to identify a
-    /// given type.
+    /// This can be easily converted to a [`TypeInfo`] struct which provides
+    /// human-readable diagnostics that has a reasonable [`Display`] and
+    /// [`Debug`] implementation for humans.
+    ///
+    /// See [`Self::type_info()`].
     ///
     /// [`Debug`]: core::fmt::Debug
     /// [`Display`]: core::fmt::Display
-    </span><span class="kw">fn </span>type_info() -&gt; TypeInfo;
+    </span><span class="kw">const </span>STATIC_TYPE_INFO: StaticTypeInfo;
+
+    <span class="attr">#[inline]
+    </span><span class="doccomment">/// Get type info associated with the current type.
+    </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
+        TypeInfo::from(<span class="self">Self</span>::STATIC_TYPE_INFO)
+    }
 }
 
 <span class="doccomment">/// A type that might or might not have a concrete type.
@@ -364,11 +430,7 @@
     </span>T: <span class="question-mark">?</span>Sized + TypeOf,
 {
     <span class="kw">const </span>PARAMETERS: Hash = T::PARAMETERS;
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
-        T::type_info()
-    }
+    <span class="kw">const </span>STATIC_TYPE_INFO: StaticTypeInfo = T::STATIC_TYPE_INFO;
 }
 
 <span class="doccomment">/// Blanket implementation for mutable references.
@@ -377,11 +439,7 @@
     </span>T: <span class="question-mark">?</span>Sized + TypeOf,
 {
     <span class="kw">const </span>PARAMETERS: Hash = T::PARAMETERS;
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
-        T::type_info()
-    }
+    <span class="kw">const </span>STATIC_TYPE_INFO: StaticTypeInfo = T::STATIC_TYPE_INFO;
 }
 
 <span class="doccomment">/// Blanket implementation for owned references.
@@ -398,11 +456,7 @@
     </span>T: <span class="question-mark">?</span>Sized + TypeOf,
 {
     <span class="kw">const </span>PARAMETERS: Hash = T::PARAMETERS;
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
-        T::type_info()
-    }
+    <span class="kw">const </span>STATIC_TYPE_INFO: StaticTypeInfo = T::STATIC_TYPE_INFO;
 }
 
 <span class="doccomment">/// Blanket implementation for owned mutable references.
@@ -419,11 +473,7 @@
     </span>T: <span class="question-mark">?</span>Sized + TypeOf,
 {
     <span class="kw">const </span>PARAMETERS: Hash = T::PARAMETERS;
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
-        T::type_info()
-    }
+    <span class="kw">const </span>STATIC_TYPE_INFO: StaticTypeInfo = T::STATIC_TYPE_INFO;
 }
 
 <span class="doccomment">/// Blanket implementation for owned shared values.
@@ -440,10 +490,6 @@
     </span>T: <span class="question-mark">?</span>Sized + TypeOf,
 {
     <span class="kw">const </span>PARAMETERS: Hash = T::PARAMETERS;
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>type_info() -&gt; TypeInfo {
-        T::type_info()
-    }
+    <span class="kw">const </span>STATIC_TYPE_INFO: StaticTypeInfo = T::STATIC_TYPE_INFO;
 }
 </code></pre></div></section></main></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value/inline.rs`."><title>inline.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/value/</div>inline.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value/inline.rs`."><title>inline.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (a0d98ff0e 2024-10-31)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/value/</div>inline.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -217,7 +217,8 @@
 <a href="#216" id="216">216</a>
 <a href="#217" id="217">217</a>
 <a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any;
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any;
 <span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 
@@ -228,6 +229,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
     static_type, Protocol, RuntimeError, Type, TypeInfo, VmErrorKind, VmIntegerRepr, VmResult,
 };
+<span class="kw">use </span><span class="kw">crate</span>::TypeHash;
 
 <span class="kw">use </span><span class="kw">super</span>::err;
 
@@ -409,13 +411,13 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
         <span class="kw">match </span><span class="self">self </span>{
             Inline::Unit =&gt; TypeInfo::static_type(static_type::TUPLE),
-            Inline::Bool(..) =&gt; TypeInfo::static_type(static_type::BOOL),
-            Inline::Char(..) =&gt; TypeInfo::static_type(static_type::CHAR),
-            Inline::Unsigned(..) =&gt; TypeInfo::static_type(static_type::UNSIGNED),
-            Inline::Signed(..) =&gt; TypeInfo::static_type(static_type::SIGNED),
-            Inline::Float(..) =&gt; TypeInfo::static_type(static_type::FLOAT),
+            Inline::Bool(..) =&gt; TypeInfo::named::&lt;bool&gt;(),
+            Inline::Char(..) =&gt; TypeInfo::named::&lt;char&gt;(),
+            Inline::Unsigned(..) =&gt; TypeInfo::named::&lt;u64&gt;(),
+            Inline::Signed(..) =&gt; TypeInfo::named::&lt;i64&gt;(),
+            Inline::Float(..) =&gt; TypeInfo::named::&lt;f64&gt;(),
             Inline::Type(..) =&gt; TypeInfo::static_type(static_type::TYPE),
-            Inline::Ordering(..) =&gt; TypeInfo::static_type(static_type::ORDERING),
+            Inline::Ordering(..) =&gt; TypeInfo::named::&lt;Ordering&gt;(),
         }
     }
 
@@ -426,13 +428,13 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
         <span class="kw">match </span><span class="self">self </span>{
             Inline::Unit =&gt; static_type::TUPLE.hash,
-            Inline::Bool(..) =&gt; static_type::BOOL.hash,
-            Inline::Char(..) =&gt; static_type::CHAR.hash,
-            Inline::Signed(..) =&gt; static_type::SIGNED.hash,
-            Inline::Unsigned(..) =&gt; static_type::UNSIGNED.hash,
-            Inline::Float(..) =&gt; static_type::FLOAT.hash,
+            Inline::Bool(..) =&gt; bool::HASH,
+            Inline::Char(..) =&gt; char::HASH,
+            Inline::Signed(..) =&gt; i64::HASH,
+            Inline::Unsigned(..) =&gt; u64::HASH,
+            Inline::Float(..) =&gt; f64::HASH,
             Inline::Type(..) =&gt; static_type::TYPE.hash,
-            Inline::Ordering(..) =&gt; static_type::ORDERING.hash,
+            Inline::Ordering(..) =&gt; Ordering::HASH,
         }
     }
 }

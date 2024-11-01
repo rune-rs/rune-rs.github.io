@@ -130,7 +130,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_26(arg0, arg1, arg2) {
-      wasm$1.closure1024_externref_shim(arg0, arg1, arg2);
+      wasm$1.closure1181_externref_shim(arg0, arg1, arg2);
   }
 
   /**
@@ -160,7 +160,7 @@ var rune = (function (exports) {
       }
   }
   function __wbg_adapter_60(arg0, arg1, arg2, arg3) {
-      wasm$1.closure234_externref_shim(arg0, arg1, arg2, arg3);
+      wasm$1.closure260_externref_shim(arg0, arg1, arg2, arg3);
   }
 
   function notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }
@@ -209,6 +209,18 @@ var rune = (function (exports) {
           const ret = arg0.call(arg1, arg2);
           return ret;
       }, arguments) };
+      imports.wbg.__wbg_text_ebeee8b31af4c919 = function() { return handleError(function (arg0) {
+          const ret = arg0.text();
+          return ret;
+      }, arguments) };
+      imports.wbg.__wbindgen_string_get = function(arg0, arg1) {
+          const obj = arg1;
+          const ret = typeof(obj) === 'string' ? obj : undefined;
+          var ptr1 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm$1.__wbindgen_malloc, wasm$1.__wbindgen_realloc);
+          var len1 = WASM_VECTOR_LEN;
+          getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+          getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+      };
       imports.wbg.__wbg_new_e69b5f66fda8f13c = function() {
           const ret = new Object();
           return ret;
@@ -246,18 +258,6 @@ var rune = (function (exports) {
           }
           const ret = result;
           return ret;
-      };
-      imports.wbg.__wbg_text_ebeee8b31af4c919 = function() { return handleError(function (arg0) {
-          const ret = arg0.text();
-          return ret;
-      }, arguments) };
-      imports.wbg.__wbindgen_string_get = function(arg0, arg1) {
-          const obj = arg1;
-          const ret = typeof(obj) === 'string' ? obj : undefined;
-          var ptr1 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm$1.__wbindgen_malloc, wasm$1.__wbindgen_realloc);
-          var len1 = WASM_VECTOR_LEN;
-          getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
-          getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
       };
       imports.wbg.__wbindgen_cb_drop = function(arg0) {
           const obj = arg0.original;
@@ -412,8 +412,8 @@ var rune = (function (exports) {
           return ret;
       };
       imports.wbg.__wbg_queueMicrotask_c5419c06eab41e73 = typeof queueMicrotask == 'function' ? queueMicrotask : notDefined('queueMicrotask');
-      imports.wbg.__wbindgen_closure_wrapper5843 = function(arg0, arg1, arg2) {
-          const ret = makeMutClosure(arg0, arg1, 1025, __wbg_adapter_26);
+      imports.wbg.__wbindgen_closure_wrapper6012 = function(arg0, arg1, arg2) {
+          const ret = makeMutClosure(arg0, arg1, 1182, __wbg_adapter_26);
           return ret;
       };
       imports.wbg.__wbindgen_init_externref_table = function() {
@@ -498,7 +498,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-5e2c4f46.wasm";
+                  let path = "/js/assets/rune_wasm-2b6cdf13.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];

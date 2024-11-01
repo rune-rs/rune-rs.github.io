@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value.rs`."><title>value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (1e4f10ba6 2024-10-29)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>value.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value.rs`."><title>value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (a0d98ff0e 2024-10-31)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>value.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -2095,7 +2095,23 @@
 <a href="#2094" id="2094">2094</a>
 <a href="#2095" id="2095">2095</a>
 <a href="#2096" id="2096">2096</a>
-<a href="#2097" id="2097">2097</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2097" id="2097">2097</a>
+<a href="#2098" id="2098">2098</a>
+<a href="#2099" id="2099">2099</a>
+<a href="#2100" id="2100">2100</a>
+<a href="#2101" id="2101">2101</a>
+<a href="#2102" id="2102">2102</a>
+<a href="#2103" id="2103">2103</a>
+<a href="#2104" id="2104">2104</a>
+<a href="#2105" id="2105">2105</a>
+<a href="#2106" id="2106">2106</a>
+<a href="#2107" id="2107">2107</a>
+<a href="#2108" id="2108">2108</a>
+<a href="#2109" id="2109">2109</a>
+<a href="#2110" id="2110">2110</a>
+<a href="#2111" id="2111">2111</a>
+<a href="#2112" id="2112">2112</a>
+<a href="#2113" id="2113">2113</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>inline;
@@ -2132,7 +2148,7 @@
     ConstValueKind, DynGuardedArgs, EnvProtocolCaller, Formatter, FromValue, Function, Future,
     Generator, IntoOutput, Iterator, MaybeTypeOf, Mut, Object, OwnedTuple, Protocol,
     ProtocolCaller, RawAnyObjGuard, Ref, RuntimeError, Shared, Snapshot, Stream, Type, TypeInfo,
-    Variant, Vec, Vm, VmErrorKind, VmIntegerRepr, VmResult,
+    Variant, Vec, VmErrorKind, VmIntegerRepr, VmResult,
 };
 <span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">use super</span>::{Hasher, Tuple};
@@ -2438,8 +2454,10 @@
     /// provided requires out-of-line formatting. This must be cleared between
     /// calls and can be re-used.
     ///
-    /// You must use [Vm::with] to specify which virtual machine this function
+    /// You must use [`Vm::with`] to specify which virtual machine this function
     /// is called inside.
+    ///
+    /// [`Vm::with`]: crate::Vm::with
     ///
     /// # Panics
     ///
@@ -2500,8 +2518,10 @@
     ///
     /// This requires read access to the underlying value.
     ///
-    /// You must use [Vm::with] to specify which virtual machine this function
+    /// You must use [`Vm::with`] to specify which virtual machine this function
     /// is called inside.
+    ///
+    /// [`Vm::with`]: crate::Vm::with
     ///
     /// # Panics
     ///
@@ -2555,8 +2575,10 @@
 
     <span class="doccomment">/// Debug format the value using the [`STRING_DEBUG`] protocol.
     ///
-    /// You must use [Vm::with] to specify which virtual machine this function
+    /// You must use [`Vm::with`] to specify which virtual machine this function
     /// is called inside.
+    ///
+    /// [`Vm::with`]: crate::Vm::with
     ///
     /// # Panics
     ///
@@ -2661,8 +2683,10 @@
     <span class="doccomment">/// Convert value into an iterator using the [`Protocol::INTO_ITER`]
     /// protocol.
     ///
-    /// You must use [Vm::with] to specify which virtual machine this function
+    /// You must use [`Vm::with`] to specify which virtual machine this function
     /// is called inside.
+    ///
+    /// [`Vm::with`]: crate::Vm::with
     ///
     /// # Errors
     ///
@@ -2678,14 +2702,18 @@
 
     <span class="doccomment">/// Retrieves a human readable type name for the current value.
     ///
-    /// You must use [Vm::with] to specify which virtual machine this function
+    /// You must use [`Vm::with`] to specify which virtual machine this function
     /// is called inside.
+    ///
+    /// [`Vm::with`]: crate::Vm::with
     ///
     /// # Errors
     ///
     /// This function errors in case the provided type cannot be converted into
     /// a name without the use of a [`Vm`] and one is not provided through the
     /// environment.
+    ///
+    /// [`Vm`]: crate::Vm
     </span><span class="kw">pub fn </span>into_type_name(<span class="self">self</span>) -&gt; VmResult&lt;String&gt; {
         <span class="kw">let </span>hash = Hash::associated_function(<span class="macro">vm_try!</span>(<span class="self">self</span>.type_hash()), Protocol::INTO_TYPE_NAME);
 
@@ -2917,7 +2945,7 @@
 
     <span class="macro">into!</span> {
         <span class="doccomment">/// Coerce into a [`Generator`].
-        </span>Generator(Generator&lt;Vm&gt;),
+        </span>Generator(Generator),
         into_generator_ref,
         into_generator_mut,
         borrow_generator_ref,
@@ -2957,7 +2985,7 @@
 
     <span class="macro">into!</span> {
         <span class="doccomment">/// Coerce into a [`Stream`].
-        </span>Stream(Stream&lt;Vm&gt;),
+        </span>Stream(Stream),
         into_stream_ref,
         into_stream_mut,
         borrow_stream_ref,
@@ -2992,14 +3020,18 @@
     <span class="doccomment">/// Coerce into a future, or convert into a future using the
     /// [Protocol::INTO_FUTURE] protocol.
     ///
-    /// You must use [Vm::with] to specify which virtual machine this function
+    /// You must use [`Vm::with`] to specify which virtual machine this function
     /// is called inside.
+    ///
+    /// [`Vm::with`]: crate::Vm::with
     ///
     /// # Errors
     ///
     /// This function errors in case the provided type cannot be converted into
     /// a future without the use of a [`Vm`] and one is not provided through the
     /// environment.
+    ///
+    /// [`Vm`]: crate::Vm
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>into_future(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Future, RuntimeError&gt; {
         <span class="kw">let </span>target = <span class="kw">match </span><span class="self">self</span>.take_repr()<span class="question-mark">? </span>{
@@ -3984,9 +4016,9 @@
     Variant =&gt; Variant,
     Object =&gt; Object,
     Tuple =&gt; OwnedTuple,
-    Generator =&gt; Generator&lt;Vm&gt;,
+    Generator =&gt; Generator,
     Future =&gt; Future,
-    Stream =&gt; Stream&lt;Vm&gt;,
+    Stream =&gt; Stream,
 }
 
 <span class="macro">any_from!</span> {
@@ -4122,9 +4154,9 @@
     <span class="doccomment">/// A stored future.
     </span>Future(Future),
     <span class="doccomment">/// A Stream.
-    </span>Stream(Stream&lt;Vm&gt;),
+    </span>Stream(Stream),
     <span class="doccomment">/// A stored generator.
-    </span>Generator(Generator&lt;Vm&gt;),
+    </span>Generator(Generator),
     <span class="doccomment">/// An empty value indicating nothing.
     </span><span class="prelude-ty">Option</span>(<span class="prelude-ty">Option</span>&lt;Value&gt;),
     <span class="doccomment">/// A stored result in a slot.
