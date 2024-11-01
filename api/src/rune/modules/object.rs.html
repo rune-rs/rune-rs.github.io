@@ -153,13 +153,60 @@
 <a href="#152" id="152">152</a>
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a></pre></div><pre class="rust"><code><span class="doccomment">//! The dynamic [`Object`] container.
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a></pre></div><pre class="rust"><code><span class="doccomment">//! The dynamic [`Object`] container.
 
-</span><span class="kw">use </span>core::cmp::Ordering;
-
-<span class="kw">use crate as </span>rune;
+</span><span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::object::{RuneIter, RuneIterKeys, RuneValues};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{EnvProtocolCaller, Object, Protocol, Value, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{EnvProtocolCaller, Formatter, Object, Protocol, Value, VmResult};
 <span class="kw">use crate</span>::{ContextError, Module};
 
 <span class="doccomment">/// The dynamic [`Object`] container.
@@ -199,15 +246,10 @@
     m.function_meta(Object::len__meta)<span class="question-mark">?</span>;
     m.function_meta(Object::is_empty__meta)<span class="question-mark">?</span>;
     m.function_meta(Object::rune_insert)<span class="question-mark">?</span>;
-    m.function_meta(remove)<span class="question-mark">?</span>;
+    m.function_meta(remove__meta)<span class="question-mark">?</span>;
     m.function_meta(Object::clear__meta)<span class="question-mark">?</span>;
-    m.function_meta(contains_key)<span class="question-mark">?</span>;
-    m.function_meta(get)<span class="question-mark">?</span>;
-
-    m.function_meta(Object::rune_iter__meta)<span class="question-mark">?</span>;
-    m.function_meta(Object::rune_keys__meta)<span class="question-mark">?</span>;
-    m.function_meta(Object::rune_values__meta)<span class="question-mark">?</span>;
-    m.associated_function(Protocol::INTO_ITER, Object::rune_iter)<span class="question-mark">?</span>;
+    m.function_meta(contains_key__meta)<span class="question-mark">?</span>;
+    m.function_meta(get__meta)<span class="question-mark">?</span>;
 
     m.function_meta(partial_eq__meta)<span class="question-mark">?</span>;
     m.implement_trait::&lt;Object&gt;(<span class="macro">rune::item!</span>(::std::cmp::PartialEq))<span class="question-mark">?</span>;
@@ -215,11 +257,15 @@
     m.function_meta(eq__meta)<span class="question-mark">?</span>;
     m.implement_trait::&lt;Object&gt;(<span class="macro">rune::item!</span>(::std::cmp::Eq))<span class="question-mark">?</span>;
 
-    m.function_meta(partial_cmp__meta)<span class="question-mark">?</span>;
-    m.implement_trait::&lt;Object&gt;(<span class="macro">rune::item!</span>(::std::cmp::PartialOrd))<span class="question-mark">?</span>;
+    m.function_meta(clone__meta)<span class="question-mark">?</span>;
+    m.implement_trait::&lt;Object&gt;(<span class="macro">rune::item!</span>(::std::clone::Clone))<span class="question-mark">?</span>;
 
-    m.function_meta(cmp__meta)<span class="question-mark">?</span>;
-    m.implement_trait::&lt;Object&gt;(<span class="macro">rune::item!</span>(::std::cmp::Ord))<span class="question-mark">?</span>;
+    m.function_meta(debug_fmt__meta)<span class="question-mark">?</span>;
+
+    m.function_meta(Object::rune_iter__meta)<span class="question-mark">?</span>;
+    m.function_meta(Object::rune_keys__meta)<span class="question-mark">?</span>;
+    m.function_meta(Object::rune_values__meta)<span class="question-mark">?</span>;
+    m.associated_function(Protocol::INTO_ITER, Object::rune_iter)<span class="question-mark">?</span>;
 
     m.ty::&lt;RuneIter&gt;()<span class="question-mark">?</span>;
     m.function_meta(RuneIter::next__meta)<span class="question-mark">?</span>;
@@ -252,7 +298,7 @@
 /// let object = #{a: 42};
 /// assert!(object.contains_key("a"));
 /// ```
-</span><span class="attr">#[rune::function(instance)]
+</span><span class="attr">#[rune::function(keep, instance)]
 #[inline]
 </span><span class="kw">fn </span>contains_key(object: <span class="kw-2">&amp;</span>Object, key: <span class="kw-2">&amp;</span>str) -&gt; bool {
     object.contains_key(key)
@@ -268,7 +314,7 @@
 /// assert_eq!(object.remove("a"), Some(42));
 /// assert_eq!(object.remove("a"), None);
 /// ```
-</span><span class="attr">#[rune::function(instance)]
+</span><span class="attr">#[rune::function(keep, instance)]
 #[inline]
 </span><span class="kw">fn </span>remove(object: <span class="kw-2">&amp;mut </span>Object, key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;Value&gt; {
     object.remove(key)
@@ -283,29 +329,77 @@
 /// assert_eq!(object.get("a"), Some(42));
 /// assert_eq!(object.get("b"), None);
 /// ```
-</span><span class="attr">#[rune::function(instance)]
+</span><span class="attr">#[rune::function(keep, instance)]
 #[inline]
 </span><span class="kw">fn </span>get(object: <span class="kw-2">&amp;</span>Object, key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;Value&gt; {
     object.get(key).cloned()
 }
 
-<span class="attr">#[rune::function(keep, instance, protocol = PARTIAL_EQ)]
+<span class="doccomment">/// Test two objects for partial equality.
+///
+/// # Examples
+///
+/// ```rune
+/// let a = #{a: 42};
+/// let b = #{a: 43};
+///
+/// assert_eq!(a, a);
+/// assert_ne!(a, b);
+/// assert_ne!(b, a);
+/// ```
+</span><span class="attr">#[rune::function(keep, instance, protocol = PARTIAL_EQ)]
 </span><span class="kw">fn </span>partial_eq(this: <span class="kw-2">&amp;</span>Object, other: <span class="kw-2">&amp;</span>Object) -&gt; VmResult&lt;bool&gt; {
     Object::partial_eq_with(this, other, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
 }
 
-<span class="attr">#[rune::function(keep, instance, protocol = EQ)]
+<span class="doccomment">/// Test two objects for total equality.
+///
+/// # Examples
+///
+/// ```rune
+/// use std::ops::eq;
+///
+/// let a = #{a: 42};
+/// let b = #{a: 43};
+///
+/// assert_eq!(eq(a, a), true);
+/// assert_eq!(eq(a, b), false);
+/// assert_eq!(eq(b, a), false);
+/// ```
+</span><span class="attr">#[rune::function(keep, instance, protocol = EQ)]
 </span><span class="kw">fn </span>eq(this: <span class="kw-2">&amp;</span>Object, other: <span class="kw-2">&amp;</span>Object) -&gt; VmResult&lt;bool&gt; {
     Object::eq_with(this, other, Value::eq_with, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
 }
 
-<span class="attr">#[rune::function(keep, instance, protocol = PARTIAL_CMP)]
-</span><span class="kw">fn </span>partial_cmp(this: <span class="kw-2">&amp;</span>Object, other: <span class="kw-2">&amp;</span>Object) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Ordering&gt;&gt; {
-    Object::partial_cmp_with(this, other, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
+<span class="doccomment">/// Clones an object.
+///
+/// # Examples
+///
+/// ```rune
+/// let a = #{a: 42};
+/// let b = a.clone();
+/// assert_eq!(a, b);
+///
+/// b.b = 43;
+/// assert_ne!(a, b);
+/// ```
+</span><span class="attr">#[rune::function(keep, instance, protocol = CLONE)]
+</span><span class="kw">fn </span>clone(this: <span class="kw-2">&amp;</span>Object) -&gt; VmResult&lt;Object&gt; {
+    VmResult::Ok(<span class="macro">vm_try!</span>(this.try_clone()))
 }
 
-<span class="attr">#[rune::function(keep, instance, protocol = CMP)]
-</span><span class="kw">fn </span>cmp(this: <span class="kw-2">&amp;</span>Object, other: <span class="kw-2">&amp;</span>Object) -&gt; VmResult&lt;Ordering&gt; {
-    Object::cmp_with(this, other, <span class="kw-2">&amp;mut </span>EnvProtocolCaller)
+<span class="doccomment">/// Write a debug representation of an object.
+///
+/// # Examples
+///
+/// ```rune
+/// let a = #{a: 42, b: 43};
+///
+/// println!("{a:?}");
+/// ```
+</span><span class="attr">#[rune::function(keep, instance, protocol = DEBUG_FMT)]
+#[inline]
+</span><span class="kw">fn </span>debug_fmt(this: <span class="kw-2">&amp;</span>Object, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; VmResult&lt;()&gt; {
+    <span class="macro">vm_write!</span>(f, <span class="string">"{this:?}"</span>)
 }
 </code></pre></div></section></main></body></html>

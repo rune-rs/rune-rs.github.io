@@ -4103,7 +4103,24 @@
 <a href="#4102" id="4102">4102</a>
 <a href="#4103" id="4103">4103</a>
 <a href="#4104" id="4104">4104</a>
-<a href="#4105" id="4105">4105</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#4105" id="4105">4105</a>
+<a href="#4106" id="4106">4106</a>
+<a href="#4107" id="4107">4107</a>
+<a href="#4108" id="4108">4108</a>
+<a href="#4109" id="4109">4109</a>
+<a href="#4110" id="4110">4110</a>
+<a href="#4111" id="4111">4111</a>
+<a href="#4112" id="4112">4112</a>
+<a href="#4113" id="4113">4113</a>
+<a href="#4114" id="4114">4114</a>
+<a href="#4115" id="4115">4115</a>
+<a href="#4116" id="4116">4116</a>
+<a href="#4117" id="4117">4117</a>
+<a href="#4118" id="4118">4118</a>
+<a href="#4119" id="4119">4119</a>
+<a href="#4120" id="4120">4120</a>
+<a href="#4121" id="4121">4121</a>
+<a href="#4122" id="4122">4122</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -4937,28 +4954,45 @@
 
     <span class="doccomment">/// Implementation of getting a string index on an object-like type.
     </span><span class="kw">fn </span>try_object_like_index_get(target: <span class="kw-2">&amp;</span>Value, field: <span class="kw-2">&amp;</span>str) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
-        <span class="kw">let </span>BorrowRefRepr::Mutable(target) = <span class="macro">vm_try!</span>(target.borrow_ref_repr()) <span class="kw">else </span>{
-            <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
-        };
+        <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref_repr()) {
+            RefRepr::Inline(..) =&gt; VmResult::Ok(<span class="prelude-val">None</span>),
+            RefRepr::Mutable(target) =&gt; {
+                <span class="kw">let </span>target = <span class="macro">vm_try!</span>(target.borrow_ref());
 
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="kw-2">&amp;*</span>target {
-            Mutable::Object(target) =&gt; target.get(field),
-            Mutable::Struct(target) =&gt; target.get(field),
-            Mutable::Variant(variant) =&gt; <span class="kw">match </span>variant.data() {
-                VariantData::Struct(target) =&gt; target.get(field),
-                <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
+                <span class="kw">let </span>value = <span class="kw">match </span><span class="kw-2">&amp;*</span>target {
+                    Mutable::Struct(target) =&gt; target.get(field),
+                    Mutable::Variant(variant) =&gt; <span class="kw">match </span>variant.data() {
+                        VariantData::Struct(target) =&gt; variant.rtti.get_field(target, field),
+                        <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
+                    },
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
+                };
+
+                <span class="kw">let </span><span class="prelude-val">Some</span>(value) = value <span class="kw">else </span>{
+                    <span class="kw">return </span>err(VmErrorKind::MissingField {
+                        target: target.type_info(),
+                        field: <span class="macro">vm_try!</span>(field.try_to_owned()),
+                    });
+                };
+
+                VmResult::Ok(<span class="prelude-val">Some</span>(value.clone()))
+            }
+            RefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                Object::HASH =&gt; {
+                    <span class="kw">let </span>target = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;Object&gt;());
+
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(value) = target.get(field) <span class="kw">else </span>{
+                        <span class="kw">return </span>err(VmErrorKind::MissingField {
+                            target: TypeInfo::any::&lt;Object&gt;(),
+                            field: <span class="macro">vm_try!</span>(field.try_to_owned()),
+                        });
+                    };
+
+                    VmResult::Ok(<span class="prelude-val">Some</span>(value.clone()))
+                }
+                <span class="kw">_ </span>=&gt; VmResult::Ok(<span class="prelude-val">None</span>),
             },
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
-        };
-
-        <span class="kw">let </span><span class="prelude-val">Some</span>(value) = value <span class="kw">else </span>{
-            <span class="kw">return </span>err(VmErrorKind::MissingField {
-                target: target.type_info(),
-                field: <span class="macro">vm_try!</span>(field.try_to_owned()),
-            });
-        };
-
-        VmResult::Ok(<span class="prelude-val">Some</span>(value.clone()))
+        }
     }
 
     <span class="doccomment">/// Implementation of getting a string index on an object-like type.
@@ -5142,18 +5176,16 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>unsupported = <span class="bool-val">false</span>;
 
                 <span class="kw">let </span>result = BorrowMut::try_map(target, |value| {
-                    <span class="kw">match </span>value {
-                        Mutable::Object(target) =&gt; {
-                            <span class="kw">return </span>target.get_mut(field);
-                        }
-                        Mutable::Struct(target) =&gt; {
+                    <span class="kw">match </span><span class="kw-2">*</span>value {
+                        Mutable::Struct(<span class="kw-2">ref mut </span>target) =&gt; {
                             <span class="kw">return </span>target.get_mut(field);
                         }
                         Mutable::Variant(Variant {
-                            data: VariantData::Struct(st),
+                            <span class="kw-2">ref </span>rtti,
+                            data: VariantData::Struct(<span class="kw-2">ref mut </span>st),
                             ..
                         }) =&gt; {
-                            <span class="kw">return </span>st.get_mut(field);
+                            <span class="kw">return </span>rtti.get_field_mut(st, field);
                         }
                         <span class="kw">_ </span>=&gt; {}
                     }
@@ -5174,7 +5206,21 @@
                     }),
                 }
             }
-            RefRepr::Any(..) =&gt; VmResult::Ok(<span class="prelude-val">None</span>),
+            RefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                Object::HASH =&gt; {
+                    <span class="kw">let </span>object = <span class="macro">vm_try!</span>(value.borrow_mut::&lt;Object&gt;());
+
+                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(value) = BorrowMut::try_map(object, |object| object.get_mut(field)) {
+                        <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">Some</span>(value));
+                    }
+
+                    err(VmErrorKind::MissingField {
+                        target: value.type_info(),
+                        field: <span class="macro">vm_try!</span>(field.try_to_owned()),
+                    })
+                }
+                <span class="kw">_ </span>=&gt; VmResult::Ok(<span class="prelude-val">None</span>),
+            },
         }
     }
 
@@ -5265,24 +5311,19 @@
                 RefRepr::Inline(..) =&gt; {
                     <span class="kw">return </span>VmResult::Ok(CallResult::Unsupported(target.clone()));
                 }
-                RefRepr::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">&amp;mut *</span><span class="macro">vm_try!</span>(target.borrow_mut()) {
-                    Mutable::Object(object) =&gt; {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = object.get(index.as_str()) {
-                            <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
-                            <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
-                        }
-                    }
-                    Mutable::Struct(typed_object) =&gt; {
+                RefRepr::Mutable(target) =&gt; <span class="kw">match </span><span class="kw-2">*</span><span class="macro">vm_try!</span>(target.borrow_ref()) {
+                    Mutable::Struct(<span class="kw-2">ref </span>typed_object) =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = typed_object.get(index.as_str()) {
                             <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
                             <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
                         }
                     }
                     Mutable::Variant(Variant {
-                        data: VariantData::Struct(data),
+                        <span class="kw-2">ref </span>rtti,
+                        data: VariantData::Struct(<span class="kw-2">ref </span>data),
                         ..
                     }) =&gt; {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = data.get(index.as_str()) {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = rtti.get_field(data, index.as_str()) {
                             <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
                             <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
                         }
@@ -5291,7 +5332,17 @@
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
                 },
-                RefRepr::Any(..) =&gt; <span class="kw">break </span><span class="lifetime">'fallback</span>,
+                RefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                    Object::HASH =&gt; {
+                        <span class="kw">let </span>object = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;Object&gt;());
+
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = object.get(index.as_str()) {
+                            <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || value.clone()));
+                            <span class="kw">return </span>VmResult::Ok(CallResult::Ok(()));
+                        }
+                    }
+                    <span class="kw">_ </span>=&gt; <span class="kw">break </span><span class="lifetime">'fallback</span>,
+                },
             }
 
             <span class="kw">return </span>err(VmErrorKind::ObjectIndexMissing { slot });
@@ -5312,11 +5363,6 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>target = <span class="macro">vm_try!</span>(target.borrow_mut());
 
                 <span class="kw">match </span><span class="kw-2">&amp;mut *</span>target {
-                    Mutable::Object(object) =&gt; {
-                        <span class="kw">let </span>key = <span class="macro">vm_try!</span>(field.try_to_owned());
-                        <span class="macro">vm_try!</span>(object.insert(key, value.clone()));
-                        <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>);
-                    }
                     Mutable::Struct(object) =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = object.get_mut(field) {
                             v.clone_from(value);
@@ -5324,8 +5370,8 @@
                         }
                     }
                     Mutable::Variant(variant) =&gt; {
-                        <span class="kw">if let </span>VariantData::Struct(data) = variant.data_mut() {
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = data.get_mut(field) {
+                        <span class="kw">if let </span>VariantData::Struct(data) = <span class="kw-2">&amp;mut </span>variant.data {
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = variant.rtti.get_field_mut(data, field) {
                                 v.clone_from(value);
                                 <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>);
                             }
@@ -5341,7 +5387,15 @@
                     field: <span class="macro">vm_try!</span>(field.try_to_owned()),
                 })
             }
-            RefRepr::Any(..) =&gt; VmResult::Ok(<span class="bool-val">false</span>),
+            RefRepr::Any(target) =&gt; <span class="kw">match </span>target.type_hash() {
+                Object::HASH =&gt; {
+                    <span class="kw">let </span>key = <span class="macro">vm_try!</span>(field.try_to_owned());
+                    <span class="kw">let </span><span class="kw-2">mut </span>object = <span class="macro">vm_try!</span>(target.borrow_mut::&lt;Object&gt;());
+                    <span class="macro">vm_try!</span>(object.insert(key, value.clone()));
+                    VmResult::Ok(<span class="bool-val">true</span>)
+                }
+                <span class="kw">_ </span>=&gt; VmResult::Ok(<span class="bool-val">false</span>),
+            },
         }
     }
 
@@ -6998,7 +7052,7 @@
             <span class="macro">vm_try!</span>(object.insert(key, take(value)));
         }
 
-        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, Mutable::Object(object)));
+        <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, object));
         VmResult::Ok(())
     }
 
@@ -7055,36 +7109,24 @@
 
     <span class="doccomment">/// Operation to allocate an object struct.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_struct(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        addr: InstAddress,
-        hash: Hash,
-        slot: usize,
-        out: Output,
-    ) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>keys = <span class="macro">vm_try!</span>(<span class="self">self
-            </span>.unit
-            .lookup_object_keys(slot)
-            .ok_or(VmErrorKind::MissingStaticObjectKeys { slot }));
-
+    </span><span class="kw">fn </span>op_struct(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, hash: Hash, <span class="kw">_</span>: usize, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
             </span>.unit
             .lookup_rtti(hash)
             .ok_or(VmErrorKind::MissingRtti { hash }));
 
-        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vm_try!</span>(Object::with_capacity(keys.len()));
-        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, keys.len()));
+        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, rtti.fields.len()));
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vm_try!</span>(alloc::Vec::try_with_capacity(rtti.fields.len()));
 
-        <span class="kw">for </span>(key, value) <span class="kw">in </span>keys.iter().zip(values) {
-            <span class="kw">let </span>key = <span class="macro">vm_try!</span>(String::try_from(key.as_str()));
-            <span class="macro">vm_try!</span>(data.insert(key, take(value)));
+        <span class="kw">for </span>value <span class="kw">in </span>values {
+            <span class="macro">vm_try!</span>(data.try_push(take(value)));
         }
 
         <span class="macro">vm_try!</span>(out.store(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.stack,
             Mutable::Struct(Struct {
                 rtti: rtti.clone(),
-                data,
+                data: <span class="macro">vm_try!</span>(data.try_into()),
             })
         ));
 
@@ -7117,31 +7159,26 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         addr: InstAddress,
         hash: Hash,
-        slot: usize,
+        <span class="kw">_</span>: usize,
         out: Output,
     ) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>keys = <span class="macro">vm_try!</span>(<span class="self">self
-            </span>.unit
-            .lookup_object_keys(slot)
-            .ok_or(VmErrorKind::MissingStaticObjectKeys { slot }));
-
         <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
             </span>.unit
             .lookup_variant_rtti(hash)
             .ok_or(VmErrorKind::MissingVariantRtti { hash }));
 
-        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vm_try!</span>(Object::with_capacity(keys.len()));
-        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, keys.len()));
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vm_try!</span>(alloc::Vec::try_with_capacity(rtti.fields.len()));
+        <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, rtti.fields.len()));
 
-        <span class="kw">for </span>(key, value) <span class="kw">in </span>keys.iter().zip(values) {
-            <span class="kw">let </span>key = <span class="macro">vm_try!</span>(String::try_from(key.as_str()));
-            <span class="macro">vm_try!</span>(data.insert(key, take(value)));
+        <span class="kw">for </span>value <span class="kw">in </span>values {
+            <span class="macro">vm_try!</span>(data.try_push(take(value)));
         }
 
         <span class="macro">vm_try!</span>(out.store(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.stack,
-            Mutable::Variant(Variant::struct_(rtti.clone(), data))
+            Mutable::Variant(Variant::struct_(rtti.clone(), <span class="macro">vm_try!</span>(data.try_into())))
         ));
+
         VmResult::Ok(())
     }
 
@@ -7470,19 +7507,16 @@
 
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(value.borrow_ref_repr()) {
-            BorrowRefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value {
-                Mutable::Object(object) =&gt; {
-                    <span class="kw">let </span>keys = <span class="macro">vm_try!</span>(<span class="self">self
-                        </span>.unit
-                        .lookup_object_keys(slot)
-                        .ok_or(VmErrorKind::MissingStaticObjectKeys { slot }));
+        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(value.try_borrow_ref::&lt;Object&gt;()) {
+            <span class="prelude-val">Some</span>(object) =&gt; {
+                <span class="kw">let </span>keys = <span class="macro">vm_try!</span>(<span class="self">self
+                    </span>.unit
+                    .lookup_object_keys(slot)
+                    .ok_or(VmErrorKind::MissingStaticObjectKeys { slot }));
 
-                    test(object, keys, exact)
-                }
-                <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-            },
-            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+                test(<span class="kw-2">&amp;</span>object, keys, exact)
+            }
+            <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
         };
 
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));

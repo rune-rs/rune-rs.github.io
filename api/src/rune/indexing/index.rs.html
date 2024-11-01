@@ -1347,12 +1347,17 @@
 <a href="#1346" id="1346">1346</a>
 <a href="#1347" id="1347">1347</a>
 <a href="#1348" id="1348">1348</a>
-<a href="#1349" id="1349">1349</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::take;
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::take;
 
 <span class="kw">use </span>tracing::instrument_ast;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{HashMap, VecDeque};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::VecDeque;
 <span class="kw">use </span><span class="kw">crate</span>::ast::{<span class="self">self</span>, OptionSpanned, Spanned};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{
     <span class="self">self</span>, attrs, meta, Doc, DynLocation, ErrorKind, ItemMeta, Location, Visibility, WithSpan,
@@ -2685,14 +2690,19 @@
         ast::Fields::Empty =&gt; meta::Fields::Empty,
         ast::Fields::Unnamed(tuple) =&gt; meta::Fields::Unnamed(tuple.len()),
         ast::Fields::Named(st) =&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>fields = HashMap::try_with_capacity(st.len())<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>fields = Vec::try_with_capacity(st.len())<span class="question-mark">?</span>;
 
             <span class="kw">for </span>(position, (ast::Field { name, .. }, <span class="kw">_</span>)) <span class="kw">in </span>st.iter().enumerate() {
                 <span class="kw">let </span>name = name.resolve(cx)<span class="question-mark">?</span>;
-                fields.try_insert(name.try_into()<span class="question-mark">?</span>, meta::FieldMeta { position })<span class="question-mark">?</span>;
+                fields.try_push(meta::FieldMeta {
+                    name: name.try_into()<span class="question-mark">?</span>,
+                    position,
+                })<span class="question-mark">?</span>;
             }
 
-            meta::Fields::Named(meta::FieldsNamed { fields })
+            meta::Fields::Named(meta::FieldsNamed {
+                fields: fields.try_into()<span class="question-mark">?</span>,
+            })
         }
     })
 }

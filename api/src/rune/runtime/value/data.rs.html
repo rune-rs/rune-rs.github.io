@@ -143,17 +143,30 @@
 <a href="#142" id="142">142</a>
 <a href="#143" id="143">143</a>
 <a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::borrow::Borrow;
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::borrow::Borrow;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::hash;
+<span class="kw">use </span>core::mem::take;
 
 <span class="kw">use </span>rust_alloc::sync::Arc;
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Object, OwnedTuple, TypeInfo};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{OwnedTuple, TypeInfo};
 
-<span class="kw">use super</span>::{Hash, Rtti, Value};
+<span class="kw">use super</span>::{Rtti, Value};
 
 <span class="doccomment">/// A empty with a well-defined type.
 </span><span class="attr">#[derive(TryClone)]
@@ -233,59 +246,70 @@
 </span><span class="kw">pub struct </span>Struct {
     <span class="doccomment">/// The type hash of the object.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) rtti: Arc&lt;Rtti&gt;,
-    <span class="doccomment">/// Content of the object.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) data: Object,
+    <span class="doccomment">/// Contents of the object.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) data: Box&lt;[Value]&gt;,
 }
 
 <span class="kw">impl </span>Struct {
-    <span class="doccomment">/// Access runtime type information.
+    <span class="doccomment">/// Access struct rtti.
     </span><span class="kw">pub fn </span>rtti(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Rtti&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.rtti
     }
 
-    <span class="doccomment">/// Access underlying data.
-    </span><span class="kw">pub fn </span>data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Object {
+    <span class="doccomment">/// Access truct data.
+    </span><span class="kw">pub fn </span>data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[Value] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.data
     }
 
-    <span class="doccomment">/// Access underlying data mutably.
-    </span><span class="kw">pub fn </span>data_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Object {
+    <span class="doccomment">/// Access struct data mutably.
+    </span><span class="kw">pub fn </span>data_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[Value] {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.data
     }
 
+    <span class="doccomment">/// Get a field through the accessor.
+    </span><span class="kw">pub fn </span>get&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Value&gt;
+    <span class="kw">where
+        </span>Box&lt;str&gt;: Borrow&lt;Q&gt;,
+        Q: hash::Hash + Eq + <span class="question-mark">?</span>Sized,
+    {
+        <span class="self">self</span>.data.get(<span class="kw-2">*</span><span class="self">self</span>.rtti.fields.get(key)<span class="question-mark">?</span>)
+    }
+
+    <span class="doccomment">/// Get a field through the accessor.
+    </span><span class="kw">pub fn </span>get_mut&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Value&gt;
+    <span class="kw">where
+        </span>Box&lt;str&gt;: Borrow&lt;Q&gt;,
+        Q: hash::Hash + Eq + <span class="question-mark">?</span>Sized,
+    {
+        <span class="self">self</span>.data.get_mut(<span class="kw-2">*</span><span class="self">self</span>.rtti.fields.get(key)<span class="question-mark">?</span>)
+    }
+
     <span class="doccomment">/// Get type info for the typed object.
-    </span><span class="kw">pub fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
         TypeInfo::typed(<span class="self">self</span>.rtti.clone())
-    }
-
-    <span class="doccomment">/// Get the type hash of the object.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
-        <span class="self">self</span>.rtti.hash
-    }
-
-    <span class="doccomment">/// Get the given key in the object.
-    </span><span class="kw">pub fn </span>get&lt;Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, k: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Value&gt;
-    <span class="kw">where
-        </span>String: Borrow&lt;Q&gt;,
-        Q: <span class="question-mark">?</span>Sized + hash::Hash + Eq + Ord,
-    {
-        <span class="self">self</span>.data.get(k)
-    }
-
-    <span class="doccomment">/// Get the given mutable value by key in the object.
-    </span><span class="kw">pub fn </span>get_mut&lt;Q&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, k: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Value&gt;
-    <span class="kw">where
-        </span>String: Borrow&lt;Q&gt;,
-        Q: <span class="question-mark">?</span>Sized + hash::Hash + Eq + Ord,
-    {
-        <span class="self">self</span>.data.get_mut(k)
     }
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Struct {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="self">self</span>.data.debug_struct(<span class="kw-2">&amp;</span><span class="self">self</span>.rtti.item))
+        <span class="macro">write!</span>(f, <span class="string">"{} {{"</span>, <span class="self">self</span>.rtti.item)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>first = <span class="bool-val">true</span>;
+
+        <span class="kw">for </span>(index, field) <span class="kw">in </span><span class="self">self</span>.data.iter().enumerate() {
+            <span class="kw">let </span><span class="prelude-val">Some</span>((name, <span class="kw">_</span>)) = <span class="self">self</span>.rtti.fields.iter().find(|t| <span class="kw-2">*</span>t.<span class="number">1 </span>== index) <span class="kw">else </span>{
+                <span class="kw">continue</span>;
+            };
+
+            <span class="kw">if </span>!take(<span class="kw-2">&amp;mut </span>first) {
+                <span class="macro">write!</span>(f, <span class="string">", "</span>)<span class="question-mark">?</span>;
+            }
+
+            <span class="macro">write!</span>(f, <span class="string">"{name}: {field:?}"</span>)<span class="question-mark">?</span>;
+        }
+
+        <span class="macro">write!</span>(f, <span class="string">"}}"</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div></section></main></body></html>

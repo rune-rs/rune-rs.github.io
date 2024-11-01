@@ -491,7 +491,8 @@
 <a href="#490" id="490">490</a>
 <a href="#491" id="491">491</a>
 <a href="#492" id="492">492</a>
-<a href="#493" id="493">493</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">use </span>core::any;
@@ -632,7 +633,7 @@
             ConstValueKind::Bytes(..) =&gt; TypeInfo::any::&lt;Bytes&gt;(),
             ConstValueKind::Vec(..) =&gt; TypeInfo::any::&lt;runtime::Vec&gt;(),
             ConstValueKind::Tuple(..) =&gt; TypeInfo::any::&lt;OwnedTuple&gt;(),
-            ConstValueKind::Object(..) =&gt; TypeInfo::static_type(static_type::OBJECT),
+            ConstValueKind::Object(..) =&gt; TypeInfo::any::&lt;Object&gt;(),
             ConstValueKind::Option(..) =&gt; TypeInfo::static_type(static_type::OPTION),
             ConstValueKind::Struct(hash, ..) =&gt; {
                 TypeInfo::any_type_info(AnyTypeInfo::new(full_name, <span class="kw-2">*</span>hash))
@@ -734,17 +735,6 @@
                     <span class="prelude-val">Some</span>(some) =&gt; <span class="prelude-val">Some</span>(Box::try_new(<span class="self">Self</span>::from_value_ref(some)<span class="question-mark">?</span>)<span class="question-mark">?</span>),
                     <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
                 }),
-                Mutable::Object(<span class="kw-2">ref </span>object) =&gt; {
-                    <span class="kw">let </span><span class="kw-2">mut </span>const_object = HashMap::try_with_capacity(object.len())<span class="question-mark">?</span>;
-
-                    <span class="kw">for </span>(key, value) <span class="kw">in </span>object {
-                        <span class="kw">let </span>key = key.try_clone()<span class="question-mark">?</span>;
-                        <span class="kw">let </span>value = <span class="self">Self</span>::from_value_ref(value)<span class="question-mark">?</span>;
-                        const_object.try_insert(key, value)<span class="question-mark">?</span>;
-                    }
-
-                    ConstValueKind::Object(const_object)
-                }
                 value =&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(RuntimeError::from(VmErrorKind::ConstNotSupported {
                         actual: value.type_info(),
@@ -779,6 +769,18 @@
                     }
 
                     ConstValueKind::Tuple(const_tuple.try_into_boxed_slice()<span class="question-mark">?</span>)
+                }
+                Object::HASH =&gt; {
+                    <span class="kw">let </span>object = value.borrow_ref::&lt;Object&gt;()<span class="question-mark">?</span>;
+                    <span class="kw">let </span><span class="kw-2">mut </span>const_object = HashMap::try_with_capacity(object.len())<span class="question-mark">?</span>;
+
+                    <span class="kw">for </span>(key, value) <span class="kw">in </span>object.iter() {
+                        <span class="kw">let </span>key = key.try_clone()<span class="question-mark">?</span>;
+                        <span class="kw">let </span>value = <span class="self">Self</span>::from_value_ref(value)<span class="question-mark">?</span>;
+                        const_object.try_insert(key, value)<span class="question-mark">?</span>;
+                    }
+
+                    ConstValueKind::Object(const_object)
                 }
                 <span class="kw">_ </span>=&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(RuntimeError::from(VmErrorKind::ConstNotSupported {

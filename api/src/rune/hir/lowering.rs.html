@@ -1962,7 +1962,11 @@
 <a href="#1961" id="1961">1961</a>
 <a href="#1962" id="1962">1962</a>
 <a href="#1963" id="1963">1963</a>
-<a href="#1964" id="1964">1964</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::{replace, take};
+<a href="#1964" id="1964">1964</a>
+<a href="#1965" id="1965">1965</a>
+<a href="#1966" id="1966">1966</a>
+<a href="#1967" id="1967">1967</a>
+<a href="#1968" id="1968">1968</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::{replace, take};
 <span class="kw">use </span>core::ops::Neg;
 
 <span class="kw">use </span>num::ToPrimitive;
@@ -2254,11 +2258,15 @@
         }
     });
 
-    <span class="kw">let </span><span class="kw-2">mut </span>check_object_fields = |fields: <span class="kw-2">&amp;</span>HashMap&lt;<span class="kw">_</span>, meta::FieldMeta&gt;, item: <span class="kw-2">&amp;</span>Item| {
-        <span class="kw">let </span><span class="kw-2">mut </span>fields = fields.try_clone()<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>check_object_fields = |fields: <span class="kw-2">&amp;</span>[meta::FieldMeta], item: <span class="kw-2">&amp;</span>Item| {
+        <span class="kw">let </span><span class="kw-2">mut </span>named = HashMap::new();
+
+        <span class="kw">for </span>f <span class="kw">in </span>fields.iter() {
+            named.try_insert(f.name.as_ref(), f)<span class="question-mark">?</span>;
+        }
 
         <span class="kw">for </span>assign <span class="kw">in </span>assignments.iter_mut() {
-            <span class="kw">match </span>fields.remove(assign.key.<span class="number">1</span>) {
+            <span class="kw">match </span>named.remove(assign.key.<span class="number">1</span>) {
                 <span class="prelude-val">Some</span>(field_meta) =&gt; {
                     assign.position = <span class="prelude-val">Some</span>(field_meta.position);
                 }
@@ -2274,11 +2282,11 @@
             };
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(field) = fields.into_keys().next() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(field) = named.into_keys().next() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                 span,
                 ErrorKind::LitObjectMissingField {
-                    field,
+                    field: field.try_into()<span class="question-mark">?</span>,
                     item: item.try_to_owned()<span class="question-mark">?</span>,
                 },
             ));
@@ -2299,7 +2307,7 @@
                     fields: meta::Fields::Empty,
                     ..
                 } =&gt; {
-                    check_object_fields(<span class="kw-2">&amp;</span>HashMap::new(), item)<span class="question-mark">?</span>;
+                    check_object_fields(<span class="kw-2">&amp;</span>[], item)<span class="question-mark">?</span>;
                     hir::ExprObjectKind::EmptyStruct { hash: meta.hash }
                 }
                 meta::Kind::Struct {
@@ -3639,8 +3647,8 @@
         meta::Fields::Empty <span class="kw">if </span>open =&gt; HashSet::new(),
         meta::Fields::Named(st) =&gt; st
             .fields
-            .keys()
-            .try_cloned()
+            .iter()
+            .map(|f| f.name.try_clone())
             .try_collect::&lt;alloc::Result&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">??</span>,
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
     };

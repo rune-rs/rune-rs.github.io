@@ -2824,7 +2824,11 @@
 <a href="#2823" id="2823">2823</a>
 <a href="#2824" id="2824">2824</a>
 <a href="#2825" id="2825">2825</a>
-<a href="#2826" id="2826">2826</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::replace;
+<a href="#2826" id="2826">2826</a>
+<a href="#2827" id="2827">2827</a>
+<a href="#2828" id="2828">2828</a>
+<a href="#2829" id="2829">2829</a>
+<a href="#2830" id="2830">2830</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::num::NonZero;
 <span class="kw">use </span>core::ops::Neg;
 
@@ -4011,11 +4015,15 @@
     comma.at_most_one(cx)<span class="question-mark">?</span>;
     p.expect(<span class="macro">K!</span>[<span class="string">'}'</span>])<span class="question-mark">?</span>;
 
-    <span class="kw">let </span><span class="kw-2">mut </span>check_object_fields = |fields: <span class="kw-2">&amp;</span>HashMap&lt;<span class="kw">_</span>, meta::FieldMeta&gt;, item: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Item| {
-        <span class="kw">let </span><span class="kw-2">mut </span>fields = fields.try_clone()<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>check_object_fields = |fields: <span class="kw-2">&amp;</span>[meta::FieldMeta], item: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Item| {
+        <span class="kw">let </span><span class="kw-2">mut </span>named = HashMap::new();
+
+        <span class="kw">for </span>f <span class="kw">in </span>fields {
+            named.try_insert(f.name.as_ref(), f)<span class="question-mark">?</span>;
+        }
 
         <span class="kw">for </span>assign <span class="kw">in </span>assignments.iter_mut() {
-            <span class="kw">let </span><span class="prelude-val">Some</span>(meta) = fields.remove(assign.key.<span class="number">1</span>) <span class="kw">else </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(meta) = named.remove(assign.key.<span class="number">1</span>) <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                     assign.key.<span class="number">0</span>,
                     ErrorKind::LitObjectNotField {
@@ -4028,11 +4036,11 @@
             assign.position = <span class="prelude-val">Some</span>(meta.position);
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(field) = fields.into_keys().next() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(field) = named.into_keys().next() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                 p.span(),
                 ErrorKind::LitObjectMissingField {
-                    field,
+                    field: field.try_into()<span class="question-mark">?</span>,
                     item: item.try_to_owned()<span class="question-mark">?</span>,
                 },
             ));
@@ -4054,7 +4062,7 @@
                     fields: meta::Fields::Empty,
                     ..
                 } =&gt; {
-                    check_object_fields(<span class="kw-2">&amp;</span>HashMap::new(), item)<span class="question-mark">?</span>;
+                    check_object_fields(<span class="kw-2">&amp;</span>[], item)<span class="question-mark">?</span>;
                     hir::ExprObjectKind::EmptyStruct { hash: meta.hash }
                 }
                 meta::Kind::Struct {
@@ -5505,8 +5513,8 @@
         meta::Fields::Empty <span class="kw">if </span>open =&gt; HashSet::new(),
         meta::Fields::Named(st) =&gt; st
             .fields
-            .keys()
-            .try_cloned()
+            .iter()
+            .map(|f| f.name.try_clone())
             .try_collect::&lt;alloc::Result&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">??</span>,
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
     };

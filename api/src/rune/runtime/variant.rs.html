@@ -186,16 +186,23 @@
 <a href="#185" id="185">185</a>
 <a href="#186" id="186">186</a>
 <a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>::rust_alloc::sync::Arc;
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Object, OwnedTuple, ProtocolCaller, TypeInfo, Value, VariantRtti, Vec, VmResult,
-};
+<span class="kw">use </span><span class="kw">crate</span>::alloc::Box;
+
+<span class="kw">use super</span>::{Accessor, OwnedTuple, ProtocolCaller, TypeInfo, Value, VariantRtti, Vec, VmResult};
 
 <span class="doccomment">/// The variant of a type.
 </span><span class="attr">#[derive(TryClone)]
@@ -205,8 +212,17 @@
 }
 
 <span class="kw">impl </span>Variant {
+    <span class="doccomment">/// Construct a field accessor from this variant.
+    </span><span class="attr">#[doc(hidden)]
+    </span><span class="kw">pub fn </span>accessor&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[Value]) -&gt; Accessor&lt;<span class="lifetime">'a</span>&gt; {
+        Accessor {
+            fields: <span class="kw-2">&amp;</span><span class="self">self</span>.rtti.fields,
+            data,
+        }
+    }
+
     <span class="doccomment">/// Construct a unit variant.
-    </span><span class="kw">pub fn </span>unit(rtti: Arc&lt;VariantRtti&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unit(rtti: Arc&lt;VariantRtti&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             rtti,
             data: VariantData::Empty,
@@ -214,7 +230,7 @@
     }
 
     <span class="doccomment">/// Construct a tuple variant.
-    </span><span class="kw">pub fn </span>tuple(rtti: Arc&lt;VariantRtti&gt;, tuple: OwnedTuple) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>tuple(rtti: Arc&lt;VariantRtti&gt;, tuple: OwnedTuple) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             rtti,
             data: VariantData::Tuple(tuple),
@@ -222,7 +238,7 @@
     }
 
     <span class="doccomment">/// Construct a struct variant.
-    </span><span class="kw">pub fn </span>struct_(rtti: Arc&lt;VariantRtti&gt;, data: Object) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>struct_(rtti: Arc&lt;VariantRtti&gt;, data: Box&lt;[Value]&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             rtti,
             data: VariantData::Struct(data),
@@ -245,7 +261,7 @@
     }
 
     <span class="doccomment">/// Get type info for the variant.
-    </span><span class="kw">pub fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
         TypeInfo::variant(<span class="self">self</span>.rtti.clone())
     }
 
@@ -269,7 +285,7 @@
                 Vec::eq_with(a, b, Value::partial_eq_with, caller)
             }
             (VariantData::Struct(a), VariantData::Struct(b)) =&gt; {
-                Object::eq_with(a, b, Value::partial_eq_with, caller)
+                Vec::eq_with(a, b, Value::partial_eq_with, caller)
             }
             <span class="kw">_ </span>=&gt; VmResult::panic(<span class="string">"data mismatch between variants"</span>),
         }
@@ -291,7 +307,7 @@
                 Vec::eq_with(a, b, Value::eq_with, caller)
             }
             (VariantData::Struct(a), VariantData::Struct(b)) =&gt; {
-                Object::eq_with(a, b, Value::eq_with, caller)
+                Vec::eq_with(a, b, Value::eq_with, caller)
             }
             <span class="kw">_ </span>=&gt; VmResult::panic(<span class="string">"data mismatch between variants"</span>),
         }
@@ -315,9 +331,7 @@
         <span class="kw">match </span>(<span class="kw-2">&amp;</span>a.data, <span class="kw-2">&amp;</span>b.data) {
             (VariantData::Empty, VariantData::Empty) =&gt; VmResult::Ok(<span class="prelude-val">Some</span>(Ordering::Equal)),
             (VariantData::Tuple(a), VariantData::Tuple(b)) =&gt; Vec::partial_cmp_with(a, b, caller),
-            (VariantData::Struct(a), VariantData::Struct(b)) =&gt; {
-                Object::partial_cmp_with(a, b, caller)
-            }
+            (VariantData::Struct(a), VariantData::Struct(b)) =&gt; Vec::partial_cmp_with(a, b, caller),
             <span class="kw">_ </span>=&gt; VmResult::panic(<span class="string">"data mismatch between variants"</span>),
         }
     }
@@ -340,7 +354,7 @@
         <span class="kw">match </span>(<span class="kw-2">&amp;</span>a.data, <span class="kw-2">&amp;</span>b.data) {
             (VariantData::Empty, VariantData::Empty) =&gt; VmResult::Ok(Ordering::Equal),
             (VariantData::Tuple(a), VariantData::Tuple(b)) =&gt; Vec::cmp_with(a, b, caller),
-            (VariantData::Struct(a), VariantData::Struct(b)) =&gt; Object::cmp_with(a, b, caller),
+            (VariantData::Struct(a), VariantData::Struct(b)) =&gt; Vec::cmp_with(a, b, caller),
             <span class="kw">_ </span>=&gt; VmResult::panic(<span class="string">"data mismatch between variants"</span>),
         }
     }
@@ -352,7 +366,7 @@
     <span class="doccomment">/// A unit variant.
     </span>Empty,
     <span class="doccomment">/// A struct variant.
-    </span>Struct(Object),
+    </span>Struct(Box&lt;[Value]&gt;),
     <span class="doccomment">/// A tuple variant.
     </span>Tuple(OwnedTuple),
 }

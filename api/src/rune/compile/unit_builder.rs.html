@@ -904,7 +904,17 @@
 <a href="#903" id="903">903</a>
 <a href="#904" id="904">904</a>
 <a href="#905" id="905">905</a>
-<a href="#906" id="906">906</a></pre></div><pre class="rust"><code><span class="doccomment">//! A single execution unit in the runestick virtual machine.
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a></pre></div><pre class="rust"><code><span class="doccomment">//! A single execution unit in the runestick virtual machine.
 //!
 //! A unit consists of a sequence of instructions, and lookaside tables for
 //! metadata like function locations.
@@ -1224,6 +1234,7 @@
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
                     hash,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
+                    fields: HashMap::new(),
                 });
 
                 <span class="self">self</span>.constants
@@ -1254,6 +1265,7 @@
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
                     hash: meta.hash,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
+                    fields: HashMap::new(),
                 });
 
                 <span class="kw">if </span><span class="self">self
@@ -1310,6 +1322,7 @@
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
                     hash: meta.hash,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
+                    fields: HashMap::new(),
                 });
 
                 <span class="kw">if </span><span class="self">self
@@ -1349,12 +1362,16 @@
                     </span>.functions
                     .try_insert(meta.hash, signature)<span class="question-mark">?</span>;
             }
-            meta::Kind::Struct { .. } =&gt; {
+            meta::Kind::Struct {
+                fields: meta::Fields::Named(<span class="kw-2">ref </span>named),
+                ..
+            } =&gt; {
                 <span class="kw">let </span>hash = pool.item_type_hash(meta.item_meta.item);
 
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
                     hash,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
+                    fields: named.to_fields()<span class="question-mark">?</span>,
                 });
 
                 <span class="self">self</span>.constants
@@ -1380,6 +1397,7 @@
                     enum_hash,
                     hash: meta.hash,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
+                    fields: HashMap::new(),
                 });
 
                 <span class="kw">if </span><span class="self">self
@@ -1428,6 +1446,7 @@
                     enum_hash,
                     hash: meta.hash,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
+                    fields: HashMap::new(),
                 });
 
                 <span class="kw">if </span><span class="self">self
@@ -1472,7 +1491,7 @@
             }
             meta::Kind::Variant {
                 enum_hash,
-                fields: meta::Fields::Named(..),
+                fields: meta::Fields::Named(<span class="kw-2">ref </span>named),
                 ..
             } =&gt; {
                 <span class="kw">let </span>hash = pool.item_type_hash(meta.item_meta.item);
@@ -1481,6 +1500,7 @@
                     enum_hash,
                     hash,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
+                    fields: named.to_fields()<span class="question-mark">?</span>,
                 });
 
                 <span class="kw">if </span><span class="self">self

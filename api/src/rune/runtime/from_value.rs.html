@@ -469,7 +469,49 @@
 <a href="#468" id="468">468</a>
 <a href="#469" id="469">469</a>
 <a href="#470" id="470">470</a>
-<a href="#471" id="471">471</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
 <span class="kw">use </span><span class="kw">crate</span>::Any;
@@ -481,21 +523,29 @@
 <span class="doccomment">/// Derive macro for the [`FromValue`] trait for converting types from the
 /// dynamic `Value` container.
 ///
-/// # Examples
+/// This can be implemented for structs and variants.
 ///
-/// ```
-/// use rune::{FromValue, Vm};
+/// For structs, this will try to decode any struct-like data into the desired data type:
+///
+/// ```rust
 /// use std::sync::Arc;
+/// use rune::{FromValue, Vm};
 ///
-/// #[derive(FromValue)]
+/// #[derive(Debug, PartialEq, FromValue)]
 /// struct Foo {
-///     field: u64,
+///     a: u64,
+///     b: u64,
 /// }
 ///
 /// let mut sources = rune::sources! {
 ///     entry =&gt; {
+///         struct Foo {
+///             a,
+///             b,
+///         }
+///
 ///         pub fn main() {
-///             #{field: 42}
+///             Foo { a: 1, b: 2 }
 ///         }
 ///     }
 /// };
@@ -506,7 +556,41 @@
 /// let foo = vm.call(["main"], ())?;
 /// let foo: Foo = rune::from_value(foo)?;
 ///
-/// assert_eq!(foo.field, 42);
+/// assert_eq!(foo, Foo { a: 1, b: 2 });
+/// # Ok::&lt;_, rune::support::Error&gt;(())
+/// ```
+///
+/// For enums, the variant name of the rune-local variant is matched:
+///
+/// ```rust
+/// use std::sync::Arc;
+/// use rune::{FromValue, Vm};
+///
+/// #[derive(Debug, PartialEq, FromValue)]
+/// enum Enum {
+///     Variant(u32),
+///     Variant2 { a: u32, b: u32 },
+/// }
+///
+/// let mut sources = rune::sources! {
+///     entry =&gt; {
+///         enum Enum {
+///             Variant(a),
+///         }
+///
+///         pub fn main() {
+///             Enum::Variant(42)
+///         }
+///     }
+/// };
+///
+/// let unit = rune::prepare(&amp;mut sources).build()?;
+///
+/// let mut vm = Vm::without_runtime(Arc::new(unit));
+/// let foo = vm.call(["main"], ())?;
+/// let foo: Enum = rune::from_value(foo)?;
+///
+/// assert_eq!(foo, Enum::Variant(42));
 /// # Ok::&lt;_, rune::support::Error&gt;(())
 /// ```
 </span><span class="kw">pub use </span>rune_macros::FromValue;
@@ -887,7 +971,7 @@
                 </span>T: FromValue,
             {
                 <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
-                    <span class="kw">let </span>object = value.into_object()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>object = value.into_any::&lt;<span class="macro-nonterminal">$crate::runtime::Object</span>&gt;()<span class="question-mark">?</span>;
 
                     <span class="kw">let </span><span class="kw-2">mut </span>output = &lt;<span class="macro-nonterminal">$ty</span>&gt;::with_capacity(object.len());
 
@@ -914,7 +998,7 @@
             </span>T: FromValue,
         {
             <span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
-                <span class="kw">let </span>object = value.into_object()<span class="question-mark">?</span>;
+                <span class="kw">let </span>object = value.into_any::&lt;<span class="macro-nonterminal">$crate::runtime::Object</span>&gt;()<span class="question-mark">?</span>;
 
                 <span class="kw">let </span><span class="kw-2">mut </span>output = &lt;<span class="macro-nonterminal">$ty</span>&gt;::try_with_capacity(object.len())<span class="question-mark">?</span>;
 

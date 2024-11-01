@@ -2066,39 +2066,7 @@
 <a href="#2065" id="2065">2065</a>
 <a href="#2066" id="2066">2066</a>
 <a href="#2067" id="2067">2067</a>
-<a href="#2068" id="2068">2068</a>
-<a href="#2069" id="2069">2069</a>
-<a href="#2070" id="2070">2070</a>
-<a href="#2071" id="2071">2071</a>
-<a href="#2072" id="2072">2072</a>
-<a href="#2073" id="2073">2073</a>
-<a href="#2074" id="2074">2074</a>
-<a href="#2075" id="2075">2075</a>
-<a href="#2076" id="2076">2076</a>
-<a href="#2077" id="2077">2077</a>
-<a href="#2078" id="2078">2078</a>
-<a href="#2079" id="2079">2079</a>
-<a href="#2080" id="2080">2080</a>
-<a href="#2081" id="2081">2081</a>
-<a href="#2082" id="2082">2082</a>
-<a href="#2083" id="2083">2083</a>
-<a href="#2084" id="2084">2084</a>
-<a href="#2085" id="2085">2085</a>
-<a href="#2086" id="2086">2086</a>
-<a href="#2087" id="2087">2087</a>
-<a href="#2088" id="2088">2088</a>
-<a href="#2089" id="2089">2089</a>
-<a href="#2090" id="2090">2090</a>
-<a href="#2091" id="2091">2091</a>
-<a href="#2092" id="2092">2092</a>
-<a href="#2093" id="2093">2093</a>
-<a href="#2094" id="2094">2094</a>
-<a href="#2095" id="2095">2095</a>
-<a href="#2096" id="2096">2096</a>
-<a href="#2097" id="2097">2097</a>
-<a href="#2098" id="2098">2098</a>
-<a href="#2099" id="2099">2099</a>
-<a href="#2100" id="2100">2100</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2068" id="2068">2068</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>inline;
@@ -2107,7 +2075,7 @@
 <span class="kw">mod </span>serde;
 
 <span class="kw">mod </span>rtti;
-<span class="kw">pub use </span><span class="self">self</span>::rtti::{Rtti, VariantRtti};
+<span class="kw">pub use </span><span class="self">self</span>::rtti::{Accessor, Rtti, VariantRtti};
 
 <span class="kw">mod </span>data;
 <span class="kw">pub use </span><span class="self">self</span>::data::{EmptyStruct, Struct, TupleStruct};
@@ -2522,7 +2490,6 @@
                     });
                 }
                 RefRepr::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-                    Mutable::Object(value) =&gt; Mutable::Object(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Option(value) =&gt; Mutable::Option(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::Result(value) =&gt; Mutable::Result(<span class="macro">vm_try!</span>(value.try_clone())),
                     Mutable::EmptyStruct(value) =&gt; Mutable::EmptyStruct(<span class="macro">vm_try!</span>(value.try_clone())),
@@ -2584,9 +2551,6 @@
             };
 
             <span class="kw">match </span><span class="kw-2">&amp;*</span><span class="macro">vm_try!</span>(value.borrow_ref()) {
-                Mutable::Object(value) =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
-                }
                 Mutable::Option(value) =&gt; {
                     <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
                 }
@@ -2801,7 +2765,6 @@
                 value =&gt; <span class="prelude-val">Ok</span>(TypeValue::NotTypedInline(NotTypedInlineValue(value))),
             },
             OwnedRepr::Mutable(value) =&gt; <span class="kw">match </span>value {
-                Mutable::Object(object) =&gt; <span class="prelude-val">Ok</span>(TypeValue::Object(object)),
                 Mutable::EmptyStruct(empty) =&gt; <span class="prelude-val">Ok</span>(TypeValue::EmptyStruct(empty)),
                 Mutable::TupleStruct(tuple) =&gt; <span class="prelude-val">Ok</span>(TypeValue::TupleStruct(tuple)),
                 Mutable::Struct(object) =&gt; <span class="prelude-val">Ok</span>(TypeValue::Struct(object)),
@@ -2810,7 +2773,8 @@
             },
             OwnedRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                 OwnedTuple::HASH =&gt; <span class="prelude-val">Ok</span>(TypeValue::Tuple(value.downcast()<span class="question-mark">?</span>)),
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(TypeValue::NotTypedRef(NotTypedRefValue(value))),
+                Object::HASH =&gt; <span class="prelude-val">Ok</span>(TypeValue::Object(value.downcast()<span class="question-mark">?</span>)),
+                <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(TypeValue::NotTypedAnyObj(NotTypedAnyObj(value))),
             },
         }
     }
@@ -2901,16 +2865,6 @@
         borrow_struct_ref,
         borrow_struct_mut,
         into_struct,
-    }
-
-    <span class="macro">into!</span> {
-        <span class="doccomment">/// Coerce into a [`Object`].
-        </span>Object(Object),
-        into_object_ref,
-        into_object_mut,
-        borrow_object_ref,
-        borrow_object_mut,
-        into_object,
     }
 
     <span class="doccomment">/// Borrow as a tuple.
@@ -3267,12 +3221,7 @@
                     }
                     (Mutable::Struct(a), Mutable::Struct(b)) =&gt; {
                         <span class="kw">if </span>a.rtti.hash == b.rtti.hash {
-                            <span class="kw">return </span>Object::eq_with(
-                                <span class="kw-2">&amp;</span>a.data,
-                                <span class="kw-2">&amp;</span>b.data,
-                                Value::partial_eq_with,
-                                caller,
-                            );
+                            <span class="kw">return </span>Vec::eq_with(<span class="kw-2">&amp;</span>a.data, <span class="kw-2">&amp;</span>b.data, Value::partial_eq_with, caller);
                         }
                     }
                     (Mutable::Variant(a), Mutable::Variant(b)) =&gt; {
@@ -3426,9 +3375,6 @@
                 });
             }
             (BorrowRefRepr::Mutable(a), BorrowRefRepr::Mutable(b)) =&gt; <span class="kw">match </span>(<span class="kw-2">&amp;*</span>a, <span class="kw-2">&amp;*</span>b) {
-                (Mutable::Object(a), Mutable::Object(b)) =&gt; {
-                    <span class="kw">return </span>Object::eq_with(a, b, Value::eq_with, caller);
-                }
                 (Mutable::EmptyStruct(a), Mutable::EmptyStruct(b)) =&gt; {
                     <span class="kw">if </span>a.rtti.hash == b.rtti.hash {
                         <span class="comment">// NB: don't get any future ideas, this must fall through to
@@ -3446,7 +3392,7 @@
                 }
                 (Mutable::Struct(a), Mutable::Struct(b)) =&gt; {
                     <span class="kw">if </span>a.rtti.hash == b.rtti.hash {
-                        <span class="kw">return </span>Object::eq_with(<span class="kw-2">&amp;</span>a.data, <span class="kw-2">&amp;</span>b.data, Value::eq_with, caller);
+                        <span class="kw">return </span>Vec::eq_with(<span class="kw-2">&amp;</span>a.data, <span class="kw-2">&amp;</span>b.data, Value::eq_with, caller);
                     }
                 }
                 (Mutable::Variant(a), Mutable::Variant(b)) =&gt; {
@@ -3522,9 +3468,6 @@
                 })
             }
             (BorrowRefRepr::Mutable(a), BorrowRefRepr::Mutable(b)) =&gt; <span class="kw">match </span>(<span class="kw-2">&amp;*</span>a, <span class="kw-2">&amp;*</span>b) {
-                (Mutable::Object(a), Mutable::Object(b)) =&gt; {
-                    <span class="kw">return </span>Object::partial_cmp_with(a, b, caller);
-                }
                 (Mutable::EmptyStruct(a), Mutable::EmptyStruct(b)) =&gt; {
                     <span class="kw">if </span>a.rtti.hash == b.rtti.hash {
                         <span class="comment">// NB: don't get any future ideas, this must fall through to
@@ -3542,7 +3485,7 @@
                 }
                 (Mutable::Struct(a), Mutable::Struct(b)) =&gt; {
                     <span class="kw">if </span>a.rtti.hash == b.rtti.hash {
-                        <span class="kw">return </span>Object::partial_cmp_with(<span class="kw-2">&amp;</span>a.data, <span class="kw-2">&amp;</span>b.data, caller);
+                        <span class="kw">return </span>Vec::partial_cmp_with(<span class="kw-2">&amp;</span>a.data, <span class="kw-2">&amp;</span>b.data, caller);
                     }
                 }
                 (Mutable::Variant(a), Mutable::Variant(b)) =&gt; {
@@ -3611,9 +3554,6 @@
         ) {
             (BorrowRefRepr::Inline(a), BorrowRefRepr::Inline(b)) =&gt; <span class="kw">return </span>a.cmp(b),
             (BorrowRefRepr::Mutable(a), BorrowRefRepr::Mutable(b)) =&gt; <span class="kw">match </span>(<span class="kw-2">&amp;*</span>a, <span class="kw-2">&amp;*</span>b) {
-                (Mutable::Object(a), Mutable::Object(b)) =&gt; {
-                    <span class="kw">return </span>Object::cmp_with(a, b, caller);
-                }
                 (Mutable::EmptyStruct(a), Mutable::EmptyStruct(b)) =&gt; {
                     <span class="kw">if </span>a.rtti.hash == b.rtti.hash {
                         <span class="comment">// NB: don't get any future ideas, this must fall through to
@@ -3631,7 +3571,7 @@
                 }
                 (Mutable::Struct(a), Mutable::Struct(b)) =&gt; {
                     <span class="kw">if </span>a.rtti.hash == b.rtti.hash {
-                        <span class="kw">return </span>Object::cmp_with(<span class="kw-2">&amp;</span>a.data, <span class="kw-2">&amp;</span>b.data, caller);
+                        <span class="kw">return </span>Vec::cmp_with(<span class="kw-2">&amp;</span>a.data, <span class="kw-2">&amp;</span>b.data, caller);
                     }
                 }
                 (Mutable::Variant(a), Mutable::Variant(b)) =&gt; {
@@ -4003,7 +3943,6 @@
     TupleStruct =&gt; TupleStruct,
     Struct =&gt; Struct,
     Variant =&gt; Variant,
-    Object =&gt; Object,
 }
 
 <span class="macro">any_from!</span> {
@@ -4018,6 +3957,7 @@
     <span class="kw">super</span>::Stream,
     <span class="kw">super</span>::Function,
     <span class="kw">super</span>::Future,
+    <span class="kw">super</span>::Object,
 }
 
 <span class="macro">from_container!</span> {
@@ -4090,11 +4030,11 @@
 
 <span class="doccomment">/// Wrapper for an any ref value kind.
 </span><span class="attr">#[doc(hidden)]
-</span><span class="kw">pub struct </span>NotTypedRefValue(AnyObj);
+</span><span class="kw">pub struct </span>NotTypedAnyObj(AnyObj);
 
 <span class="doccomment">/// The coersion of a value into a typed value.
-</span><span class="attr">#[doc(hidden)]
-#[non_exhaustive]
+</span><span class="attr">#[non_exhaustive]
+#[doc(hidden)]
 </span><span class="kw">pub enum </span>TypeValue {
     <span class="doccomment">/// The unit value.
     </span>Unit,
@@ -4118,7 +4058,7 @@
     </span>NotTypedMutable(NotTypedMutableValue),
     <span class="doccomment">/// Not a typed value.
     </span><span class="attr">#[doc(hidden)]
-    </span>NotTypedRef(NotTypedRefValue),
+    </span>NotTypedAnyObj(NotTypedAnyObj),
 }
 
 <span class="kw">impl </span>TypeValue {
@@ -4128,21 +4068,19 @@
         <span class="kw">match </span><span class="self">self </span>{
             TypeValue::Unit =&gt; TypeInfo::any::&lt;OwnedTuple&gt;(),
             TypeValue::Tuple(..) =&gt; TypeInfo::any::&lt;OwnedTuple&gt;(),
-            TypeValue::Object(..) =&gt; TypeInfo::static_type(static_type::OBJECT),
+            TypeValue::Object(..) =&gt; TypeInfo::any::&lt;Object&gt;(),
             TypeValue::EmptyStruct(empty) =&gt; empty.type_info(),
             TypeValue::TupleStruct(tuple) =&gt; tuple.type_info(),
             TypeValue::Struct(object) =&gt; object.type_info(),
             TypeValue::Variant(empty) =&gt; empty.type_info(),
             TypeValue::NotTypedInline(value) =&gt; value.<span class="number">0</span>.type_info(),
             TypeValue::NotTypedMutable(value) =&gt; value.<span class="number">0</span>.type_info(),
-            TypeValue::NotTypedRef(value) =&gt; value.<span class="number">0</span>.type_info(),
+            TypeValue::NotTypedAnyObj(value) =&gt; value.<span class="number">0</span>.type_info(),
         }
     }
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Mutable {
-    <span class="doccomment">/// An object.
-    </span>Object(Object),
     <span class="doccomment">/// An empty value indicating nothing.
     </span><span class="prelude-ty">Option</span>(<span class="prelude-ty">Option</span>&lt;Value&gt;),
     <span class="doccomment">/// A stored result in a slot.
@@ -4160,7 +4098,6 @@
 <span class="kw">impl </span>Mutable {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
         <span class="kw">match </span><span class="self">self </span>{
-            Mutable::Object(..) =&gt; TypeInfo::static_type(static_type::OBJECT),
             Mutable::Option(..) =&gt; TypeInfo::static_type(static_type::OPTION),
             Mutable::Result(..) =&gt; TypeInfo::static_type(static_type::RESULT),
             Mutable::EmptyStruct(empty) =&gt; empty.type_info(),
@@ -4176,7 +4113,6 @@
     /// *enum*, and not the type hash of the variant itself.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
         <span class="kw">match </span><span class="self">self </span>{
-            Mutable::Object(..) =&gt; static_type::OBJECT.hash,
             Mutable::Result(..) =&gt; static_type::RESULT.hash,
             Mutable::Option(..) =&gt; static_type::OPTION.hash,
             Mutable::EmptyStruct(empty) =&gt; empty.rtti.hash,
