@@ -291,7 +291,61 @@
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
 <a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a></pre></div><pre class="rust"><code><span class="doccomment">//! &lt;img alt="rune logo" src="https://raw.githubusercontent.com/rune-rs/rune/main/assets/icon.png" /&gt;
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a></pre></div><pre class="rust"><code><span class="doccomment">//! &lt;img alt="rune logo" src="https://raw.githubusercontent.com/rune-rs/rune/main/assets/icon.png" /&gt;
 //! &lt;br&gt;
 //! &lt;a href="https://github.com/rune-rs/rune"&gt;&lt;img alt="github" src="https://img.shields.io/badge/github-rune--rs/rune-8da0cb?style=for-the-badge&amp;logo=github" height="20"&gt;&lt;/a&gt;
 //! &lt;a href="https://crates.io/crates/rune-macros"&gt;&lt;img alt="crates.io" src="https://img.shields.io/crates/v/rune-macros.svg?style=for-the-badge&amp;color=fc8d62&amp;logo=rust" height="20"&gt;&lt;/a&gt;
@@ -335,12 +389,14 @@
 <span class="kw">mod </span>module;
 <span class="kw">mod </span>opaque;
 <span class="kw">mod </span>parse;
+<span class="kw">mod </span>path_in;
 <span class="kw">mod </span>quote;
 <span class="kw">mod </span>spanned;
 <span class="kw">mod </span>to_tokens;
 <span class="kw">mod </span>to_value;
 
 <span class="kw">use </span><span class="self">self</span>::context::{Context, Tokens};
+<span class="kw">use </span>proc_macro2::TokenStream;
 
 <span class="attr">#[proc_macro]
 </span><span class="kw">pub fn </span>quote(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
@@ -469,7 +525,14 @@
 <span class="attr">#[proc_macro_derive(Any, attributes(rune))]
 </span><span class="kw">pub fn </span>any(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
     <span class="kw">let </span>derive = <span class="macro">syn::parse_macro_input!</span>(input <span class="kw">as </span>any::Derive);
-    Context::build(|cx| <span class="prelude-val">Ok</span>(derive.into_any_builder(cx)<span class="question-mark">?</span>.expand())).into()
+
+    <span class="kw">let </span>stream = Context::build(|cx| {
+        <span class="kw">let </span>attr = cx.type_attrs(<span class="kw-2">&amp;</span>derive.input.attrs);
+        <span class="kw">let </span>tokens = cx.tokens_with_module(attr.module.as_ref());
+        <span class="prelude-val">Ok</span>(derive.into_any_builder(cx, <span class="kw-2">&amp;</span>attr, <span class="kw-2">&amp;</span>tokens)<span class="question-mark">?</span>.expand())
+    });
+
+    stream.into()
 }
 
 <span class="attr">#[proc_macro_derive(ToConstValue, attributes(const_value))]
@@ -495,6 +558,20 @@
         <span class="kw">let </span>Tokens { hash, .. } = cx.tokens_with_module(<span class="prelude-val">None</span>);
         <span class="kw">let </span>value = args.build_type_hash(cx)<span class="question-mark">?</span>.into_inner();
         <span class="prelude-val">Ok</span>(<span class="macro">::quote::quote!</span>(#hash(#value)))
+    });
+
+    stream.into()
+}
+
+<span class="attr">#[doc(hidden)]
+#[proc_macro]
+</span><span class="kw">pub fn </span>hash_in(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
+    <span class="kw">let </span>path_in::PathIn { in_crate, item, .. } =
+        <span class="macro">syn::parse_macro_input!</span>(input <span class="kw">as </span>path_in::PathIn&lt;<span class="self">self</span>::hash::Arguments&gt;);
+
+    <span class="kw">let </span>stream = Context::build(|cx| {
+        <span class="kw">let </span>value = item.build_type_hash(cx)<span class="question-mark">?</span>.into_inner();
+        <span class="prelude-val">Ok</span>(<span class="macro">::quote::quote!</span>(#in_crate::Hash(#value)))
     });
 
     stream.into()
@@ -533,9 +610,40 @@
 
 <span class="attr">#[proc_macro]
 #[doc(hidden)]
-</span><span class="kw">pub fn </span>__internal_impl_any(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
+</span><span class="kw">pub fn </span>item_in(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
+    <span class="kw">let </span>path_in::PathIn { in_crate, item, .. } = <span class="macro">syn::parse_macro_input!</span>(input <span class="kw">as </span>path_in::PathIn);
+
+    <span class="kw">let </span>stream = <span class="kw">match </span><span class="self">self</span>::item::build_item(<span class="kw-2">&amp;</span>item) {
+        <span class="prelude-val">Ok</span>(hash) =&gt; {
+            <span class="macro">::quote::quote!</span>(<span class="kw">unsafe </span>{ #in_crate::Item::from_bytes(<span class="kw-2">&amp;</span>#hash) })
+        }
+        <span class="prelude-val">Err</span>(error) =&gt; to_compile_errors([error]),
+    };
+
+    stream.into()
+}
+
+<span class="doccomment">/// Helper to generate bindings for an external type.
+///
+/// This can *only* be used inside of the `rune` crate itself.
+</span><span class="attr">#[proc_macro]
+#[doc(hidden)]
+</span><span class="kw">pub fn </span>binding(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
     <span class="kw">let </span>derive = <span class="macro">syn::parse_macro_input!</span>(input <span class="kw">as </span>any::InternalCall);
-    Context::build_with_crate(|cx| <span class="prelude-val">Ok</span>(derive.into_any_builder(cx)<span class="question-mark">?</span>.expand())).into()
+
+    <span class="kw">let </span>stream = Context::build_with_crate(|cx| {
+        <span class="kw">let </span><span class="kw-2">mut </span>stream = TokenStream::default();
+        <span class="kw">let </span>attr = context::TypeAttr::default();
+        <span class="kw">let </span>tokens = cx.tokens_with_module(<span class="prelude-val">None</span>);
+
+        <span class="kw">for </span>builder <span class="kw">in </span>derive.into_any_builders(cx, <span class="kw-2">&amp;</span>attr, <span class="kw-2">&amp;</span>tokens) {
+            stream.extend(builder.expand());
+        }
+
+        <span class="prelude-val">Ok</span>(stream)
+    });
+
+    stream.into()
 }
 
 <span class="doccomment">/// Shim for an ignored `#[stable]` attribute.

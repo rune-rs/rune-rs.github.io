@@ -2064,9 +2064,7 @@
 <a href="#2063" id="2063">2063</a>
 <a href="#2064" id="2064">2064</a>
 <a href="#2065" id="2065">2065</a>
-<a href="#2066" id="2066">2066</a>
-<a href="#2067" id="2067">2067</a>
-<a href="#2068" id="2068">2068</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#2066" id="2066">2066</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">mod </span>inline;
@@ -2097,7 +2095,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime;
 <span class="kw">use crate</span>::{Any, Hash, TypeHash};
 
-<span class="kw">use </span><span class="kw">super</span>::static_type;
 <span class="kw">use super</span>::{
     AccessError, AnyObj, AnyObjDrop, BorrowMut, BorrowRef, CallResultOnly, ConstValue,
     ConstValueKind, DynGuardedArgs, EnvProtocolCaller, Formatter, FromValue, Future, IntoOutput,
@@ -3815,10 +3812,9 @@
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
-        <span class="comment">// SAFETY: Formatter does not outlive the string it references.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>o = <span class="kw">unsafe </span>{ Formatter::new(NonNull::from(<span class="kw-2">&amp;mut </span>s)) };
+        <span class="kw">let </span>result = Formatter::format_with(<span class="kw-2">&amp;mut </span>s, |f| <span class="self">self</span>.debug_fmt(f));
 
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="self">self</span>.debug_fmt(<span class="kw-2">&amp;mut </span>o).into_result() {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = result.into_result() {
             <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
                 Repr::Empty =&gt; {
                     <span class="macro">write!</span>(f, <span class="string">"&lt;empty: {e}&gt;"</span>)<span class="question-mark">?</span>;
@@ -4098,8 +4094,8 @@
 <span class="kw">impl </span>Mutable {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TypeInfo {
         <span class="kw">match </span><span class="self">self </span>{
-            Mutable::Option(..) =&gt; TypeInfo::static_type(static_type::OPTION),
-            Mutable::Result(..) =&gt; TypeInfo::static_type(static_type::RESULT),
+            Mutable::Result(..) =&gt; TypeInfo::any::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;(),
+            Mutable::Option(..) =&gt; TypeInfo::any::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;(),
             Mutable::EmptyStruct(empty) =&gt; empty.type_info(),
             Mutable::TupleStruct(tuple) =&gt; tuple.type_info(),
             Mutable::Struct(object) =&gt; object.type_info(),
@@ -4113,8 +4109,8 @@
     /// *enum*, and not the type hash of the variant itself.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
         <span class="kw">match </span><span class="self">self </span>{
-            Mutable::Result(..) =&gt; static_type::RESULT.hash,
-            Mutable::Option(..) =&gt; static_type::OPTION.hash,
+            Mutable::Result(..) =&gt; <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH,
+            Mutable::Option(..) =&gt; <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH,
             Mutable::EmptyStruct(empty) =&gt; empty.rtti.hash,
             Mutable::TupleStruct(tuple) =&gt; tuple.rtti.hash,
             Mutable::Struct(object) =&gt; object.rtti.hash,

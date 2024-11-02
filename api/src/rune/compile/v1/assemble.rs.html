@@ -3170,8 +3170,7 @@
 <a href="#3169" id="3169">3169</a>
 <a href="#3170" id="3170">3170</a>
 <a href="#3171" id="3171">3171</a>
-<a href="#3172" id="3172">3172</a>
-<a href="#3173" id="3173">3173</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#3172" id="3172">3172</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::take;
 <span class="kw">use </span>core::slice;
 
@@ -5690,10 +5689,6 @@
     <span class="kw">if let </span><span class="prelude-val">Some</span>(linear) =
         exprs_with(cx, span, hir.assignments, |hir| <span class="kw-2">&amp;</span>hir.assign)<span class="question-mark">?</span>.into_converging()
     {
-        <span class="kw">let </span>slot =
-            cx.q.unit
-                .new_static_object_keys_iter(span, hir.assignments.iter().map(|a| a.key.<span class="number">1</span>))<span class="question-mark">?</span>;
-
         <span class="kw">match </span>hir.kind {
             hir::ExprObjectKind::EmptyStruct { hash } =&gt; {
                 cx.asm.push(
@@ -5709,7 +5704,6 @@
                     Inst::Struct {
                         addr: linear.addr(),
                         hash,
-                        slot,
                         out: needs.alloc_output()<span class="question-mark">?</span>,
                     },
                     span,
@@ -5720,7 +5714,6 @@
                     Inst::StructVariant {
                         addr: linear.addr(),
                         hash,
-                        slot,
                         out: needs.alloc_output()<span class="question-mark">?</span>,
                     },
                     span,
@@ -5740,6 +5733,11 @@
                 )<span class="question-mark">?</span>;
             }
             hir::ExprObjectKind::Anonymous =&gt; {
+                <span class="kw">let </span>slot = cx
+                    .q
+                    .unit
+                    .new_static_object_keys_iter(span, hir.assignments.iter().map(|a| a.key.<span class="number">1</span>))<span class="question-mark">?</span>;
+
                 cx.asm.push(
                     Inst::Object {
                         addr: linear.addr(),

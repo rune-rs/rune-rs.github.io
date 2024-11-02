@@ -283,14 +283,34 @@
 <a href="#282" id="282">282</a>
 <a href="#283" id="283">283</a>
 <a href="#284" id="284">284</a>
-<a href="#285" id="285">285</a></pre></div><pre class="rust"><code><span class="doccomment">//! The [`Result`] type.
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a></pre></div><pre class="rust"><code><span class="doccomment">//! The [`Result`] type.
 
-</span><span class="kw">use </span>core::ptr::NonNull;
-
-<span class="kw">use crate as </span>rune;
+</span><span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{ControlFlow, Formatter, Function, Panic, Value, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{ControlFlow, Formatter, Function, Panic, Protocol, Value, VmResult};
 <span class="kw">use crate</span>::{ContextError, Module};
 
 <span class="doccomment">/// The [`Result`] type.
@@ -302,16 +322,35 @@
 
     <span class="comment">// Sorted for ease of finding
     </span><span class="kw">let </span><span class="kw-2">mut </span>result = module
-        .result(<span class="string">"Result"</span>)<span class="question-mark">?
-        </span>.static_docs(<span class="kw-2">&amp;</span>[<span class="string">"Result is a type that represents either success (Ok) or failure (Err)."</span>])<span class="question-mark">?</span>;
+        .ty::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;()<span class="question-mark">?
+        </span>.static_docs(<span class="kw-2">&amp;</span>[<span class="string">"Result is a type that represents either success (Ok) or failure (Err)."</span>])<span class="question-mark">?
+        </span>.make_enum(<span class="kw-2">&amp;</span>[<span class="string">"Ok"</span>, <span class="string">"Err"</span>])<span class="question-mark">?</span>;
 
     result
         .variant_mut(<span class="number">0</span>)<span class="question-mark">?
+        </span>.make_unnamed(<span class="number">1</span>)<span class="question-mark">?
+        </span>.constructor(Result::Ok)<span class="question-mark">?
         </span>.static_docs(<span class="kw-2">&amp;</span>[<span class="string">"Contains the success value"</span>])<span class="question-mark">?</span>;
 
     result
         .variant_mut(<span class="number">1</span>)<span class="question-mark">?
+        </span>.make_unnamed(<span class="number">1</span>)<span class="question-mark">?
+        </span>.constructor(Result::Err)<span class="question-mark">?
         </span>.static_docs(<span class="kw-2">&amp;</span>[<span class="string">"Contains the error value"</span>])<span class="question-mark">?</span>;
+
+    module.associated_function(
+        Protocol::IS_VARIANT,
+        |this: <span class="kw-2">&amp;</span><span class="prelude-ty">Result</span>&lt;Value, Value&gt;, index: usize| <span class="kw">match </span>(this, index) {
+            (Result::Ok(<span class="kw">_</span>), <span class="number">0</span>) =&gt; <span class="bool-val">true</span>,
+            (Result::Err(<span class="kw">_</span>), <span class="number">1</span>) =&gt; <span class="bool-val">true</span>,
+            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+        },
+    )<span class="question-mark">?</span>;
+
+    module.index_function(Protocol::GET, <span class="number">0</span>, |this: <span class="kw-2">&amp;</span><span class="prelude-ty">Result</span>&lt;Value, Value&gt;| <span class="kw">match </span>this {
+        Result::Ok(value) =&gt; VmResult::Ok(value.clone()),
+        Result::Err(value) =&gt; VmResult::Ok(value.clone()),
+    })<span class="question-mark">?</span>;
 
     module.function_meta(ok)<span class="question-mark">?</span>;
     module.function_meta(is_ok)<span class="question-mark">?</span>;
@@ -396,16 +435,17 @@
 /// x.unwrap(); // panics with `emergency failure`
 /// ```
 </span><span class="attr">#[rune::function(instance)]
-</span><span class="kw">fn </span>unwrap(result: <span class="prelude-ty">Result</span>&lt;Value, Value&gt;) -&gt; VmResult&lt;Value&gt; {
+</span><span class="kw">fn </span>unwrap(result: <span class="kw-2">&amp;</span><span class="prelude-ty">Result</span>&lt;Value, Value&gt;) -&gt; VmResult&lt;Value&gt; {
     <span class="kw">match </span>result {
-        <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(value),
+        <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(value.clone()),
         <span class="prelude-val">Err</span>(err) =&gt; {
-            <span class="kw">let </span>message = <span class="macro">vm_try!</span>(<span class="macro">format_args!</span>(
-                <span class="string">"Called `Result::unwrap()` on an `Err` value: {:?}"</span>,
-                err
-            )
-            .try_to_string());
-            VmResult::err(Panic::custom(message))
+            <span class="kw">let </span><span class="kw-2">mut </span>m = String::new();
+            <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(
+                m,
+                <span class="string">"Called `Result::unwrap()` on an `Err` value: "
+            </span>));
+            <span class="macro">vm_try!</span>(Formatter::format_with(<span class="kw-2">&amp;mut </span>m, |f| err.debug_fmt(f)));
+            VmResult::err(Panic::custom(m))
         }
     }
 }
@@ -429,8 +469,11 @@
 /// assert_eq!(x.unwrap_or(default_value), default_value);
 /// ```
 </span><span class="attr">#[rune::function(instance)]
-</span><span class="kw">fn </span>unwrap_or(this: <span class="prelude-ty">Result</span>&lt;Value, Value&gt;, default: Value) -&gt; Value {
-    this.unwrap_or(default)
+</span><span class="kw">fn </span>unwrap_or(this: <span class="kw-2">&amp;</span><span class="prelude-ty">Result</span>&lt;Value, Value&gt;, default: Value) -&gt; Value {
+    <span class="kw">match </span>this {
+        <span class="prelude-val">Ok</span>(value) =&gt; value.clone(),
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; default.clone(),
+    }
 }
 
 <span class="doccomment">/// Returns the contained [`Ok`] value or computes it from a closure.
@@ -447,9 +490,9 @@
 /// assert_eq!(Err("foo").unwrap_or_else(count), 3);
 /// ```
 </span><span class="attr">#[rune::function(instance)]
-</span><span class="kw">fn </span>unwrap_or_else(this: <span class="prelude-ty">Result</span>&lt;Value, Value&gt;, default: Function) -&gt; VmResult&lt;Value&gt; {
+</span><span class="kw">fn </span>unwrap_or_else(this: <span class="kw-2">&amp;</span><span class="prelude-ty">Result</span>&lt;Value, Value&gt;, default: Function) -&gt; VmResult&lt;Value&gt; {
     <span class="kw">match </span>this {
-        <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(value),
+        <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(value.clone()),
         <span class="prelude-val">Err</span>(error) =&gt; default.call((error,)),
     }
 }
@@ -484,16 +527,17 @@
 /// as in "env variable should be set by blah" or "the given binary should be
 /// available and executable by the current user".
 </span><span class="attr">#[rune::function(instance)]
-</span><span class="kw">fn </span>expect(result: <span class="prelude-ty">Result</span>&lt;Value, Value&gt;, message: Value) -&gt; VmResult&lt;Value&gt; {
+</span><span class="kw">fn </span>expect(result: <span class="kw-2">&amp;</span><span class="prelude-ty">Result</span>&lt;Value, Value&gt;, message: Value) -&gt; VmResult&lt;Value&gt; {
     <span class="kw">match </span>result {
-        <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(value),
+        <span class="prelude-val">Ok</span>(value) =&gt; VmResult::Ok(value.clone()),
         <span class="prelude-val">Err</span>(err) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
-            <span class="comment">// SAFETY: Formatter does not outlive the string it references.
-            </span><span class="kw">let </span><span class="kw-2">mut </span>f = <span class="kw">unsafe </span>{ Formatter::new(NonNull::from(<span class="kw-2">&amp;mut </span>s)) };
-            <span class="macro">vm_try!</span>(message.display_fmt(<span class="kw-2">&amp;mut </span>f));
-            <span class="macro">vm_try!</span>(f.try_write_str(<span class="string">": "</span>));
-            <span class="macro">vm_try!</span>(err.debug_fmt(<span class="kw-2">&amp;mut </span>f));
+            <span class="macro">vm_try!</span>(Formatter::format_with(<span class="kw-2">&amp;mut </span>s, |f| {
+                <span class="macro">vm_try!</span>(message.display_fmt(f));
+                <span class="macro">vm_try!</span>(f.try_write_str(<span class="string">": "</span>));
+                <span class="macro">vm_try!</span>(err.debug_fmt(f));
+                VmResult::Ok(())
+            }));
             VmResult::err(Panic::custom(s))
         }
     }

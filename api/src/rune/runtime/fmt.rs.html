@@ -53,10 +53,17 @@
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
-<a href="#55" id="55">55</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::ptr::NonNull;
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::ptr::NonNull;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::VmResult;
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
 <span class="doccomment">/// A formatter for the rune virtual machine.
@@ -74,13 +81,18 @@
 }
 
 <span class="kw">impl </span>Formatter {
-    <span class="doccomment">/// Construct a new formatter wrapping a [`TryWrite`].
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>new(out: NonNull&lt;<span class="kw">dyn </span>TryWrite&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            out,
+    <span class="doccomment">/// Format onto the given trywrite.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>format_with(
+        out: <span class="kw-2">&amp;mut </span>String,
+        f: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; VmResult&lt;()&gt;,
+    ) -&gt; VmResult&lt;()&gt; {
+        <span class="comment">// SAFETY: Call to this function ensures that the formatter does not
+        // outlive the passed in reference.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>fmt = Formatter {
+            out: NonNull::from(out),
             buf: String::new(),
-        }
+        };
+        f(<span class="kw-2">&amp;mut </span>fmt)
     }
 
     <span class="attr">#[inline]

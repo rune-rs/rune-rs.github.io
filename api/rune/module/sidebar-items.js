@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["EnumMut","InternalEnumMut","ItemFnMut","ItemMut","Module","ModuleConstantBuilder","ModuleFunctionBuilder","ModuleMetaData","ModuleRawFunctionBuilder","TraitMut","TypeMut","VariantMut"],"trait":["InstallWith"],"type":["ModuleMeta"]};
+window.SIDEBAR_ITEMS = {"struct":["EnumMut","ItemFnMut","ItemMut","Module","ModuleConstantBuilder","ModuleFunctionBuilder","ModuleMetaData","ModuleRawFunctionBuilder","TraitMut","TypeMut","VariantMut"],"trait":["InstallWith"],"type":["ModuleMeta"]};
