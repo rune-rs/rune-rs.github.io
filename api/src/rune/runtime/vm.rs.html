@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (a0d98ff0e 2024-10-31)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (705cfe0e9 2024-11-01)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -4110,17 +4110,7 @@
 <a href="#4109" id="4109">4109</a>
 <a href="#4110" id="4110">4110</a>
 <a href="#4111" id="4111">4111</a>
-<a href="#4112" id="4112">4112</a>
-<a href="#4113" id="4113">4113</a>
-<a href="#4114" id="4114">4114</a>
-<a href="#4115" id="4115">4115</a>
-<a href="#4116" id="4116">4116</a>
-<a href="#4117" id="4117">4117</a>
-<a href="#4118" id="4118">4118</a>
-<a href="#4119" id="4119">4119</a>
-<a href="#4120" id="4120">4120</a>
-<a href="#4121" id="4121">4121</a>
-<a href="#4122" id="4122">4122</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#4112" id="4112">4112</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -4440,13 +4430,10 @@
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use rune::{Context, Unit, Vm};
     ///
     /// use std::sync::Arc;
-    ///
-    /// let context = Context::with_default_modules()?;
-    /// let context = Arc::new(context.runtime()?);
     ///
     /// let mut sources = rune::sources! {
     ///     entry =&gt; {
@@ -4460,10 +4447,13 @@
     ///     }
     /// };
     ///
+    /// let context = Context::with_default_modules()?;
+    /// let runtime = Arc::new(context.runtime()?);
+    ///
     /// let unit = rune::prepare(&amp;mut sources).build()?;
     /// let unit = Arc::new(unit);
     ///
-    /// let vm = Vm::new(context, unit);
+    /// let vm = Vm::new(runtime, unit);
     ///
     /// // Looking up an item from the source.
     /// let dynamic_max = vm.lookup_function(["max"])?;
@@ -4516,18 +4506,12 @@
     ///
     /// # Examples
     ///
-    /// ```,no_run
+    /// ```no_run
     /// use rune::{Context, Unit};
     /// use std::sync::Arc;
     ///
-    /// let context = Context::with_default_modules()?;
-    /// let context = Arc::new(context.runtime()?);
-    ///
-    /// // Normally the unit would be created by compiling some source,
-    /// // and since this one is empty it won't do anything.
     /// let unit = Arc::new(Unit::default());
-    ///
-    /// let mut vm = rune::Vm::new(context, unit);
+    /// let mut vm = rune::Vm::without_runtime(unit);
     ///
     /// let output = vm.execute(["main"], (33i64,))?.complete().into_result()?;
     /// let output: i64 = rune::from_value(output)?;
@@ -4539,18 +4523,14 @@
     /// You can use a `Vec&lt;Value&gt;` to provide a variadic collection of
     /// arguments.
     ///
-    /// ```,no_run
+    /// ```no_run
     /// use rune::{Context, Unit};
     /// use std::sync::Arc;
-    ///
-    /// let context = Context::with_default_modules()?;
-    /// let context = Arc::new(context.runtime()?);
     ///
     /// // Normally the unit would be created by compiling some source,
     /// // and since this one is empty it won't do anything.
     /// let unit = Arc::new(Unit::default());
-    ///
-    /// let mut vm = rune::Vm::new(context, unit);
+    /// let mut vm = rune::Vm::without_runtime(unit);
     ///
     /// let mut args = Vec::new();
     /// args.push(rune::to_value(1u32)?);
@@ -4616,7 +4596,7 @@
         <span class="comment">// Safety: We hold onto the guard until the vm has completed and
         // `VmExecution` will clear the stack before this function returns.
         // Erronously or not.
-        </span><span class="kw">let </span>guard = <span class="kw">unsafe </span>{ args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack).into_result()<span class="question-mark">? </span>};
+        </span><span class="kw">let </span>guard = <span class="kw">unsafe </span>{ args.guarded_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack).into_result()<span class="question-mark">? </span>};
 
         <span class="kw">let </span>value = {
             <span class="comment">// Clearing the stack here on panics has safety implications - see
@@ -4657,7 +4637,7 @@
         <span class="comment">// Safety: We hold onto the guard until the vm has completed and
         // `VmExecution` will clear the stack before this function returns.
         // Erronously or not.
-        </span><span class="kw">let </span>guard = <span class="kw">unsafe </span>{ args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack).into_result()<span class="question-mark">? </span>};
+        </span><span class="kw">let </span>guard = <span class="kw">unsafe </span>{ args.guarded_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack).into_result()<span class="question-mark">? </span>};
 
         <span class="kw">let </span>value = {
             <span class="comment">// Clearing the stack here on panics has safety implications - see
@@ -4700,7 +4680,7 @@
         <span class="comment">// Safety: We hold onto the guard until the vm has completed and
         // `VmExecution` will clear the stack before this function returns.
         // Erronously or not.
-        </span><span class="kw">let </span>guard = <span class="kw">unsafe </span>{ args.unsafe_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack).into_result()<span class="question-mark">? </span>};
+        </span><span class="kw">let </span>guard = <span class="kw">unsafe </span>{ args.guarded_into_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack).into_result()<span class="question-mark">? </span>};
 
         <span class="kw">let </span>value = {
             <span class="comment">// Clearing the stack here on panics has safety implications - see
