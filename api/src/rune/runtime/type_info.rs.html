@@ -147,18 +147,7 @@
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
 <a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#149" id="149">149</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::hash;
 
 <span class="kw">use crate as </span>rune;
@@ -169,16 +158,14 @@
 
 <span class="kw">use </span>::rust_alloc::sync::Arc;
 
-<span class="kw">use super</span>::{Rtti, VariantRtti};
+<span class="kw">use </span><span class="kw">super</span>::Rtti;
 
 <span class="attr">#[derive(Debug, TryClone, PartialEq, Eq)]
 </span><span class="kw">enum </span>TypeInfoKind {
     <span class="doccomment">/// Reference to an external type.
     </span>Any(AnyTypeInfo),
     <span class="doccomment">/// A named type.
-    </span>Typed(Arc&lt;Rtti&gt;),
-    <span class="doccomment">/// A variant.
-    </span>Variant(Arc&lt;VariantRtti&gt;),
+    </span>Runtime(Arc&lt;Rtti&gt;),
 }
 
 <span class="doccomment">/// Diagnostical type information for a given type.
@@ -226,21 +213,15 @@
     }
 
     <span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>typed(rtti: Arc&lt;Rtti&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new(TypeInfoKind::Typed(rtti))
-    }
-
-    <span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>variant(rtti: Arc&lt;VariantRtti&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new(TypeInfoKind::Variant(rtti))
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>rtti(rtti: Arc&lt;Rtti&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(TypeInfoKind::Runtime(rtti))
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.kind {
-            TypeInfoKind::Typed(ty) =&gt; ty.hash,
-            TypeInfoKind::Variant(ty) =&gt; ty.hash,
             TypeInfoKind::Any(ty) =&gt; ty.hash,
+            TypeInfoKind::Runtime(ty) =&gt; ty.type_hash(),
         }
     }
 }
@@ -255,10 +236,7 @@
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>TypeInfo {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.kind {
-            TypeInfoKind::Typed(rtti) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"{}"</span>, rtti.item)<span class="question-mark">?</span>;
-            }
-            TypeInfoKind::Variant(rtti) =&gt; {
+            TypeInfoKind::Runtime(rtti) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"{}"</span>, rtti.item)<span class="question-mark">?</span>;
             }
             TypeInfoKind::Any(info) =&gt; {

@@ -304,20 +304,7 @@
 <a href="#303" id="303">303</a>
 <a href="#304" id="304">304</a>
 <a href="#305" id="305">305</a>
-<a href="#306" id="306">306</a>
-<a href="#307" id="307">307</a>
-<a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a>
-<a href="#311" id="311">311</a>
-<a href="#312" id="312">312</a>
-<a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a></pre></div><pre class="rust"><code><span class="doccomment">//! A single execution unit in the rune virtual machine.
+<a href="#306" id="306">306</a></pre></div><pre class="rust"><code><span class="doccomment">//! A single execution unit in the rune virtual machine.
 //!
 //! A unit consists of a sequence of instructions, and lookaside tables for
 //! metadata like function locations.
@@ -337,9 +324,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Box, String, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::hash;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Call, ConstValue, DebugInfo, Inst, Rtti, StaticString, VariantRtti, VmError, VmErrorKind,
-};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Call, ConstValue, DebugInfo, Inst, Rtti, StaticString, VmError, VmErrorKind};
 <span class="kw">use </span><span class="kw">crate</span>::Hash;
 
 <span class="kw">pub use </span><span class="self">self</span>::storage::{ArrayUnit, EncodeError, UnitEncoder, UnitStorage};
@@ -391,14 +376,13 @@
     </span>static_object_keys: Vec&lt;Box&lt;[String]&gt;&gt;,
     <span class="doccomment">/// Runtime information for types.
     </span>rtti: hash::Map&lt;Arc&lt;Rtti&gt;&gt;,
-    <span class="doccomment">/// Runtime information for variants.
-    </span>variant_rtti: hash::Map&lt;Arc&lt;VariantRtti&gt;&gt;,
     <span class="doccomment">/// Named constants
     </span>constants: hash::Map&lt;ConstValue&gt;,
 }
 
 <span class="kw">impl</span>&lt;S&gt; Unit&lt;S&gt; {
     <span class="doccomment">/// Constructs a new unit from a pair of data and debug info.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>from_parts(data: Logic&lt;S&gt;, debug: <span class="prelude-ty">Option</span>&lt;DebugInfo&gt;) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             logic: data,
@@ -408,6 +392,7 @@
 
     <span class="doccomment">/// Construct a new unit with the given content.
     </span><span class="attr">#[allow(clippy::too_many_arguments)]
+    #[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
         storage: S,
         functions: hash::Map&lt;UnitFn&gt;,
@@ -415,7 +400,6 @@
         static_bytes: Vec&lt;Vec&lt;u8&gt;&gt;,
         static_object_keys: Vec&lt;Box&lt;[String]&gt;&gt;,
         rtti: hash::Map&lt;Arc&lt;Rtti&gt;&gt;,
-        variant_rtti: hash::Map&lt;Arc&lt;VariantRtti&gt;&gt;,
         debug: <span class="prelude-ty">Option</span>&lt;Box&lt;DebugInfo&gt;&gt;,
         constants: hash::Map&lt;ConstValue&gt;,
     ) -&gt; <span class="self">Self </span>{
@@ -427,7 +411,6 @@
                 static_bytes,
                 static_object_keys,
                 rtti,
-                variant_rtti,
                 constants,
             },
             debug,
@@ -435,35 +418,40 @@
     }
 
     <span class="doccomment">/// Access unit data.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>logic(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Logic&lt;S&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.logic
     }
 
     <span class="doccomment">/// Access debug information for the given location if it is available.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>debug_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>DebugInfo&gt; {
-        <span class="kw">let </span>debug = <span class="self">self</span>.debug.as_ref()<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;**</span>debug)
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;**</span><span class="self">self</span>.debug.as_ref()<span class="question-mark">?</span>)
     }
 
     <span class="doccomment">/// Get raw underlying instructions storage.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>instructions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>S {
         <span class="kw-2">&amp;</span><span class="self">self</span>.logic.storage
     }
 
     <span class="doccomment">/// Iterate over all static strings in the unit.
     </span><span class="attr">#[cfg(feature = <span class="string">"cli"</span>)]
+    #[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>iter_static_strings(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>Arc&lt;StaticString&gt;&gt; + <span class="lifetime">'_ </span>{
         <span class="self">self</span>.logic.static_strings.iter()
     }
 
     <span class="doccomment">/// Iterate over all constants in the unit.
     </span><span class="attr">#[cfg(feature = <span class="string">"cli"</span>)]
+    #[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>iter_constants(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span>Hash, <span class="kw-2">&amp;</span>ConstValue)&gt; + <span class="lifetime">'_ </span>{
         <span class="self">self</span>.logic.constants.iter()
     }
 
     <span class="doccomment">/// Iterate over all static object keys in the unit.
     </span><span class="attr">#[cfg(feature = <span class="string">"cli"</span>)]
+    #[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>iter_static_object_keys(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (usize, <span class="kw-2">&amp;</span>[String])&gt; + <span class="lifetime">'_ </span>{
         <span class="kw">use </span>core::iter;
 
@@ -477,11 +465,13 @@
 
     <span class="doccomment">/// Iterate over dynamic functions.
     </span><span class="attr">#[cfg(feature = <span class="string">"cli"</span>)]
+    #[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>iter_functions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (Hash, <span class="kw-2">&amp;</span>UnitFn)&gt; + <span class="lifetime">'_ </span>{
         <span class="self">self</span>.logic.functions.iter().map(|(h, f)| (<span class="kw-2">*</span>h, f))
     }
 
     <span class="doccomment">/// Lookup the static string by slot, if it exists.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lookup_string(<span class="kw-2">&amp;</span><span class="self">self</span>, slot: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;StaticString&gt;, VmError&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self
             </span>.logic
@@ -491,6 +481,7 @@
     }
 
     <span class="doccomment">/// Lookup the static byte string by slot, if it exists.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lookup_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>, slot: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>[u8], VmError&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self
             </span>.logic
@@ -501,6 +492,7 @@
     }
 
     <span class="doccomment">/// Lookup the static object keys by slot, if it exists.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lookup_object_keys(<span class="kw-2">&amp;</span><span class="self">self</span>, slot: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[String]&gt; {
         <span class="self">self</span>.logic
             .static_object_keys
@@ -509,21 +501,19 @@
     }
 
     <span class="doccomment">/// Lookup run-time information for the given type hash.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lookup_rtti(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;Rtti&gt;&gt; {
         <span class="self">self</span>.logic.rtti.get(<span class="kw-2">&amp;</span>hash)
     }
 
-    <span class="doccomment">/// Lookup variant run-time information for the given variant hash.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lookup_variant_rtti(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;VariantRtti&gt;&gt; {
-        <span class="self">self</span>.logic.variant_rtti.get(<span class="kw-2">&amp;</span>hash)
-    }
-
     <span class="doccomment">/// Lookup a function in the unit.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>function(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Option</span>&lt;UnitFn&gt; {
         <span class="self">self</span>.logic.functions.get(<span class="kw-2">&amp;</span>hash).copied()
     }
 
     <span class="doccomment">/// Lookup a constant from the unit.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>constant(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ConstValue&gt; {
         <span class="self">self</span>.logic.constants.get(<span class="kw-2">&amp;</span>hash)
     }
@@ -539,6 +529,7 @@
     }
 
     <span class="doccomment">/// Get the instruction at the given instruction pointer.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>instruction_at(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ip: usize,
@@ -548,6 +539,7 @@
 
     <span class="doccomment">/// Iterate over all instructions in order.
     </span><span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
+    #[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>iter_instructions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (usize, Inst)&gt; + <span class="lifetime">'_ </span>{
         <span class="self">self</span>.logic.storage.iter()
     }
@@ -581,18 +573,6 @@
         <span class="doccomment">/// The number of arguments the tuple takes.
         </span>args: usize,
     },
-    <span class="doccomment">/// A unit variant of the type identified by the given hash.
-    </span>UnitVariant {
-        <span class="doccomment">/// The type hash of the empty variant.
-        </span>hash: Hash,
-    },
-    <span class="doccomment">/// A tuple variant of the type identified by the given hash.
-    </span>TupleVariant {
-        <span class="doccomment">/// The type hash of the variant.
-        </span>hash: Hash,
-        <span class="doccomment">/// The number of arguments the tuple takes.
-        </span>args: usize,
-    },
 }
 
 <span class="kw">impl </span>TryClone <span class="kw">for </span>UnitFn {
@@ -621,12 +601,6 @@
             }
             <span class="self">Self</span>::TupleStruct { hash, args } =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"tuple hash={hash}, args={args}"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::UnitVariant { hash } =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"empty-variant hash={hash}"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::TupleVariant { hash, args } =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"tuple-variant hash={hash}, args={args}"</span>)<span class="question-mark">?</span>;
             }
         }
 

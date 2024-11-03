@@ -1241,7 +1241,12 @@
 <a href="#1240" id="1240">1240</a>
 <a href="#1241" id="1241">1241</a>
 <a href="#1242" id="1242">1242</a>
-<a href="#1243" id="1243">1243</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::convert::Infallible;
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::convert::Infallible;
 <span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>::rust_alloc::boxed::Box;
@@ -1254,8 +1259,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::unit::{BadInstruction, BadJump};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
     AccessError, AccessErrorKind, AnyObjError, AnyObjErrorKind, AnyTypeInfo, BoxedPanic, CallFrame,
-    DynArgsUsed, ExecutionState, MaybeTypeOf, Panic, Protocol, SliceError, StackError, TypeInfo,
-    TypeOf, Unit, Vm, VmHaltInfo,
+    DynArgsUsed, DynamicTakeError, ExecutionState, MaybeTypeOf, Panic, Protocol, SliceError,
+    StackError, TypeInfo, TypeOf, Unit, Vm, VmHaltInfo,
 };
 <span class="kw">use crate</span>::{Any, Hash, ItemBuf};
 
@@ -1684,26 +1689,6 @@
         })
     }
 
-    <span class="doccomment">/// Construct an expected error for a variant.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expected_variant(actual: TypeInfo) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new(VmErrorKind::ExpectedVariant { actual })
-    }
-
-    <span class="doccomment">/// Construct an expected expecting a unit struct.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expected_unit_struct(actual: TypeInfo) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new(VmErrorKind::ExpectedUnitStruct { actual })
-    }
-
-    <span class="doccomment">/// Construct an expected expecting a tuple struct.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expected_tuple_struct(actual: TypeInfo) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new(VmErrorKind::ExpectedTupleStruct { actual })
-    }
-
-    <span class="doccomment">/// Construct an expected expecting a struct.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expected_struct(actual: TypeInfo) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new(VmErrorKind::ExpectedStruct { actual })
-    }
-
     <span class="doccomment">/// Construct an expected error from any.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expected_any&lt;T&gt;(actual: TypeInfo) -&gt; <span class="self">Self
     </span><span class="kw">where
@@ -1723,6 +1708,18 @@
     <span class="doccomment">/// Indicate that a constant constructor is missing.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>missing_constant_constructor(hash: Hash) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(VmErrorKind::MissingConstantConstructor { hash })
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expected_empty(actual: TypeInfo) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(VmErrorKind::ExpectedEmpty { actual })
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expected_tuple(actual: TypeInfo) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(VmErrorKind::ExpectedTuple { actual })
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>expected_struct(actual: TypeInfo) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(VmErrorKind::ExpectedStruct { actual })
     }
 }
 
@@ -1789,6 +1786,16 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(error: Infallible) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>error {}
+    }
+}
+
+<span class="kw">impl </span>From&lt;DynamicTakeError&gt; <span class="kw">for </span>RuntimeError {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from(value: DynamicTakeError) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>value {
+            DynamicTakeError::Access(error) =&gt; <span class="self">Self</span>::from(error),
+            DynamicTakeError::Alloc(error) =&gt; <span class="self">Self</span>::from(error),
+        }
     }
 }
 
@@ -1935,9 +1942,6 @@
     MissingStaticObjectKeys {
         slot: usize,
     },
-    MissingVariantRtti {
-        hash: Hash,
-    },
     MissingRtti {
         hash: Hash,
     },
@@ -2030,6 +2034,15 @@
     ExpectedNumber {
         actual: TypeInfo,
     },
+    ExpectedEmpty {
+        actual: TypeInfo,
+    },
+    ExpectedTuple {
+        actual: TypeInfo,
+    },
+    ExpectedStruct {
+        actual: TypeInfo,
+    },
     MissingConstantConstructor {
         hash: Hash,
     },
@@ -2075,15 +2088,6 @@
         index: usize,
     },
     ExpectedVariant {
-        actual: TypeInfo,
-    },
-    ExpectedUnitStruct {
-        actual: TypeInfo,
-    },
-    ExpectedTupleStruct {
-        actual: TypeInfo,
-    },
-    ExpectedStruct {
         actual: TypeInfo,
     },
     UnsupportedObjectFieldGet {
@@ -2154,10 +2158,6 @@
             VmErrorKind::MissingStaticObjectKeys { slot } =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"Static object keys slot `{slot}` does not exist"</span>)
             }
-            VmErrorKind::MissingVariantRtti { hash } =&gt; <span class="macro">write!</span>(
-                f,
-                <span class="string">"Missing runtime information for variant with hash `{hash}`"</span>,
-            ),
             VmErrorKind::MissingRtti { hash } =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"Missing runtime information for type with hash `{hash}`"</span>)
             }
@@ -2246,6 +2246,15 @@
             VmErrorKind::ExpectedNumber { actual } =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"Expected number type, but found `{actual}`"</span>)
             }
+            VmErrorKind::ExpectedEmpty { actual } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"Expected empty, but found `{actual}`"</span>)
+            }
+            VmErrorKind::ExpectedTuple { actual } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"Expected tuple, but found `{actual}`"</span>)
+            }
+            VmErrorKind::ExpectedStruct { actual } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"Expected struct, but found `{actual}`"</span>)
+            }
             VmErrorKind::MissingConstantConstructor { hash } =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"Missing constant constructor for type with hash {hash}"</span>)
             }
@@ -2293,15 +2302,6 @@
             VmErrorKind::ExpectedVariant { actual } =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"Expected an enum variant, but got `{actual}`"</span>)
             }
-            VmErrorKind::ExpectedUnitStruct { actual } =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"Expected a unit struct, but got `{actual}`"</span>)
-            }
-            VmErrorKind::ExpectedTupleStruct { actual } =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"Expected a tuple struct, but got `{actual}`"</span>)
-            }
-            VmErrorKind::ExpectedStruct { actual } =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"Expected a struct, but got `{actual}`"</span>)
-            }
             VmErrorKind::UnsupportedObjectFieldGet { target } =&gt; <span class="macro">write!</span>(
                 f,
                 <span class="string">"The object field get operation is not supported on `{target}`"</span>,
@@ -2330,6 +2330,16 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(value: RuntimeError) -&gt; <span class="self">Self </span>{
         value.into_vm_error_kind()
+    }
+}
+
+<span class="kw">impl </span>From&lt;DynamicTakeError&gt; <span class="kw">for </span>VmErrorKind {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>from(value: DynamicTakeError) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>value {
+            DynamicTakeError::Access(error) =&gt; <span class="self">Self</span>::from(error),
+            DynamicTakeError::Alloc(error) =&gt; <span class="self">Self</span>::from(error),
+        }
     }
 }
 

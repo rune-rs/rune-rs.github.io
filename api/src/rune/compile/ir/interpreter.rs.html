@@ -417,13 +417,7 @@
 <a href="#416" id="416">416</a>
 <a href="#417" id="417">417</a>
 <a href="#418" id="418">418</a>
-<a href="#419" id="419">419</a>
-<a href="#420" id="420">420</a>
-<a href="#421" id="421">421</a>
-<a href="#422" id="422">422</a>
-<a href="#423" id="423">423</a>
-<a href="#424" id="424">424</a>
-<a href="#425" id="425">425</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
+<a href="#419" id="419">419</a></pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{try_format, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::ast::Spanned;
 <span class="kw">use </span><span class="kw">crate</span>::compile::ir;
@@ -634,10 +628,10 @@
                             value.type_info(),
                         ));
                     }
-                    ReprRef::Mutable(value) =&gt; {
+                    ReprRef::Dynamic(value) =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
                             ir_target,
-                            value.borrow_ref().with_span(ir_target)<span class="question-mark">?</span>.type_info(),
+                            value.type_info(),
                         ));
                     }
                     ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
@@ -702,12 +696,10 @@
                             value.type_info(),
                         ));
                     }
-                    ReprRef::Mutable(current) =&gt; {
-                        <span class="kw">let </span>mutable = current.borrow_mut().with_span(ir_target)<span class="question-mark">?</span>;
-
+                    ReprRef::Dynamic(value) =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
                             ir_target,
-                            mutable.type_info(),
+                            value.type_info(),
                         ));
                     }
                     ReprRef::Any(any) =&gt; <span class="kw">match </span>any.type_hash() {
@@ -773,14 +765,10 @@
                 <span class="kw">let </span>current = <span class="self">self</span>.get_target(target)<span class="question-mark">?</span>;
 
                 <span class="kw">match </span>current.as_ref().with_span(ir_target)<span class="question-mark">? </span>{
-                    ReprRef::Mutable(value) =&gt; {
-                        <span class="kw">let </span>value = value.borrow_ref().with_span(ir_target)<span class="question-mark">?</span>;
-
-                        <span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
-                            ir_target,
-                            value.type_info(),
-                        ))
-                    }
+                    ReprRef::Dynamic(value) =&gt; <span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
+                        ir_target,
+                        value.type_info(),
+                    )),
                     ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                         runtime::Vec::HASH =&gt; {
                             <span class="kw">let </span><span class="kw-2">mut </span>vec =
@@ -816,7 +804,7 @@
                     },
                     actual =&gt; <span class="prelude-val">Err</span>(compile::Error::expected_type::&lt;OwnedTuple&gt;(
                         ir_target,
-                        actual.type_info().with_span(ir_target)<span class="question-mark">?</span>,
+                        actual.type_info(),
                     )),
                 }
             }

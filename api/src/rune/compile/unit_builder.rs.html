@@ -934,8 +934,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::debug::{DebugArgs, DebugSignature};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::unit::UnitEncoder;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Call, ConstValue, DebugInfo, DebugInst, Inst, Label, Protocol, Rtti, StaticString, Unit,
-    UnitFn, VariantRtti,
+    Call, ConstValue, DebugInfo, DebugInst, Inst, Label, Protocol, Rtti, RttiKind, StaticString,
+    Unit, UnitFn,
 };
 <span class="kw">use crate</span>::{Context, Diagnostics, Hash, Item, SourceId};
 
@@ -990,8 +990,6 @@
     </span>static_object_keys_rev: HashMap&lt;Hash, usize&gt;,
     <span class="doccomment">/// Runtime type information for types.
     </span>rtti: hash::Map&lt;Arc&lt;Rtti&gt;&gt;,
-    <span class="doccomment">/// Runtime type information for variants.
-    </span>variant_rtti: hash::Map&lt;Arc&lt;VariantRtti&gt;&gt;,
     <span class="doccomment">/// The current label count.
     </span>label_count: usize,
     <span class="doccomment">/// A collection of required function hashes.
@@ -1069,7 +1067,6 @@
             <span class="self">self</span>.static_bytes,
             <span class="self">self</span>.static_object_keys,
             <span class="self">self</span>.rtti,
-            <span class="self">self</span>.variant_rtti,
             <span class="self">self</span>.debug,
             <span class="self">self</span>.constants,
         ))
@@ -1232,7 +1229,9 @@
                 <span class="kw">let </span>hash = pool.item_type_hash(meta.item_meta.item);
 
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
+                    kind: RttiKind::Empty,
                     hash,
+                    variant_hash: Hash::EMPTY,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
                     fields: HashMap::new(),
                 });
@@ -1263,7 +1262,9 @@
                 );
 
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
+                    kind: RttiKind::Empty,
                     hash: meta.hash,
+                    variant_hash: Hash::EMPTY,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
                     fields: HashMap::new(),
                 });
@@ -1320,7 +1321,9 @@
                 );
 
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
+                    kind: RttiKind::Tuple,
                     hash: meta.hash,
+                    variant_hash: Hash::EMPTY,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
                     fields: HashMap::new(),
                 });
@@ -1369,7 +1372,9 @@
                 <span class="kw">let </span>hash = pool.item_type_hash(meta.item_meta.item);
 
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
+                    kind: RttiKind::Struct,
                     hash,
+                    variant_hash: Hash::EMPTY,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
                     fields: named.to_fields()<span class="question-mark">?</span>,
                 });
@@ -1393,26 +1398,27 @@
                 fields: meta::Fields::Empty,
                 ..
             } =&gt; {
-                <span class="kw">let </span>rtti = Arc::new(VariantRtti {
-                    enum_hash,
-                    hash: meta.hash,
+                <span class="kw">let </span>rtti = Arc::new(Rtti {
+                    kind: RttiKind::Empty,
+                    hash: enum_hash,
+                    variant_hash: meta.hash,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
                     fields: HashMap::new(),
                 });
 
                 <span class="kw">if </span><span class="self">self
-                    </span>.variant_rtti
+                    </span>.rtti
                     .try_insert(meta.hash, rtti)
                     .with_span(span)<span class="question-mark">?
                     </span>.is_some()
                 {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                         span,
-                        ErrorKind::VariantRttiConflict { hash: meta.hash },
+                        ErrorKind::RttiConflict { hash: meta.hash },
                     ));
                 }
 
-                <span class="kw">let </span>info = UnitFn::UnitVariant { hash: meta.hash };
+                <span class="kw">let </span>info = UnitFn::EmptyStruct { hash: meta.hash };
 
                 <span class="kw">let </span>signature = DebugSignature::new(
                     pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
@@ -1442,26 +1448,27 @@
                 fields: meta::Fields::Unnamed(args),
                 ..
             } =&gt; {
-                <span class="kw">let </span>rtti = Arc::new(VariantRtti {
-                    enum_hash,
-                    hash: meta.hash,
+                <span class="kw">let </span>rtti = Arc::new(Rtti {
+                    kind: RttiKind::Tuple,
+                    hash: enum_hash,
+                    variant_hash: meta.hash,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
                     fields: HashMap::new(),
                 });
 
                 <span class="kw">if </span><span class="self">self
-                    </span>.variant_rtti
+                    </span>.rtti
                     .try_insert(meta.hash, rtti)
                     .with_span(span)<span class="question-mark">?
                     </span>.is_some()
                 {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                         span,
-                        ErrorKind::VariantRttiConflict { hash: meta.hash },
+                        ErrorKind::RttiConflict { hash: meta.hash },
                     ));
                 }
 
-                <span class="kw">let </span>info = UnitFn::TupleVariant {
+                <span class="kw">let </span>info = UnitFn::TupleStruct {
                     hash: meta.hash,
                     args,
                 };
@@ -1496,23 +1503,16 @@
             } =&gt; {
                 <span class="kw">let </span>hash = pool.item_type_hash(meta.item_meta.item);
 
-                <span class="kw">let </span>rtti = Arc::new(VariantRtti {
-                    enum_hash,
-                    hash,
+                <span class="kw">let </span>rtti = Arc::new(Rtti {
+                    kind: RttiKind::Struct,
+                    hash: enum_hash,
+                    variant_hash: hash,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
                     fields: named.to_fields()<span class="question-mark">?</span>,
                 });
 
-                <span class="kw">if </span><span class="self">self
-                    </span>.variant_rtti
-                    .try_insert(hash, rtti)
-                    .with_span(span)<span class="question-mark">?
-                    </span>.is_some()
-                {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
-                        span,
-                        ErrorKind::VariantRttiConflict { hash },
-                    ));
+                <span class="kw">if </span><span class="self">self</span>.rtti.try_insert(hash, rtti).with_span(span)<span class="question-mark">?</span>.is_some() {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::RttiConflict { hash }));
                 }
             }
             meta::Kind::Enum { .. } =&gt; {

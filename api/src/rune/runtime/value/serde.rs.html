@@ -308,11 +308,15 @@
 <a href="#307" id="307">307</a>
 <a href="#308" id="308">308</a>
 <a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{<span class="self">self</span>, Bytes, Inline, Mutable, Object, OwnedTuple, ReprRef, Vec};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{<span class="self">self</span>, Bytes, Inline, Object, OwnedTuple, ReprRef, RttiKind, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::TypeHash;
 
 <span class="kw">use </span>serde::de::{<span class="self">self</span>, Deserialize <span class="kw">as _</span>, Error <span class="kw">as _</span>};
@@ -347,15 +351,19 @@
                 Inline::Type(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize types"</span>)),
                 Inline::Ordering(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize orderings"</span>)),
             },
-            ReprRef::Mutable(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;*</span>value.borrow_ref().map_err(S::Error::custom)<span class="question-mark">? </span>{
-                Mutable::EmptyStruct(..) =&gt; {
-                    <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize empty structs"</span>))
-                }
-                Mutable::TupleStruct(..) =&gt; {
-                    <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize tuple structs"</span>))
-                }
-                Mutable::Struct(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize objects structs"</span>)),
-                Mutable::Variant(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize variants"</span>)),
+            ReprRef::Dynamic(value) =&gt; <span class="kw">match </span>value.rtti().kind {
+                RttiKind::Empty =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="macro">format!</span>(
+                    <span class="string">"cannot serialize empty struct {}"</span>,
+                    value.rtti().item
+                ))),
+                RttiKind::Tuple =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="macro">format!</span>(
+                    <span class="string">"cannot serialize tuple struct {}"</span>,
+                    value.rtti().item
+                ))),
+                RttiKind::Struct =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="macro">format!</span>(
+                    <span class="string">"cannot serialize struct {}"</span>,
+                    value.rtti().item
+                ))),
             },
             ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                 <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; {

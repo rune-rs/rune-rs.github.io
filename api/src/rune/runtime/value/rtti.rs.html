@@ -114,107 +114,19 @@
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::borrow::Borrow;
+<a href="#116" id="116">116</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::borrow::Borrow;
 <span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::hash;
+
+<span class="kw">use </span>rust_alloc::sync::Arc;
 
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::HashMap;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::Value;
+<span class="kw">use </span><span class="kw">crate</span>::item::Item;
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{TypeInfo, Value};
 <span class="kw">use crate</span>::{Hash, ItemBuf};
-
-<span class="doccomment">/// Runtime information on variant.
-</span><span class="attr">#[derive(Debug, Serialize, Deserialize)]
-#[non_exhaustive]
-</span><span class="kw">pub struct </span>VariantRtti {
-    <span class="doccomment">/// The type hash of the enum.
-    </span><span class="kw">pub </span>enum_hash: Hash,
-    <span class="doccomment">/// The type variant hash.
-    </span><span class="kw">pub </span>hash: Hash,
-    <span class="doccomment">/// The name of the variant.
-    </span><span class="kw">pub </span>item: ItemBuf,
-    <span class="doccomment">/// Fields associated with the variant.
-    </span><span class="kw">pub </span>fields: HashMap&lt;Box&lt;str&gt;, usize&gt;,
-}
-
-<span class="kw">impl </span>VariantRtti {
-    <span class="doccomment">/// Access a named field mutably from the given data.
-    </span><span class="kw">pub fn </span>get_field&lt;<span class="lifetime">'a</span>, Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[Value], key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value&gt;
-    <span class="kw">where
-        </span>Box&lt;str&gt;: Borrow&lt;Q&gt;,
-        Q: hash::Hash + Eq + <span class="question-mark">?</span>Sized,
-    {
-        data.get(<span class="kw-2">*</span><span class="self">self</span>.fields.get(key)<span class="question-mark">?</span>)
-    }
-
-    <span class="doccomment">/// Access a named field immutably from the given data.
-    </span><span class="kw">pub fn </span>get_field_mut&lt;<span class="lifetime">'a</span>, Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>[Value], key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Value&gt;
-    <span class="kw">where
-        </span>Box&lt;str&gt;: Borrow&lt;Q&gt;,
-        Q: hash::Hash + Eq + <span class="question-mark">?</span>Sized,
-    {
-        data.get_mut(<span class="kw-2">*</span><span class="self">self</span>.fields.get(key)<span class="question-mark">?</span>)
-    }
-}
-
-<span class="kw">impl </span>PartialEq <span class="kw">for </span>VariantRtti {
-    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
-        <span class="self">self</span>.hash == other.hash
-    }
-}
-
-<span class="kw">impl </span>Eq <span class="kw">for </span>VariantRtti {}
-
-<span class="kw">impl </span>hash::Hash <span class="kw">for </span>VariantRtti {
-    <span class="kw">fn </span>hash&lt;H: hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
-        <span class="self">self</span>.hash.hash(state)
-    }
-}
-
-<span class="kw">impl </span>PartialOrd <span class="kw">for </span>VariantRtti {
-    <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Ordering&gt; {
-        <span class="prelude-val">Some</span>(<span class="self">self</span>.cmp(other))
-    }
-}
-
-<span class="kw">impl </span>Ord <span class="kw">for </span>VariantRtti {
-    <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; Ordering {
-        <span class="self">self</span>.hash.cmp(<span class="kw-2">&amp;</span>other.hash)
-    }
-}
 
 <span class="doccomment">/// Field accessor for a variant struct.
 </span><span class="attr">#[doc(hidden)]
@@ -235,41 +147,63 @@
     }
 }
 
+<span class="doccomment">/// The kind of value stored.
+</span><span class="attr">#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">"kebab-case"</span>)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>RttiKind {
+    <span class="doccomment">/// The value stored is empty.
+    </span>Empty,
+    <span class="doccomment">/// The value stored is a tuple.
+    </span>Tuple,
+    <span class="doccomment">/// The value stored is a strict.
+    </span>Struct,
+}
+
 <span class="doccomment">/// Runtime information on variant.
 </span><span class="attr">#[derive(Debug, Serialize, Deserialize)]
 #[non_exhaustive]
 </span><span class="kw">pub struct </span>Rtti {
+    <span class="doccomment">/// The kind of value.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) kind: RttiKind,
     <span class="doccomment">/// The type hash of the type.
-    </span><span class="kw">pub </span>hash: Hash,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) hash: Hash,
+    <span class="doccomment">/// If this type is a variant, designates the hash of the variant.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) variant_hash: Hash,
     <span class="doccomment">/// The item of the type.
-    </span><span class="kw">pub </span>item: ItemBuf,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) item: ItemBuf,
     <span class="doccomment">/// Mapping from field names to their corresponding indexes.
-    </span><span class="kw">pub </span>fields: HashMap&lt;Box&lt;str&gt;, usize&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) fields: HashMap&lt;Box&lt;str&gt;, usize&gt;,
 }
 
 <span class="kw">impl </span>Rtti {
-    <span class="doccomment">/// Access a named field mutably from the given data.
-    </span><span class="kw">pub fn </span>get_field&lt;<span class="lifetime">'a</span>, Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[Value], key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value&gt;
-    <span class="kw">where
-        </span>Box&lt;str&gt;: Borrow&lt;Q&gt;,
-        Q: hash::Hash + Eq + <span class="question-mark">?</span>Sized,
-    {
-        data.get(<span class="kw-2">*</span><span class="self">self</span>.fields.get(key)<span class="question-mark">?</span>)
+    <span class="doccomment">/// Test if this RTTI matches the given raw hashes.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash, variant_hash: Hash) -&gt; bool {
+        <span class="self">self</span>.hash == hash &amp;&amp; <span class="self">self</span>.variant_hash == variant_hash
     }
 
-    <span class="doccomment">/// Access a named field immutably from the given data.
-    </span><span class="kw">pub fn </span>get_field_mut&lt;<span class="lifetime">'a</span>, Q&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>[Value], key: <span class="kw-2">&amp;</span>Q) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Value&gt;
-    <span class="kw">where
-        </span>Box&lt;str&gt;: Borrow&lt;Q&gt;,
-        Q: hash::Hash + Eq + <span class="question-mark">?</span>Sized,
-    {
-        data.get_mut(<span class="kw-2">*</span><span class="self">self</span>.fields.get(key)<span class="question-mark">?</span>)
+    <span class="doccomment">/// Access the item of the RTTI.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>item(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Item {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.item
+    }
+
+    <span class="doccomment">/// Access the type hash of the RTTI.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
+        <span class="self">self</span>.hash
+    }
+
+    <span class="doccomment">/// Access the type information for the RTTI.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>type_info(<span class="self">self</span>: Arc&lt;<span class="self">Self</span>&gt;) -&gt; TypeInfo {
+        TypeInfo::rtti(<span class="self">self</span>)
     }
 }
 
 <span class="kw">impl </span>PartialEq <span class="kw">for </span>Rtti {
     <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
-        <span class="self">self</span>.hash == other.hash
+        <span class="self">self</span>.hash == other.hash &amp;&amp; <span class="self">self</span>.variant_hash == other.variant_hash
     }
 }
 
@@ -277,7 +211,8 @@
 
 <span class="kw">impl </span>hash::Hash <span class="kw">for </span>Rtti {
     <span class="kw">fn </span>hash&lt;H: hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
-        <span class="self">self</span>.hash.hash(state)
+        <span class="self">self</span>.hash.hash(state);
+        <span class="self">self</span>.variant_hash.hash(state);
     }
 }
 
@@ -288,8 +223,11 @@
 }
 
 <span class="kw">impl </span>Ord <span class="kw">for </span>Rtti {
-    <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; Ordering {
-        <span class="self">self</span>.hash.cmp(<span class="kw-2">&amp;</span>other.hash)
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; Ordering {
+        <span class="self">self</span>.hash
+            .cmp(<span class="kw-2">&amp;</span>other.hash)
+            .then_with(|| <span class="self">self</span>.variant_hash.cmp(<span class="kw-2">&amp;</span>other.variant_hash))
     }
 }
 </code></pre></div></section></main></body></html>

@@ -606,7 +606,23 @@
 <a href="#605" id="605">605</a>
 <a href="#606" id="606">606</a>
 <a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp;
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp;
 <span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::ops;
@@ -1179,6 +1195,22 @@
         <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.into_ref::&lt;Vec&gt;());
         <span class="kw">let </span>(vec, guard) = Ref::into_raw(vec);
         VmResult::Ok((vec.as_ref().as_slice(), guard))
+    }
+}
+
+<span class="kw">impl</span>&lt;T, <span class="kw">const </span>N: usize&gt; ToValue <span class="kw">for </span>[T; N]
+<span class="kw">where
+    </span>T: ToValue,
+{
+    <span class="kw">fn </span>to_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = alloc::Vec::try_with_capacity(<span class="self">self</span>.len())<span class="question-mark">?</span>;
+
+        <span class="kw">for </span>value <span class="kw">in </span><span class="self">self </span>{
+            <span class="kw">let </span>value = value.to_value()<span class="question-mark">?</span>;
+            inner.try_push(value)<span class="question-mark">?</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(Value::try_from(Vec { inner })<span class="question-mark">?</span>)
     }
 }
 
