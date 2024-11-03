@@ -585,23 +585,19 @@
 <a href="#584" id="584">584</a>
 <a href="#585" id="585">585</a>
 <a href="#586" id="586">586</a>
-<a href="#587" id="587">587</a>
-<a href="#588" id="588">588</a>
-<a href="#589" id="589">589</a>
-<a href="#590" id="590">590</a>
-<a href="#591" id="591">591</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::borrow;
+<a href="#587" id="587">587</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::borrow;
 <span class="kw">use </span>core::cmp;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::hash;
 <span class="kw">use </span>core::iter;
 
 <span class="kw">use crate as </span>rune;
+<span class="kw">use </span><span class="kw">crate</span>::alloc::hash_map;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::hashbrown::raw::RawIter;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
-<span class="kw">use </span><span class="kw">crate</span>::alloc::{hash_map, HashMap};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    FromValue, ProtocolCaller, RawAnyGuard, Ref, ToValue, Value, VmError, VmResult,
+    FieldMap, FromValue, ProtocolCaller, RawAnyGuard, Ref, ToValue, Value, VmError, VmResult,
 };
 <span class="kw">use </span><span class="kw">crate</span>::Any;
 
@@ -673,7 +669,7 @@
 #[repr(transparent)]
 #[rune(item = ::std::object)]
 </span><span class="kw">pub struct </span>Object {
-    inner: HashMap&lt;String, Value&gt;,
+    inner: FieldMap&lt;String, Value&gt;,
 }
 
 <span class="kw">impl </span>Object {
@@ -689,7 +685,7 @@
     #[rune::function(keep, path = <span class="self">Self</span>::new)]
     </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            inner: HashMap::new(),
+            inner: <span class="kw">crate</span>::runtime::new_field_map(),
         }
     }
 
@@ -712,7 +708,7 @@
         <span class="comment">// BTreeMap doesn't support setting capacity on creation but we keep
         // this here in case we want to switch store later.
         </span><span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            inner: HashMap::try_with_capacity(capacity)<span class="question-mark">?</span>,
+            inner: <span class="kw">crate</span>::runtime::new_field_hash_map_with_capacity(capacity)<span class="question-mark">?</span>,
         })
     }
 
@@ -838,6 +834,7 @@
     <span class="doccomment">/// Inserts a key-value pair into the map.
     ///
     /// If the map did not have this key present, `None` is returned.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, k: String, v: Value) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
         <span class="self">self</span>.inner.try_insert(k, v)
     }
@@ -848,11 +845,6 @@
     #[rune::function(keep)]
     </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.inner.clear();
-    }
-
-    <span class="doccomment">/// Convert into inner.
-    </span><span class="kw">pub fn </span>into_inner(<span class="self">self</span>) -&gt; HashMap&lt;String, Value&gt; {
-        <span class="self">self</span>.inner
     }
 
     <span class="doccomment">/// An iterator visiting all key-value pairs in arbitrary order.

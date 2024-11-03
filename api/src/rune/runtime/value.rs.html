@@ -1752,7 +1752,9 @@
 <a href="#1751" id="1751">1751</a>
 <a href="#1752" id="1752">1752</a>
 <a href="#1753" id="1753">1753</a>
-<a href="#1754" id="1754">1754</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="attr">#[cfg(test)]
@@ -2201,42 +2203,43 @@
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
             Repr::Empty =&gt; {
                 <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;empty&gt;"</span>));
-                <span class="kw">return </span>VmResult::Ok(());
             }
             Repr::Inline(value) =&gt; {
                 <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
-                <span class="kw">return </span>VmResult::Ok(());
             }
             Repr::Dynamic(<span class="kw-2">ref </span>value) =&gt; {
                 <span class="macro">vm_try!</span>(value.debug_fmt_with(f, caller));
-                <span class="kw">return </span>VmResult::Ok(());
             }
-            Repr::Any(..) =&gt; {}
-        }
+            Repr::Any(..) =&gt; {
+                <span class="comment">// reborrow f to avoid moving it
+                </span><span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;mut *</span>f,));
 
-        <span class="comment">// reborrow f to avoid moving it
-        </span><span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((<span class="kw-2">&amp;mut *</span>f,));
-
-        <span class="kw">match </span><span class="macro">vm_try!</span>(caller.try_call_protocol_fn(Protocol::DEBUG_FMT, <span class="self">self</span>.clone(), <span class="kw-2">&amp;mut </span>args)) {
-            CallResultOnly::Ok(value) =&gt; {
-                <span class="macro">vm_try!</span>(&lt;()&gt;::from_value(value));
+                <span class="kw">match </span><span class="macro">vm_try!</span>(caller.try_call_protocol_fn(
+                    Protocol::DEBUG_FMT,
+                    <span class="self">self</span>.clone(),
+                    <span class="kw-2">&amp;mut </span>args
+                )) {
+                    CallResultOnly::Ok(value) =&gt; {
+                        <span class="macro">vm_try!</span>(&lt;()&gt;::from_value(value));
+                    }
+                    CallResultOnly::Unsupported(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>value.repr {
+                        Repr::Empty =&gt; {
+                            <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;empty&gt;"</span>));
+                        }
+                        Repr::Inline(value) =&gt; {
+                            <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
+                        }
+                        Repr::Dynamic(value) =&gt; {
+                            <span class="kw">let </span>ty = value.type_info();
+                            <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>));
+                        }
+                        Repr::Any(value) =&gt; {
+                            <span class="kw">let </span>ty = value.type_info();
+                            <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>));
+                        }
+                    },
+                }
             }
-            CallResultOnly::Unsupported(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>value.repr {
-                Repr::Empty =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;empty&gt;"</span>));
-                }
-                Repr::Inline(value) =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
-                }
-                Repr::Dynamic(value) =&gt; {
-                    <span class="kw">let </span>ty = value.type_info();
-                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>));
-                }
-                Repr::Any(value) =&gt; {
-                    <span class="kw">let </span>ty = value.type_info();
-                    <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>));
-                }
-            },
         }
 
         VmResult::Ok(())
@@ -3123,6 +3126,7 @@
     <span class="doccomment">/// Coerce into a checked [`Inline`] object.
     ///
     /// Any empty value will cause an access error.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_inline(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Inline&gt;, AccessError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
             Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
@@ -3132,7 +3136,8 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_inline_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Inline&gt;, AccessError&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_inline_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Inline&gt;, AccessError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.repr {
             Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
             Repr::Inline(value) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(value)),
@@ -3144,6 +3149,7 @@
     <span class="doccomment">/// Coerce into a checked [`AnyObj`] object.
     ///
     /// Any empty value will cause an access error.
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>AnyObj&gt;, AccessError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
             Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
@@ -3153,7 +3159,8 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>take_repr(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ReprOwned, AccessError&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>take_repr(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ReprOwned, AccessError&gt; {
         <span class="kw">match </span><span class="self">self</span>.repr {
             Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
             Repr::Inline(value) =&gt; <span class="prelude-val">Ok</span>(ReprOwned::Inline(value)),
@@ -3162,16 +3169,18 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ReprRef&lt;<span class="lifetime">'_</span>&gt;, AccessError&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ReprRef&lt;<span class="lifetime">'_</span>&gt;, AccessError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
+            Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
             Repr::Inline(value) =&gt; <span class="prelude-val">Ok</span>(ReprRef::Inline(value)),
             Repr::Dynamic(value) =&gt; <span class="prelude-val">Ok</span>(ReprRef::Dynamic(value)),
             Repr::Any(value) =&gt; <span class="prelude-val">Ok</span>(ReprRef::Any(value)),
-            Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ReprMut&lt;<span class="lifetime">'_</span>&gt;, AccessError&gt; {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ReprMut&lt;<span class="lifetime">'_</span>&gt;, AccessError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.repr {
             Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
             Repr::Inline(value) =&gt; <span class="prelude-val">Ok</span>(ReprMut::Inline(value)),
@@ -3180,27 +3189,29 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_borrow_ref&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BorrowRef&lt;<span class="lifetime">'_</span>, T&gt;&gt;, AccessError&gt;
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_borrow_ref&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BorrowRef&lt;<span class="lifetime">'_</span>, T&gt;&gt;, AccessError&gt;
     <span class="kw">where
         </span>T: Any,
     {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
+            Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
             Repr::Inline(..) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             Repr::Dynamic(..) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             Repr::Any(value) =&gt; value.try_borrow_ref(),
-            Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_borrow_mut&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'_</span>, T&gt;&gt;, AccessError&gt;
+    <span class="attr">#[inline]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_borrow_mut&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'_</span>, T&gt;&gt;, AccessError&gt;
     <span class="kw">where
         </span>T: Any,
     {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
+            Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
             Repr::Inline(..) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             Repr::Dynamic(..) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             Repr::Any(value) =&gt; value.try_borrow_mut(),
-            Repr::Empty =&gt; <span class="prelude-val">Err</span>(AccessError::empty()),
         }
     }
 
@@ -3249,49 +3260,42 @@
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Value {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="kw">let </span>snapshot = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
             Repr::Empty =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"&lt;empty&gt;"</span>)<span class="question-mark">?</span>;
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
             Repr::Inline(value) =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"{value:?}"</span>)<span class="question-mark">?</span>;
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
-            Repr::Dynamic(value) =&gt; value.snapshot(),
-            Repr::Any(value) =&gt; value.snapshot(),
-        };
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
+                <span class="kw">let </span>result = Formatter::format_with(<span class="kw-2">&amp;mut </span>s, |f| <span class="self">self</span>.debug_fmt(f));
 
-        <span class="kw">if </span>!snapshot.is_readable() {
-            <span class="macro">write!</span>(f, <span class="string">"&lt;{snapshot}&gt;"</span>)<span class="question-mark">?</span>;
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = result.into_result() {
+                    <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
+                        Repr::Empty =&gt; {
+                            <span class="macro">write!</span>(f, <span class="string">"&lt;empty: {e}&gt;"</span>)<span class="question-mark">?</span>;
+                        }
+                        Repr::Inline(value) =&gt; {
+                            <span class="macro">write!</span>(f, <span class="string">"&lt;{value:?}: {e}&gt;"</span>)<span class="question-mark">?</span>;
+                        }
+                        Repr::Dynamic(value) =&gt; {
+                            <span class="kw">let </span>ty = value.type_info();
+                            <span class="macro">write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}: {e}&gt;"</span>)<span class="question-mark">?</span>;
+                        }
+                        Repr::Any(value) =&gt; {
+                            <span class="kw">let </span>ty = value.type_info();
+                            <span class="macro">write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}: {e}&gt;"</span>)<span class="question-mark">?</span>;
+                        }
+                    }
+
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                }
+
+                f.write_str(s.as_str())<span class="question-mark">?</span>;
+            }
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
-        <span class="kw">let </span>result = Formatter::format_with(<span class="kw-2">&amp;mut </span>s, |f| <span class="self">self</span>.debug_fmt(f));
-
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = result.into_result() {
-            <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
-                Repr::Empty =&gt; {
-                    <span class="macro">write!</span>(f, <span class="string">"&lt;empty: {e}&gt;"</span>)<span class="question-mark">?</span>;
-                }
-                Repr::Inline(value) =&gt; {
-                    <span class="macro">write!</span>(f, <span class="string">"&lt;{value:?}: {e}&gt;"</span>)<span class="question-mark">?</span>;
-                }
-                Repr::Dynamic(value) =&gt; {
-                    <span class="kw">let </span>ty = value.type_info();
-                    <span class="macro">write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}: {e}&gt;"</span>)<span class="question-mark">?</span>;
-                }
-                Repr::Any(value) =&gt; {
-                    <span class="kw">let </span>ty = value.type_info();
-                    <span class="macro">write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}: {e}&gt;"</span>)<span class="question-mark">?</span>;
-                }
-            }
-
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-        }
-
-        f.write_str(s.as_str())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
