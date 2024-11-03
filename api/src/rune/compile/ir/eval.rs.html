@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/ir/eval.rs`."><title>eval.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (705cfe0e9 2024-11-01)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/ir/</div>eval.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/ir/eval.rs`."><title>eval.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b3f75cc87 2024-11-02)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/ir/</div>eval.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -457,7 +457,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::compile::ir::{<span class="self">self</span>};
 <span class="kw">use </span><span class="kw">crate</span>::compile::{<span class="self">self</span>, WithSpan};
 <span class="kw">use </span><span class="kw">crate</span>::query::Used;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{BorrowRefRepr, Inline, Object, OwnedTuple, Value};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Inline, Object, OwnedTuple, ReprRef, Value};
 <span class="kw">use </span><span class="kw">crate</span>::TypeHash;
 
 <span class="doccomment">/// The outcome of a constant evaluation.
@@ -522,11 +522,11 @@
     <span class="kw">let </span>a = eval_ir(<span class="kw-2">&amp;</span>ir.lhs, interp, used)<span class="question-mark">?</span>;
     <span class="kw">let </span>b = eval_ir(<span class="kw-2">&amp;</span>ir.rhs, interp, used)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>a = a.borrow_ref_repr().with_span(ir)<span class="question-mark">?</span>;
-    <span class="kw">let </span>b = b.borrow_ref_repr().with_span(ir)<span class="question-mark">?</span>;
+    <span class="kw">let </span>a = a.as_ref().with_span(ir)<span class="question-mark">?</span>;
+    <span class="kw">let </span>b = b.as_ref().with_span(ir)<span class="question-mark">?</span>;
 
     <span class="kw">match </span>(a, b) {
-        (BorrowRefRepr::Inline(a), BorrowRefRepr::Inline(b)) =&gt; {
+        (ReprRef::Inline(a), ReprRef::Inline(b)) =&gt; {
             <span class="kw">let </span>out = <span class="lifetime">'out</span>: {
                 <span class="kw">match </span>(a, b) {
                     (Inline::Signed(a), Inline::Signed(b)) =&gt; <span class="kw">match </span>ir.op {
@@ -590,7 +590,7 @@
 
             <span class="kw">return </span><span class="prelude-val">Ok</span>(Value::from(out));
         }
-        (BorrowRefRepr::Any(a), BorrowRefRepr::Any(b)) =&gt; {
+        (ReprRef::Any(a), ReprRef::Any(b)) =&gt; {
             <span class="kw">let </span>value = <span class="lifetime">'out</span>: {
                 <span class="kw">if let </span>(String::HASH, String::HASH) = (a.type_hash(), b.type_hash()) {
                     <span class="kw">let </span>a = a.borrow_ref::&lt;String&gt;().with_span(span)<span class="question-mark">?</span>;
@@ -803,10 +803,10 @@
             }
             ir::IrTemplateComponent::Ir(ir) =&gt; {
                 <span class="kw">let </span>const_value = eval_ir(ir, interp, used)<span class="question-mark">?</span>;
-                <span class="kw">let </span>value = const_value.borrow_ref_repr().with_span(ir)<span class="question-mark">?</span>;
+                <span class="kw">let </span>value = const_value.as_ref().with_span(ir)<span class="question-mark">?</span>;
 
                 <span class="kw">match </span>value {
-                    BorrowRefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
+                    ReprRef::Inline(value) =&gt; <span class="kw">match </span>value {
                         Inline::Signed(integer) =&gt; {
                             <span class="macro">write!</span>(buf, <span class="string">"{integer}"</span>)<span class="question-mark">?</span>;
                         }
@@ -821,7 +821,7 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
                         }
                     },
-                    BorrowRefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                    ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                         String::HASH =&gt; {
                             <span class="kw">let </span>s = value.borrow_ref::&lt;String&gt;().with_span(ir)<span class="question-mark">?</span>;
                             buf.try_push_str(<span class="kw-2">&amp;</span>s)<span class="question-mark">?</span>;
@@ -830,7 +830,7 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
                         }
                     },
-                    BorrowRefRepr::Mutable(..) =&gt; {
+                    ReprRef::Mutable(..) =&gt; {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(EvalOutcome::not_const(ir));
                     }
                 }

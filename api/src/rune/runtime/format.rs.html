@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/format.rs`."><title>format.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (705cfe0e9 2024-11-01)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>format.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/format.rs`."><title>format.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b3f75cc87 2024-11-02)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>format.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -613,7 +613,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::clone::TryClone;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::String;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Formatter, Inline, ProtocolCaller, RefRepr, Value, VmErrorKind, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{Formatter, Inline, ProtocolCaller, ReprRef, Value, VmErrorKind, VmResult};
 <span class="kw">use crate</span>::{Any, TypeHash};
 
 <span class="doccomment">/// Error raised when trying to parse a type string and it fails.
@@ -808,8 +808,8 @@
         caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="lifetime">'fallback</span>: {
-            <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref_repr()) {
-                RefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
+            <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref()) {
+                ReprRef::Inline(value) =&gt; <span class="kw">match </span>value {
                     Inline::Char(c) =&gt; {
                         <span class="macro">vm_try!</span>(f.buf_mut().try_push(<span class="kw-2">*</span>c));
                         <span class="macro">vm_try!</span>(<span class="self">self</span>.format_fill(f, <span class="self">self</span>.align, <span class="self">self</span>.fill, <span class="prelude-val">None</span>));
@@ -828,10 +828,10 @@
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
                 },
-                RefRepr::Mutable(..) =&gt; {
+                ReprRef::Mutable(..) =&gt; {
                     <span class="kw">break </span><span class="lifetime">'fallback</span>;
                 }
-                RefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                     String::HASH =&gt; {
                         <span class="kw">let </span>s = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;String&gt;());
                         <span class="macro">vm_try!</span>(f.buf_mut().try_push_str(<span class="kw-2">&amp;</span>s));
@@ -856,8 +856,8 @@
         caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="lifetime">'fallback</span>: {
-            <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref_repr()) {
-                RefRepr::Inline(value) =&gt; <span class="kw">match </span>value {
+            <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref()) {
+                ReprRef::Inline(value) =&gt; <span class="kw">match </span>value {
                     Inline::Signed(n) =&gt; {
                         <span class="kw">let </span>(n, align, fill, sign) = <span class="self">self</span>.int_traits(<span class="kw-2">*</span>n);
                         <span class="macro">vm_try!</span>(<span class="self">self</span>.format_number(f.buf_mut(), n));
@@ -872,10 +872,10 @@
                         <span class="kw">break </span><span class="lifetime">'fallback</span>;
                     }
                 },
-                RefRepr::Mutable(..) =&gt; {
+                ReprRef::Mutable(..) =&gt; {
                     <span class="kw">break </span><span class="lifetime">'fallback</span>;
                 }
-                RefRepr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+                ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                     String::HASH =&gt; {
                         <span class="kw">let </span>s = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;String&gt;());
                         <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{s:?}"</span>));

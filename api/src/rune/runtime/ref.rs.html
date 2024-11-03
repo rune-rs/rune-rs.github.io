@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/ref.rs`."><title>ref.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (705cfe0e9 2024-11-01)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>ref.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/ref.rs`."><title>ref.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b3f75cc87 2024-11-02)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>ref.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -393,7 +393,51 @@
 <a href="#392" id="392">392</a>
 <a href="#393" id="393">393</a>
 <a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::future::Future;
 <span class="kw">use </span>core::ops::{Deref, DerefMut};
 <span class="kw">use </span>core::pin::Pin;
@@ -411,7 +455,17 @@
 
 <span class="kw">type </span>DropFn = <span class="kw">unsafe fn</span>(NonNull&lt;()&gt;);
 
-<span class="doccomment">/// A strong reference to the given type.
+<span class="doccomment">/// A strong owned reference to the given type that can be safely dereferenced.
+///
+/// # Examples
+///
+/// Constructed from a static value:
+///
+/// ```rust
+/// use rune::Ref;
+///
+/// let value: Ref&lt;str&gt; = Ref::from_static("hello world");
+/// ```
 </span><span class="kw">pub struct </span>Ref&lt;T: <span class="question-mark">?</span>Sized&gt; {
     value: NonNull&lt;T&gt;,
     guard: RawAnyGuard,
@@ -425,7 +479,7 @@
     ///
     /// ```
     /// use std::rc::Rc;
-    /// use rune::runtime::Ref;
+    /// use rune::Ref;
     ///
     /// let value: Ref&lt;String&gt; = Ref::from(Rc::new(String::from("hello world")));
     /// assert_eq!(value.as_ref(), "hello world");
@@ -452,7 +506,7 @@
     ///
     /// ```
     /// use std::sync::Arc;
-    /// use rune::runtime::Ref;
+    /// use rune::Ref;
     ///
     /// let value: Ref&lt;String&gt; = Ref::from(Arc::new(String::from("hello world")));
     /// assert_eq!(value.as_ref(), "hello world");
@@ -476,7 +530,16 @@
         <span class="self">Self </span>{ value, guard }
     }
 
-    <span class="doccomment">/// Construct a static reference.
+    <span class="doccomment">/// Construct an owned reference from a static value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rune::Ref;
+    ///
+    /// let value: Ref&lt;str&gt; = Ref::from_static("Hello World");
+    /// assert_eq!(value.as_ref(), "Hello World");
+    /// ```
     </span><span class="kw">pub const fn </span>from_static(value: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>T) -&gt; Ref&lt;T&gt; {
         <span class="kw">let </span>value = <span class="kw">unsafe </span>{ NonNull::new_unchecked((value <span class="kw">as </span><span class="kw-2">*const </span>T).cast_mut()) };
         <span class="kw">let </span>guard = RawAnyGuard::new(NonNull::dangling(), <span class="kw-2">&amp;</span>RefVtable { drop: |<span class="kw">_</span>| {} });
@@ -488,7 +551,8 @@
     /// # Examples
     ///
     /// ```
-    /// use rune::runtime::{Bytes, Ref};
+    /// use rune::Ref;
+    /// use rune::runtime::Bytes;
     /// use rune::alloc::try_vec;
     ///
     /// let bytes = rune::to_value(Bytes::from_vec(try_vec![1, 2, 3, 4]))?;
@@ -518,7 +582,8 @@
     /// # Examples
     ///
     /// ```
-    /// use rune::runtime::{Bytes, Ref};
+    /// use rune::Ref;
+    /// use rune::runtime::Bytes;
     /// use rune::alloc::try_vec;
     ///
     /// let bytes = rune::to_value(Bytes::from_vec(try_vec![1, 2, 3, 4]))?;
@@ -601,7 +666,19 @@
     }
 }
 
-<span class="doccomment">/// A strong mutable reference to the given type.
+<span class="doccomment">/// A strong owned mutable reference to the given type that can be safely
+/// dereferenced.
+///
+/// # Examples
+///
+/// Constructed from a static value:
+///
+/// ```rust
+/// use rune::Mut;
+///
+/// let value: Mut&lt;[u8]&gt; = Mut::from_static(&amp;mut [][..]);
+/// assert_eq!(&amp;value[..], b"");
+/// ```
 </span><span class="kw">pub struct </span>Mut&lt;T: <span class="question-mark">?</span>Sized&gt; {
     value: NonNull&lt;T&gt;,
     guard: RawAnyGuard,
@@ -612,7 +689,16 @@
         <span class="self">Self </span>{ value, guard }
     }
 
-    <span class="doccomment">/// Construct a static mutable reference.
+    <span class="doccomment">/// Construct an owned mutable reference from a static value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rune::Mut;
+    ///
+    /// let value: Mut&lt;[u8]&gt; = Mut::from_static(&amp;mut [][..]);
+    /// assert_eq!(&amp;value[..], b"");
+    /// ```
     </span><span class="kw">pub fn </span>from_static(value: <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="kw-2">mut </span>T) -&gt; Mut&lt;T&gt; {
         <span class="kw">let </span>value = <span class="kw">unsafe </span>{ NonNull::new_unchecked((value <span class="kw">as </span><span class="kw-2">*const </span>T).cast_mut()) };
         <span class="kw">let </span>guard = RawAnyGuard::new(NonNull::dangling(), <span class="kw-2">&amp;</span>RefVtable { drop: |<span class="kw">_</span>| {} });
@@ -624,7 +710,8 @@
     /// # Examples
     ///
     /// ```
-    /// use rune::runtime::{Bytes, Mut};
+    /// use rune::Mut;
+    /// use rune::runtime::Bytes;
     /// use rune::alloc::try_vec;
     ///
     /// let bytes = rune::to_value(Bytes::from_vec(try_vec![1, 2, 3, 4]))?;
@@ -655,7 +742,8 @@
     /// # Examples
     ///
     /// ```
-    /// use rune::runtime::{Bytes, Mut};
+    /// use rune::Mut;
+    /// use rune::runtime::Bytes;
     /// use rune::alloc::try_vec;
     ///
     /// let bytes = rune::to_value(Bytes::from_vec(try_vec![1, 2, 3, 4]))?;
