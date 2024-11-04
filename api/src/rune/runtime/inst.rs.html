@@ -1810,46 +1810,8 @@
 <a href="#1809" id="1809">1809</a>
 <a href="#1810" id="1810">1810</a>
 <a href="#1811" id="1811">1811</a>
-<a href="#1812" id="1812">1812</a>
-<a href="#1813" id="1813">1813</a>
-<a href="#1814" id="1814">1814</a>
-<a href="#1815" id="1815">1815</a>
-<a href="#1816" id="1816">1816</a>
-<a href="#1817" id="1817">1817</a>
-<a href="#1818" id="1818">1818</a>
-<a href="#1819" id="1819">1819</a>
-<a href="#1820" id="1820">1820</a>
-<a href="#1821" id="1821">1821</a>
-<a href="#1822" id="1822">1822</a>
-<a href="#1823" id="1823">1823</a>
-<a href="#1824" id="1824">1824</a>
-<a href="#1825" id="1825">1825</a>
-<a href="#1826" id="1826">1826</a>
-<a href="#1827" id="1827">1827</a>
-<a href="#1828" id="1828">1828</a>
-<a href="#1829" id="1829">1829</a>
-<a href="#1830" id="1830">1830</a>
-<a href="#1831" id="1831">1831</a>
-<a href="#1832" id="1832">1832</a>
-<a href="#1833" id="1833">1833</a>
-<a href="#1834" id="1834">1834</a>
-<a href="#1835" id="1835">1835</a>
-<a href="#1836" id="1836">1836</a>
-<a href="#1837" id="1837">1837</a>
-<a href="#1838" id="1838">1838</a>
-<a href="#1839" id="1839">1839</a>
-<a href="#1840" id="1840">1840</a>
-<a href="#1841" id="1841">1841</a>
-<a href="#1842" id="1842">1842</a>
-<a href="#1843" id="1843">1843</a>
-<a href="#1844" id="1844">1844</a>
-<a href="#1845" id="1845">1845</a>
-<a href="#1846" id="1846">1846</a>
-<a href="#1847" id="1847">1847</a>
-<a href="#1848" id="1848">1848</a>
-<a href="#1849" id="1849">1849</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#1812" id="1812">1812</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
-<span class="kw">use </span>core::num::NonZeroUsize;
 
 <span class="kw">use </span>musli::{Decode, Encode};
 <span class="kw">use </span>rune_macros::InstDisplay;
@@ -1857,8 +1819,9 @@
 
 <span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{Call, FormatSpec, Memory, Type, Value, VmError, VmResult};
 <span class="kw">use </span><span class="kw">crate</span>::Hash;
+
+<span class="kw">use super</span>::{Call, FormatSpec, Memory, RuntimeError, Type, Value};
 
 <span class="doccomment">/// Pre-canned panic reasons.
 ///
@@ -2972,19 +2935,6 @@
     }
 }
 
-<span class="doccomment">/// The calling convention of a function.
-</span><span class="attr">#[derive(
-    Debug, TryClone, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Encode, Decode,
-)]
-#[try_clone(copy)]
-#[non_exhaustive]
-</span><span class="kw">enum </span>OutputKind {
-    <span class="doccomment">/// Push the produced value onto the stack.
-    </span>Keep(NonZeroUsize),
-    <span class="doccomment">/// Discard the produced value, leaving the stack unchanged.
-    </span>Discard,
-}
-
 <span class="doccomment">/// What to do with the output of an instruction.
 </span><span class="attr">#[derive(TryClone, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Encode, Decode)]
 #[try_clone(copy)]
@@ -2992,36 +2942,30 @@
 #[musli(transparent)]
 #[serde(transparent)]
 </span><span class="kw">pub struct </span>Output {
-    kind: OutputKind,
+    offset: usize,
 }
 
 <span class="kw">impl </span>Output {
     <span class="doccomment">/// Construct a keep output kind.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>keep(index: usize) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="prelude-val">Some</span>(index) = NonZeroUsize::new(index ^ usize::MAX) <span class="kw">else </span>{
-            <span class="macro">panic!</span>(<span class="string">"Index {index} is out of bounds"</span>)
-        };
-
-        <span class="self">Self </span>{
-            kind: OutputKind::Keep(index),
-        }
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>keep(offset: usize) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert_ne!</span>(offset, usize::MAX, <span class="string">"Address is invalid"</span>);
+        <span class="self">Self </span>{ offset }
     }
 
     <span class="doccomment">/// Construct a discard output kind.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>discard() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            kind: OutputKind::Discard,
-        }
+        <span class="self">Self </span>{ offset: usize::MAX }
     }
 
     <span class="doccomment">/// Check if the output is a keep.
-    </span><span class="attr">#[inline]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_addr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;InstAddress&gt; {
-        <span class="kw">match </span><span class="self">self</span>.kind {
-            OutputKind::Keep(index) =&gt; <span class="prelude-val">Some</span>(InstAddress::new(index.get() ^ usize::MAX)),
-            OutputKind::Discard =&gt; <span class="prelude-val">None</span>,
+        <span class="kw">if </span><span class="self">self</span>.offset == usize::MAX {
+            <span class="prelude-val">None
+        </span>} <span class="kw">else </span>{
+            <span class="prelude-val">Some</span>(InstAddress::new(<span class="self">self</span>.offset))
         }
     }
 
@@ -3049,25 +2993,26 @@
     ///     out.store(stack, number);
     ///     VmResult::Ok(())
     /// }
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>store&lt;O&gt;(<span class="self">self</span>, stack: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Memory, o: O) -&gt; VmResult&lt;()&gt;
+    </span><span class="attr">#[inline(always)]
+    </span><span class="kw">pub fn </span>store&lt;M, O&gt;(<span class="self">self</span>, stack: <span class="kw-2">&amp;mut </span>M, o: O) -&gt; <span class="prelude-ty">Result</span>&lt;(), RuntimeError&gt;
     <span class="kw">where
-        </span>O: IntoOutput&lt;Output: TryInto&lt;Value, Error: Into&lt;VmError&gt;&gt;&gt;,
+        </span>M: <span class="question-mark">?</span>Sized + Memory,
+        O: IntoOutput,
     {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(addr) = <span class="self">self</span>.as_addr() {
-            <span class="kw">let </span>value = <span class="macro">vm_try!</span>(o.into_output());
-            <span class="kw-2">*</span><span class="macro">vm_try!</span>(stack.at_mut(addr)) = <span class="macro">vm_try!</span>(value.try_into().map_err(Into::into));
+            <span class="kw-2">*</span>stack.at_mut(addr)<span class="question-mark">? </span>= o.into_output()<span class="question-mark">?</span>;
         }
 
-        VmResult::Ok(())
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>Output {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-        <span class="kw">match </span><span class="self">self</span>.kind {
-            OutputKind::Keep(index) =&gt; <span class="macro">write!</span>(f, <span class="string">"keep({})"</span>, index.get() ^ usize::MAX),
-            OutputKind::Discard =&gt; <span class="macro">write!</span>(f, <span class="string">"discard"</span>),
+        <span class="kw">if </span><span class="self">self</span>.offset == usize::MAX {
+            <span class="macro">write!</span>(f, <span class="string">"discard"</span>)
+        } <span class="kw">else </span>{
+            <span class="macro">write!</span>(f, <span class="string">"keep({})"</span>, <span class="self">self</span>.offset)
         }
     }
 }
@@ -3081,11 +3026,8 @@
 
 <span class="doccomment">/// Trait used to coerce values into outputs.
 </span><span class="kw">pub trait </span>IntoOutput {
-    <span class="attr">#[doc(hidden)]
-    </span><span class="kw">type </span>Output;
-
     <span class="doccomment">/// Coerce the current value into an output.
-    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; VmResult&lt;<span class="self">Self</span>::Output&gt;;
+    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt;;
 }
 
 <span class="kw">impl</span>&lt;F, O&gt; IntoOutput <span class="kw">for </span>F
@@ -3093,41 +3035,27 @@
     </span>F: FnOnce() -&gt; O,
     O: IntoOutput,
 {
-    <span class="kw">type </span>Output = O::Output;
-
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; VmResult&lt;<span class="self">Self</span>::Output&gt; {
+    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
         <span class="self">self</span>().into_output()
     }
 }
 
 <span class="kw">impl</span>&lt;T, E&gt; IntoOutput <span class="kw">for </span><span class="prelude-ty">Result</span>&lt;T, E&gt;
 <span class="kw">where
-    </span>VmError: From&lt;E&gt;,
+    </span>T: IntoOutput,
+    RuntimeError: From&lt;E&gt;,
 {
-    <span class="kw">type </span>Output = T;
-
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; VmResult&lt;<span class="self">Self</span>::Output&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(<span class="self">self</span>))
+    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="self">self</span><span class="question-mark">?</span>.into_output()
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; IntoOutput <span class="kw">for </span>VmResult&lt;T&gt; {
-    <span class="kw">type </span>Output = T;
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; VmResult&lt;<span class="self">Self</span>::Output&gt; {
-        <span class="self">self
-    </span>}
-}
-
 <span class="kw">impl </span>IntoOutput <span class="kw">for </span>Value {
-    <span class="kw">type </span>Output = Value;
-
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; VmResult&lt;<span class="self">Self</span>::Output&gt; {
-        VmResult::Ok(<span class="self">self</span>)
+    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
 }
 
@@ -3689,11 +3617,9 @@
 }
 
 <span class="kw">impl </span>IntoOutput <span class="kw">for </span><span class="kw-2">&amp;</span>str {
-    <span class="kw">type </span>Output = String;
-
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; VmResult&lt;<span class="self">Self</span>::Output&gt; {
-        VmResult::Ok(<span class="macro">vm_try!</span>(String::try_from(<span class="self">self</span>)))
+    </span><span class="kw">fn </span>into_output(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Value, RuntimeError&gt; {
+        <span class="prelude-val">Ok</span>(Value::try_from(<span class="self">self</span>)<span class="question-mark">?</span>)
     }
 }
 </code></pre></div></section></main></body></html>
