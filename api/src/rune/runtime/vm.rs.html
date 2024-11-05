@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b8c8287a2 2024-11-03)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (fbab78289 2024-11-04)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -3918,16 +3918,7 @@
 <a href="#3917" id="3917">3917</a>
 <a href="#3918" id="3918">3918</a>
 <a href="#3919" id="3919">3919</a>
-<a href="#3920" id="3920">3920</a>
-<a href="#3921" id="3921">3921</a>
-<a href="#3922" id="3922">3922</a>
-<a href="#3923" id="3923">3923</a>
-<a href="#3924" id="3924">3924</a>
-<a href="#3925" id="3925">3925</a>
-<a href="#3926" id="3926">3926</a>
-<a href="#3927" id="3927">3927</a>
-<a href="#3928" id="3928">3928</a>
-<a href="#3929" id="3929">3929</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#3920" id="3920">3920</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ops;
@@ -3948,7 +3939,7 @@
     Format, FormatSpec, Formatter, FromValue, Function, Future, Generator, GeneratorState,
     GuardedArgs, Inline, Inst, InstAddress, InstAssignOp, InstOp, InstRange, InstTarget, InstValue,
     InstVariant, Object, Output, OwnedTuple, Pair, Panic, Protocol, ProtocolCaller, Range,
-    RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive, ReprMut, ReprRef, RttiKind,
+    RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive, Repr, RttiKind,
     RuntimeContext, Select, SelectFuture, Stack, Stream, Type, TypeCheck, TypeHash, TypeInfo,
     TypeOf, Unit, UnitFn, UnitStorage, Value, Vec, VmDiagnostics, VmDiagnosticsObj, VmError,
     VmErrorKind, VmExecution, VmHalt, VmIntegerRepr, VmResult, VmSendExecution,
@@ -4073,7 +4064,9 @@
             InstTarget::Field(lhs, field) =&gt; {
                 <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(<span class="macro-nonterminal">$vm</span>.stack.at(<span class="macro-nonterminal">$rhs</span>));
 
-                <span class="kw">let </span>field = <span class="macro">vm_try!</span>(<span class="macro-nonterminal">$vm</span>.unit.lookup_string(field));
+                <span class="kw">let </span><span class="prelude-val">Some</span>(field) = <span class="macro-nonterminal">$vm</span>.unit.lookup_string(field) <span class="kw">else </span>{
+                    <span class="kw">return </span>err(VmErrorKind::MissingStaticString { slot: field });
+                };
 
                 <span class="macro-nonterminal">$lhs </span>= <span class="macro">vm_try!</span>(<span class="macro-nonterminal">$vm</span>.stack.at(lhs)).clone();
 
@@ -4524,7 +4517,7 @@
     {
         <span class="kw">let </span>hash = name.to_type_hash();
 
-        <span class="kw">let </span><span class="prelude-val">Some</span>(info) = <span class="self">self</span>.unit.function(hash) <span class="kw">else </span>{
+        <span class="kw">let </span><span class="prelude-val">Some</span>(info) = <span class="self">self</span>.unit.function(<span class="kw-2">&amp;</span>hash) <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">if let </span><span class="prelude-val">Some</span>(item) = name.to_item()<span class="question-mark">? </span>{
                 VmErrorKind::MissingEntry { hash, item }
             } <span class="kw">else </span>{
@@ -4540,8 +4533,8 @@
                 args: expected,
                 ..
             } =&gt; {
-                check_args(count, expected)<span class="question-mark">?</span>;
-                offset
+                check_args(count, <span class="kw-2">*</span>expected)<span class="question-mark">?</span>;
+                <span class="kw-2">*</span>offset
             }
             <span class="kw">_ </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(VmErrorKind::MissingFunction { hash });
@@ -4565,7 +4558,7 @@
         out: Output,
     ) -&gt; VmResult&lt;CallResult&lt;()&gt;&gt; {
         <span class="kw">let </span>count = args.count().wrapping_add(<span class="number">1</span>);
-        <span class="kw">let </span>type_hash = <span class="macro">vm_try!</span>(target.type_hash());
+        <span class="kw">let </span>type_hash = target.type_hash();
         <span class="kw">let </span>hash = Hash::associated_function(type_hash, hash.to_type_hash());
         <span class="self">self</span>.call_hash_with(isolated, hash, target, args, count, out)
     }
@@ -4581,7 +4574,7 @@
         out: Output,
     ) -&gt; VmResult&lt;CallResult&lt;()&gt;&gt; {
         <span class="kw">let </span>count = args.count().wrapping_add(<span class="number">1</span>);
-        <span class="kw">let </span>hash = Hash::field_function(protocol, <span class="macro">vm_try!</span>(target.type_hash()), name);
+        <span class="kw">let </span>hash = Hash::field_function(protocol, target.type_hash(), name);
         <span class="self">self</span>.call_hash_with(Isolated::None, hash, target, args, count, out)
     }
 
@@ -4596,7 +4589,7 @@
         out: Output,
     ) -&gt; VmResult&lt;CallResult&lt;()&gt;&gt; {
         <span class="kw">let </span>count = args.count().wrapping_add(<span class="number">1</span>);
-        <span class="kw">let </span>hash = Hash::index_function(protocol, <span class="macro">vm_try!</span>(target.type_hash()), Hash::index(index));
+        <span class="kw">let </span>hash = Hash::index_function(protocol, target.type_hash(), Hash::index(index));
         <span class="self">self</span>.call_hash_with(Isolated::None, hash, target, args, count, out)
     }
 
@@ -4620,7 +4613,7 @@
         count: usize,
         out: Output,
     ) -&gt; VmResult&lt;CallResult&lt;()&gt;&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(hash) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(<span class="kw-2">&amp;</span>hash) {
             <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
 
             <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
@@ -4638,16 +4631,17 @@
             call,
             args: expected,
             ..
-        }) = <span class="self">self</span>.unit.function(hash)
+        }) = <span class="self">self</span>.unit.function(<span class="kw-2">&amp;</span>hash)
         {
-            <span class="macro">vm_try!</span>(check_args(count, expected));
+            <span class="macro">vm_try!</span>(check_args(count, <span class="kw-2">*</span>expected));
 
             <span class="kw">let </span>addr = <span class="self">self</span>.stack.addr();
+
             <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
             <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.push(target));
             <span class="macro">vm_try!</span>(args.push_to_stack(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack));
 
-            <span class="kw">let </span>result = <span class="self">self</span>.call_offset_fn(offset, call, addr, count, isolated, out);
+            <span class="kw">let </span>result = <span class="self">self</span>.call_offset_fn(<span class="kw-2">*</span>offset, <span class="kw-2">*</span>call, addr, count, isolated, out);
 
             <span class="kw">if </span><span class="macro">vm_try!</span>(result) {
                 <span class="self">self</span>.stack.truncate(addr);
@@ -4747,8 +4741,8 @@
 
     <span class="doccomment">/// Implementation of getting a string index on an object-like type.
     </span><span class="kw">fn </span>try_object_like_index_get(target: <span class="kw-2">&amp;</span>Value, field: <span class="kw-2">&amp;</span>str) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref()) {
-            ReprRef::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Struct) =&gt; {
+        <span class="kw">match </span>target.as_ref() {
+            Repr::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Struct) =&gt; {
                 <span class="kw">let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(data.get_field_ref(field)) <span class="kw">else </span>{
                     <span class="kw">return </span>err(VmErrorKind::MissingField {
                         target: data.type_info(),
@@ -4758,7 +4752,7 @@
 
                 VmResult::Ok(<span class="prelude-val">Some</span>(value.clone()))
             }
-            ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+            Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                 Object::HASH =&gt; {
                     <span class="kw">let </span>target = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;Object&gt;());
 
@@ -4779,19 +4773,19 @@
 
     <span class="doccomment">/// Implementation of getting a string index on an object-like type.
     </span><span class="kw">fn </span>try_tuple_like_index_get(target: <span class="kw-2">&amp;</span>Value, index: usize) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt; {
-        <span class="kw">let </span>result = <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref()) {
-            ReprRef::Inline(target) =&gt; <span class="kw">match </span>target {
+        <span class="kw">let </span>result = <span class="kw">match </span>target.as_ref() {
+            Repr::Inline(target) =&gt; <span class="kw">match </span>target {
                 Inline::Unit =&gt; <span class="prelude-val">Err</span>(target.type_info()),
                 <span class="kw">_ </span>=&gt; <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>),
             },
-            ReprRef::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Tuple) =&gt; {
+            Repr::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Tuple) =&gt; {
                 <span class="kw">match </span><span class="macro">vm_try!</span>(data.get_ref(index)) {
                     <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
                     <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(data.type_info()),
                 }
             }
-            ReprRef::Dynamic(data) =&gt; <span class="prelude-val">Err</span>(data.type_info()),
-            ReprRef::Any(target) =&gt; <span class="kw">match </span>target.type_hash() {
+            Repr::Dynamic(data) =&gt; <span class="prelude-val">Err</span>(data.type_info()),
+            Repr::Any(target) =&gt; <span class="kw">match </span>target.type_hash() {
                 <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH =&gt; {
                     <span class="kw">match </span>(
                         index,
@@ -4849,8 +4843,8 @@
         target: <span class="kw-2">&amp;</span>Value,
         index: usize,
     ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'_</span>, Value&gt;&gt;&gt; {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref()) {
-            ReprRef::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Tuple) =&gt; {
+        <span class="kw">match </span>target.as_ref() {
+            Repr::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Tuple) =&gt; {
                 <span class="kw">let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(data.get_mut(index)) <span class="kw">else </span>{
                     <span class="kw">return </span>err(VmErrorKind::MissingIndexInteger {
                         target: data.type_info(),
@@ -4860,11 +4854,11 @@
 
                 VmResult::Ok(<span class="prelude-val">Some</span>(value))
             }
-            ReprRef::Dynamic(data) =&gt; err(VmErrorKind::MissingIndexInteger {
+            Repr::Dynamic(data) =&gt; err(VmErrorKind::MissingIndexInteger {
                 target: data.type_info(),
                 index: VmIntegerRepr::from(index),
             }),
-            ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+            Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                 <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH =&gt; {
                     <span class="kw">let </span>result = BorrowMut::try_map(
                         <span class="macro">vm_try!</span>(value.borrow_mut::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;()),
@@ -4958,19 +4952,19 @@
         target: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value,
         field: <span class="kw-2">&amp;</span>str,
     ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;BorrowMut&lt;<span class="lifetime">'a</span>, Value&gt;&gt;&gt; {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref()) {
-            ReprRef::Inline(value) =&gt; err(VmErrorKind::MissingField {
+        <span class="kw">match </span>target.as_ref() {
+            Repr::Inline(value) =&gt; err(VmErrorKind::MissingField {
                 target: value.type_info(),
                 field: <span class="macro">vm_try!</span>(field.try_to_owned()),
             }),
-            ReprRef::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Struct) =&gt; {
+            Repr::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Struct) =&gt; {
                 VmResult::Ok(<span class="macro">vm_try!</span>(data.get_field_mut(field)))
             }
-            ReprRef::Dynamic(data) =&gt; err(VmErrorKind::MissingField {
+            Repr::Dynamic(data) =&gt; err(VmErrorKind::MissingField {
                 target: data.type_info(),
                 field: <span class="macro">vm_try!</span>(field.try_to_owned()),
             }),
-            ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+            Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                 Object::HASH =&gt; {
                     <span class="kw">let </span>object = <span class="macro">vm_try!</span>(value.borrow_mut::&lt;Object&gt;());
 
@@ -4990,12 +4984,12 @@
 
     <span class="doccomment">/// Implementation of getting a string index on an object-like type.
     </span><span class="kw">fn </span>try_tuple_like_index_set(target: <span class="kw-2">&amp;</span>Value, index: usize, from: <span class="kw-2">&amp;</span>Value) -&gt; VmResult&lt;bool&gt; {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref()) {
-            ReprRef::Inline(target) =&gt; <span class="kw">match </span>target {
+        <span class="kw">match </span>target.as_ref() {
+            Repr::Inline(target) =&gt; <span class="kw">match </span>target {
                 Inline::Unit =&gt; VmResult::Ok(<span class="bool-val">false</span>),
                 <span class="kw">_ </span>=&gt; VmResult::Ok(<span class="bool-val">false</span>),
             },
-            ReprRef::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Tuple) =&gt; {
+            Repr::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Tuple) =&gt; {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(target) = <span class="macro">vm_try!</span>(data.borrow_mut()).get_mut(index) {
                     target.clone_from(from);
                     <span class="kw">return </span>VmResult::Ok(<span class="bool-val">true</span>);
@@ -5003,8 +4997,8 @@
 
                 VmResult::Ok(<span class="bool-val">false</span>)
             }
-            ReprRef::Dynamic(..) =&gt; VmResult::Ok(<span class="bool-val">false</span>),
-            ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+            Repr::Dynamic(..) =&gt; VmResult::Ok(<span class="bool-val">false</span>),
+            Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                 <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vm_try!</span>(value.borrow_mut::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;());
 
@@ -5058,8 +5052,8 @@
         field: <span class="kw-2">&amp;</span>str,
         value: <span class="kw-2">&amp;</span>Value,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, VmErrorKind&gt; {
-        <span class="kw">match </span>target.as_ref()<span class="question-mark">? </span>{
-            ReprRef::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Struct) =&gt; {
+        <span class="kw">match </span>target.as_ref() {
+            Repr::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Struct) =&gt; {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>v) = data.get_field_mut(field)<span class="question-mark">? </span>{
                     v.clone_from(value);
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
@@ -5070,7 +5064,7 @@
                     field: field.try_to_owned()<span class="question-mark">?</span>,
                 })
             }
-            ReprRef::Any(target) =&gt; <span class="kw">match </span>target.type_hash() {
+            Repr::Any(target) =&gt; <span class="kw">match </span>target.type_hash() {
                 Object::HASH =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>target = target.borrow_mut::&lt;Object&gt;()<span class="question-mark">?</span>;
 
@@ -5096,12 +5090,12 @@
     <span class="kw">where
         </span>F: FnOnce(<span class="kw-2">&amp;</span>[Value]) -&gt; O,
     {
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref()) {
-            ReprRef::Inline(value) =&gt; <span class="kw">match </span>(ty, value) {
+        <span class="kw">let </span>value = <span class="kw">match </span>value.as_ref() {
+            Repr::Inline(value) =&gt; <span class="kw">match </span>(ty, value) {
                 (TypeCheck::Unit, Inline::Unit) =&gt; <span class="prelude-val">Some</span>(f(<span class="kw-2">&amp;</span>[])),
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
             },
-            ReprRef::Any(value) =&gt; <span class="kw">match </span>(ty, value.type_hash()) {
+            Repr::Any(value) =&gt; <span class="kw">match </span>(ty, value.type_hash()) {
                 (TypeCheck::Vec, runtime::Vec::HASH) =&gt; {
                     <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;runtime::Vec&gt;());
                     <span class="prelude-val">Some</span>(f(<span class="kw-2">&amp;</span>vec))
@@ -5123,10 +5117,10 @@
         <span class="kw">let </span>b = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(rhs));
         <span class="kw">let </span>a = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(lhs));
 
-        <span class="kw">let </span>ReprRef::Inline(Inline::Type(ty)) = <span class="macro">vm_try!</span>(b.as_ref()) <span class="kw">else </span>{
+        <span class="kw">let </span>Repr::Inline(Inline::Type(ty)) = b.as_ref() <span class="kw">else </span>{
             <span class="kw">return </span>err(VmErrorKind::UnsupportedIs {
-                value: <span class="macro">vm_try!</span>(a.type_info()),
-                test_type: <span class="macro">vm_try!</span>(b.type_info()),
+                value: a.type_info(),
+                test_type: b.type_info(),
             });
         };
 
@@ -5146,10 +5140,10 @@
             };
         }
 
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(a.as_ref()) {
-            ReprRef::Inline(Inline::Unsigned(a)) =&gt; <span class="macro">convert!</span>(u64, <span class="kw-2">*</span>a),
-            ReprRef::Inline(Inline::Signed(a)) =&gt; <span class="macro">convert!</span>(i64, <span class="kw-2">*</span>a),
-            ReprRef::Inline(Inline::Float(a)) =&gt; <span class="macro">convert!</span>(f64, <span class="kw-2">*</span>a),
+        <span class="kw">let </span>value = <span class="kw">match </span>a.as_ref() {
+            Repr::Inline(Inline::Unsigned(a)) =&gt; <span class="macro">convert!</span>(u64, <span class="kw-2">*</span>a),
+            Repr::Inline(Inline::Signed(a)) =&gt; <span class="macro">convert!</span>(i64, <span class="kw-2">*</span>a),
+            Repr::Inline(Inline::Float(a)) =&gt; <span class="macro">convert!</span>(f64, <span class="kw-2">*</span>a),
             value =&gt; {
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedAs {
                     value: value.type_info(),
@@ -5166,14 +5160,14 @@
         <span class="kw">let </span>b = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(rhs));
         <span class="kw">let </span>a = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(lhs));
 
-        <span class="kw">let </span><span class="prelude-val">Some</span>(Inline::Type(ty)) = <span class="macro">vm_try!</span>(b.as_inline()) <span class="kw">else </span>{
+        <span class="kw">let </span><span class="prelude-val">Some</span>(Inline::Type(ty)) = b.as_inline() <span class="kw">else </span>{
             <span class="kw">return </span>err(VmErrorKind::UnsupportedIs {
-                value: <span class="macro">vm_try!</span>(a.type_info()),
-                test_type: <span class="macro">vm_try!</span>(b.type_info()),
+                value: a.type_info(),
+                test_type: b.type_info(),
             });
         };
 
-        VmResult::Ok(<span class="macro">vm_try!</span>(a.type_hash()) == ty.into_hash())
+        VmResult::Ok(a.type_hash() == ty.into_hash())
     }
 
     <span class="kw">fn </span>internal_bool(
@@ -5187,17 +5181,10 @@
         <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(rhs));
         <span class="kw">let </span>lhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(lhs));
 
-        <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_ref()), <span class="macro">vm_try!</span>(rhs.as_ref())) {
-            (ReprRef::Inline(lhs), ReprRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
-                (Inline::Bool(lhs), Inline::Bool(rhs)) =&gt; Inline::Bool(bool_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs)),
-                (lhs, rhs) =&gt; {
-                    <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
-                        op,
-                        lhs: lhs.type_info(),
-                        rhs: rhs.type_info(),
-                    });
-                }
-            },
+        <span class="kw">let </span>inline = <span class="kw">match </span>(lhs.as_ref(), rhs.as_ref()) {
+            (Repr::Inline(Inline::Bool(lhs)), Repr::Inline(Inline::Bool(rhs))) =&gt; {
+                Inline::Bool(bool_op(<span class="kw-2">*</span>lhs, <span class="kw-2">*</span>rhs))
+            }
             (lhs, rhs) =&gt; {
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                     op,
@@ -5328,23 +5315,23 @@
 
         <span class="kw">let </span>fallback = <span class="kw">match </span><span class="macro">target_value!</span>(<span class="self">self</span>, target, guard, lhs, rhs) {
             TargetValue::Same(value) =&gt; {
-                <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_mut()) {
-                    ReprMut::Inline(Inline::Signed(value)) =&gt; {
+                <span class="kw">match </span>value.as_mut() {
+                    Repr::Inline(Inline::Signed(value)) =&gt; {
                         <span class="kw">let </span>out = <span class="macro">vm_try!</span>(signed_op(<span class="kw-2">*</span>value, <span class="kw-2">*</span>value).ok_or_else(error));
                         <span class="kw-2">*</span>value = out;
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ReprMut::Inline(Inline::Unsigned(value)) =&gt; {
+                    Repr::Inline(Inline::Unsigned(value)) =&gt; {
                         <span class="kw">let </span>out = <span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>value, <span class="kw-2">*</span>value).ok_or_else(error));
                         <span class="kw-2">*</span>value = out;
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ReprMut::Inline(Inline::Float(value)) =&gt; {
+                    Repr::Inline(Inline::Float(value)) =&gt; {
                         <span class="kw">let </span>out = float_op(<span class="kw-2">*</span>value, <span class="kw-2">*</span>value);
                         <span class="kw-2">*</span>value = out;
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ReprMut::Inline(value) =&gt; {
+                    Repr::Inline(value) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: value.type_info(),
@@ -5357,8 +5344,8 @@
                 TargetFallback::Value(value.clone(), value.clone())
             }
             TargetValue::Pair(lhs, rhs) =&gt; {
-                <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut()), <span class="macro">vm_try!</span>(rhs.as_ref())) {
-                    (ReprMut::Inline(lhs), ReprRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+                <span class="kw">match </span>(lhs.as_mut(), rhs.as_ref()) {
+                    (Repr::Inline(lhs), Repr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                         (Inline::Signed(lhs), rhs) =&gt; {
                             <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
                             <span class="kw">let </span>out = <span class="macro">vm_try!</span>(signed_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
@@ -5384,7 +5371,7 @@
                             });
                         }
                     },
-                    (ReprMut::Inline(lhs), rhs) =&gt; {
+                    (Repr::Inline(lhs), rhs) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: lhs.type_info(),
@@ -5422,8 +5409,8 @@
                 )) {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                         op: protocol.name,
-                        lhs: <span class="macro">vm_try!</span>(lhs.type_info()),
-                        rhs: <span class="macro">vm_try!</span>(rhs.type_info()),
+                        lhs: lhs.type_info(),
+                        rhs: rhs.type_info(),
                     });
                 };
 
@@ -5440,7 +5427,7 @@
                     Output::discard()
                 )) {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedObjectSlotIndexGet {
-                        target: <span class="macro">vm_try!</span>(lhs.type_info()),
+                        target: lhs.type_info(),
                     });
                 }
 
@@ -5457,7 +5444,7 @@
                     Output::discard()
                 )) {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedTupleIndexGet {
-                        target: <span class="macro">vm_try!</span>(lhs.type_info()),
+                        target: lhs.type_info(),
                         index,
                     });
                 }
@@ -5484,8 +5471,8 @@
         <span class="kw">let </span>lhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(lhs));
 
         <span class="lifetime">'fallback</span>: {
-            <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_ref()), <span class="macro">vm_try!</span>(rhs.as_ref())) {
-                (ReprRef::Inline(lhs), ReprRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+            <span class="kw">let </span>inline = <span class="kw">match </span>(lhs.as_ref(), rhs.as_ref()) {
+                (Repr::Inline(lhs), Repr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                     (Inline::Unsigned(lhs), rhs) =&gt; {
                         <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
                         Inline::Unsigned(<span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error)))
@@ -5503,7 +5490,7 @@
                         });
                     }
                 },
-                (ReprRef::Inline(lhs), rhs) =&gt; {
+                (Repr::Inline(lhs), rhs) =&gt; {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                         op: protocol.name,
                         lhs: lhs.type_info(),
@@ -5529,8 +5516,8 @@
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                 op: protocol.name,
-                lhs: <span class="macro">vm_try!</span>(lhs.type_info()),
-                rhs: <span class="macro">vm_try!</span>(rhs.type_info()),
+                lhs: lhs.type_info(),
+                rhs: rhs.type_info(),
             });
         }
 
@@ -5553,8 +5540,8 @@
         <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(rhs));
 
         <span class="lifetime">'fallback</span>: {
-            <span class="kw">let </span>inline = <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_ref()), <span class="macro">vm_try!</span>(rhs.as_ref())) {
-                (ReprRef::Inline(lhs), ReprRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+            <span class="kw">let </span>inline = <span class="kw">match </span>(lhs.as_ref(), rhs.as_ref()) {
+                (Repr::Inline(lhs), Repr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                     (Inline::Unsigned(lhs), rhs) =&gt; {
                         <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
                         Inline::Unsigned(unsigned_op(<span class="kw-2">*</span>lhs, rhs))
@@ -5572,7 +5559,7 @@
                         });
                     }
                 },
-                (ReprRef::Inline(lhs), rhs) =&gt; {
+                (Repr::Inline(lhs), rhs) =&gt; {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                         op: protocol.name,
                         lhs: lhs.type_info(),
@@ -5598,8 +5585,8 @@
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                 op: protocol.name,
-                lhs: <span class="macro">vm_try!</span>(lhs.type_info()),
-                rhs: <span class="macro">vm_try!</span>(rhs.type_info()),
+                lhs: lhs.type_info(),
+                rhs: rhs.type_info(),
             });
         }
 
@@ -5620,23 +5607,23 @@
 
         <span class="kw">let </span>fallback = <span class="kw">match </span><span class="macro">target_value!</span>(<span class="self">self</span>, target, guard, lhs, rhs) {
             TargetValue::Same(value) =&gt; {
-                <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_mut()) {
-                    ReprMut::Inline(Inline::Unsigned(value)) =&gt; {
+                <span class="kw">match </span>value.as_mut() {
+                    Repr::Inline(Inline::Unsigned(value)) =&gt; {
                         <span class="kw">let </span>rhs = <span class="kw-2">*</span>value;
                         unsigned_op(value, rhs);
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ReprMut::Inline(Inline::Signed(value)) =&gt; {
+                    Repr::Inline(Inline::Signed(value)) =&gt; {
                         <span class="kw">let </span>rhs = <span class="kw-2">*</span>value;
                         signed_op(value, rhs);
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ReprMut::Inline(Inline::Bool(value)) =&gt; {
+                    Repr::Inline(Inline::Bool(value)) =&gt; {
                         <span class="kw">let </span>rhs = <span class="kw-2">*</span>value;
                         bool_op(value, rhs);
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ReprMut::Inline(value) =&gt; {
+                    Repr::Inline(value) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: value.type_info(),
@@ -5649,8 +5636,8 @@
                 TargetFallback::Value(value.clone(), value.clone())
             }
             TargetValue::Pair(lhs, rhs) =&gt; {
-                <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut()), <span class="macro">vm_try!</span>(rhs.as_ref())) {
-                    (ReprMut::Inline(lhs), ReprRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+                <span class="kw">match </span>(lhs.as_mut(), rhs.as_ref()) {
+                    (Repr::Inline(lhs), Repr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                         (Inline::Unsigned(lhs), rhs) =&gt; {
                             <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
                             unsigned_op(lhs, rhs);
@@ -5673,7 +5660,7 @@
                             });
                         }
                     },
-                    (ReprMut::Inline(lhs), rhs) =&gt; {
+                    (Repr::Inline(lhs), rhs) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: lhs.type_info(),
@@ -5705,7 +5692,7 @@
             <span class="kw">let </span>inline = <span class="lifetime">'inline</span>: {
                 <span class="kw">match </span><span class="macro">vm_try!</span>(<span class="self">self</span>.stack.pair(lhs, rhs)) {
                     Pair::Same(value) =&gt; {
-                        <span class="kw">if let </span>ReprMut::Inline(lhs) = <span class="macro">vm_try!</span>(value.as_mut()) {
+                        <span class="kw">if let </span>Repr::Inline(lhs) = value.as_mut() {
                             <span class="kw">match </span>lhs {
                                 Inline::Unsigned(value) =&gt; {
                                     <span class="kw">let </span>shift =
@@ -5733,8 +5720,8 @@
                         <span class="kw">break </span><span class="lifetime">'fallback </span>(value.clone(), value.clone());
                     }
                     Pair::Pair(lhs, rhs) =&gt; {
-                        <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut()), <span class="macro">vm_try!</span>(rhs.as_ref())) {
-                            (ReprMut::Inline(lhs), ReprRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+                        <span class="kw">match </span>(lhs.as_mut(), rhs.as_ref()) {
+                            (Repr::Inline(lhs), Repr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                                 (Inline::Unsigned(lhs), rhs) =&gt; {
                                     <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
                                     <span class="kw">let </span>value = <span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
@@ -5753,7 +5740,7 @@
                                     });
                                 }
                             },
-                            (ReprMut::Inline(lhs), rhs) =&gt; {
+                            (Repr::Inline(lhs), rhs) =&gt; {
                                 <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                                     op: protocol.name,
                                     lhs: lhs.type_info(),
@@ -5779,8 +5766,8 @@
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                 op: protocol.name,
-                lhs: <span class="macro">vm_try!</span>(lhs.type_info()),
-                rhs: <span class="macro">vm_try!</span>(rhs.type_info()),
+                lhs: lhs.type_info(),
+                rhs: rhs.type_info(),
             });
         }
 
@@ -5801,20 +5788,20 @@
 
         <span class="kw">let </span>fallback = <span class="kw">match </span><span class="macro">target_value!</span>(<span class="self">self</span>, target, guard, lhs, rhs) {
             TargetValue::Same(value) =&gt; {
-                <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_mut()) {
-                    ReprMut::Inline(Inline::Unsigned(value)) =&gt; {
+                <span class="kw">match </span>value.as_mut() {
+                    Repr::Inline(Inline::Unsigned(value)) =&gt; {
                         <span class="kw">let </span>shift = <span class="macro">vm_try!</span>(u32::try_from(<span class="kw-2">*</span>value).ok().ok_or_else(error));
                         <span class="kw">let </span>out = <span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>value, shift).ok_or_else(error));
                         <span class="kw-2">*</span>value = out;
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ReprMut::Inline(Inline::Signed(value)) =&gt; {
+                    Repr::Inline(Inline::Signed(value)) =&gt; {
                         <span class="kw">let </span>shift = <span class="macro">vm_try!</span>(u32::try_from(<span class="kw-2">*</span>value).ok().ok_or_else(error));
                         <span class="kw">let </span>out = <span class="macro">vm_try!</span>(signed_op(<span class="kw-2">*</span>value, shift).ok_or_else(error));
                         <span class="kw-2">*</span>value = out;
                         <span class="kw">return </span>VmResult::Ok(());
                     }
-                    ReprMut::Inline(value) =&gt; {
+                    Repr::Inline(value) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: value.type_info(),
@@ -5827,8 +5814,8 @@
                 TargetFallback::Value(value.clone(), value.clone())
             }
             TargetValue::Pair(lhs, rhs) =&gt; {
-                <span class="kw">match </span>(<span class="macro">vm_try!</span>(lhs.as_mut()), <span class="macro">vm_try!</span>(rhs.as_ref())) {
-                    (ReprMut::Inline(lhs), ReprRef::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
+                <span class="kw">match </span>(lhs.as_mut(), rhs.as_ref()) {
+                    (Repr::Inline(lhs), Repr::Inline(rhs)) =&gt; <span class="kw">match </span>(lhs, rhs) {
                         (Inline::Unsigned(lhs), rhs) =&gt; {
                             <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(rhs.as_integer());
                             <span class="kw">let </span>out = <span class="macro">vm_try!</span>(unsigned_op(<span class="kw-2">*</span>lhs, rhs).ok_or_else(error));
@@ -5849,7 +5836,7 @@
                             });
                         }
                     },
-                    (ReprMut::Inline(lhs), rhs) =&gt; {
+                    (Repr::Inline(lhs), rhs) =&gt; {
                         <span class="kw">return </span>err(VmErrorKind::UnsupportedBinaryOperation {
                             op: protocol.name,
                             lhs: lhs.type_info(),
@@ -5923,8 +5910,15 @@
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
-    </span><span class="kw">fn </span>op_drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress) -&gt; VmResult&lt;()&gt; {
-        <span class="kw-2">*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at_mut(addr)) = Value::empty();
+    </span><span class="kw">fn </span>op_drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: usize) -&gt; VmResult&lt;()&gt; {
+        <span class="kw">let </span><span class="prelude-val">Some</span>(addresses) = <span class="self">self</span>.unit.lookup_drop_set(set) <span class="kw">else </span>{
+            <span class="kw">return </span>err(VmErrorKind::MissingDropSet { set });
+        };
+
+        <span class="kw">for </span><span class="kw-2">&amp;</span>addr <span class="kw">in </span>addresses {
+            <span class="kw-2">*</span><span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at_mut(addr)) = Value::empty();
+        }
+
         VmResult::Ok(())
     }
 
@@ -6033,8 +6027,8 @@
     </span><span class="kw">fn </span>op_not(<span class="kw-2">&amp;mut </span><span class="self">self</span>, operand: InstAddress, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(operand));
 
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref()) {
-            ReprRef::Inline(value) =&gt; <span class="kw">match </span>value {
+        <span class="kw">let </span>value = <span class="kw">match </span>value.as_ref() {
+            Repr::Inline(value) =&gt; <span class="kw">match </span>value {
                 Inline::Bool(value) =&gt; Value::from(!value),
                 Inline::Unsigned(value) =&gt; Value::from(!value),
                 Inline::Signed(value) =&gt; Value::from(!value),
@@ -6057,8 +6051,8 @@
     </span><span class="kw">fn </span>op_neg(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>value = <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref()) {
-            ReprRef::Inline(value) =&gt; <span class="kw">match </span>value {
+        <span class="kw">let </span>value = <span class="kw">match </span>value.as_ref() {
+            Repr::Inline(value) =&gt; <span class="kw">match </span>value {
                 Inline::Float(value) =&gt; Value::from(-value),
                 Inline::Signed(value) =&gt; Value::from(-value),
                 actual =&gt; {
@@ -6229,9 +6223,7 @@
                 <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(rhs));
                 <span class="kw">let </span>lhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(lhs));
 
-                <span class="kw">let </span>test = <span class="kw">if let </span>(<span class="prelude-val">Some</span>(lhs), <span class="prelude-val">Some</span>(rhs)) =
-                    (<span class="macro">vm_try!</span>(lhs.as_inline()), <span class="macro">vm_try!</span>(rhs.as_inline()))
-                {
+                <span class="kw">let </span>test = <span class="kw">if let </span>(<span class="prelude-val">Some</span>(lhs), <span class="prelude-val">Some</span>(rhs)) = (lhs.as_inline(), rhs.as_inline()) {
                     <span class="macro">vm_try!</span>(lhs.partial_eq(rhs))
                 } <span class="kw">else </span>{
                     <span class="kw">let </span>lhs = lhs.clone();
@@ -6245,9 +6237,7 @@
                 <span class="kw">let </span>rhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(rhs));
                 <span class="kw">let </span>lhs = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(lhs));
 
-                <span class="kw">let </span>test = <span class="kw">if let </span>(<span class="prelude-val">Some</span>(lhs), <span class="prelude-val">Some</span>(rhs)) =
-                    (<span class="macro">vm_try!</span>(lhs.as_inline()), <span class="macro">vm_try!</span>(rhs.as_inline()))
-                {
+                <span class="kw">let </span>test = <span class="kw">if let </span>(<span class="prelude-val">Some</span>(lhs), <span class="prelude-val">Some</span>(rhs)) = (lhs.as_inline(), rhs.as_inline()) {
                     <span class="macro">vm_try!</span>(lhs.partial_eq(rhs))
                 } <span class="kw">else </span>{
                     <span class="kw">let </span>lhs = lhs.clone();
@@ -6430,9 +6420,9 @@
             Output::discard()
         )) {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedIndexSet {
-                target: <span class="macro">vm_try!</span>(target.type_info()),
-                index: <span class="macro">vm_try!</span>(index.type_info()),
-                value: <span class="macro">vm_try!</span>(value.type_info()),
+                target: target.type_info(),
+                index: index.type_info(),
+                value: value.type_info(),
             });
         }
 
@@ -6457,44 +6447,42 @@
     }
 
     <span class="kw">fn </span>lookup_function_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Result</span>&lt;Function, VmErrorKind&gt; {
-        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self</span>.unit.function(hash) {
-            <span class="prelude-val">Some</span>(info) =&gt; <span class="kw">match </span>info {
-                UnitFn::Offset {
-                    offset, call, args, ..
-                } =&gt; Function::from_vm_offset(
-                    <span class="self">self</span>.context.clone(),
-                    <span class="self">self</span>.unit.clone(),
-                    offset,
-                    call,
-                    args,
-                    hash,
-                ),
-                UnitFn::EmptyStruct { hash } =&gt; {
-                    <span class="kw">let </span>rtti = <span class="self">self
-                        </span>.unit
-                        .lookup_rtti(hash)
-                        .ok_or(VmErrorKind::MissingRtti { hash })<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="prelude-val">Some</span>(info) = <span class="self">self</span>.unit.function(<span class="kw-2">&amp;</span>hash) <span class="kw">else </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(<span class="kw-2">&amp;</span>hash) <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(VmErrorKind::MissingContextFunction { hash });
+            };
 
-                    Function::from_unit_struct(rtti.clone())
-                }
-                UnitFn::TupleStruct { hash, args } =&gt; {
-                    <span class="kw">let </span>rtti = <span class="self">self
-                        </span>.unit
-                        .lookup_rtti(hash)
-                        .ok_or(VmErrorKind::MissingRtti { hash })<span class="question-mark">?</span>;
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(Function::from_handler(handler.clone(), hash));
+        };
 
-                    Function::from_tuple_struct(rtti.clone(), args)
-                }
-            },
-            <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span>handler = <span class="self">self
-                    </span>.context
-                    .function(hash)
-                    .ok_or(VmErrorKind::MissingContextFunction { hash })<span class="question-mark">?</span>;
+        <span class="kw">let </span>f = <span class="kw">match </span>info {
+            UnitFn::Offset {
+                offset, call, args, ..
+            } =&gt; Function::from_vm_offset(
+                <span class="self">self</span>.context.clone(),
+                <span class="self">self</span>.unit.clone(),
+                <span class="kw-2">*</span>offset,
+                <span class="kw-2">*</span>call,
+                <span class="kw-2">*</span>args,
+                hash,
+            ),
+            UnitFn::EmptyStruct { hash } =&gt; {
+                <span class="kw">let </span><span class="prelude-val">Some</span>(rtti) = <span class="self">self</span>.unit.lookup_rtti(hash) <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(VmErrorKind::MissingRtti { hash: <span class="kw-2">*</span>hash });
+                };
 
-                Function::from_handler(handler.clone(), hash)
+                Function::from_unit_struct(rtti.clone())
             }
-        })
+            UnitFn::TupleStruct { hash, args } =&gt; {
+                <span class="kw">let </span><span class="prelude-val">Some</span>(rtti) = <span class="self">self</span>.unit.lookup_rtti(hash) <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(VmErrorKind::MissingRtti { hash: <span class="kw-2">*</span>hash });
+                };
+
+                Function::from_tuple_struct(rtti.clone(), <span class="kw-2">*</span>args)
+            }
+        };
+
+        <span class="prelude-val">Ok</span>(f)
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
@@ -6523,7 +6511,7 @@
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_load_instance_fn(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, hash: Hash, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>instance = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
-        <span class="kw">let </span>ty = <span class="macro">vm_try!</span>(instance.type_hash());
+        <span class="kw">let </span>ty = instance.type_hash();
         <span class="kw">let </span>hash = Hash::associated_function(ty, hash);
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || Type::new(hash)));
         VmResult::Ok(())
@@ -6541,15 +6529,15 @@
             <span class="kw">let </span>index = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(index));
             <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(target));
 
-            <span class="kw">match </span><span class="macro">vm_try!</span>(index.as_ref()) {
-                ReprRef::Inline(inline) =&gt; {
+            <span class="kw">match </span>index.as_ref() {
+                Repr::Inline(inline) =&gt; {
                     <span class="kw">let </span>index = <span class="macro">vm_try!</span>(inline.as_integer::&lt;usize&gt;());
 
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(<span class="self">Self</span>::try_tuple_like_index_get(target, index)) {
                         <span class="kw">break </span><span class="lifetime">'store </span>value;
                     }
                 }
-                ReprRef::Any(value) =&gt; {
+                Repr::Any(value) =&gt; {
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = <span class="macro">vm_try!</span>(value.try_borrow_ref::&lt;String&gt;()) {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(value) =
                             <span class="macro">vm_try!</span>(<span class="self">Self</span>::try_object_like_index_get(target, index.as_str()))
@@ -6574,8 +6562,8 @@
                 out
             )) {
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedIndexGet {
-                    target: <span class="macro">vm_try!</span>(target.type_info()),
-                    index: <span class="macro">vm_try!</span>(index.type_info()),
+                    target: target.type_info(),
+                    index: index.type_info(),
                 });
             }
 
@@ -6602,7 +6590,7 @@
         }
 
         err(VmErrorKind::UnsupportedTupleIndexSet {
-            target: <span class="macro">vm_try!</span>(target.type_info()),
+            target: target.type_info(),
         })
     }
 
@@ -6627,7 +6615,7 @@
             <span class="macro">vm_try!</span>(<span class="self">self</span>.call_index_fn(Protocol::GET, value, index, <span class="kw-2">&amp;mut </span>(), out))
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedTupleIndexGet {
-                target: <span class="macro">vm_try!</span>(value.type_info()),
+                target: value.type_info(),
                 index,
             });
         }
@@ -6645,7 +6633,10 @@
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(target));
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(value));
-        <span class="kw">let </span>field = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_string(slot));
+
+        <span class="kw">let </span><span class="prelude-val">Some</span>(field) = <span class="self">self</span>.unit.lookup_string(slot) <span class="kw">else </span>{
+            <span class="kw">return </span>err(VmErrorKind::MissingStaticString { slot });
+        };
 
         <span class="kw">if </span><span class="macro">vm_try!</span>(<span class="self">Self</span>::try_object_slot_index_set(target, field, value)) {
             <span class="kw">return </span>VmResult::Ok(());
@@ -6663,7 +6654,7 @@
 
         <span class="kw">if let </span>CallResult::Unsupported(target) = result {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedObjectSlotIndexSet {
-                target: <span class="macro">vm_try!</span>(target.type_info()),
+                target: target.type_info(),
             });
         };
 
@@ -6679,10 +6670,13 @@
         out: Output,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>target = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
-        <span class="kw">let </span>index = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_string(slot));
 
-        <span class="kw">match </span><span class="macro">vm_try!</span>(target.as_ref()) {
-            ReprRef::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Struct) =&gt; {
+        <span class="kw">let </span><span class="prelude-val">Some</span>(index) = <span class="self">self</span>.unit.lookup_string(slot) <span class="kw">else </span>{
+            <span class="kw">return </span>err(VmErrorKind::MissingStaticString { slot });
+        };
+
+        <span class="kw">match </span>target.as_ref() {
+            Repr::Dynamic(data) <span class="kw">if </span><span class="macro">matches!</span>(data.rtti().kind, RttiKind::Struct) =&gt; {
                 <span class="kw">let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(data.get_field_ref(index.as_str())) <span class="kw">else </span>{
                     <span class="kw">return </span>err(VmErrorKind::ObjectIndexMissing { slot });
                 };
@@ -6691,7 +6685,7 @@
                 <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, value));
                 <span class="kw">return </span>VmResult::Ok(());
             }
-            ReprRef::Any(value) <span class="kw">if </span>value.type_hash() == Object::HASH =&gt; {
+            Repr::Any(value) <span class="kw">if </span>value.type_hash() == Object::HASH =&gt; {
                 <span class="kw">let </span>object = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;Object&gt;());
 
                 <span class="kw">let </span><span class="prelude-val">Some</span>(value) = object.get(index.as_str()) <span class="kw">else </span>{
@@ -6702,7 +6696,7 @@
                 <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, value));
                 <span class="kw">return </span>VmResult::Ok(());
             }
-            ReprRef::Any(..) =&gt; {}
+            Repr::Any(..) =&gt; {}
             target =&gt; {
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedObjectSlotIndexGet {
                     target: target.type_info(),
@@ -6716,7 +6710,7 @@
             <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(Protocol::GET, target, index.hash(), <span class="kw-2">&amp;mut </span>(), out))
         {
             <span class="kw">return </span>err(VmErrorKind::UnsupportedObjectSlotIndexGet {
-                target: <span class="macro">vm_try!</span>(target.type_info()),
+                target: target.type_info(),
             });
         }
 
@@ -6726,10 +6720,9 @@
     <span class="doccomment">/// Operation to allocate an object.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_object(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, slot: usize, out: Output) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>keys = <span class="macro">vm_try!</span>(<span class="self">self
-            </span>.unit
-            .lookup_object_keys(slot)
-            .ok_or(VmErrorKind::MissingStaticObjectKeys { slot }));
+        <span class="kw">let </span><span class="prelude-val">Some</span>(keys) = <span class="self">self</span>.unit.lookup_object_keys(slot) <span class="kw">else </span>{
+            <span class="kw">return </span>err(VmErrorKind::MissingStaticObjectKeys { slot });
+        };
 
         <span class="kw">let </span><span class="kw-2">mut </span>object = <span class="macro">vm_try!</span>(Object::with_capacity(keys.len()));
         <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, keys.len()));
@@ -6781,10 +6774,9 @@
     <span class="doccomment">/// Operation to allocate an empty struct.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_empty_struct(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, out: Output) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
-            </span>.unit
-            .lookup_rtti(hash)
-            .ok_or(VmErrorKind::MissingRtti { hash }));
+        <span class="kw">let </span><span class="prelude-val">Some</span>(rtti) = <span class="self">self</span>.unit.lookup_rtti(<span class="kw-2">&amp;</span>hash) <span class="kw">else </span>{
+            <span class="kw">return </span>err(VmErrorKind::MissingRtti { hash });
+        };
 
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(Dynamic::&lt;<span class="kw">_</span>, Value&gt;::new(rtti.clone(), []));
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, value));
@@ -6794,10 +6786,9 @@
     <span class="doccomment">/// Operation to allocate an object struct.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_struct(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, hash: Hash, out: Output) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
-            </span>.unit
-            .lookup_rtti(hash)
-            .ok_or(VmErrorKind::MissingRtti { hash }));
+        <span class="kw">let </span><span class="prelude-val">Some</span>(rtti) = <span class="self">self</span>.unit.lookup_rtti(<span class="kw-2">&amp;</span>hash) <span class="kw">else </span>{
+            <span class="kw">return </span>err(VmErrorKind::MissingRtti { hash });
+        };
 
         <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, rtti.fields.len()));
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(Dynamic::new(rtti.clone(), values.iter_mut().map(take)));
@@ -6816,7 +6807,7 @@
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>values = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, count));
 
-        <span class="kw">let </span><span class="prelude-val">Some</span>(construct) = <span class="self">self</span>.context.construct(hash) <span class="kw">else </span>{
+        <span class="kw">let </span><span class="prelude-val">Some</span>(construct) = <span class="self">self</span>.context.construct(<span class="kw-2">&amp;</span>hash) <span class="kw">else </span>{
             <span class="kw">return </span>err(VmErrorKind::MissingConstantConstructor { hash });
         };
 
@@ -6827,14 +6818,20 @@
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: usize, out: Output) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>string = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_string(slot));
+        <span class="kw">let </span><span class="prelude-val">Some</span>(string) = <span class="self">self</span>.unit.lookup_string(slot) <span class="kw">else </span>{
+            <span class="kw">return </span>err(VmErrorKind::MissingStaticString { slot });
+        };
+
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, string.as_str()));
         VmResult::Ok(())
     }
 
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: usize, out: Output) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>bytes = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_bytes(slot));
+        <span class="kw">let </span><span class="prelude-val">Some</span>(bytes) = <span class="self">self</span>.unit.lookup_bytes(slot) <span class="kw">else </span>{
+            <span class="kw">return </span>err(VmErrorKind::MissingStaticBytes { slot });
+        };
+
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, bytes));
         VmResult::Ok(())
     }
@@ -6877,7 +6874,7 @@
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_is_unit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
-        <span class="kw">let </span>is_unit = <span class="macro">matches!</span>(<span class="macro">vm_try!</span>(value.as_inline()), <span class="prelude-val">Some</span>(Inline::Unit));
+        <span class="kw">let </span>is_unit = <span class="macro">matches!</span>(value.as_inline(), <span class="prelude-val">Some</span>(Inline::Unit));
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_unit));
         VmResult::Ok(())
     }
@@ -6889,7 +6886,7 @@
             <span class="kw">let </span>value = {
                 <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-                <span class="kw">if let </span>ReprRef::Any(value) = <span class="macro">vm_try!</span>(value.as_ref()) {
+                <span class="kw">if let </span>Repr::Any(value) = value.as_ref() {
                     <span class="kw">match </span>value.type_hash() {
                         <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH =&gt; {
                             <span class="kw">let </span>result = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;());
@@ -6910,7 +6907,7 @@
                 CallResultOnly::Ok(value) =&gt; <span class="macro">vm_try!</span>(ControlFlow::from_value(value)),
                 CallResultOnly::Unsupported(target) =&gt; {
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedTryOperand {
-                        actual: <span class="macro">vm_try!</span>(target.type_info()),
+                        actual: target.type_info(),
                     })
                 }
             }
@@ -6929,7 +6926,7 @@
     </span><span class="kw">fn </span>op_eq_character(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: char, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(v.as_inline()) {
+        <span class="kw">let </span>is_match = <span class="kw">match </span>v.as_inline() {
             <span class="prelude-val">Some</span>(Inline::Char(actual)) =&gt; <span class="kw-2">*</span>actual == value,
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
@@ -6942,7 +6939,7 @@
     </span><span class="kw">fn </span>op_eq_unsigned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: u64, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(v.as_inline()) {
+        <span class="kw">let </span>is_match = <span class="kw">match </span>v.as_inline() {
             <span class="prelude-val">Some</span>(Inline::Unsigned(actual)) =&gt; <span class="kw-2">*</span>actual == value,
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
@@ -6955,7 +6952,7 @@
     </span><span class="kw">fn </span>op_eq_signed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: i64, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(v.as_inline()) {
+        <span class="kw">let </span>is_match = <span class="kw">match </span>v.as_inline() {
             <span class="prelude-val">Some</span>(Inline::Signed(actual)) =&gt; <span class="kw-2">*</span>actual == value,
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
@@ -6968,7 +6965,7 @@
     </span><span class="kw">fn </span>op_eq_bool(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, value: bool, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>v = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(v.as_inline()) {
+        <span class="kw">let </span>is_match = <span class="kw">match </span>v.as_inline() {
             <span class="prelude-val">Some</span>(Inline::Bool(actual)) =&gt; <span class="kw-2">*</span>actual == value,
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         };
@@ -6988,7 +6985,10 @@
                 <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
             };
 
-            <span class="kw">let </span>string = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_string(slot));
+            <span class="kw">let </span><span class="prelude-val">Some</span>(string) = <span class="self">self</span>.unit.lookup_string(slot) <span class="kw">else </span>{
+                <span class="kw">return </span>err(VmErrorKind::MissingStaticString { slot });
+            };
+
             actual.as_str() == string.as_str()
         };
 
@@ -7007,7 +7007,10 @@
                 <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
             };
 
-            <span class="kw">let </span>bytes = <span class="macro">vm_try!</span>(<span class="self">self</span>.unit.lookup_bytes(slot));
+            <span class="kw">let </span><span class="prelude-val">Some</span>(bytes) = <span class="self">self</span>.unit.lookup_bytes(slot) <span class="kw">else </span>{
+                <span class="kw">return </span>err(VmErrorKind::MissingStaticBytes { slot });
+            };
+
             value.as_slice() == bytes
         };
 
@@ -7041,7 +7044,7 @@
     <span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_match_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, addr: InstAddress, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
-        <span class="kw">let </span>is_match = <span class="macro">vm_try!</span>(value.type_hash()) == hash;
+        <span class="kw">let </span>is_match = value.type_hash() == hash;
         <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, is_match));
         VmResult::Ok(())
     }
@@ -7058,11 +7061,11 @@
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
         <span class="kw">let </span>is_match = <span class="lifetime">'out</span>: {
-            <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref()) {
-                ReprRef::Dynamic(value) =&gt; {
+            <span class="kw">match </span>value.as_ref() {
+                Repr::Dynamic(value) =&gt; {
                     <span class="kw">break </span><span class="lifetime">'out </span>value.rtti().is(enum_hash, variant_hash);
                 }
-                ReprRef::Any(any) =&gt; <span class="kw">match </span>enum_hash {
+                Repr::Any(any) =&gt; <span class="kw">match </span>enum_hash {
                     <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH =&gt; {
                         <span class="kw">let </span>result = <span class="macro">vm_try!</span>(any.borrow_ref::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;());
 
@@ -7117,13 +7120,13 @@
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref()) {
-            ReprRef::Inline(value) =&gt; <span class="kw">match </span>(type_check, value) {
+        <span class="kw">let </span>is_match = <span class="kw">match </span>value.as_ref() {
+            Repr::Inline(value) =&gt; <span class="kw">match </span>(type_check, value) {
                 (TypeCheck::Unit, Inline::Unit) =&gt; <span class="bool-val">true</span>,
                 <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
             },
-            ReprRef::Dynamic(..) =&gt; <span class="bool-val">false</span>,
-            ReprRef::Any(value) =&gt; <span class="kw">match </span>(type_check, value.type_hash()) {
+            Repr::Dynamic(..) =&gt; <span class="bool-val">false</span>,
+            Repr::Any(value) =&gt; <span class="kw">match </span>(type_check, value.type_hash()) {
                 (TypeCheck::Vec, runtime::Vec::HASH) =&gt; <span class="bool-val">true</span>,
                 (TypeCheck::Tuple, runtime::OwnedTuple::HASH) =&gt; <span class="bool-val">true</span>,
                 <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
@@ -7164,10 +7167,9 @@
 
         <span class="kw">let </span>is_match = <span class="kw">match </span><span class="macro">vm_try!</span>(value.try_borrow_ref::&lt;Object&gt;()) {
             <span class="prelude-val">Some</span>(object) =&gt; {
-                <span class="kw">let </span>keys = <span class="macro">vm_try!</span>(<span class="self">self
-                    </span>.unit
-                    .lookup_object_keys(slot)
-                    .ok_or(VmErrorKind::MissingStaticObjectKeys { slot }));
+                <span class="kw">let </span><span class="prelude-val">Some</span>(keys) = <span class="self">self</span>.unit.lookup_object_keys(slot) <span class="kw">else </span>{
+                    <span class="kw">return </span>err(VmErrorKind::MissingStaticObjectKeys { slot });
+                };
 
                 test(<span class="kw-2">&amp;</span>object, keys, exact)
             }
@@ -7219,24 +7221,19 @@
         count: usize,
         out: Output,
     ) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span>info = <span class="macro">vm_try!</span>(<span class="self">self
-            </span>.unit
-            .function(hash)
-            .ok_or(VmErrorKind::MissingFunction { hash }));
-
-        <span class="kw">let </span>UnitFn::Offset {
+        <span class="kw">let </span><span class="prelude-val">Some</span>(UnitFn::Offset {
             offset,
             call,
             args,
             captures: <span class="prelude-val">Some</span>(captures),
-        } = info
+        }) = <span class="self">self</span>.unit.function(<span class="kw-2">&amp;</span>hash)
         <span class="kw">else </span>{
             <span class="kw">return </span>err(VmErrorKind::MissingFunction { hash });
         };
 
-        <span class="kw">if </span>captures != count {
+        <span class="kw">if </span><span class="kw-2">*</span>captures != count {
             <span class="kw">return </span>err(VmErrorKind::BadEnvironmentCount {
-                expected: captures,
+                expected: <span class="kw-2">*</span>captures,
                 actual: count,
             });
         }
@@ -7251,9 +7248,9 @@
         <span class="kw">let </span>function = Function::from_vm_closure(
             <span class="self">self</span>.context.clone(),
             <span class="self">self</span>.unit.clone(),
-            offset,
-            call,
-            args,
+            <span class="kw-2">*</span>offset,
+            <span class="kw-2">*</span>call,
+            <span class="kw-2">*</span>args,
             environment,
             hash,
         );
@@ -7265,11 +7262,10 @@
     <span class="doccomment">/// Implementation of a function call.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">"bench"</span>, inline(never))]
     </span><span class="kw">fn </span>op_call(<span class="kw-2">&amp;mut </span><span class="self">self</span>, hash: Hash, addr: InstAddress, args: usize, out: Output) -&gt; VmResult&lt;()&gt; {
-        <span class="kw">let </span><span class="prelude-val">Some</span>(info) = <span class="self">self</span>.unit.function(hash) <span class="kw">else </span>{
-            <span class="kw">let </span>handler = <span class="macro">vm_try!</span>(<span class="self">self
-                </span>.context
-                .function(hash)
-                .ok_or(VmErrorKind::MissingFunction { hash }));
+        <span class="kw">let </span><span class="prelude-val">Some</span>(info) = <span class="self">self</span>.unit.function(<span class="kw-2">&amp;</span>hash) <span class="kw">else </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(<span class="kw-2">&amp;</span>hash) <span class="kw">else </span>{
+                <span class="kw">return </span>err(VmErrorKind::MissingFunction { hash });
+            };
 
             <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, addr, args, out));
             <span class="kw">return </span>VmResult::Ok(());
@@ -7282,16 +7278,15 @@
                 args: expected,
                 ..
             } =&gt; {
-                <span class="macro">vm_try!</span>(check_args(args, expected));
-                <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, addr, args, Isolated::None, out));
+                <span class="macro">vm_try!</span>(check_args(args, <span class="kw-2">*</span>expected));
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(<span class="kw-2">*</span>offset, <span class="kw-2">*</span>call, addr, args, Isolated::None, out));
             }
             UnitFn::EmptyStruct { hash } =&gt; {
                 <span class="macro">vm_try!</span>(check_args(args, <span class="number">0</span>));
 
-                <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
-                    </span>.unit
-                    .lookup_rtti(hash)
-                    .ok_or(VmErrorKind::MissingRtti { hash }));
+                <span class="kw">let </span><span class="prelude-val">Some</span>(rtti) = <span class="self">self</span>.unit.lookup_rtti(hash) <span class="kw">else </span>{
+                    <span class="kw">return </span>err(VmErrorKind::MissingRtti { hash: <span class="kw-2">*</span>hash });
+                };
 
                 <span class="macro">vm_try!</span>(out.store(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, || Value::empty_struct(rtti.clone())));
             }
@@ -7299,12 +7294,11 @@
                 hash,
                 args: expected,
             } =&gt; {
-                <span class="macro">vm_try!</span>(check_args(args, expected));
+                <span class="macro">vm_try!</span>(check_args(args, <span class="kw-2">*</span>expected));
 
-                <span class="kw">let </span>rtti = <span class="macro">vm_try!</span>(<span class="self">self
-                    </span>.unit
-                    .lookup_rtti(hash)
-                    .ok_or(VmErrorKind::MissingRtti { hash }));
+                <span class="kw">let </span><span class="prelude-val">Some</span>(rtti) = <span class="self">self</span>.unit.lookup_rtti(hash) <span class="kw">else </span>{
+                    <span class="kw">return </span>err(VmErrorKind::MissingRtti { hash: <span class="kw-2">*</span>hash });
+                };
 
                 <span class="kw">let </span>tuple = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.slice_at_mut(addr, args));
                 <span class="kw">let </span>data = tuple.iter_mut().map(take);
@@ -7339,10 +7333,10 @@
         out: Output,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>instance = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
-        <span class="kw">let </span>type_hash = <span class="macro">vm_try!</span>(instance.type_hash());
+        <span class="kw">let </span>type_hash = instance.type_hash();
         <span class="kw">let </span>hash = Hash::associated_function(type_hash, hash);
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(hash) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = <span class="self">self</span>.context.function(<span class="kw-2">&amp;</span>hash) {
             <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
             <span class="macro">vm_try!</span>(handler(<span class="kw-2">&amp;mut </span><span class="self">self</span>.stack, addr, args, out));
             <span class="kw">return </span>VmResult::Ok(());
@@ -7353,16 +7347,16 @@
             call,
             args: expected,
             ..
-        }) = <span class="self">self</span>.unit.function(hash)
+        }) = <span class="self">self</span>.unit.function(<span class="kw-2">&amp;</span>hash)
         {
             <span class="macro">vm_try!</span>(<span class="self">self</span>.called_function_hook(hash));
-            <span class="macro">vm_try!</span>(check_args(args, expected));
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(offset, call, addr, args, Isolated::None, out));
+            <span class="macro">vm_try!</span>(check_args(args, <span class="kw-2">*</span>expected));
+            <span class="macro">vm_try!</span>(<span class="self">self</span>.call_offset_fn(<span class="kw-2">*</span>offset, <span class="kw-2">*</span>call, addr, args, Isolated::None, out));
             <span class="kw">return </span>VmResult::Ok(());
         }
 
         err(VmErrorKind::MissingInstanceFunction {
-            instance: <span class="macro">vm_try!</span>(instance.type_info()),
+            instance: instance.type_info(),
             hash,
         })
     }
@@ -7378,32 +7372,19 @@
     ) -&gt; VmResult&lt;<span class="prelude-ty">Option</span>&lt;VmHalt&gt;&gt; {
         <span class="kw">let </span>function = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(function));
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = <span class="macro">vm_try!</span>(function.as_inline()) {
-            <span class="kw">let </span>ty = <span class="kw">match </span>value {
-                Inline::Type(ty) =&gt; <span class="kw-2">*</span>ty,
-                actual =&gt; {
-                    <span class="kw">return </span>err(VmErrorKind::UnsupportedCallFn {
-                        actual: actual.type_info(),
-                    });
-                }
-            };
-
-            <span class="macro">vm_try!</span>(<span class="self">self</span>.op_call(ty.into_hash(), addr, args, out));
-            <span class="kw">return </span>VmResult::Ok(<span class="prelude-val">None</span>);
-        }
-
-        <span class="kw">match </span><span class="macro">vm_try!</span>(function.as_ref()) {
-            ReprRef::Inline(value) =&gt; err(VmErrorKind::UnsupportedCallFn {
-                actual: value.type_info(),
-            }),
-            ReprRef::Dynamic(value) =&gt; err(VmErrorKind::UnsupportedCallFn {
-                actual: value.type_info(),
-            }),
-            ReprRef::Any(value) =&gt; {
+        <span class="kw">match </span>function.as_ref() {
+            Repr::Inline(Inline::Type(ty)) =&gt; {
+                <span class="macro">vm_try!</span>(<span class="self">self</span>.op_call(ty.into_hash(), addr, args, out));
+                VmResult::Ok(<span class="prelude-val">None</span>)
+            }
+            Repr::Any(value) <span class="kw">if </span>value.type_hash() == Function::HASH =&gt; {
                 <span class="kw">let </span>value = value.clone();
                 <span class="kw">let </span>f = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;Function&gt;());
                 f.call_with_vm(<span class="self">self</span>, addr, args, out)
             }
+            value =&gt; err(VmErrorKind::UnsupportedCallFn {
+                actual: value.type_info(),
+            }),
         }
     }
 
@@ -7411,8 +7392,8 @@
     </span><span class="kw">fn </span>op_iter_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress, jump: usize, out: Output) -&gt; VmResult&lt;()&gt; {
         <span class="kw">let </span>value = <span class="macro">vm_try!</span>(<span class="self">self</span>.stack.at(addr));
 
-        <span class="kw">let </span>some = <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref()) {
-            ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+        <span class="kw">let </span>some = <span class="kw">match </span>value.as_ref() {
+            Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                 <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; {
                     <span class="kw">let </span>option = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;());
 
@@ -7614,8 +7595,8 @@
                 Inst::Move { addr, out } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_move(addr, out));
                 }
-                Inst::Drop { addr } =&gt; {
-                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_drop(addr));
+                Inst::Drop { set } =&gt; {
+                    <span class="macro">vm_try!</span>(<span class="self">self</span>.op_drop(set));
                 }
                 Inst::Swap { a, b } =&gt; {
                     <span class="macro">vm_try!</span>(<span class="self">self</span>.op_swap(a, b));
@@ -7846,6 +7827,7 @@
 }
 
 <span class="doccomment">/// Check that arguments matches expected or raise the appropriate error.
+</span><span class="attr">#[inline(always)]
 </span><span class="kw">fn </span>check_args(args: usize, expected: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmErrorKind&gt; {
     <span class="kw">if </span>args != expected {
         <span class="kw">return </span><span class="prelude-val">Err</span>(VmErrorKind::BadArgumentCount {

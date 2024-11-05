@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/modules/future.rs`."><title>future.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b8c8287a2 2024-11-03)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/modules/</div>future.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/modules/future.rs`."><title>future.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (fbab78289 2024-11-04)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/modules/</div>future.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -140,7 +140,7 @@
 
 </span><span class="kw">use crate as </span>rune;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::Vec;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{<span class="self">self</span>, Future, Inline, ReprRef, SelectFuture, Value, VmErrorKind, VmResult};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{<span class="self">self</span>, Future, Inline, Repr, SelectFuture, Value, VmErrorKind, VmResult};
 <span class="kw">use crate</span>::{ContextError, Module, TypeHash};
 
 <span class="doccomment">/// Asynchronous computations.
@@ -163,20 +163,20 @@
     <span class="kw">let </span><span class="kw-2">mut </span>results = <span class="macro">vm_try!</span>(Vec::try_with_capacity(len));
 
     <span class="kw">for </span>(index, value) <span class="kw">in </span>values.into_iter().enumerate() {
-        <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref()) {
-            ReprRef::Inline(value) =&gt; {
+        <span class="kw">match </span>value.as_ref() {
+            Repr::Inline(value) =&gt; {
                 <span class="kw">return </span>VmResult::err([
                     VmErrorKind::expected::&lt;Future&gt;(value.type_info()),
                     VmErrorKind::bad_argument(index),
                 ]);
             }
-            ReprRef::Dynamic(value) =&gt; {
+            Repr::Dynamic(value) =&gt; {
                 <span class="kw">return </span>VmResult::err([
                     VmErrorKind::expected::&lt;Future&gt;(value.type_info()),
                     VmErrorKind::bad_argument(index),
                 ]);
             }
-            ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+            Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                 Future::HASH =&gt; {
                     <span class="kw">let </span>future = <span class="macro">vm_try!</span>(Value::from(value.clone()).into_future());
                     futures.push(SelectFuture::new(index, future));
@@ -236,19 +236,19 @@
 /// ```
 </span><span class="attr">#[rune::function(keep)]
 </span><span class="kw">async fn </span>join(value: Value) -&gt; VmResult&lt;Value&gt; {
-    <span class="kw">match </span><span class="macro">vm_try!</span>(value.as_ref()) {
-        ReprRef::Inline(value) =&gt; <span class="kw">match </span>value {
+    <span class="kw">match </span>value.as_ref() {
+        Repr::Inline(value) =&gt; <span class="kw">match </span>value {
             Inline::Unit =&gt; VmResult::Ok(Value::unit()),
             value =&gt; VmResult::err([
                 VmErrorKind::bad_argument(<span class="number">0</span>),
                 VmErrorKind::expected::&lt;runtime::Vec&gt;(value.type_info()),
             ]),
         },
-        ReprRef::Dynamic(value) =&gt; VmResult::err([
+        Repr::Dynamic(value) =&gt; VmResult::err([
             VmErrorKind::bad_argument(<span class="number">0</span>),
             VmErrorKind::expected::&lt;runtime::Vec&gt;(value.type_info()),
         ]),
-        ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+        Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
             runtime::Vec::HASH =&gt; {
                 <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;runtime::Vec&gt;());
                 <span class="kw">let </span>result = try_join_impl(vec.iter(), vec.len(), |vec| {

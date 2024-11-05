@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b8c8287a2 2024-11-03)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/v1/</div>assemble.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/assemble.rs`."><title>assemble.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (fbab78289 2024-11-04)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/v1/</div>assemble.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -3160,7 +3160,31 @@
 <a href="#3159" id="3159">3159</a>
 <a href="#3160" id="3160">3160</a>
 <a href="#3161" id="3161">3161</a>
-<a href="#3162" id="3162">3162</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#3162" id="3162">3162</a>
+<a href="#3163" id="3163">3163</a>
+<a href="#3164" id="3164">3164</a>
+<a href="#3165" id="3165">3165</a>
+<a href="#3166" id="3166">3166</a>
+<a href="#3167" id="3167">3167</a>
+<a href="#3168" id="3168">3168</a>
+<a href="#3169" id="3169">3169</a>
+<a href="#3170" id="3170">3170</a>
+<a href="#3171" id="3171">3171</a>
+<a href="#3172" id="3172">3172</a>
+<a href="#3173" id="3173">3173</a>
+<a href="#3174" id="3174">3174</a>
+<a href="#3175" id="3175">3175</a>
+<a href="#3176" id="3176">3176</a>
+<a href="#3177" id="3177">3177</a>
+<a href="#3178" id="3178">3178</a>
+<a href="#3179" id="3179">3179</a>
+<a href="#3180" id="3180">3180</a>
+<a href="#3181" id="3181">3181</a>
+<a href="#3182" id="3182">3182</a>
+<a href="#3183" id="3183">3183</a>
+<a href="#3184" id="3184">3184</a>
+<a href="#3185" id="3185">3185</a>
+<a href="#3186" id="3186">3186</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::take;
 <span class="kw">use </span>core::slice;
 
@@ -3237,8 +3261,14 @@
             .drain_dangling_into(<span class="kw-2">&amp;mut </span><span class="self">self</span>.drop)
             .with_span(span)<span class="question-mark">?</span>;
 
+        <span class="kw">let </span><span class="kw-2">mut </span>drop_set = <span class="self">self</span>.q.unit.drop_set();
+
         <span class="kw">for </span>addr <span class="kw">in </span><span class="self">self</span>.drop.drain(..).rev() {
-            <span class="self">self</span>.asm.push(Inst::Drop { addr }, span)<span class="question-mark">?</span>;
+            drop_set.push(addr)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(set) = drop_set.finish()<span class="question-mark">? </span>{
+            <span class="self">self</span>.asm.push(Inst::Drop { set }, span)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -4263,6 +4293,12 @@
 
     <span class="kw">match </span><span class="kw-2">*</span>value.as_kind() {
         ConstValueKind::Inline(value) =&gt; <span class="kw">match </span>value {
+            Inline::Empty =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
+                    span,
+                    <span class="string">"Empty inline constant value is not supported"</span>,
+                ));
+            }
             Inline::Unit =&gt; {
                 cx.asm.push(Inst::unit(out), span)<span class="question-mark">?</span>;
             }
@@ -4894,9 +4930,15 @@
         cx.asm.push(Inst::unit(out), span)<span class="question-mark">?</span>;
     }
 
+    <span class="kw">let </span><span class="kw-2">mut </span>drop_set = cx.q.unit.drop_set();
+
     <span class="comment">// Drop loop temporaries.
     </span><span class="kw">for </span>addr <span class="kw">in </span>cx.drop.drain(..) {
-        cx.asm.push(Inst::Drop { addr }, span)<span class="question-mark">?</span>;
+        drop_set.push(addr)<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(set) = drop_set.finish()<span class="question-mark">? </span>{
+        cx.asm.push(Inst::Drop { set }, span)<span class="question-mark">?</span>;
     }
 
     cx.asm.jump(<span class="kw-2">&amp;</span>break_label, span)<span class="question-mark">?</span>;
@@ -5373,15 +5415,15 @@
 
     cx.asm.label(<span class="kw-2">&amp;</span>end_label)<span class="question-mark">?</span>;
 
+    <span class="kw">let </span><span class="kw-2">mut </span>drop_set = cx.q.unit.drop_set();
+    drop_set.push(into_iter.addr())<span class="question-mark">?</span>;
+
     <span class="comment">// NB: Dropping has to happen before the break label. When breaking,
     // the break statement is responsible for ensuring that active
     // iterators are dropped.
-    </span>cx.asm.push(
-        Inst::Drop {
-            addr: into_iter.addr(),
-        },
-        span,
-    )<span class="question-mark">?</span>;
+    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(set) = drop_set.finish()<span class="question-mark">? </span>{
+        cx.asm.push(Inst::Drop { set }, span)<span class="question-mark">?</span>;
+    }
 
     cx.asm.label(<span class="kw-2">&amp;</span>break_label)<span class="question-mark">?</span>;
 
@@ -5976,9 +6018,15 @@
 
     cx.asm.label(<span class="kw-2">&amp;</span>end_label)<span class="question-mark">?</span>;
 
+    <span class="kw">let </span><span class="kw-2">mut </span>drop_set = cx.q.unit.drop_set();
+
     <span class="comment">// Drop futures we are currently using.
     </span><span class="kw">for </span>addr <span class="kw">in </span><span class="kw-2">&amp;</span>linear {
-        cx.asm.push(Inst::Drop { addr: addr.addr() }, span)<span class="question-mark">?</span>;
+        drop_set.push(addr.addr())<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(set) = drop_set.finish()<span class="question-mark">? </span>{
+        cx.asm.push(Inst::Drop { set }, span)<span class="question-mark">?</span>;
     }
 
     value_addr.free()<span class="question-mark">?</span>;

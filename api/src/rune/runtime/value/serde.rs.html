@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value/serde.rs`."><title>serde.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b8c8287a2 2024-11-03)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/value/</div>serde.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value/serde.rs`."><title>serde.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (fbab78289 2024-11-04)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/value/</div>serde.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -312,11 +312,12 @@
 <a href="#311" id="311">311</a>
 <a href="#312" id="312">312</a>
 <a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span><span class="kw">crate</span>::alloc;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{<span class="self">self</span>, Bytes, Inline, Object, OwnedTuple, ReprRef, RttiKind, Vec};
+<span class="kw">use </span><span class="kw">crate</span>::runtime::{<span class="self">self</span>, Bytes, Inline, Object, OwnedTuple, Repr, RttiKind, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::TypeHash;
 
 <span class="kw">use </span>serde::de::{<span class="self">self</span>, Deserialize <span class="kw">as _</span>, Error <span class="kw">as _</span>};
@@ -340,8 +341,9 @@
     <span class="kw">where
         </span>S: ser::Serializer,
     {
-        <span class="kw">match </span><span class="self">self</span>.as_ref().map_err(S::Error::custom)<span class="question-mark">? </span>{
-            ReprRef::Inline(value) =&gt; <span class="kw">match </span><span class="kw-2">*</span>value {
+        <span class="kw">match </span><span class="self">self</span>.as_ref() {
+            Repr::Inline(value) =&gt; <span class="kw">match </span><span class="kw-2">*</span>value {
+                Inline::Empty =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize empty values"</span>)),
                 Inline::Unit =&gt; serializer.serialize_unit(),
                 Inline::Bool(value) =&gt; serializer.serialize_bool(value),
                 Inline::Char(value) =&gt; serializer.serialize_char(value),
@@ -351,7 +353,7 @@
                 Inline::Type(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize types"</span>)),
                 Inline::Ordering(..) =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"cannot serialize orderings"</span>)),
             },
-            ReprRef::Dynamic(value) =&gt; <span class="kw">match </span>value.rtti().kind {
+            Repr::Dynamic(value) =&gt; <span class="kw">match </span>value.rtti().kind {
                 RttiKind::Empty =&gt; <span class="prelude-val">Err</span>(ser::Error::custom(<span class="macro">format!</span>(
                     <span class="string">"cannot serialize empty struct {}"</span>,
                     value.rtti().item
@@ -365,7 +367,7 @@
                     value.rtti().item
                 ))),
             },
-            ReprRef::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
+            Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                 <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; {
                     <span class="kw">let </span>option = value
                         .borrow_ref::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;()

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/unit_builder.rs`."><title>unit_builder.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b8c8287a2 2024-11-03)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/</div>unit_builder.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/unit_builder.rs`."><title>unit_builder.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-590a400c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (fbab78289 2024-11-04)" data-channel="nightly" data-search-js="search-c5a66128.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/</div>unit_builder.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -914,7 +914,53 @@
 <a href="#913" id="913">913</a>
 <a href="#914" id="914">914</a>
 <a href="#915" id="915">915</a>
-<a href="#916" id="916">916</a></pre></div><pre class="rust"><code><span class="doccomment">//! A single execution unit in the runestick virtual machine.
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a></pre></div><pre class="rust"><code><span class="doccomment">//! A single execution unit in the runestick virtual machine.
 //!
 //! A unit consists of a sequence of instructions, and lookaside tables for
 //! metadata like function locations.
@@ -934,8 +980,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::runtime::debug::{DebugArgs, DebugSignature};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::unit::UnitEncoder;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
-    Call, ConstValue, DebugInfo, DebugInst, Inst, Label, Protocol, Rtti, RttiKind, StaticString,
-    Unit, UnitFn,
+    Call, ConstValue, DebugInfo, DebugInst, Inst, InstAddress, Label, Protocol, Rtti, RttiKind,
+    StaticString, Unit, UnitFn,
 };
 <span class="kw">use crate</span>::{Context, Diagnostics, Hash, Item, SourceId};
 
@@ -988,6 +1034,10 @@
     </span>static_object_keys: Vec&lt;Box&lt;[String]&gt;&gt;,
     <span class="doccomment">/// Used to detect duplicates in the collection of static object keys.
     </span>static_object_keys_rev: HashMap&lt;Hash, usize&gt;,
+    <span class="doccomment">/// A static string.
+    </span>drop_sets: Vec&lt;Arc&lt;[InstAddress]&gt;&gt;,
+    <span class="doccomment">/// Reverse lookup for drop sets.
+    </span>drop_sets_rev: HashMap&lt;Vec&lt;InstAddress&gt;, usize&gt;,
     <span class="doccomment">/// Runtime type information for types.
     </span>rtti: hash::Map&lt;Arc&lt;Rtti&gt;&gt;,
     <span class="doccomment">/// The current label count.
@@ -1003,6 +1053,14 @@
 }
 
 <span class="kw">impl </span>UnitBuilder {
+    <span class="doccomment">/// Construct a new drop set.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drop_set(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; DropSet&lt;<span class="lifetime">'_</span>&gt; {
+        DropSet {
+            builder: <span class="self">self</span>,
+            addresses: Vec::new(),
+        }
+    }
+
     <span class="doccomment">/// Insert an identifier for debug purposes.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>insert_debug_ident(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ident: <span class="kw-2">&amp;</span>str) -&gt; alloc::Result&lt;()&gt; {
         <span class="self">self</span>.hash_to_ident
@@ -1066,6 +1124,7 @@
             <span class="self">self</span>.static_strings,
             <span class="self">self</span>.static_bytes,
             <span class="self">self</span>.static_object_keys,
+            <span class="self">self</span>.drop_sets,
             <span class="self">self</span>.rtti,
             <span class="self">self</span>.debug,
             <span class="self">self</span>.constants,
@@ -1828,6 +1887,39 @@
         }
 
         <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="doccomment">/// A set of addresses that should be dropped.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>DropSet&lt;<span class="lifetime">'a</span>&gt; {
+    builder: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>UnitBuilder,
+    addresses: Vec&lt;InstAddress&gt;,
+}
+
+<span class="kw">impl </span>DropSet&lt;<span class="lifetime">'_</span>&gt; {
+    <span class="doccomment">/// Construct a new drop set.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: InstAddress) -&gt; alloc::Result&lt;()&gt; {
+        <span class="self">self</span>.addresses.try_push(addr)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>finish(<span class="self">self</span>) -&gt; alloc::Result&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt; {
+        <span class="kw">if </span><span class="self">self</span>.addresses.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(set) = <span class="self">self</span>.builder.drop_sets_rev.get(<span class="kw-2">&amp;</span><span class="self">self</span>.addresses) {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw-2">*</span>set));
+        }
+
+        <span class="kw">let </span>set = <span class="self">self</span>.builder.drop_sets.len();
+
+        <span class="self">self</span>.builder
+            .drop_sets_rev
+            .try_insert(<span class="self">self</span>.addresses.try_clone()<span class="question-mark">?</span>, set)<span class="question-mark">?</span>;
+        <span class="self">self</span>.builder
+            .drop_sets
+            .try_push(Arc::from(<span class="kw-2">&amp;</span><span class="self">self</span>.addresses[..]))<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(set))
     }
 }
 </code></pre></div></section></main></body></html>
