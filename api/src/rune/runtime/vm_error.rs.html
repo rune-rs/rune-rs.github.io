@@ -1267,7 +1267,10 @@
 <a href="#1266" id="1266">1266</a>
 <a href="#1267" id="1267">1267</a>
 <a href="#1268" id="1268">1268</a>
-<a href="#1269" id="1269">1269</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::convert::Infallible;
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::convert::Infallible;
 <span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>::rust_alloc::boxed::Box;
@@ -1278,12 +1281,13 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
 <span class="kw">use </span><span class="kw">crate</span>::compile::meta;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::unit::{BadInstruction, BadJump};
-<span class="kw">use </span><span class="kw">crate</span>::runtime::{
+<span class="kw">use crate</span>::{Any, Hash, ItemBuf};
+
+<span class="kw">use super</span>::{
     AccessError, AccessErrorKind, AnyObjError, AnyObjErrorKind, AnyTypeInfo, BoxedPanic, CallFrame,
     DynArgsUsed, DynamicTakeError, ExecutionState, MaybeTypeOf, Panic, Protocol, SliceError,
-    StackError, TypeInfo, TypeOf, Unit, Vm, VmHaltInfo,
+    StackError, StaticString, TypeInfo, TypeOf, Unit, Vm, VmHaltInfo,
 };
-<span class="kw">use crate</span>::{Any, Hash, ItemBuf};
 
 <span class="doccomment">/// A virtual machine error which includes tracing information.
 </span><span class="kw">pub struct </span>VmError {
@@ -2010,9 +2014,11 @@
     },
     UnsupportedObjectSlotIndexGet {
         target: TypeInfo,
+        field: Arc&lt;StaticString&gt;,
     },
     UnsupportedObjectSlotIndexSet {
         target: TypeInfo,
+        field: Arc&lt;StaticString&gt;,
     },
     UnsupportedIs {
         value: TypeInfo,
@@ -2231,11 +2237,11 @@
                 f,
                 <span class="string">"The tuple index set operation is not supported on `{target}`"</span>,
             ),
-            VmErrorKind::UnsupportedObjectSlotIndexGet { target } =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"Field not available to get on `{target}`"</span>)
+            VmErrorKind::UnsupportedObjectSlotIndexGet { target, field } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"Field `{field}` not available on `{target}`"</span>)
             }
-            VmErrorKind::UnsupportedObjectSlotIndexSet { target } =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"Field not available to set on `{target}`"</span>)
+            VmErrorKind::UnsupportedObjectSlotIndexSet { target, field } =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"Field `{field}` not available to set on `{target}`"</span>)
             }
             VmErrorKind::UnsupportedIs { value, test_type } =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"Operation `{value} is {test_type}` is not supported"</span>)

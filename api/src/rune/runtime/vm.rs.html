@@ -3617,7 +3617,24 @@
 <a href="#3616" id="3616">3616</a>
 <a href="#3617" id="3617">3617</a>
 <a href="#3618" id="3618">3618</a>
-<a href="#3619" id="3619">3619</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#3619" id="3619">3619</a>
+<a href="#3620" id="3620">3620</a>
+<a href="#3621" id="3621">3621</a>
+<a href="#3622" id="3622">3622</a>
+<a href="#3623" id="3623">3623</a>
+<a href="#3624" id="3624">3624</a>
+<a href="#3625" id="3625">3625</a>
+<a href="#3626" id="3626">3626</a>
+<a href="#3627" id="3627">3627</a>
+<a href="#3628" id="3628">3628</a>
+<a href="#3629" id="3629">3629</a>
+<a href="#3630" id="3630">3630</a>
+<a href="#3631" id="3631">3631</a>
+<a href="#3632" id="3632">3632</a>
+<a href="#3633" id="3633">3633</a>
+<a href="#3634" id="3634">3634</a>
+<a href="#3635" id="3635">3635</a>
+<a href="#3636" id="3636">3636</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
 <span class="kw">use </span>core::ptr::NonNull;
@@ -4831,7 +4848,7 @@
 
                 VmResult::Ok(())
             }
-            TargetFallback::Field(lhs, hash, rhs) =&gt; {
+            TargetFallback::Field(lhs, hash, slot, rhs) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>args = DynGuardedArgs::new((rhs,));
 
                 <span class="kw">if let </span>CallResult::Unsupported(lhs) = <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(
@@ -4841,8 +4858,13 @@
                     <span class="kw-2">&amp;mut </span>args,
                     Output::discard()
                 )) {
+                    <span class="kw">let </span><span class="prelude-val">Some</span>(field) = <span class="self">self</span>.unit.lookup_string(slot) <span class="kw">else </span>{
+                        <span class="kw">return </span>err(VmErrorKind::MissingStaticString { slot });
+                    };
+
                     <span class="kw">return </span>err(VmErrorKind::UnsupportedObjectSlotIndexGet {
                         target: lhs.type_info(),
+                        field: field.clone(),
                     });
                 }
 
@@ -5832,8 +5854,13 @@
             <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(<span class="kw-2">&amp;</span>Protocol::SET, target, hash, <span class="kw-2">&amp;mut </span>args, Output::discard()));
 
         <span class="kw">if let </span>CallResult::Unsupported(target) = result {
+            <span class="kw">let </span><span class="prelude-val">Some</span>(field) = <span class="self">self</span>.unit.lookup_string(slot) <span class="kw">else </span>{
+                <span class="kw">return </span>err(VmErrorKind::MissingStaticString { slot });
+            };
+
             <span class="kw">return </span>err(VmErrorKind::UnsupportedObjectSlotIndexSet {
                 target: target.type_info(),
+                field: field.clone(),
             });
         };
 
@@ -5879,6 +5906,7 @@
             target =&gt; {
                 <span class="kw">return </span>err(VmErrorKind::UnsupportedObjectSlotIndexGet {
                     target: target.type_info(),
+                    field: index.clone(),
                 });
             }
         }
@@ -5888,8 +5916,13 @@
         <span class="kw">if let </span>CallResult::Unsupported(target) =
             <span class="macro">vm_try!</span>(<span class="self">self</span>.call_field_fn(<span class="kw-2">&amp;</span>Protocol::GET, target, index.hash(), <span class="kw-2">&amp;mut </span>(), out))
         {
+            <span class="kw">let </span><span class="prelude-val">Some</span>(field) = <span class="self">self</span>.unit.lookup_string(slot) <span class="kw">else </span>{
+                <span class="kw">return </span>err(VmErrorKind::MissingStaticString { slot });
+            };
+
             <span class="kw">return </span>err(VmErrorKind::UnsupportedObjectSlotIndexGet {
                 target: target.type_info(),
+                field: field.clone(),
             });
         }
 
@@ -7033,7 +7066,7 @@
 
 <span class="kw">enum </span>TargetFallback {
     Value(Value, Value),
-    Field(Value, Hash, Value),
+    Field(Value, Hash, usize, Value),
     Index(Value, usize, Value),
 }
 
@@ -7087,6 +7120,7 @@
                 <span class="prelude-val">Ok</span>(TargetValue::Fallback(TargetFallback::Field(
                     lhs.clone(),
                     field.hash(),
+                    slot,
                     rhs.clone(),
                 )))
             }

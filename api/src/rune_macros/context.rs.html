@@ -944,10 +944,7 @@
 <a href="#943" id="943">943</a>
 <a href="#944" id="944">944</a>
 <a href="#945" id="945">945</a>
-<a href="#946" id="946">946</a>
-<a href="#947" id="947">947</a>
-<a href="#948" id="948">948</a>
-<a href="#949" id="949">949</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::cell::RefCell;
+<a href="#946" id="946">946</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::cell::RefCell;
 
 <span class="kw">use </span>proc_macro2::Span;
 <span class="kw">use </span>proc_macro2::TokenStream;
@@ -1255,6 +1252,51 @@
             };
         }
 
+        <span class="macro">macro_rules!</span> generate {
+            (<span class="macro-nonterminal">$proto</span>:ident, <span class="macro-nonterminal">$op</span>:tt) =&gt; {
+                |g| {
+                    <span class="kw">let </span>Generate {
+                        ty,
+                        target,
+                        field,
+                        protocol,
+                        ..
+                    } = g;
+
+                    <span class="kw">let </span>protocol_field = g.tokens.protocol(<span class="kw-2">&amp;</span>Protocol::<span class="macro-nonterminal">$proto</span>);
+
+                    <span class="kw">match </span>target {
+                        GenerateTarget::Named { field_ident, field_name } =&gt; {
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(custom) = <span class="kw-2">&amp;</span>protocol.custom {
+                                <span class="macro">quote_spanned!</span> { field.span() =&gt;
+                                    module.field_function(<span class="kw-2">&amp;</span>#protocol_field, #field_name, #custom)<span class="question-mark">?</span>;
+                                }
+                            } <span class="kw">else </span>{
+                                <span class="macro">quote_spanned!</span> { field.span() =&gt;
+                                    module.field_function(<span class="kw-2">&amp;</span>#protocol_field, #field_name, |s: <span class="kw-2">&amp;mut </span><span class="self">Self</span>, value: #ty| {
+                                        s.#field_ident <span class="macro-nonterminal">$op </span>value
+                                    })<span class="question-mark">?</span>;
+                                }
+                            }
+                        }
+                        GenerateTarget::Numbered { field_index } =&gt; {
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(custom) = <span class="kw-2">&amp;</span>protocol.custom {
+                                <span class="macro">quote_spanned!</span> { field.span() =&gt;
+                                    module.index_function(<span class="kw-2">&amp;</span>#protocol_field, #field_index, #custom)<span class="question-mark">?</span>;
+                                }
+                            } <span class="kw">else </span>{
+                                <span class="macro">quote_spanned!</span> { field.span() =&gt;
+                                    module.index_function(<span class="kw-2">&amp;</span>#protocol_field, #field_index, |s: <span class="kw-2">&amp;mut </span><span class="self">Self</span>, value: #ty| {
+                                        s.#field_index <span class="macro-nonterminal">$op </span>value
+                                    })<span class="question-mark">?</span>;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
         <span class="kw">let </span><span class="kw-2">mut </span>attr = FieldAttrs::default();
 
         <span class="kw">for </span>a <span class="kw">in </span>input {
@@ -1263,6 +1305,35 @@
             }
 
             <span class="kw">let </span>result = a.parse_nested_meta(|meta| {
+                <span class="macro">macro_rules!</span> field_functions {
+                    (
+                        $(
+                            <span class="macro-nonterminal">$assign</span>:literal, <span class="macro-nonterminal">$assign_proto</span>:ident, [$(<span class="macro-nonterminal">$assign_op</span>:tt)<span class="kw-2">*</span>],
+                            <span class="macro-nonterminal">$op</span>:literal, <span class="macro-nonterminal">$op_proto</span>:ident, [$(<span class="macro-nonterminal">$op_op</span>:tt)<span class="kw-2">*</span>],
+                        )*
+                    ) =&gt; {{
+                        $(
+                            <span class="kw">if </span>meta.path.is_ident(<span class="macro-nonterminal">$assign</span>) {
+                                attr.protocols.push(FieldProtocol {
+                                    custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
+                                    generate: <span class="macro">generate_assign!</span>(<span class="macro-nonterminal">$assign_proto</span>, $(<span class="macro-nonterminal">$assign_op</span>)<span class="kw-2">*</span>),
+                                });
+
+                                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                            }
+
+                            <span class="kw">if </span>meta.path.is_ident(<span class="macro-nonterminal">$op</span>) {
+                                attr.protocols.push(FieldProtocol {
+                                    custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
+                                    generate: <span class="macro">generate!</span>(<span class="macro-nonterminal">$op_proto</span>, $(<span class="macro-nonterminal">$op_op</span>)<span class="kw-2">*</span>),
+                                });
+
+                                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                            }
+                        )*
+                    }};
+                }
+
                 <span class="kw">if </span>meta.path.is_ident(<span class="string">"id"</span>) {
                     attr.id = <span class="prelude-val">Some</span>(meta.path.span());
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
@@ -1400,94 +1471,17 @@
                     <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
 
-                <span class="kw">if </span>meta.path.is_ident(<span class="string">"add_assign"</span>) {
-                    attr.protocols.push(FieldProtocol {
-                        custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
-                        generate: <span class="macro">generate_assign!</span>(ADD_ASSIGN, +=),
-                    });
-
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                }
-
-                <span class="kw">if </span>meta.path.is_ident(<span class="string">"sub_assign"</span>) {
-                    attr.protocols.push(FieldProtocol {
-                        custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
-                        generate: <span class="macro">generate_assign!</span>(SUB_ASSIGN, -=),
-                    });
-
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                }
-
-                <span class="kw">if </span>meta.path.is_ident(<span class="string">"div_assign"</span>) {
-                    attr.protocols.push(FieldProtocol {
-                        custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
-                        generate: <span class="macro">generate_assign!</span>(DIV_ASSIGN, /=),
-                    });
-
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                }
-
-                <span class="kw">if </span>meta.path.is_ident(<span class="string">"mul_assign"</span>) {
-                    attr.protocols.push(FieldProtocol {
-                        custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
-                        generate: <span class="macro">generate_assign!</span>(MUL_ASSIGN, <span class="kw-2">*</span>=),
-                    });
-
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                }
-
-                <span class="kw">if </span>meta.path.is_ident(<span class="string">"bit_and_assign"</span>) {
-                    attr.protocols.push(FieldProtocol {
-                        custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
-                        generate: <span class="macro">generate_assign!</span>(BIT_AND_ASSIGN, &amp;=),
-                    });
-
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                }
-
-                <span class="kw">if </span>meta.path.is_ident(<span class="string">"bit_or_assign"</span>) {
-                    attr.protocols.push(FieldProtocol {
-                        custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
-                        generate: <span class="macro">generate_assign!</span>(BIT_OR_ASSIGN, |=),
-                    });
-
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                }
-
-                <span class="kw">if </span>meta.path.is_ident(<span class="string">"bit_xor_assign"</span>) {
-                    attr.protocols.push(FieldProtocol {
-                        custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
-                        generate: <span class="macro">generate_assign!</span>(BIT_XOR_ASSIGN, ^=),
-                    });
-
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                }
-
-                <span class="kw">if </span>meta.path.is_ident(<span class="string">"shl_assign"</span>) {
-                    attr.protocols.push(FieldProtocol {
-                        custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
-                        generate: <span class="macro">generate_assign!</span>(SHL_ASSIGN, &lt;&lt;=),
-                    });
-
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                }
-
-                <span class="kw">if </span>meta.path.is_ident(<span class="string">"shr_assign"</span>) {
-                    attr.protocols.push(FieldProtocol {
-                        custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
-                        generate: <span class="macro">generate_assign!</span>(SHR_ASSIGN, &gt;&gt;=),
-                    });
-
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-                }
-
-                <span class="kw">if </span>meta.path.is_ident(<span class="string">"rem_assign"</span>) {
-                    attr.protocols.push(FieldProtocol {
-                        custom: <span class="self">self</span>.parse_field_custom(meta.input)<span class="question-mark">?</span>,
-                        generate: <span class="macro">generate_assign!</span>(REM_ASSIGN, %=),
-                    });
-
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                <span class="macro">field_functions!</span> {
+                    <span class="string">"add_assign"</span>, ADD_ASSIGN, [+=], <span class="string">"add"</span>, ADD, [+],
+                    <span class="string">"sub_assign"</span>, SUB_ASSIGN, [-=], <span class="string">"sub"</span>, SUB, [-],
+                    <span class="string">"div_assign"</span>, DIV_ASSIGN, [/=], <span class="string">"div"</span>, DIV, [/],
+                    <span class="string">"mul_assign"</span>, MUL_ASSIGN, [<span class="kw-2">*</span>=], <span class="string">"mul"</span>, MUL, [<span class="kw-2">*</span>],
+                    <span class="string">"rem_assign"</span>, REM_ASSIGN, [%=], <span class="string">"rem"</span>, REM, [%],
+                    <span class="string">"bit_and_assign"</span>, BIT_AND_ASSIGN, [&amp;=], <span class="string">"bit_and"</span>, BIT_AND, [<span class="kw-2">&amp;</span>],
+                    <span class="string">"bit_or_assign"</span>, BIT_OR_ASSIGN, [|=], <span class="string">"bit_or"</span>, BIT_OR, [|],
+                    <span class="string">"bit_xor_assign"</span>, BIT_XOR_ASSIGN, [^=], <span class="string">"bit_xor"</span>, BIT_XOR, [^],
+                    <span class="string">"shl_assign"</span>, SHL_ASSIGN, [&lt;&lt;=], <span class="string">"shl"</span>, SHL, [&lt;&lt;],
+                    <span class="string">"shr_assign"</span>, SHR_ASSIGN, [&gt;&gt;=], <span class="string">"shr"</span>, SHR, [&gt;&gt;],
                 }
 
                 <span class="prelude-val">Err</span>(syn::Error::new_spanned(<span class="kw-2">&amp;</span>meta.path, <span class="string">"Unsupported attribute"</span>))
