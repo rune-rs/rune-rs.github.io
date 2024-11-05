@@ -630,7 +630,15 @@
 <a href="#629" id="629">629</a>
 <a href="#630" id="630">630</a>
 <a href="#631" id="631">631</a>
-<a href="#632" id="632">632</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::array;
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::array;
 <span class="kw">use </span>core::convert::Infallible;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem::replace;
@@ -640,6 +648,13 @@
 <span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, Vec};
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{InstAddress, Output, Value, VmErrorKind};
+
+<span class="comment">// This is a bit tricky. We know that `Value::empty()` is `Sync` but we can't
+// convince Rust that is the case.
+</span><span class="kw">struct </span>AssertSync&lt;T&gt;(T);
+<span class="kw">unsafe impl</span>&lt;T&gt; Sync <span class="kw">for </span>AssertSync&lt;T&gt; {}
+
+<span class="kw">static </span>EMPTY: AssertSync&lt;Value&gt; = AssertSync(Value::empty());
 
 <span class="doccomment">/// An error raised when accessing an address on the stack.
 </span><span class="attr">#[derive(Debug)]
@@ -866,16 +881,17 @@
     /// use rune::runtime::{Output, Stack, VmResult, InstAddress};
     ///
     /// fn add_one(stack: &amp;mut Stack, addr: InstAddress, args: usize, out: Output) -&gt; VmResult&lt;()&gt; {
-    ///     let value = vm_try!(vm_try!(stack.at(addr)).as_integer::&lt;i64&gt;());
+    ///     let value = vm_try!(stack.at(addr).as_integer::&lt;i64&gt;());
     ///     out.store(stack, value + 1);
     ///     VmResult::Ok(())
     /// }
     /// ```
-    </span><span class="kw">pub fn </span>at(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: InstAddress) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>Value, StackError&gt; {
+    </span><span class="attr">#[inline(always)]
+    </span><span class="kw">pub fn </span>at(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: InstAddress) -&gt; <span class="kw-2">&amp;</span>Value {
         <span class="self">self</span>.top
             .checked_add(addr.offset())
             .and_then(|n| <span class="self">self</span>.stack.get(n))
-            .ok_or(StackError { addr })
+            .unwrap_or(<span class="kw-2">&amp;</span>EMPTY.<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Get a value mutable at the given index from the stack bottom.

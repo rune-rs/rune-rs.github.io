@@ -1803,7 +1803,29 @@
 <a href="#1802" id="1802">1802</a>
 <a href="#1803" id="1803">1803</a>
 <a href="#1804" id="1804">1804</a>
-<a href="#1805" id="1805">1805</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
+<a href="#1807" id="1807">1807</a>
+<a href="#1808" id="1808">1808</a>
+<a href="#1809" id="1809">1809</a>
+<a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 
 <span class="kw">use </span>musli::{Decode, Encode};
@@ -2794,17 +2816,10 @@
         <span class="doccomment">/// Where to store the variant.
         </span>out: Output,
     },
-    <span class="doccomment">/// A built-in operation like `a + b` that takes its operands and pushes its
-    /// result to and from the stack.
-    ///
-    /// # Operation
-    ///
-    /// ```text
-    /// =&gt; &lt;value&gt;
-    /// ```
+    <span class="doccomment">/// An operation.
     </span><span class="attr">#[musli(packed)]
     </span>Op {
-        <span class="doccomment">/// The actual operation.
+        <span class="doccomment">/// The kind of operation.
         </span>op: InstOp,
         <span class="doccomment">/// The address of the first argument.
         </span>a: InstAddress,
@@ -2813,25 +2828,71 @@
         <span class="doccomment">/// Whether the produced value from the operation should be kept or not.
         </span>out: Output,
     },
-    <span class="doccomment">/// A built-in operation that assigns to the left-hand side operand. Like
-    /// `a += b`.
-    ///
-    /// The target determines the left hand side operation.
-    ///
-    /// # Operation
-    ///
-    /// ```text
-    /// &lt;value&gt;
-    /// =&gt;
-    /// ```
+    <span class="doccomment">/// An arithmetic operation.
     </span><span class="attr">#[musli(packed)]
-    </span>Assign {
+    </span>Arithmetic {
+        <span class="doccomment">/// The kind of operation.
+        </span>op: InstArithmeticOp,
+        <span class="doccomment">/// The address of the first argument.
+        </span>a: InstAddress,
+        <span class="doccomment">/// The address of the second argument.
+        </span>b: InstAddress,
+        <span class="doccomment">/// Whether the produced value from the operation should be kept or not.
+        </span>out: Output,
+    },
+    <span class="doccomment">/// A bitwise operation.
+    </span><span class="attr">#[musli(packed)]
+    </span>Bitwise {
+        <span class="doccomment">/// The kind of operation.
+        </span>op: InstBitwiseOp,
+        <span class="doccomment">/// The address of the first argument.
+        </span>a: InstAddress,
+        <span class="doccomment">/// The address of the second argument.
+        </span>b: InstAddress,
+        <span class="doccomment">/// Whether the produced value from the operation should be kept or not.
+        </span>out: Output,
+    },
+    <span class="doccomment">/// A shift operation.
+    </span><span class="attr">#[musli(packed)]
+    </span>Shift {
+        <span class="doccomment">/// The kind of operation.
+        </span>op: InstShiftOp,
+        <span class="doccomment">/// The address of the first argument.
+        </span>a: InstAddress,
+        <span class="doccomment">/// The address of the second argument.
+        </span>b: InstAddress,
+        <span class="doccomment">/// Whether the produced value from the operation should be kept or not.
+        </span>out: Output,
+    },
+    <span class="doccomment">/// Instruction for assigned arithmetic operations.
+    </span><span class="attr">#[musli(packed)]
+    </span>AssignArithmetic {
+        <span class="doccomment">/// The kind of operation.
+        </span>op: InstArithmeticOp,
         <span class="doccomment">/// The target of the operation.
         </span>target: InstTarget,
-        <span class="doccomment">/// The actual operation.
-        </span>op: InstAssignOp,
         <span class="doccomment">/// The value being assigned.
-        </span>value: InstAddress,
+        </span>rhs: InstAddress,
+    },
+    <span class="doccomment">/// Instruction for assigned bitwise operations.
+    </span><span class="attr">#[musli(packed)]
+    </span>AssignBitwise {
+        <span class="doccomment">/// The kind of operation.
+        </span>op: InstBitwiseOp,
+        <span class="doccomment">/// The target of the operation.
+        </span>target: InstTarget,
+        <span class="doccomment">/// The value being assigned.
+        </span>rhs: InstAddress,
+    },
+    <span class="doccomment">/// Instruction for assigned shift operations.
+    </span><span class="attr">#[musli(packed)]
+    </span>AssignShift {
+        <span class="doccomment">/// The kind of operation.
+        </span>op: InstShiftOp,
+        <span class="doccomment">/// The target of the operation.
+        </span>target: InstTarget,
+        <span class="doccomment">/// The value being assigned.
+        </span>rhs: InstAddress,
     },
     <span class="doccomment">/// Advance an iterator at the given position.
     </span><span class="attr">#[musli(packed)]
@@ -3190,7 +3251,7 @@
 <span class="doccomment">/// An operation between two values on the machine.
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Serialize, Deserialize, Decode, Encode)]
 #[try_clone(copy)]
-</span><span class="kw">pub enum </span>InstAssignOp {
+</span><span class="kw">pub enum </span>InstArithmeticOp {
     <span class="doccomment">/// The add operation. `a + b`.
     </span>Add,
     <span class="doccomment">/// The sub operation. `a - b`.
@@ -3201,20 +3262,11 @@
     </span>Div,
     <span class="doccomment">/// The remainder operation. `a % b`.
     </span>Rem,
-    <span class="doccomment">/// The bitwise and operation. `a &amp; b`.
-    </span>BitAnd,
-    <span class="doccomment">/// The bitwise xor operation. `a ^ b`.
-    </span>BitXor,
-    <span class="doccomment">/// The bitwise or operation. `a | b`.
-    </span>BitOr,
-    <span class="doccomment">/// The shift left operation. `a &lt;&lt; b`.
-    </span>Shl,
-    <span class="doccomment">/// The shift right operation. `a &lt;&lt; b`.
-    </span>Shr,
 }
 
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>InstAssignOp {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>InstArithmeticOp {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Add =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"+"</span>)<span class="question-mark">?</span>;
@@ -3231,6 +3283,28 @@
             <span class="self">Self</span>::Rem =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"%"</span>)<span class="question-mark">?</span>;
             }
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="doccomment">/// An operation between two values on the machine.
+</span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Serialize, Deserialize, Decode, Encode)]
+#[try_clone(copy)]
+</span><span class="kw">pub enum </span>InstBitwiseOp {
+    <span class="doccomment">/// The bitwise and operation. `a &amp; b`.
+    </span>BitAnd,
+    <span class="doccomment">/// The bitwise xor operation. `a ^ b`.
+    </span>BitXor,
+    <span class="doccomment">/// The bitwise or operation. `a | b`.
+    </span>BitOr,
+}
+
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>InstBitwiseOp {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::BitAnd =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"&amp;"</span>)<span class="question-mark">?</span>;
             }
@@ -3240,6 +3314,26 @@
             <span class="self">Self</span>::BitOr =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"|"</span>)<span class="question-mark">?</span>;
             }
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="doccomment">/// An operation between two values on the machine.
+</span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Serialize, Deserialize, Decode, Encode)]
+#[try_clone(copy)]
+</span><span class="kw">pub enum </span>InstShiftOp {
+    <span class="doccomment">/// The shift left operation. `a &lt;&lt; b`.
+    </span>Shl,
+    <span class="doccomment">/// The shift right operation. `a &lt;&lt; b`.
+    </span>Shr,
+}
+
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>InstShiftOp {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Shl =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"&lt;&lt;"</span>)<span class="question-mark">?</span>;
             }
@@ -3256,26 +3350,6 @@
 </span><span class="attr">#[derive(Debug, TryClone, Clone, Copy, Serialize, Deserialize, Decode, Encode)]
 #[try_clone(copy)]
 </span><span class="kw">pub enum </span>InstOp {
-    <span class="doccomment">/// The add operation. `a + b`.
-    </span>Add,
-    <span class="doccomment">/// The sub operation. `a - b`.
-    </span>Sub,
-    <span class="doccomment">/// The multiply operation. `a * b`.
-    </span>Mul,
-    <span class="doccomment">/// The division operation. `a / b`.
-    </span>Div,
-    <span class="doccomment">/// The remainder operation. `a % b`.
-    </span>Rem,
-    <span class="doccomment">/// The bitwise and operation. `a &amp; b`.
-    </span>BitAnd,
-    <span class="doccomment">/// The bitwise xor operation. `a ^ b`.
-    </span>BitXor,
-    <span class="doccomment">/// The bitwise or operation. `a | b`.
-    </span>BitOr,
-    <span class="doccomment">/// The shift left operation. `a &lt;&lt; b`.
-    </span>Shl,
-    <span class="doccomment">/// The shift right operation. `a &lt;&lt; b`.
-    </span>Shr,
     <span class="doccomment">/// Compare two values on the stack for lt and push the result as a
     /// boolean on the stack.
     </span>Lt,
@@ -3368,36 +3442,6 @@
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>InstOp {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Add =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"+"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::Sub =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"-"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::Mul =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"*"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::Div =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"/"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::Rem =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"%"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::BitAnd =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"&amp;"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::BitXor =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"^"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::BitOr =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"|"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::Shl =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"&lt;&lt;"</span>)<span class="question-mark">?</span>;
-            }
-            <span class="self">Self</span>::Shr =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"&gt;&gt;"</span>)<span class="question-mark">?</span>;
-            }
             <span class="self">Self</span>::Lt =&gt; {
                 <span class="macro">write!</span>(f, <span class="string">"&lt;"</span>)<span class="question-mark">?</span>;
             }

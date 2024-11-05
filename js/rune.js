@@ -130,7 +130,7 @@ var rune = (function (exports) {
       return real;
   }
   function __wbg_adapter_26(arg0, arg1, arg2) {
-      wasm$1.closure1216_externref_shim(arg0, arg1, arg2);
+      wasm$1.closure1223_externref_shim(arg0, arg1, arg2);
   }
 
   /**
@@ -160,7 +160,7 @@ var rune = (function (exports) {
       }
   }
   function __wbg_adapter_60(arg0, arg1, arg2, arg3) {
-      wasm$1.closure266_externref_shim(arg0, arg1, arg2, arg3);
+      wasm$1.closure271_externref_shim(arg0, arg1, arg2, arg3);
   }
 
   function notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }
@@ -412,8 +412,8 @@ var rune = (function (exports) {
           return ret;
       };
       imports.wbg.__wbg_queueMicrotask_c5419c06eab41e73 = typeof queueMicrotask == 'function' ? queueMicrotask : notDefined('queueMicrotask');
-      imports.wbg.__wbindgen_closure_wrapper6175 = function(arg0, arg1, arg2) {
-          const ret = makeMutClosure(arg0, arg1, 1217, __wbg_adapter_26);
+      imports.wbg.__wbindgen_closure_wrapper6185 = function(arg0, arg1, arg2) {
+          const ret = makeMutClosure(arg0, arg1, 1224, __wbg_adapter_26);
           return ret;
       };
       imports.wbg.__wbindgen_init_externref_table = function() {
@@ -498,7 +498,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-45951cd7.wasm";
+                  let path = "/js/assets/rune_wasm-16b07356.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
