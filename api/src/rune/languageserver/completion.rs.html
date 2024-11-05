@@ -213,7 +213,23 @@
 <a href="#212" id="212">212</a>
 <a href="#213" id="213">213</a>
 <a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a></pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::ToOwned;
+
+<span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>lsp::CompletionItem;
 <span class="kw">use </span>lsp::CompletionItemKind;
 <span class="kw">use </span>lsp::CompletionItemLabelDetails;
@@ -251,6 +267,10 @@
             <span class="kw">continue</span>;
         }
 
+        <span class="kw">let </span><span class="prelude-val">Some</span>(last) = function.path.base_name() <span class="kw">else </span>{
+            <span class="kw">continue</span>;
+        };
+
         <span class="kw">let </span>args = <span class="kw">match </span><span class="kw-2">&amp;</span>function.args {
             DebugArgs::EmptyArgs =&gt; <span class="prelude-val">None</span>,
             DebugArgs::TupleArgs(n) =&gt; <span class="prelude-val">Some</span>({
@@ -279,7 +299,7 @@
         <span class="kw">let </span>detail = args.map(|a| <span class="macro">format!</span>(<span class="string">"({a:}) -&gt; ?"</span>));
 
         results.try_push(CompletionItem {
-            label: <span class="macro">format!</span>(<span class="string">"{}"</span>, function.path.last().unwrap()),
+            label: last.to_owned(),
             kind: <span class="prelude-val">Some</span>(CompletionItemKind::FUNCTION),
             detail: detail.clone(),
             documentation: docs.map(|d| {
@@ -341,6 +361,10 @@
 
             <span class="kw">let </span>detail = return_type.map(|r| <span class="macro">format!</span>(<span class="string">"({args}) -&gt; {r}"</span>));
 
+            <span class="kw">let </span><span class="prelude-val">Ok</span>(data) = serde_json::to_value(meta.hash.into_inner()) <span class="kw">else </span>{
+                <span class="kw">continue</span>;
+            };
+
             results.try_push(CompletionItem {
                 label: n.try_to_string()<span class="question-mark">?</span>.into_std(),
                 kind: <span class="prelude-val">Some</span>(kind),
@@ -363,7 +387,7 @@
                     detail: <span class="prelude-val">None</span>,
                     description: <span class="prelude-val">Some</span>(prefix.try_to_string()<span class="question-mark">?</span>.into_std()),
                 }),
-                data: <span class="prelude-val">Some</span>(serde_json::to_value(meta.hash.into_inner() <span class="kw">as </span>i64).unwrap()),
+                data: <span class="prelude-val">Some</span>(data),
                 ..Default::default()
             })<span class="question-mark">?</span>;
         }
@@ -402,6 +426,10 @@
 
             <span class="kw">let </span>detail = return_type.map(|r| <span class="macro">format!</span>(<span class="string">"({args}) -&gt; {r}"</span>));
 
+            <span class="kw">let </span><span class="prelude-val">Ok</span>(data) = serde_json::to_value(meta.hash.into_inner()) <span class="kw">else </span>{
+                <span class="kw">continue</span>;
+            };
+
             results.try_push(CompletionItem {
                 label: func_name.try_clone()<span class="question-mark">?</span>.into_std(),
                 kind: <span class="prelude-val">Some</span>(kind),
@@ -420,7 +448,7 @@
                     },
                     new_text: func_name.into_std(),
                 })),
-                data: <span class="prelude-val">Some</span>(serde_json::to_value(meta.hash.into_inner() <span class="kw">as </span>i64).unwrap()),
+                data: <span class="prelude-val">Some</span>(data),
                 ..Default::default()
             })<span class="question-mark">?</span>;
         }
