@@ -1689,7 +1689,12 @@
 <a href="#1688" id="1688">1688</a>
 <a href="#1689" id="1689">1689</a>
 <a href="#1690" id="1690">1690</a>
-<a href="#1691" id="1691">1691</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
+<a href="#1691" id="1691">1691</a>
+<a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a></pre></div><pre class="rust"><code><span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="attr">#[cfg(test)]
@@ -2040,7 +2045,8 @@
         <span class="kw">let </span>result =
             <span class="macro">vm_try!</span>(caller.call_protocol_fn(<span class="kw-2">&amp;</span>Protocol::DISPLAY_FMT, <span class="self">self</span>.clone(), <span class="kw-2">&amp;mut </span>args));
 
-        VmResult::Ok(<span class="macro">vm_try!</span>(&lt;()&gt;::from_value(result)))
+        <span class="macro">vm_try!</span>(&lt;()&gt;::from_value(result));
+        VmResult::Ok(())
     }
 
     <span class="doccomment">/// Perform a shallow clone of the value using the [`CLONE`] protocol.
@@ -2892,7 +2898,10 @@
         caller: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>ProtocolCaller,
     ) -&gt; VmResult&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.as_ref() {
-            Repr::Inline(value) =&gt; <span class="kw">return </span>VmResult::Ok(<span class="macro">vm_try!</span>(value.hash(hasher))),
+            Repr::Inline(value) =&gt; {
+                <span class="macro">vm_try!</span>(value.hash(hasher));
+                <span class="kw">return </span>VmResult::Ok(());
+            }
             Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
                 Vec::HASH =&gt; {
                     <span class="kw">let </span>vec = <span class="macro">vm_try!</span>(value.borrow_ref::&lt;Vec&gt;());
@@ -2912,7 +2921,8 @@
         <span class="kw">if let </span>CallResultOnly::Ok(value) =
             <span class="macro">vm_try!</span>(caller.try_call_protocol_fn(<span class="kw-2">&amp;</span>Protocol::HASH, <span class="self">self</span>.clone(), <span class="kw-2">&amp;mut </span>args))
         {
-            <span class="kw">return </span>VmResult::Ok(<span class="macro">vm_try!</span>(&lt;<span class="kw">_</span>&gt;::from_value(value)));
+            <span class="macro">vm_try!</span>(&lt;()&gt;::from_value(value));
+            <span class="kw">return </span>VmResult::Ok(());
         }
 
         err(VmErrorKind::UnsupportedUnaryOperation {
