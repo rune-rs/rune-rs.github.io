@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/unit_builder.rs`."><title>unit_builder.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e7950ecc.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (2f348cb7c 2025-01-27)" data-channel="nightly" data-search-js="search-ccb196c1.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/</div>unit_builder.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/unit_builder.rs`."><title>unit_builder.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cf3c48c1.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (a9730c3b5 2025-02-05)" data-channel="nightly" data-search-js="search-581efc7a.js" data-settings-js="settings-6dad6058.js" ><script src="../../../static.files/storage-3a5871a4.js"></script><script defer src="../../../static.files/src-script-8fee9dc5.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-4d63596a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/</div>unit_builder.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -960,7 +960,27 @@
 <a href="#959" id="959">959</a>
 <a href="#960" id="960">960</a>
 <a href="#961" id="961">961</a>
-<a href="#962" id="962">962</a></pre></div><pre class="rust"><code><span class="doccomment">//! A single execution unit in the runestick virtual machine.
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a></pre></div><pre class="rust"><code><span class="doccomment">//! A single execution unit in the runestick virtual machine.
 //!
 //! A unit consists of a sequence of instructions, and lookaside tables for
 //! metadata like function locations.
@@ -1283,13 +1303,16 @@
         pool: <span class="kw-2">&amp;</span>Pool,
         query: <span class="kw-2">&amp;mut </span>QueryInner,
     ) -&gt; compile::Result&lt;()&gt; {
+        <span class="macro">debug_assert_eq!</span> {
+            pool.item_type_hash(meta.item_meta.item),
+            meta.hash,
+        };
+
         <span class="kw">match </span>meta.kind {
             meta::Kind::Type { .. } =&gt; {
-                <span class="kw">let </span>hash = pool.item_type_hash(meta.item_meta.item);
-
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
                     kind: RttiKind::Empty,
-                    hash,
+                    hash: meta.hash,
                     variant_hash: Hash::EMPTY,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
                     fields: HashMap::default(),
@@ -1297,20 +1320,26 @@
 
                 <span class="self">self</span>.constants
                     .try_insert(
-                        Hash::associated_function(hash, <span class="kw-2">&amp;</span>Protocol::INTO_TYPE_NAME),
+                        Hash::associated_function(meta.hash, <span class="kw-2">&amp;</span>Protocol::INTO_TYPE_NAME),
                         ConstValue::from(rtti.item.try_to_string()<span class="question-mark">?</span>),
                     )
                     .with_span(span)<span class="question-mark">?</span>;
 
-                <span class="kw">if </span><span class="self">self</span>.rtti.try_insert(hash, rtti).with_span(span)<span class="question-mark">?</span>.is_some() {
+                <span class="kw">if </span><span class="self">self
+                    </span>.rtti
+                    .try_insert(meta.hash, rtti)
+                    .with_span(span)<span class="question-mark">?
+                    </span>.is_some()
+                {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
                         span,
-                        ErrorKind::TypeRttiConflict { hash },
+                        ErrorKind::TypeRttiConflict { hash: meta.hash },
                     ));
                 }
             }
             meta::Kind::Struct {
                 fields: meta::Fields::Empty,
+                enum_hash: Hash::EMPTY,
                 ..
             } =&gt; {
                 <span class="kw">let </span>info = UnitFn::EmptyStruct { hash: meta.hash };
@@ -1366,7 +1395,58 @@
                     .try_insert(meta.hash, signature)<span class="question-mark">?</span>;
             }
             meta::Kind::Struct {
+                fields: meta::Fields::Empty,
+                enum_hash,
+                ..
+            } =&gt; {
+                <span class="kw">let </span>rtti = Arc::new(Rtti {
+                    kind: RttiKind::Empty,
+                    hash: enum_hash,
+                    variant_hash: meta.hash,
+                    item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
+                    fields: HashMap::default(),
+                });
+
+                <span class="kw">if </span><span class="self">self
+                    </span>.rtti
+                    .try_insert(meta.hash, rtti)
+                    .with_span(span)<span class="question-mark">?
+                    </span>.is_some()
+                {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
+                        span,
+                        ErrorKind::RttiConflict { hash: meta.hash },
+                    ));
+                }
+
+                <span class="kw">let </span>info = UnitFn::EmptyStruct { hash: meta.hash };
+
+                <span class="kw">let </span>signature = DebugSignature::new(
+                    pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
+                    DebugArgs::EmptyArgs,
+                );
+
+                <span class="kw">if </span><span class="self">self
+                    </span>.functions
+                    .try_insert(meta.hash, info)
+                    .with_span(span)<span class="question-mark">?
+                    </span>.is_some()
+                {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
+                        span,
+                        ErrorKind::FunctionConflict {
+                            existing: signature,
+                        },
+                    ));
+                }
+
+                <span class="self">self</span>.debug_mut()<span class="question-mark">?
+                    </span>.functions
+                    .try_insert(meta.hash, signature)<span class="question-mark">?</span>;
+            }
+            meta::Kind::Struct {
                 fields: meta::Fields::Unnamed(args),
+                enum_hash: Hash::EMPTY,
                 ..
             } =&gt; {
                 <span class="kw">let </span>info = UnitFn::TupleStruct {
@@ -1425,86 +1505,8 @@
                     .try_insert(meta.hash, signature)<span class="question-mark">?</span>;
             }
             meta::Kind::Struct {
-                fields: meta::Fields::Named(<span class="kw-2">ref </span>named),
-                ..
-            } =&gt; {
-                <span class="kw">let </span>hash = pool.item_type_hash(meta.item_meta.item);
-
-                <span class="kw">let </span>rtti = Arc::new(Rtti {
-                    kind: RttiKind::Struct,
-                    hash,
-                    variant_hash: Hash::EMPTY,
-                    item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
-                    fields: named.to_fields()<span class="question-mark">?</span>,
-                });
-
-                <span class="self">self</span>.constants
-                    .try_insert(
-                        Hash::associated_function(hash, <span class="kw-2">&amp;</span>Protocol::INTO_TYPE_NAME),
-                        ConstValue::from(rtti.item.try_to_string()<span class="question-mark">?</span>),
-                    )
-                    .with_span(span)<span class="question-mark">?</span>;
-
-                <span class="kw">if </span><span class="self">self</span>.rtti.try_insert(hash, rtti).with_span(span)<span class="question-mark">?</span>.is_some() {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
-                        span,
-                        ErrorKind::TypeRttiConflict { hash },
-                    ));
-                }
-            }
-            meta::Kind::Variant {
-                enum_hash,
-                fields: meta::Fields::Empty,
-                ..
-            } =&gt; {
-                <span class="kw">let </span>rtti = Arc::new(Rtti {
-                    kind: RttiKind::Empty,
-                    hash: enum_hash,
-                    variant_hash: meta.hash,
-                    item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
-                    fields: HashMap::default(),
-                });
-
-                <span class="kw">if </span><span class="self">self
-                    </span>.rtti
-                    .try_insert(meta.hash, rtti)
-                    .with_span(span)<span class="question-mark">?
-                    </span>.is_some()
-                {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
-                        span,
-                        ErrorKind::RttiConflict { hash: meta.hash },
-                    ));
-                }
-
-                <span class="kw">let </span>info = UnitFn::EmptyStruct { hash: meta.hash };
-
-                <span class="kw">let </span>signature = DebugSignature::new(
-                    pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
-                    DebugArgs::EmptyArgs,
-                );
-
-                <span class="kw">if </span><span class="self">self
-                    </span>.functions
-                    .try_insert(meta.hash, info)
-                    .with_span(span)<span class="question-mark">?
-                    </span>.is_some()
-                {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
-                        span,
-                        ErrorKind::FunctionConflict {
-                            existing: signature,
-                        },
-                    ));
-                }
-
-                <span class="self">self</span>.debug_mut()<span class="question-mark">?
-                    </span>.functions
-                    .try_insert(meta.hash, signature)<span class="question-mark">?</span>;
-            }
-            meta::Kind::Variant {
-                enum_hash,
                 fields: meta::Fields::Unnamed(args),
+                enum_hash,
                 ..
             } =&gt; {
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
@@ -1555,23 +1557,61 @@
                     </span>.functions
                     .try_insert(meta.hash, signature)<span class="question-mark">?</span>;
             }
-            meta::Kind::Variant {
-                enum_hash,
+            meta::Kind::Struct {
                 fields: meta::Fields::Named(<span class="kw-2">ref </span>named),
+                enum_hash: Hash::EMPTY,
                 ..
             } =&gt; {
-                <span class="kw">let </span>hash = pool.item_type_hash(meta.item_meta.item);
-
                 <span class="kw">let </span>rtti = Arc::new(Rtti {
                     kind: RttiKind::Struct,
-                    hash: enum_hash,
-                    variant_hash: hash,
+                    hash: meta.hash,
+                    variant_hash: Hash::EMPTY,
                     item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
                     fields: named.to_fields()<span class="question-mark">?</span>,
                 });
 
-                <span class="kw">if </span><span class="self">self</span>.rtti.try_insert(hash, rtti).with_span(span)<span class="question-mark">?</span>.is_some() {
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(span, ErrorKind::RttiConflict { hash }));
+                <span class="self">self</span>.constants
+                    .try_insert(
+                        Hash::associated_function(meta.hash, <span class="kw-2">&amp;</span>Protocol::INTO_TYPE_NAME),
+                        ConstValue::from(rtti.item.try_to_string()<span class="question-mark">?</span>),
+                    )
+                    .with_span(span)<span class="question-mark">?</span>;
+
+                <span class="kw">if </span><span class="self">self
+                    </span>.rtti
+                    .try_insert(meta.hash, rtti)
+                    .with_span(span)<span class="question-mark">?
+                    </span>.is_some()
+                {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
+                        span,
+                        ErrorKind::TypeRttiConflict { hash: meta.hash },
+                    ));
+                }
+            }
+            meta::Kind::Struct {
+                fields: meta::Fields::Named(<span class="kw-2">ref </span>named),
+                enum_hash,
+                ..
+            } =&gt; {
+                <span class="kw">let </span>rtti = Arc::new(Rtti {
+                    kind: RttiKind::Struct,
+                    hash: enum_hash,
+                    variant_hash: meta.hash,
+                    item: pool.item(meta.item_meta.item).try_to_owned()<span class="question-mark">?</span>,
+                    fields: named.to_fields()<span class="question-mark">?</span>,
+                });
+
+                <span class="kw">if </span><span class="self">self
+                    </span>.rtti
+                    .try_insert(meta.hash, rtti)
+                    .with_span(span)<span class="question-mark">?
+                    </span>.is_some()
+                {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
+                        span,
+                        ErrorKind::RttiConflict { hash: meta.hash },
+                    ));
                 }
             }
             meta::Kind::Enum { .. } =&gt; {

@@ -157,7 +157,7 @@ var rune = (function (exports) {
   }
 
   function __wbg_adapter_26(arg0, arg1, arg2) {
-      wasm$1.closure1230_externref_shim(arg0, arg1, arg2);
+      wasm$1.closure1227_externref_shim(arg0, arg1, arg2);
   }
 
   function __wbg_adapter_60(arg0, arg1, arg2, arg3) {
@@ -377,8 +377,8 @@ var rune = (function (exports) {
           const ret = false;
           return ret;
       };
-      imports.wbg.__wbindgen_closure_wrapper6255 = function(arg0, arg1, arg2) {
-          const ret = makeMutClosure(arg0, arg1, 1231, __wbg_adapter_26);
+      imports.wbg.__wbindgen_closure_wrapper6258 = function(arg0, arg1, arg2) {
+          const ret = makeMutClosure(arg0, arg1, 1228, __wbg_adapter_26);
           return ret;
       };
       imports.wbg.__wbindgen_init_externref_table = function() {
@@ -499,7 +499,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-e69cca24.wasm";
+                  let path = "/js/assets/rune_wasm-641aec14.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
