@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value/inline.rs`."><title>inline.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-cf3c48c1.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (a9730c3b5 2025-02-05)" data-channel="nightly" data-search-js="search-581efc7a.js" data-settings-js="settings-6dad6058.js" ><script src="../../../../static.files/storage-3a5871a4.js"></script><script defer src="../../../../static.files/src-script-8fee9dc5.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-4d63596a.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/value/</div>inline.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value/inline.rs`."><title>inline.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-cf3c48c1.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (942db6782 2025-02-06)" data-channel="nightly" data-search-js="search-581efc7a.js" data-settings-js="settings-6dad6058.js" ><script src="../../../../static.files/storage-3a5871a4.js"></script><script defer src="../../../../static.files/src-script-8fee9dc5.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-4d63596a.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/value/</div>inline.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -268,7 +268,15 @@
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
 <a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any;
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a></pre></div><pre class="rust"><code><span class="kw">use </span>core::any;
 <span class="kw">use </span>core::cmp::Ordering;
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::hash::Hash <span class="kw">as _</span>;
@@ -277,11 +285,10 @@
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use crate as </span>rune;
-<span class="kw">use </span><span class="kw">crate</span>::hash::Hash;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{
     Hasher, OwnedTuple, Protocol, RuntimeError, Type, TypeInfo, VmErrorKind, VmIntegerRepr,
 };
-<span class="kw">use </span><span class="kw">crate</span>::TypeHash;
+<span class="kw">use crate</span>::{Hash, TypeHash};
 
 <span class="doccomment">/// An inline value.
 </span><span class="attr">#[derive(Clone, Copy, Encode, Decode, Deserialize, Serialize)]
@@ -314,6 +321,8 @@
         #[serde(with = <span class="string">"crate::serde::ordering"</span>)]
         </span>Ordering,
     ),
+    <span class="doccomment">/// A type hash.
+    </span>Hash(Hash),
 }
 
 <span class="kw">impl </span>Inline {
@@ -359,6 +368,7 @@
             (Inline::Float(a), Inline::Float(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
             (Inline::Type(a), Inline::Type(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
             (Inline::Ordering(a), Inline::Ordering(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (Inline::Hash(a), Inline::Hash(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
             (lhs, rhs) =&gt; <span class="prelude-val">Err</span>(RuntimeError::from(
                 VmErrorKind::UnsupportedBinaryOperation {
                     op: Protocol::PARTIAL_EQ.name,
@@ -389,6 +399,7 @@
             }
             (Inline::Type(a), Inline::Type(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
             (Inline::Ordering(a), Inline::Ordering(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
+            (Inline::Hash(a), Inline::Hash(b)) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>a == <span class="kw-2">*</span>b),
             (lhs, rhs) =&gt; <span class="prelude-val">Err</span>(RuntimeError::new(VmErrorKind::UnsupportedBinaryOperation {
                 op: Protocol::EQ.name,
                 lhs: lhs.type_info(),
@@ -416,6 +427,7 @@
             (Inline::Float(lhs), Inline::Float(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
             (Inline::Type(lhs), Inline::Type(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
             (Inline::Ordering(lhs), Inline::Ordering(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
+            (Inline::Hash(lhs), Inline::Hash(rhs)) =&gt; <span class="prelude-val">Ok</span>(lhs.partial_cmp(rhs)),
             (lhs, rhs) =&gt; <span class="prelude-val">Err</span>(RuntimeError::from(
                 VmErrorKind::UnsupportedBinaryOperation {
                     op: Protocol::PARTIAL_CMP.name,
@@ -446,6 +458,7 @@
             }
             (Inline::Type(a), Inline::Type(b)) =&gt; <span class="prelude-val">Ok</span>(a.cmp(b)),
             (Inline::Ordering(a), Inline::Ordering(b)) =&gt; <span class="prelude-val">Ok</span>(a.cmp(b)),
+            (Inline::Hash(a), Inline::Hash(b)) =&gt; <span class="prelude-val">Ok</span>(a.cmp(b)),
             (lhs, rhs) =&gt; <span class="prelude-val">Err</span>(RuntimeError::new(VmErrorKind::UnsupportedBinaryOperation {
                 op: Protocol::CMP.name,
                 lhs: lhs.type_info(),
@@ -501,6 +514,7 @@
             Inline::Float(value) =&gt; value.fmt(f),
             Inline::Type(value) =&gt; value.fmt(f),
             Inline::Ordering(value) =&gt; value.fmt(f),
+            Inline::Hash(value) =&gt; value.fmt(f),
         }
     }
 }
@@ -517,6 +531,7 @@
             Inline::Float(..) =&gt; TypeInfo::named::&lt;f64&gt;(),
             Inline::Type(..) =&gt; TypeInfo::named::&lt;Type&gt;(),
             Inline::Ordering(..) =&gt; TypeInfo::named::&lt;Ordering&gt;(),
+            Inline::Hash(..) =&gt; TypeInfo::named::&lt;Hash&gt;(),
         }
     }
 
@@ -535,6 +550,7 @@
             Inline::Float(..) =&gt; f64::HASH,
             Inline::Type(..) =&gt; Type::HASH,
             Inline::Ordering(..) =&gt; Ordering::HASH,
+            Inline::Hash(..) =&gt; Hash::HASH,
         }
     }
 }
