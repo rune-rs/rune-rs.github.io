@@ -1,1 +1,1 @@
-searchState.loadedDescShard("rune_alloc_macros", 0, "Macros for alloc crate of the Rune Language, an embeddable …")
+searchState.loadedDescShard("rune_alloc_macros", 0, "Macros for alloc crate of the Rune Language, an embeddable …\nDerive to implement the <code>TryClone</code> trait.")
