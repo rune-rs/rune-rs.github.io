@@ -1,9 +1,9 @@
 (function() {
-    var implementors = Object.fromEntries([["musli",[]],["musli_core",[]]]);
+    var implementors = Object.fromEntries([["musli",[]],["musli_core",[]],["rune_alloc",[["impl&lt;'de, M, K, V&gt; <a class=\"trait\" href=\"musli_core/en/encode_trace/trait.EncodeTrace.html\" title=\"trait musli_core::en::encode_trace::EncodeTrace\">EncodeTrace</a>&lt;M&gt; for <a class=\"struct\" href=\"rune_alloc/struct.BTreeMap.html\" title=\"struct rune_alloc::BTreeMap\">BTreeMap</a>&lt;K, V&gt;<div class=\"where\">where\n    K: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> + <a class=\"trait\" href=\"musli_core/en/encode/trait.Encode.html\" title=\"trait musli_core::en::encode::Encode\">Encode</a>&lt;M&gt;,\n    V: <a class=\"trait\" href=\"musli_core/en/encode/trait.Encode.html\" title=\"trait musli_core::en::encode::Encode\">Encode</a>&lt;M&gt;,</div>"],["impl&lt;'de, M, K, V, S&gt; <a class=\"trait\" href=\"musli_core/en/encode_trace/trait.EncodeTrace.html\" title=\"trait musli_core::en::encode_trace::EncodeTrace\">EncodeTrace</a>&lt;M&gt; for <a class=\"struct\" href=\"rune_alloc/struct.HashMap.html\" title=\"struct rune_alloc::HashMap\">HashMap</a>&lt;K, V, S&gt;<div class=\"where\">where\n    K: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> + <a class=\"trait\" href=\"musli_core/en/encode/trait.Encode.html\" title=\"trait musli_core::en::encode::Encode\">Encode</a>&lt;M&gt;,\n    V: <a class=\"trait\" href=\"musli_core/en/encode/trait.Encode.html\" title=\"trait musli_core::en::encode::Encode\">Encode</a>&lt;M&gt;,\n    S: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/hash/trait.BuildHasher.html\" title=\"trait core::hash::BuildHasher\">BuildHasher</a> + <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a>,</div>"]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
         window.pending_implementors = implementors;
     }
 })()
-//{"start":57,"fragment_lengths":[12,18]}
+//{"start":57,"fragment_lengths":[12,18,1877]}

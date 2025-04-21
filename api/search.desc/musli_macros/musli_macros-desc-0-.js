@@ -1,1 +1,1 @@
-searchState.loadedDescShard("musli_macros", 0, "  \nDerive which automatically implements the <code>Decode</code> trait.\nDerive which automatically implements the <code>Encode</code> trait.")
+searchState.loadedDescShard("musli_macros", 0, "  ")

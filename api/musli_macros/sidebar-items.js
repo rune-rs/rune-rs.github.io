@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"attr":["decoder","encoder","visitor"],"derive":["Decode","Encode"]};
+window.SIDEBAR_ITEMS = {};

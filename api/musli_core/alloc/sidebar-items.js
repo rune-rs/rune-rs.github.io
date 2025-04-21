@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["Allocator","RawVec"]};
+window.SIDEBAR_ITEMS = {"struct":["AllocError","Box","Disabled","FromUtf8Error","String","System","SystemAlloc","Vec"],"trait":["Alloc","Allocator","ToOwned"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["DEFAULT_ARRAY_BUFFER"],"macro":["default"],"static":["SYSTEM"],"struct":["ArrayBuffer","Disabled","Slice","String","System","Vec"],"trait":["Allocator","RawVec"]};
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_ARRAY_BUFFER"],"fn":["default","with_buffer"],"struct":["AllocError","ArrayBuffer","Box","DefaultAllocator","Disabled","Slice","SliceAlloc","String","System","SystemAlloc","Vec"],"trait":["Alloc","Allocator","SliceBuffer","ToOwned"]};

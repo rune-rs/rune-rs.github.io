@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ByteOrder","Float","Integer","Width"],"fn":["new"],"struct":["Builder"],"type":["Options"]};
+window.SIDEBAR_ITEMS = {"enum":["ByteOrder","Float","Integer","Width"],"fn":["from_raw","new"],"struct":["Builder"],"type":["Options"]};

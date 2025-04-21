@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["BufWriter"],"trait":["Writer"]};
+window.SIDEBAR_ITEMS = {"struct":["BufWriter","SliceMutWriter"],"trait":["IntoWriter","Writer"]};

@@ -217,6 +217,43 @@ module.field_function(&amp;Protocol::GET, "field", External::field_get)?;</code>
     println!("{}", external.field);
 }
 </code></pre>
+<h2 id="customizing-how-fields-are-cloned-with-runeget"><a class="header" href="#customizing-how-fields-are-cloned-with-runeget">Customizing how fields are cloned with <code>#[rune(get)]</code></a></h2>
+<p>In order to return a value through <code>#[rune(get)]</code>, the value has to be cloned.</p>
+<p>By default, this is done through the <a href="https://docs.rs/rune/0/rune/alloc/clone/trait.TryClone.html"><code>TryClone</code> trait</a>, but its behavior can be
+customized through the following attributes:</p>
+<h4 id="runecopy"><a class="header" href="#runecopy"><code>#[rune(copy)]</code></a></h4>
+<p>This indicates that the field is <code>Copy</code>.</p>
+<h4 id="runeclone"><a class="header" href="#runeclone"><code>#[rune(clone)]</code></a></h4>
+<p>This indicates that the field should use <code>std::clone::Clone</code> to clone the value.
+Note that this effecitvely means that the memory the value uses during cloning
+is <em>not</em> tracked and should be avoided in favor of using <a href="https://docs.rs/rune/0/rune/alloc/"><code>rune::alloc</code></a> and the
+<a href="https://docs.rs/rune/0/rune/alloc/clone/trait.TryClone.html"><code>TryClone</code> trait</a> without good reason.</p>
+<h4 id="runeclone_with--path"><a class="header" href="#runeclone_with--path"><code>#[rune(clone_with = &lt;path&gt;)]</code></a></h4>
+<p>This specified a custom method that should be used to clone the value.</p>
+<pre><code class="language-rust noplaypen">use rune::Any;
+
+use std::sync::Arc;
+
+#[derive(Any)]
+struct External {
+    #[rune(get, clone_with = Thing::clone)]
+    field: Thing,
+}
+
+#[derive(Any, Clone)]
+struct Thing {
+    name: Arc&lt;String&gt;,
+}</code></pre>
+<h4 id="runetry_clone_with--path"><a class="header" href="#runetry_clone_with--path"><code>#[rune(try_clone_with = &lt;path&gt;)]</code></a></h4>
+<p>This specified a custom method that should be used to clone the value.</p>
+<pre><code class="language-rust noplaypen">use rune::Any;
+use rune::prelude::*;
+
+#[derive(Any)]
+struct External {
+    #[rune(get, try_clone_with = String::try_clone)]
+    field: String,
+}</code></pre>
 <h2 id="custom-field-function"><a class="header" href="#custom-field-function">Custom field function</a></h2>
 <p>Using the <code>Any</code> derive, you can specify a custom field function by using an
 argument to the corresponding attribute pointing to the function to use instead.</p>

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["new","with_alloc"],"struct":["Capture","DefaultContext","Error","ErrorMarker","Ignore","Same"],"trait":["ContextError"]};
+window.SIDEBAR_ITEMS = {"fn":["new","new_in"],"struct":["Capture","DefaultContext","Emit","Error","ErrorMarker","Errors","Ignore","NoTrace","Report","Trace"],"trait":["ContextError","ErrorMode","TraceImpl","TraceMode"]};

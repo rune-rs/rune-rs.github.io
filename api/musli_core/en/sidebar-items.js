@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"derive":["Encode"],"trait":["Encode","EncodeBytes","EncodePacked","EncodeTrace","Encoder","EntriesEncoder","EntryEncoder","MapEncoder","SequenceEncoder","VariantEncoder"]};
+window.SIDEBAR_ITEMS = {"attr":["encoder"],"derive":["Encode"],"enum":["TryFastEncode"],"trait":["Encode","EncodeBytes","EncodePacked","EncodeTrace","Encoder","EntriesEncoder","EntryEncoder","MapEncoder","SequenceEncoder","VariantEncoder"]};

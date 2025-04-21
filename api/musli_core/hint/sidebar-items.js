@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["MapHint","SequenceHint"]};
+window.SIDEBAR_ITEMS = {"trait":["MapHint","SequenceHint"]};

@@ -1,9 +1,9 @@
 (function() {
-    var implementors = Object.fromEntries([["musli",[]],["musli_core",[]]]);
+    var implementors = Object.fromEntries([["musli",[]],["musli_core",[]],["rune_alloc",[["impl&lt;M&gt; <a class=\"trait\" href=\"musli_core/en/encode_bytes/trait.EncodeBytes.html\" title=\"trait musli_core::en::encode_bytes::EncodeBytes\">EncodeBytes</a>&lt;M&gt; for <a class=\"enum\" href=\"rune_alloc/borrow/enum.Cow.html\" title=\"enum rune_alloc::borrow::Cow\">Cow</a>&lt;'_, [<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>]&gt;"],["impl&lt;M&gt; <a class=\"trait\" href=\"musli_core/en/encode_bytes/trait.EncodeBytes.html\" title=\"trait musli_core::en::encode_bytes::EncodeBytes\">EncodeBytes</a>&lt;M&gt; for <a class=\"struct\" href=\"rune_alloc/boxed/struct.Box.html\" title=\"struct rune_alloc::boxed::Box\">Box</a>&lt;[<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>]&gt;"],["impl&lt;M&gt; <a class=\"trait\" href=\"musli_core/en/encode_bytes/trait.EncodeBytes.html\" title=\"trait musli_core::en::encode_bytes::EncodeBytes\">EncodeBytes</a>&lt;M&gt; for <a class=\"struct\" href=\"rune_alloc/vec/struct.Vec.html\" title=\"struct rune_alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>&gt;"],["impl&lt;M&gt; <a class=\"trait\" href=\"musli_core/en/encode_bytes/trait.EncodeBytes.html\" title=\"trait musli_core::en::encode_bytes::EncodeBytes\">EncodeBytes</a>&lt;M&gt; for <a class=\"struct\" href=\"rune_alloc/vec_deque/struct.VecDeque.html\" title=\"struct rune_alloc::vec_deque::VecDeque\">VecDeque</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>&gt;"]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
         window.pending_implementors = implementors;
     }
 })()
-//{"start":57,"fragment_lengths":[12,18]}
+//{"start":57,"fragment_lengths":[12,18,1620]}
