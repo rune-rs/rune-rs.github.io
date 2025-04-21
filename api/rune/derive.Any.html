@@ -1,0 +1,157 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Macro to mark a value as external, which will implement all the appropriate traits."><title>Any in rune - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-7dda4a46.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (b8c54d635 2025-04-20)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-4e99c027.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc derive"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../rune/index.html">rune</a><span class="version">0.14.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Any</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#container-attributes" title="Container attributes">Container attributes</a><ul><li><a href="#runeitem--path" title="`#[rune(item = &#60;path&#62;)]`"><code>#[rune(item = &lt;path&gt;)]</code></a></li><li><a href="#runename--ident-attribute" title="`#[rune(name = &#60;ident&#62;)]` attribute"><code>#[rune(name = &lt;ident&gt;)]</code> attribute</a></li></ul></li><li><a href="#field-functions" title="Field functions">Field functions</a></li><li><a href="#customizing-how-fields-are-cloned-with-runeget" title="Customizing how fields are cloned with `#[rune(get)]`">Customizing how fields are cloned with <code>#[rune(get)]</code></a><ul><li><a href="#runecopy" title="`#[rune(copy)]`"><code>#[rune(copy)]</code></a></li><li><a href="#runeclone" title="`#[rune(clone)]`"><code>#[rune(clone)]</code></a></li><li><a href="#runeclone_with--path" title="`#[rune(clone_with = &#60;path&#62;)]`"><code>#[rune(clone_with = &lt;path&gt;)]</code></a></li><li><a href="#runetry_clone_with--path" title="`#[rune(try_clone_with = &#60;path&#62;)]`"><code>#[rune(try_clone_with = &lt;path&gt;)]</code></a></li></ul></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="index.html">In crate rune</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">rune</a></div><h1>Derive Macro <span class="derive">Any</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/rune_macros/lib.rs.html#187">Source</a> </span></div><pre class="rust item-decl"><code>#[derive(Any)]
+{
+    <span class="comment">// Attributes available to this derive:</span>
+    #[rune]
+}
+</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Macro to mark a value as external, which will implement all the appropriate
+traits.</p>
+<p>This is required to support the external type as a type argument in a
+registered function.</p>
+<br>
+<h3 id="container-attributes"><a class="doc-anchor" href="#container-attributes">§</a>Container attributes</h3><br>
+<h4 id="runeitem--path"><a class="doc-anchor" href="#runeitem--path">§</a><code>#[rune(item = &lt;path&gt;)]</code></h4>
+<p>Specify the item prefix which contains this time.</p>
+<p>This is required in order to calculate the correct type hash, if this is
+omitted and the item is defined in a nested module the type hash won’t match
+the expected path hash.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>rune::Any;
+
+<span class="attr">#[derive(Any)]
+#[rune(item = ::process)]
+</span><span class="kw">struct </span>Process {
+    <span class="comment">/* .. */
+</span>}
+
+<span class="kw">fn </span>install() -&gt; <span class="prelude-ty">Result</span>&lt;rune::Module, rune::ContextError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>module = rune::Module::with_crate(<span class="string">"process"</span>)<span class="question-mark">?</span>;
+    module.ty::&lt;Process&gt;()<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(module)
+}</code></pre></div>
+<br>
+<h4 id="runename--ident-attribute"><a class="doc-anchor" href="#runename--ident-attribute">§</a><code>#[rune(name = &lt;ident&gt;)]</code> attribute</h4>
+<p>The name of a type defaults to its identifiers, so <code>struct Foo {}</code> would be
+given the name <code>Foo</code>.</p>
+<p>This can be overrided with the <code>#[rune(name = &lt;ident&gt;)]</code> attribute:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>rune::Any;
+
+<span class="attr">#[derive(Any)]
+#[rune(name = Bar)]
+</span><span class="kw">struct </span>Foo {
+}
+
+<span class="kw">fn </span>install() -&gt; <span class="prelude-ty">Result</span>&lt;rune::Module, rune::ContextError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>module = rune::Module::new();
+    module.ty::&lt;Foo&gt;()<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(module)
+}</code></pre></div>
+<br>
+<h3 id="field-functions"><a class="doc-anchor" href="#field-functions">§</a>Field functions</h3>
+<p>Field functions are special operations which operate on fields. These are
+distinct from associated functions, because they are invoked by using the
+operation associated with the kind of the field function.</p>
+<p>The most common forms of fields functions are <em>getters</em> and <em>setters</em>, which
+are defined through the <a href="runtime/struct.Protocol.html#associatedconstant.GET" title="associated constant rune::runtime::Protocol::GET"><code>Protocol::GET</code></a> and <a href="runtime/struct.Protocol.html#associatedconstant.SET" title="associated constant rune::runtime::Protocol::SET"><code>Protocol::SET</code></a> protocols.</p>
+<p>The <code>Any</code> derive can also generate default implementations of these through
+various <code>#[rune(...)]</code> attributes:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>rune::Any;
+
+<span class="attr">#[derive(Any)]
+</span><span class="kw">struct </span>External {
+    <span class="attr">#[rune(get, set, add_assign, copy)]
+    </span>number: i64,
+    <span class="attr">#[rune(get, set)]
+    </span>string: String,
+}</code></pre></div>
+<p>Once registered, this allows <code>External</code> to be used like this in Rune:</p>
+<div class="example-wrap"><pre class="language-rune"><code>pub fn main(external) {
+    external.number = external.number + 1;
+    external.number += 1;
+    external.string = `${external.string} World`;
+}</code></pre></div>
+<p>The full list of available field functions and their corresponding
+attributes are:</p>
+<div><table><thead><tr><th>Protocol</th><th>Attribute</th><th></th></tr></thead><tbody>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.GET" title="associated constant rune::runtime::Protocol::GET"><code>Protocol::GET</code></a></td><td><code>#[rune(get)]</code></td><td>For getters, like <code>external.field</code>.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.SET" title="associated constant rune::runtime::Protocol::SET"><code>Protocol::SET</code></a></td><td><code>#[rune(set)]</code></td><td>For setters, like <code>external.field = 42</code>.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.ADD_ASSIGN" title="associated constant rune::runtime::Protocol::ADD_ASSIGN"><code>Protocol::ADD_ASSIGN</code></a></td><td><code>#[rune(add_assign)]</code></td><td>The <code>+=</code> operation.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.SUB_ASSIGN" title="associated constant rune::runtime::Protocol::SUB_ASSIGN"><code>Protocol::SUB_ASSIGN</code></a></td><td><code>#[rune(sub_assign)]</code></td><td>The <code>-=</code> operation.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.MUL_ASSIGN" title="associated constant rune::runtime::Protocol::MUL_ASSIGN"><code>Protocol::MUL_ASSIGN</code></a></td><td><code>#[rune(mul_assign)]</code></td><td>The <code>*=</code> operation.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.DIV_ASSIGN" title="associated constant rune::runtime::Protocol::DIV_ASSIGN"><code>Protocol::DIV_ASSIGN</code></a></td><td><code>#[rune(div_assign)]</code></td><td>The <code>/=</code> operation.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.BIT_AND_ASSIGN" title="associated constant rune::runtime::Protocol::BIT_AND_ASSIGN"><code>Protocol::BIT_AND_ASSIGN</code></a></td><td><code>#[rune(bit_and_assign)]</code></td><td>The <code>&amp;=</code> operation.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.BIT_OR_ASSIGN" title="associated constant rune::runtime::Protocol::BIT_OR_ASSIGN"><code>Protocol::BIT_OR_ASSIGN</code></a></td><td><code>#[rune(bit_or_assign)]</code></td><td>The bitwise or operation.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.BIT_XOR_ASSIGN" title="associated constant rune::runtime::Protocol::BIT_XOR_ASSIGN"><code>Protocol::BIT_XOR_ASSIGN</code></a></td><td><code>#[rune(bit_xor_assign)]</code></td><td>The <code>^=</code> operation.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.SHL_ASSIGN" title="associated constant rune::runtime::Protocol::SHL_ASSIGN"><code>Protocol::SHL_ASSIGN</code></a></td><td><code>#[rune(shl_assign)]</code></td><td>The <code>&lt;&lt;=</code> operation.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.SHR_ASSIGN" title="associated constant rune::runtime::Protocol::SHR_ASSIGN"><code>Protocol::SHR_ASSIGN</code></a></td><td><code>#[rune(shr_assign)]</code></td><td>The <code>&gt;&gt;=</code> operation.</td></tr>
+<tr><td><a href="runtime/struct.Protocol.html#associatedconstant.REM_ASSIGN" title="associated constant rune::runtime::Protocol::REM_ASSIGN"><code>Protocol::REM_ASSIGN</code></a></td><td><code>#[rune(rem_assign)]</code></td><td>The <code>%=</code> operation.</td></tr>
+</tbody></table>
+</div>
+<p>The manual way to register these functions is to use the new
+<code>Module::field_function</code> function. This clearly showcases that there’s no
+relationship between the field used and the function registered:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>rune::{Any, Module};
+<span class="kw">use </span>rune::runtime::Protocol;
+
+<span class="attr">#[derive(Any)]
+</span><span class="kw">struct </span>External {
+}
+
+<span class="kw">impl </span>External {
+    <span class="kw">fn </span>field_get(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        String::from(<span class="string">"Hello World"</span>)
+    }
+}
+
+<span class="kw">let </span><span class="kw-2">mut </span>module = Module::new();
+module.field_function(<span class="kw-2">&amp;</span>Protocol::GET, <span class="string">"field"</span>, External::field_get)<span class="question-mark">?</span>;</code></pre></div>
+<p>Would allow for this in Rune:</p>
+<div class="example-wrap"><pre class="language-rune"><code>pub fn main(external) {
+    println!(&quot;{}&quot;, external.field);
+}</code></pre></div><h3 id="customizing-how-fields-are-cloned-with-runeget"><a class="doc-anchor" href="#customizing-how-fields-are-cloned-with-runeget">§</a>Customizing how fields are cloned with <code>#[rune(get)]</code></h3>
+<p>In order to return a value through <code>#[rune(get)]</code>, the value has to be
+cloned.</p>
+<p>By default, this is done through the <a href="alloc/clone/trait.TryClone.html" title="trait rune::alloc::clone::TryClone"><code>TryClone</code> trait</a>, but its behavior
+can be customized through the following attributes:</p>
+<br>
+<h4 id="runecopy"><a class="doc-anchor" href="#runecopy">§</a><code>#[rune(copy)]</code></h4>
+<p>This indicates that the field is <code>Copy</code>.</p>
+<br>
+<h4 id="runeclone"><a class="doc-anchor" href="#runeclone">§</a><code>#[rune(clone)]</code></h4>
+<p>This indicates that the field should use <code>std::clone::Clone</code> to clone the
+value. Note that this effecitvely means that the memory the value uses
+during cloning is <em>not</em> tracked and should be avoided in favor of using
+<a href="alloc/index.html" title="mod rune::alloc"><code>rune::alloc</code></a> and the <a href="alloc/clone/trait.TryClone.html" title="trait rune::alloc::clone::TryClone"><code>TryClone</code> trait</a> without good reason.</p>
+<br>
+<h4 id="runeclone_with--path"><a class="doc-anchor" href="#runeclone_with--path">§</a><code>#[rune(clone_with = &lt;path&gt;)]</code></h4>
+<p>This specified a custom method that should be used to clone the value.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>rune::Any;
+
+<span class="kw">use </span>std::sync::Arc;
+
+<span class="attr">#[derive(Any)]
+</span><span class="kw">struct </span>External {
+    <span class="attr">#[rune(get, clone_with = Inner::clone)]
+    </span>field: Inner,
+}
+
+<span class="attr">#[derive(Any, Clone)]
+</span><span class="kw">struct </span>Inner {
+    name: Arc&lt;String&gt;,
+}</code></pre></div>
+<br>
+<h4 id="runetry_clone_with--path"><a class="doc-anchor" href="#runetry_clone_with--path">§</a><code>#[rune(try_clone_with = &lt;path&gt;)]</code></h4>
+<p>This specified a custom method that should be used to clone the value.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>rune::Any;
+<span class="kw">use </span>rune::alloc::prelude::<span class="kw-2">*</span>;
+
+<span class="attr">#[derive(Any)]
+</span><span class="kw">struct </span>External {
+    <span class="attr">#[rune(get, try_clone_with = String::try_clone)]
+    </span>field: String,
+}</code></pre></div>
+</div></details></section></div></main></body></html>
