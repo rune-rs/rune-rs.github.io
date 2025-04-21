@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["SyntheticKind"],"fn":["quote_fn","test"],"macro":["quote"],"struct":["FormatArgs","MacroContext","Quote","SyntheticId","TokenStream","TokenStreamIter"],"trait":["IntoLit","ToTokens"]};
+window.SIDEBAR_ITEMS = {"enum":["SyntheticKind"],"fn":["quote_fn","test"],"struct":["FormatArgs","MacroContext","Quote","SyntheticId","TokenStream","TokenStreamIter"],"trait":["IntoLit","ToTokens"]};

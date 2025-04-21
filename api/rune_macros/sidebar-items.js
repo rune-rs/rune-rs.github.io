@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"attr":["attribute_macro","function","macro_","module"],"derive":["Any","FromValue","ToConstValue","ToValue"],"macro":["hash","item","quote"]};
+window.SIDEBAR_ITEMS = {"derive":["Spanned"]};
