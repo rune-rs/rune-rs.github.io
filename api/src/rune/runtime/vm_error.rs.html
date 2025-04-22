@@ -1,8 +1,8 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm_error.rs`."><title>vm_error.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-7dda4a46.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (b8c54d635 2025-04-20)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm_error.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::convert::Infallible;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm_error.rs`."><title>vm_error.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-7dda4a46.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (d6c1e454a 2025-04-21)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm_error.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::convert::Infallible;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::fmt;
 <a href=#3 id=3 data-nosnippet>3</a>
-<a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>::rust_alloc::boxed::Box;
-<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>::rust_alloc::sync::Arc;
+<a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>rust_alloc::boxed::Box;
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>rust_alloc::sync::Arc;
 <a href=#6 id=6 data-nosnippet>6</a>
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::alloc::error::CustomError;
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -34,8 +34,8 @@
 <a href=#34 id=34 data-nosnippet>34</a>                    </span>index: <span class="number">0</span>,
 <a href=#35 id=35 data-nosnippet>35</a>                    kind: VmErrorKind::from(error),
 <a href=#36 id=36 data-nosnippet>36</a>                },
-<a href=#37 id=37 data-nosnippet>37</a>                chain: ::rust_alloc::vec::Vec::new(),
-<a href=#38 id=38 data-nosnippet>38</a>                stacktrace: ::rust_alloc::vec::Vec::new(),
+<a href=#37 id=37 data-nosnippet>37</a>                chain: rust_alloc::vec::Vec::new(),
+<a href=#38 id=38 data-nosnippet>38</a>                stacktrace: rust_alloc::vec::Vec::new(),
 <a href=#39 id=39 data-nosnippet>39</a>            }),
 <a href=#40 id=40 data-nosnippet>40</a>        }
 <a href=#41 id=41 data-nosnippet>41</a>    }
@@ -165,7 +165,7 @@
 <a href=#165 id=165 data-nosnippet>165</a>    <span class="doccomment">/// Frozen instruction pointer.
 <a href=#166 id=166 data-nosnippet>166</a>    </span><span class="kw">pub </span>ip: usize,
 <a href=#167 id=167 data-nosnippet>167</a>    <span class="doccomment">/// All lower call frames before the unwind trigger point
-<a href=#168 id=168 data-nosnippet>168</a>    </span><span class="kw">pub </span>frames: ::rust_alloc::vec::Vec&lt;CallFrame&gt;,
+<a href=#168 id=168 data-nosnippet>168</a>    </span><span class="kw">pub </span>frames: rust_alloc::vec::Vec&lt;CallFrame&gt;,
 <a href=#169 id=169 data-nosnippet>169</a>}
 <a href=#170 id=170 data-nosnippet>170</a>
 <a href=#171 id=171 data-nosnippet>171</a><span class="attr">#[derive(Debug)]
@@ -201,8 +201,8 @@
 <a href=#201 id=201 data-nosnippet>201</a><span class="attr">#[non_exhaustive]
 <a href=#202 id=202 data-nosnippet>202</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>VmErrorInner {
 <a href=#203 id=203 data-nosnippet>203</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) error: VmErrorAt,
-<a href=#204 id=204 data-nosnippet>204</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) chain: ::rust_alloc::vec::Vec&lt;VmErrorAt&gt;,
-<a href=#205 id=205 data-nosnippet>205</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) stacktrace: ::rust_alloc::vec::Vec&lt;VmErrorLocation&gt;,
+<a href=#204 id=204 data-nosnippet>204</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) chain: rust_alloc::vec::Vec&lt;VmErrorAt&gt;,
+<a href=#205 id=205 data-nosnippet>205</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) stacktrace: rust_alloc::vec::Vec&lt;VmErrorLocation&gt;,
 <a href=#206 id=206 data-nosnippet>206</a>}
 <a href=#207 id=207 data-nosnippet>207</a>
 <a href=#208 id=208 data-nosnippet>208</a><span class="doccomment">/// A result produced by the virtual machine.
@@ -374,7 +374,7 @@
 <a href=#374 id=374 data-nosnippet>374</a>            <span class="prelude-val">Some</span>(first) =&gt; first,
 <a href=#375 id=375 data-nosnippet>375</a>        };
 <a href=#376 id=376 data-nosnippet>376</a>
-<a href=#377 id=377 data-nosnippet>377</a>        <span class="kw">let </span><span class="kw-2">mut </span>chain = ::rust_alloc::vec::Vec::with_capacity(it.len());
+<a href=#377 id=377 data-nosnippet>377</a>        <span class="kw">let </span><span class="kw-2">mut </span>chain = rust_alloc::vec::Vec::with_capacity(it.len());
 <a href=#378 id=378 data-nosnippet>378</a>
 <a href=#379 id=379 data-nosnippet>379</a>        <span class="kw">for </span>kind <span class="kw">in </span>it {
 <a href=#380 id=380 data-nosnippet>380</a>            chain.push(VmErrorAt {
@@ -392,7 +392,7 @@
 <a href=#392 id=392 data-nosnippet>392</a>                    kind: first,
 <a href=#393 id=393 data-nosnippet>393</a>                },
 <a href=#394 id=394 data-nosnippet>394</a>                chain,
-<a href=#395 id=395 data-nosnippet>395</a>                stacktrace: ::rust_alloc::vec::Vec::new(),
+<a href=#395 id=395 data-nosnippet>395</a>                stacktrace: rust_alloc::vec::Vec::new(),
 <a href=#396 id=396 data-nosnippet>396</a>            }),
 <a href=#397 id=397 data-nosnippet>397</a>        }
 <a href=#398 id=398 data-nosnippet>398</a>    }

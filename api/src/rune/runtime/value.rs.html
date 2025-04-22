@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value.rs`."><title>value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-7dda4a46.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (b8c54d635 2025-04-20)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>value.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#[macro_use]
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/value.rs`."><title>value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-7dda4a46.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (d6c1e454a 2025-04-21)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>value.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#[macro_use]
 <a href=#2 id=2 data-nosnippet>2</a></span><span class="kw">mod </span>macros;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="attr">#[cfg(test)]
@@ -27,13 +27,13 @@
 <a href=#27 id=27 data-nosnippet>27</a><span class="kw">use </span>core::mem::replace;
 <a href=#28 id=28 data-nosnippet>28</a><span class="kw">use </span>core::ptr::NonNull;
 <a href=#29 id=29 data-nosnippet>29</a>
-<a href=#30 id=30 data-nosnippet>30</a><span class="kw">use </span>::rust_alloc::sync::Arc;
+<a href=#30 id=30 data-nosnippet>30</a><span class="kw">use </span>rust_alloc::sync::Arc;
 <a href=#31 id=31 data-nosnippet>31</a>
 <a href=#32 id=32 data-nosnippet>32</a><span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <a href=#33 id=33 data-nosnippet>33</a><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <a href=#34 id=34 data-nosnippet>34</a><span class="kw">use </span><span class="kw">crate</span>::alloc::{<span class="self">self</span>, String};
 <a href=#35 id=35 data-nosnippet>35</a><span class="kw">use </span><span class="kw">crate</span>::compile::meta;
-<a href=#36 id=36 data-nosnippet>36</a><span class="kw">use crate</span>::{Any, Hash, TypeHash};
+<a href=#36 id=36 data-nosnippet>36</a><span class="kw">use crate</span>::{vm_try, Any, Hash, TypeHash};
 <a href=#37 id=37 data-nosnippet>37</a>
 <a href=#38 id=38 data-nosnippet>38</a><span class="kw">use super</span>::{
 <a href=#39 id=39 data-nosnippet>39</a>    AccessError, AnyObj, AnyObjDrop, BorrowMut, BorrowRef, CallResultOnly, ConstValue,
@@ -328,7 +328,7 @@
 <a href=#328 id=328 data-nosnippet>328</a>                        <span class="macro">vm_try!</span>(f.try_write_str(buffer.format(<span class="kw-2">*</span>float)));
 <a href=#329 id=329 data-nosnippet>329</a>                    }
 <a href=#330 id=330 data-nosnippet>330</a>                    Inline::Bool(bool) =&gt; {
-<a href=#331 id=331 data-nosnippet>331</a>                        <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{bool}"</span>));
+<a href=#331 id=331 data-nosnippet>331</a>                        <span class="macro">vm_try!</span>(<span class="macro">write!</span>(f, <span class="string">"{bool}"</span>));
 <a href=#332 id=332 data-nosnippet>332</a>                    }
 <a href=#333 id=333 data-nosnippet>333</a>                    <span class="kw">_ </span>=&gt; {
 <a href=#334 id=334 data-nosnippet>334</a>                        <span class="kw">break </span><span class="lifetime">'fallback</span>;
@@ -414,7 +414,7 @@
 <a href=#414 id=414 data-nosnippet>414</a>    ) -&gt; VmResult&lt;()&gt; {
 <a href=#415 id=415 data-nosnippet>415</a>        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.repr {
 <a href=#416 id=416 data-nosnippet>416</a>            Repr::Inline(value) =&gt; {
-<a href=#417 id=417 data-nosnippet>417</a>                <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
+<a href=#417 id=417 data-nosnippet>417</a>                <span class="macro">vm_try!</span>(<span class="macro">write!</span>(f, <span class="string">"{value:?}"</span>));
 <a href=#418 id=418 data-nosnippet>418</a>            }
 <a href=#419 id=419 data-nosnippet>419</a>            Repr::Dynamic(<span class="kw-2">ref </span>value) =&gt; {
 <a href=#420 id=420 data-nosnippet>420</a>                <span class="macro">vm_try!</span>(value.debug_fmt_with(f, caller));
@@ -433,15 +433,15 @@
 <a href=#433 id=433 data-nosnippet>433</a>                    }
 <a href=#434 id=434 data-nosnippet>434</a>                    CallResultOnly::Unsupported(value) =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>value.repr {
 <a href=#435 id=435 data-nosnippet>435</a>                        Repr::Inline(value) =&gt; {
-<a href=#436 id=436 data-nosnippet>436</a>                            <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"{value:?}"</span>));
+<a href=#436 id=436 data-nosnippet>436</a>                            <span class="macro">vm_try!</span>(<span class="macro">write!</span>(f, <span class="string">"{value:?}"</span>));
 <a href=#437 id=437 data-nosnippet>437</a>                        }
 <a href=#438 id=438 data-nosnippet>438</a>                        Repr::Dynamic(value) =&gt; {
 <a href=#439 id=439 data-nosnippet>439</a>                            <span class="kw">let </span>ty = value.type_info();
-<a href=#440 id=440 data-nosnippet>440</a>                            <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>));
+<a href=#440 id=440 data-nosnippet>440</a>                            <span class="macro">vm_try!</span>(<span class="macro">write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>));
 <a href=#441 id=441 data-nosnippet>441</a>                        }
 <a href=#442 id=442 data-nosnippet>442</a>                        Repr::Any(value) =&gt; {
 <a href=#443 id=443 data-nosnippet>443</a>                            <span class="kw">let </span>ty = value.type_info();
-<a href=#444 id=444 data-nosnippet>444</a>                            <span class="macro">vm_try!</span>(<span class="macro">vm_write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>));
+<a href=#444 id=444 data-nosnippet>444</a>                            <span class="macro">vm_try!</span>(<span class="macro">write!</span>(f, <span class="string">"&lt;{ty} object at {value:p}&gt;"</span>));
 <a href=#445 id=445 data-nosnippet>445</a>                        }
 <a href=#446 id=446 data-nosnippet>446</a>                    },
 <a href=#447 id=447 data-nosnippet>447</a>                }

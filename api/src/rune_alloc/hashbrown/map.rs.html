@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/hashbrown/map.rs`."><title>map.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-7dda4a46.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (b8c54d635 2025-04-20)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune_alloc/hashbrown/</div>map.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::borrow::Borrow;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/hashbrown/map.rs`."><title>map.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-7dda4a46.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (d6c1e454a 2025-04-21)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune_alloc/hashbrown/</div>map.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::borrow::Borrow;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::convert::Infallible;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>core::fmt::{<span class="self">self</span>, Debug};
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>core::hash::{BuildHasher, Hash};
@@ -7078,8 +7078,8 @@
 <a href=#7078 id=7078 data-nosnippet>7078</a>    <span class="kw">use </span>std::vec::Vec;
 <a href=#7079 id=7079 data-nosnippet>7079</a>    <span class="kw">use </span>std::{format, println};
 <a href=#7080 id=7080 data-nosnippet>7080</a>
-<a href=#7081 id=7081 data-nosnippet>7081</a>    <span class="kw">use </span>::rust_alloc::string::{String, ToString};
-<a href=#7082 id=7082 data-nosnippet>7082</a>    <span class="kw">use </span>::rust_alloc::sync::Arc;
+<a href=#7081 id=7081 data-nosnippet>7081</a>    <span class="kw">use </span>rust_alloc::string::{String, ToString};
+<a href=#7082 id=7082 data-nosnippet>7082</a>    <span class="kw">use </span>rust_alloc::sync::Arc;
 <a href=#7083 id=7083 data-nosnippet>7083</a>
 <a href=#7084 id=7084 data-nosnippet>7084</a>    <span class="kw">use </span>rand::{rngs::SmallRng, Rng, SeedableRng};
 <a href=#7085 id=7085 data-nosnippet>7085</a>
@@ -7212,7 +7212,7 @@
 <a href=#7212 id=7212 data-nosnippet>7212</a>    <span class="attr">#[test]
 <a href=#7213 id=7213 data-nosnippet>7213</a>    </span><span class="kw">fn </span>test_drops() {
 <a href=#7214 id=7214 data-nosnippet>7214</a>        DROP_VECTOR.with(|slot| {
-<a href=#7215 id=7215 data-nosnippet>7215</a>            <span class="kw-2">*</span>slot.borrow_mut() = <span class="macro">::rust_alloc::vec!</span>[<span class="number">0</span>; <span class="number">200</span>];
+<a href=#7215 id=7215 data-nosnippet>7215</a>            <span class="kw-2">*</span>slot.borrow_mut() = <span class="macro">rust_alloc::vec!</span>[<span class="number">0</span>; <span class="number">200</span>];
 <a href=#7216 id=7216 data-nosnippet>7216</a>        });
 <a href=#7217 id=7217 data-nosnippet>7217</a>
 <a href=#7218 id=7218 data-nosnippet>7218</a>        {
@@ -7271,7 +7271,7 @@
 <a href=#7271 id=7271 data-nosnippet>7271</a>    <span class="attr">#[test]
 <a href=#7272 id=7272 data-nosnippet>7272</a>    </span><span class="kw">fn </span>test_into_iter_drops() {
 <a href=#7273 id=7273 data-nosnippet>7273</a>        DROP_VECTOR.with(|v| {
-<a href=#7274 id=7274 data-nosnippet>7274</a>            <span class="kw-2">*</span>v.borrow_mut() = <span class="macro">::rust_alloc::vec!</span>[<span class="number">0</span>; <span class="number">200</span>];
+<a href=#7274 id=7274 data-nosnippet>7274</a>            <span class="kw-2">*</span>v.borrow_mut() = <span class="macro">rust_alloc::vec!</span>[<span class="number">0</span>; <span class="number">200</span>];
 <a href=#7275 id=7275 data-nosnippet>7275</a>        });
 <a href=#7276 id=7276 data-nosnippet>7276</a>
 <a href=#7277 id=7277 data-nosnippet>7277</a>        <span class="kw">let </span>hm = {
@@ -7542,7 +7542,7 @@
 <a href=#7542 id=7542 data-nosnippet>7542</a>
 <a href=#7543 id=7543 data-nosnippet>7543</a>    <span class="attr">#[test]
 <a href=#7544 id=7544 data-nosnippet>7544</a>    </span><span class="kw">fn </span>test_keys() {
-<a href=#7545 id=7545 data-nosnippet>7545</a>        <span class="kw">let </span>vec = <span class="macro">::rust_alloc::vec!</span>[(<span class="number">1</span>, <span class="string">'a'</span>), (<span class="number">2</span>, <span class="string">'b'</span>), (<span class="number">3</span>, <span class="string">'c'</span>)];
+<a href=#7545 id=7545 data-nosnippet>7545</a>        <span class="kw">let </span>vec = <span class="macro">rust_alloc::vec!</span>[(<span class="number">1</span>, <span class="string">'a'</span>), (<span class="number">2</span>, <span class="string">'b'</span>), (<span class="number">3</span>, <span class="string">'c'</span>)];
 <a href=#7546 id=7546 data-nosnippet>7546</a>        <span class="kw">let </span>map: HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt; = vec.into_iter().collect();
 <a href=#7547 id=7547 data-nosnippet>7547</a>        <span class="kw">let </span>keys: Vec&lt;<span class="kw">_</span>&gt; = map.keys().copied().collect();
 <a href=#7548 id=7548 data-nosnippet>7548</a>        <span class="macro">assert_eq!</span>(keys.len(), <span class="number">3</span>);
@@ -7553,7 +7553,7 @@
 <a href=#7553 id=7553 data-nosnippet>7553</a>
 <a href=#7554 id=7554 data-nosnippet>7554</a>    <span class="attr">#[test]
 <a href=#7555 id=7555 data-nosnippet>7555</a>    </span><span class="kw">fn </span>test_values() {
-<a href=#7556 id=7556 data-nosnippet>7556</a>        <span class="kw">let </span>vec = <span class="macro">::rust_alloc::vec!</span>[(<span class="number">1</span>, <span class="string">'a'</span>), (<span class="number">2</span>, <span class="string">'b'</span>), (<span class="number">3</span>, <span class="string">'c'</span>)];
+<a href=#7556 id=7556 data-nosnippet>7556</a>        <span class="kw">let </span>vec = <span class="macro">rust_alloc::vec!</span>[(<span class="number">1</span>, <span class="string">'a'</span>), (<span class="number">2</span>, <span class="string">'b'</span>), (<span class="number">3</span>, <span class="string">'c'</span>)];
 <a href=#7557 id=7557 data-nosnippet>7557</a>        <span class="kw">let </span>map: HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt; = vec.into_iter().collect();
 <a href=#7558 id=7558 data-nosnippet>7558</a>        <span class="kw">let </span>values: Vec&lt;<span class="kw">_</span>&gt; = map.values().copied().collect();
 <a href=#7559 id=7559 data-nosnippet>7559</a>        <span class="macro">assert_eq!</span>(values.len(), <span class="number">3</span>);
@@ -7564,7 +7564,7 @@
 <a href=#7564 id=7564 data-nosnippet>7564</a>
 <a href=#7565 id=7565 data-nosnippet>7565</a>    <span class="attr">#[test]
 <a href=#7566 id=7566 data-nosnippet>7566</a>    </span><span class="kw">fn </span>test_values_mut() {
-<a href=#7567 id=7567 data-nosnippet>7567</a>        <span class="kw">let </span>vec = <span class="macro">::rust_alloc::vec!</span>[(<span class="number">1</span>, <span class="number">1</span>), (<span class="number">2</span>, <span class="number">2</span>), (<span class="number">3</span>, <span class="number">3</span>)];
+<a href=#7567 id=7567 data-nosnippet>7567</a>        <span class="kw">let </span>vec = <span class="macro">rust_alloc::vec!</span>[(<span class="number">1</span>, <span class="number">1</span>), (<span class="number">2</span>, <span class="number">2</span>), (<span class="number">3</span>, <span class="number">3</span>)];
 <a href=#7568 id=7568 data-nosnippet>7568</a>        <span class="kw">let </span><span class="kw-2">mut </span>map: HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt; = vec.into_iter().collect();
 <a href=#7569 id=7569 data-nosnippet>7569</a>        <span class="kw">for </span>value <span class="kw">in </span>map.values_mut() {
 <a href=#7570 id=7570 data-nosnippet>7570</a>            <span class="kw-2">*</span>value <span class="kw-2">*</span>= <span class="number">2</span>;
@@ -7578,7 +7578,7 @@
 <a href=#7578 id=7578 data-nosnippet>7578</a>
 <a href=#7579 id=7579 data-nosnippet>7579</a>    <span class="attr">#[test]
 <a href=#7580 id=7580 data-nosnippet>7580</a>    </span><span class="kw">fn </span>test_into_keys() {
-<a href=#7581 id=7581 data-nosnippet>7581</a>        <span class="kw">let </span>vec = <span class="macro">::rust_alloc::vec!</span>[(<span class="number">1</span>, <span class="string">'a'</span>), (<span class="number">2</span>, <span class="string">'b'</span>), (<span class="number">3</span>, <span class="string">'c'</span>)];
+<a href=#7581 id=7581 data-nosnippet>7581</a>        <span class="kw">let </span>vec = <span class="macro">rust_alloc::vec!</span>[(<span class="number">1</span>, <span class="string">'a'</span>), (<span class="number">2</span>, <span class="string">'b'</span>), (<span class="number">3</span>, <span class="string">'c'</span>)];
 <a href=#7582 id=7582 data-nosnippet>7582</a>        <span class="kw">let </span>map: HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt; = vec.into_iter().collect();
 <a href=#7583 id=7583 data-nosnippet>7583</a>        <span class="kw">let </span>keys: Vec&lt;<span class="kw">_</span>&gt; = map.into_keys().collect();
 <a href=#7584 id=7584 data-nosnippet>7584</a>
@@ -7590,7 +7590,7 @@
 <a href=#7590 id=7590 data-nosnippet>7590</a>
 <a href=#7591 id=7591 data-nosnippet>7591</a>    <span class="attr">#[test]
 <a href=#7592 id=7592 data-nosnippet>7592</a>    </span><span class="kw">fn </span>test_into_values() {
-<a href=#7593 id=7593 data-nosnippet>7593</a>        <span class="kw">let </span>vec = <span class="macro">::rust_alloc::vec!</span>[(<span class="number">1</span>, <span class="string">'a'</span>), (<span class="number">2</span>, <span class="string">'b'</span>), (<span class="number">3</span>, <span class="string">'c'</span>)];
+<a href=#7593 id=7593 data-nosnippet>7593</a>        <span class="kw">let </span>vec = <span class="macro">rust_alloc::vec!</span>[(<span class="number">1</span>, <span class="string">'a'</span>), (<span class="number">2</span>, <span class="string">'b'</span>), (<span class="number">3</span>, <span class="string">'c'</span>)];
 <a href=#7594 id=7594 data-nosnippet>7594</a>        <span class="kw">let </span>map: HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt; = vec.into_iter().collect();
 <a href=#7595 id=7595 data-nosnippet>7595</a>        <span class="kw">let </span>values: Vec&lt;<span class="kw">_</span>&gt; = map.into_values().collect();
 <a href=#7596 id=7596 data-nosnippet>7596</a>
@@ -8537,7 +8537,7 @@
 <a href=#8537 id=8537 data-nosnippet>8537</a>            <span class="kw">let </span>drained = map.extract_if(|<span class="kw-2">&amp;</span>k, <span class="kw">_</span>| k % <span class="number">2 </span>== <span class="number">0</span>);
 <a href=#8538 id=8538 data-nosnippet>8538</a>            <span class="kw">let </span><span class="kw-2">mut </span>out = drained.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 <a href=#8539 id=8539 data-nosnippet>8539</a>            out.sort_unstable();
-<a href=#8540 id=8540 data-nosnippet>8540</a>            <span class="macro">assert_eq!</span>(<span class="macro">::rust_alloc::vec!</span>[(<span class="number">0</span>, <span class="number">0</span>), (<span class="number">2</span>, <span class="number">20</span>), (<span class="number">4</span>, <span class="number">40</span>), (<span class="number">6</span>, <span class="number">60</span>)], out);
+<a href=#8540 id=8540 data-nosnippet>8540</a>            <span class="macro">assert_eq!</span>(<span class="macro">rust_alloc::vec!</span>[(<span class="number">0</span>, <span class="number">0</span>), (<span class="number">2</span>, <span class="number">20</span>), (<span class="number">4</span>, <span class="number">40</span>), (<span class="number">6</span>, <span class="number">60</span>)], out);
 <a href=#8541 id=8541 data-nosnippet>8541</a>            <span class="macro">assert_eq!</span>(map.len(), <span class="number">4</span>);
 <a href=#8542 id=8542 data-nosnippet>8542</a>        }
 <a href=#8543 id=8543 data-nosnippet>8543</a>        {
@@ -8904,7 +8904,7 @@
 <a href=#8904 id=8904 data-nosnippet>8904</a>    <span class="attr">#[test]
 <a href=#8905 id=8905 data-nosnippet>8905</a>    #[should_panic = <span class="string">"panic in clone"</span>]
 <a href=#8906 id=8906 data-nosnippet>8906</a>    </span><span class="kw">fn </span>test_clone_from_memory_leaks() {
-<a href=#8907 id=8907 data-nosnippet>8907</a>        <span class="kw">use </span>::rust_alloc::vec::Vec;
+<a href=#8907 id=8907 data-nosnippet>8907</a>        <span class="kw">use </span>rust_alloc::vec::Vec;
 <a href=#8908 id=8908 data-nosnippet>8908</a>
 <a href=#8909 id=8909 data-nosnippet>8909</a>        <span class="kw">struct </span>CheckedClone {
 <a href=#8910 id=8910 data-nosnippet>8910</a>            panic_in_clone: bool,
@@ -8926,7 +8926,7 @@
 <a href=#8926 id=8926 data-nosnippet>8926</a>            <span class="number">1</span>,
 <a href=#8927 id=8927 data-nosnippet>8927</a>            CheckedClone {
 <a href=#8928 id=8928 data-nosnippet>8928</a>                panic_in_clone: <span class="bool-val">false</span>,
-<a href=#8929 id=8929 data-nosnippet>8929</a>                need_drop: <span class="macro">::rust_alloc::vec!</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>],
+<a href=#8929 id=8929 data-nosnippet>8929</a>                need_drop: <span class="macro">rust_alloc::vec!</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>],
 <a href=#8930 id=8930 data-nosnippet>8930</a>            },
 <a href=#8931 id=8931 data-nosnippet>8931</a>        )
 <a href=#8932 id=8932 data-nosnippet>8932</a>        .unwrap();
@@ -8934,7 +8934,7 @@
 <a href=#8934 id=8934 data-nosnippet>8934</a>            <span class="number">2</span>,
 <a href=#8935 id=8935 data-nosnippet>8935</a>            CheckedClone {
 <a href=#8936 id=8936 data-nosnippet>8936</a>                panic_in_clone: <span class="bool-val">false</span>,
-<a href=#8937 id=8937 data-nosnippet>8937</a>                need_drop: <span class="macro">::rust_alloc::vec!</span>[<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>],
+<a href=#8937 id=8937 data-nosnippet>8937</a>                need_drop: <span class="macro">rust_alloc::vec!</span>[<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>],
 <a href=#8938 id=8938 data-nosnippet>8938</a>            },
 <a href=#8939 id=8939 data-nosnippet>8939</a>        )
 <a href=#8940 id=8940 data-nosnippet>8940</a>        .unwrap();
@@ -8942,7 +8942,7 @@
 <a href=#8942 id=8942 data-nosnippet>8942</a>            <span class="number">3</span>,
 <a href=#8943 id=8943 data-nosnippet>8943</a>            CheckedClone {
 <a href=#8944 id=8944 data-nosnippet>8944</a>                panic_in_clone: <span class="bool-val">true</span>,
-<a href=#8945 id=8945 data-nosnippet>8945</a>                need_drop: <span class="macro">::rust_alloc::vec!</span>[<span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>],
+<a href=#8945 id=8945 data-nosnippet>8945</a>                need_drop: <span class="macro">rust_alloc::vec!</span>[<span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>],
 <a href=#8946 id=8946 data-nosnippet>8946</a>            },
 <a href=#8947 id=8947 data-nosnippet>8947</a>        )
 <a href=#8948 id=8948 data-nosnippet>8948</a>        .unwrap();
@@ -9165,7 +9165,7 @@
 <a href=#9165 id=9165 data-nosnippet>9165</a>            <span class="kw">let </span>map: HashMap&lt;u64, CheckedCloneDrop&lt;Vec&lt;u64&gt;&gt;, DefaultHashBuilder, MyAlloc&gt; =
 <a href=#9166 id=9166 data-nosnippet>9166</a>                <span class="kw">match </span>get_test_map(
 <a href=#9167 id=9167 data-nosnippet>9167</a>                    ARMED_FLAGS.into_iter().zip(DISARMED_FLAGS),
-<a href=#9168 id=9168 data-nosnippet>9168</a>                    |n| <span class="macro">::rust_alloc::vec!</span>[n],
+<a href=#9168 id=9168 data-nosnippet>9168</a>                    |n| <span class="macro">rust_alloc::vec!</span>[n],
 <a href=#9169 id=9169 data-nosnippet>9169</a>                    MyAlloc::new(dropped.clone()),
 <a href=#9170 id=9170 data-nosnippet>9170</a>                ) {
 <a href=#9171 id=9171 data-nosnippet>9171</a>                    <span class="prelude-val">Ok</span>(map) =&gt; map,
@@ -9224,7 +9224,7 @@
 <a href=#9224 id=9224 data-nosnippet>9224</a>
 <a href=#9225 id=9225 data-nosnippet>9225</a>            <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="kw">match </span>get_test_map(
 <a href=#9226 id=9226 data-nosnippet>9226</a>                DISARMED_FLAGS.into_iter().zip(DISARMED_FLAGS),
-<a href=#9227 id=9227 data-nosnippet>9227</a>                |n| <span class="macro">::rust_alloc::vec!</span>[n],
+<a href=#9227 id=9227 data-nosnippet>9227</a>                |n| <span class="macro">rust_alloc::vec!</span>[n],
 <a href=#9228 id=9228 data-nosnippet>9228</a>                MyAlloc::new(dropped.clone()),
 <a href=#9229 id=9229 data-nosnippet>9229</a>            ) {
 <a href=#9230 id=9230 data-nosnippet>9230</a>                <span class="prelude-val">Ok</span>(map) =&gt; map,
@@ -9234,7 +9234,7 @@
 <a href=#9234 id=9234 data-nosnippet>9234</a>            thread::scope(|s| {
 <a href=#9235 id=9235 data-nosnippet>9235</a>                <span class="kw">let </span>result: thread::ScopedJoinHandle&lt;<span class="lifetime">'_</span>, String&gt; = s.spawn(|| {
 <a href=#9236 id=9236 data-nosnippet>9236</a>                    <span class="kw">let </span>scope_map =
-<a href=#9237 id=9237 data-nosnippet>9237</a>                        <span class="kw">match </span>get_test_map(ARMED_FLAGS.into_iter().zip(DISARMED_FLAGS), |n| <span class="macro">::rust_alloc::vec!</span>[n * <span class="number">2</span>], MyAlloc::new(dropped.clone())) {
+<a href=#9237 id=9237 data-nosnippet>9237</a>                        <span class="kw">match </span>get_test_map(ARMED_FLAGS.into_iter().zip(DISARMED_FLAGS), |n| <span class="macro">rust_alloc::vec!</span>[n * <span class="number">2</span>], MyAlloc::new(dropped.clone())) {
 <a href=#9238 id=9238 data-nosnippet>9238</a>                            <span class="prelude-val">Ok</span>(map) =&gt; map,
 <a href=#9239 id=9239 data-nosnippet>9239</a>                            <span class="prelude-val">Err</span>(msg) =&gt; <span class="kw">return </span>msg,
 <a href=#9240 id=9240 data-nosnippet>9240</a>                        };
@@ -9291,7 +9291,7 @@
 <a href=#9291 id=9291 data-nosnippet>9291</a>
 <a href=#9292 id=9292 data-nosnippet>9292</a>            <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="kw">match </span>get_test_map(
 <a href=#9293 id=9293 data-nosnippet>9293</a>                [DISARMED].into_iter().zip([DISARMED]),
-<a href=#9294 id=9294 data-nosnippet>9294</a>                |n| <span class="macro">::rust_alloc::vec!</span>[n],
+<a href=#9294 id=9294 data-nosnippet>9294</a>                |n| <span class="macro">rust_alloc::vec!</span>[n],
 <a href=#9295 id=9295 data-nosnippet>9295</a>                MyAlloc::new(dropped.clone()),
 <a href=#9296 id=9296 data-nosnippet>9296</a>            ) {
 <a href=#9297 id=9297 data-nosnippet>9297</a>                <span class="prelude-val">Ok</span>(map) =&gt; map,
@@ -9302,7 +9302,7 @@
 <a href=#9302 id=9302 data-nosnippet>9302</a>                <span class="kw">let </span>result: thread::ScopedJoinHandle&lt;<span class="lifetime">'_</span>, String&gt; = s.spawn(|| {
 <a href=#9303 id=9303 data-nosnippet>9303</a>                    <span class="kw">let </span>scope_map = <span class="kw">match </span>get_test_map(
 <a href=#9304 id=9304 data-nosnippet>9304</a>                        ARMED_FLAGS.into_iter().zip(DISARMED_FLAGS),
-<a href=#9305 id=9305 data-nosnippet>9305</a>                        |n| <span class="macro">::rust_alloc::vec!</span>[n * <span class="number">2</span>],
+<a href=#9305 id=9305 data-nosnippet>9305</a>                        |n| <span class="macro">rust_alloc::vec!</span>[n * <span class="number">2</span>],
 <a href=#9306 id=9306 data-nosnippet>9306</a>                        MyAlloc::new(dropped.clone()),
 <a href=#9307 id=9307 data-nosnippet>9307</a>                    ) {
 <a href=#9308 id=9308 data-nosnippet>9308</a>                        <span class="prelude-val">Ok</span>(map) =&gt; map,

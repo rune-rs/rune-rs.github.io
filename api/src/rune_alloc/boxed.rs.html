@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/boxed.rs`."><title>boxed.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-7dda4a46.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (b8c54d635 2025-04-20)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-4e99c027.js"></script><script defer src="../../static.files/src-script-63605ae7.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune_alloc/</div>boxed.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! The `Box&lt;T&gt;` type for heap allocation.
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune-alloc/src/boxed.rs`."><title>boxed.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-7dda4a46.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="rune_alloc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0-nightly (d6c1e454a 2025-04-21)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-4e99c027.js"></script><script defer src="../../static.files/src-script-63605ae7.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune_alloc/</div>boxed.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! The `Box&lt;T&gt;` type for heap allocation.
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! [`Box&lt;T&gt;`], casually referred to as a 'box', provides the simplest form of
 <a href=#4 id=4 data-nosnippet>4</a>//! heap allocation in Rust. Boxes provide ownership for this allocation, and
@@ -251,7 +251,7 @@
 <a href=#251 id=251 data-nosnippet>251</a>    /// # Ok::&lt;_, rune::alloc::Error&gt;(())
 <a href=#252 id=252 data-nosnippet>252</a>    /// ```
 <a href=#253 id=253 data-nosnippet>253</a>    </span><span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
-<a href=#254 id=254 data-nosnippet>254</a>    </span><span class="kw">pub fn </span>from_std(b: ::rust_alloc::boxed::Box&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+<a href=#254 id=254 data-nosnippet>254</a>    </span><span class="kw">pub fn </span>from_std(b: rust_alloc::boxed::Box&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
 <a href=#255 id=255 data-nosnippet>255</a>        <span class="comment">// SAFETY: We've ensured that standard allocations only happen in an
 <a href=#256 id=256 data-nosnippet>256</a>        // allocator which is compatible with our `Global`.
 <a href=#257 id=257 data-nosnippet>257</a>        </span><span class="kw">unsafe </span>{
@@ -259,7 +259,7 @@
 <a href=#259 id=259 data-nosnippet>259</a>            // value by the box, which for unsized types is the size of the
 <a href=#260 id=260 data-nosnippet>260</a>            // metadata. For sized types the value inside of the box.
 <a href=#261 id=261 data-nosnippet>261</a>            </span>Global.take(Layout::for_value(b.as_ref()))<span class="question-mark">?</span>;
-<a href=#262 id=262 data-nosnippet>262</a>            <span class="kw">let </span>raw = ::rust_alloc::boxed::Box::into_raw(b);
+<a href=#262 id=262 data-nosnippet>262</a>            <span class="kw">let </span>raw = rust_alloc::boxed::Box::into_raw(b);
 <a href=#263 id=263 data-nosnippet>263</a>            <span class="prelude-val">Ok</span>(Box::from_raw_in(raw, Global))
 <a href=#264 id=264 data-nosnippet>264</a>        }
 <a href=#265 id=265 data-nosnippet>265</a>    }
@@ -847,14 +847,14 @@
 <a href=#847 id=847 data-nosnippet>847</a>}
 <a href=#848 id=848 data-nosnippet>848</a>
 <a href=#849 id=849 data-nosnippet>849</a><span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
-<a href=#850 id=850 data-nosnippet>850</a></span><span class="kw">impl</span>&lt;T&gt; TryFrom&lt;::rust_alloc::boxed::Box&lt;[T]&gt;&gt; <span class="kw">for </span>Box&lt;[T]&gt; {
+<a href=#850 id=850 data-nosnippet>850</a></span><span class="kw">impl</span>&lt;T&gt; TryFrom&lt;rust_alloc::boxed::Box&lt;[T]&gt;&gt; <span class="kw">for </span>Box&lt;[T]&gt; {
 <a href=#851 id=851 data-nosnippet>851</a>    <span class="kw">type </span>Error = Error;
 <a href=#852 id=852 data-nosnippet>852</a>
 <a href=#853 id=853 data-nosnippet>853</a>    <span class="attr">#[inline]
-<a href=#854 id=854 data-nosnippet>854</a>    </span><span class="kw">fn </span>try_from(values: ::rust_alloc::boxed::Box&lt;[T]&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+<a href=#854 id=854 data-nosnippet>854</a>    </span><span class="kw">fn </span>try_from(values: rust_alloc::boxed::Box&lt;[T]&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
 <a href=#855 id=855 data-nosnippet>855</a>        <span class="kw">let </span><span class="kw-2">mut </span>vec = Vec::try_with_capacity(values.len())<span class="question-mark">?</span>;
 <a href=#856 id=856 data-nosnippet>856</a>
-<a href=#857 id=857 data-nosnippet>857</a>        <span class="kw">for </span>value <span class="kw">in </span>::rust_alloc::vec::Vec::from(values) {
+<a href=#857 id=857 data-nosnippet>857</a>        <span class="kw">for </span>value <span class="kw">in </span>rust_alloc::vec::Vec::from(values) {
 <a href=#858 id=858 data-nosnippet>858</a>            vec.try_push(value)<span class="question-mark">?</span>;
 <a href=#859 id=859 data-nosnippet>859</a>        }
 <a href=#860 id=860 data-nosnippet>860</a>
@@ -988,7 +988,7 @@
 <a href=#988 id=988 data-nosnippet>988</a>}
 <a href=#989 id=989 data-nosnippet>989</a>
 <a href=#990 id=990 data-nosnippet>990</a><span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
-<a href=#991 id=991 data-nosnippet>991</a></span><span class="kw">impl </span>TryFrom&lt;::rust_alloc::string::String&gt; <span class="kw">for </span>Box&lt;str&gt; {
+<a href=#991 id=991 data-nosnippet>991</a></span><span class="kw">impl </span>TryFrom&lt;rust_alloc::string::String&gt; <span class="kw">for </span>Box&lt;str&gt; {
 <a href=#992 id=992 data-nosnippet>992</a>    <span class="kw">type </span>Error = Error;
 <a href=#993 id=993 data-nosnippet>993</a>
 <a href=#994 id=994 data-nosnippet>994</a>    <span class="doccomment">/// Converts a std `String` into a `Box&lt;str&gt;`.
@@ -1004,7 +1004,7 @@
 <a href=#1004 id=1004 data-nosnippet>1004</a>    /// # Ok::&lt;_, rune::alloc::Error&gt;(())
 <a href=#1005 id=1005 data-nosnippet>1005</a>    /// ```
 <a href=#1006 id=1006 data-nosnippet>1006</a>    </span><span class="attr">#[inline]
-<a href=#1007 id=1007 data-nosnippet>1007</a>    </span><span class="kw">fn </span>try_from(string: ::rust_alloc::string::String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+<a href=#1007 id=1007 data-nosnippet>1007</a>    </span><span class="kw">fn </span>try_from(string: rust_alloc::string::String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
 <a href=#1008 id=1008 data-nosnippet>1008</a>        Box::from_std(string.into_boxed_str())
 <a href=#1009 id=1009 data-nosnippet>1009</a>    }
 <a href=#1010 id=1010 data-nosnippet>1010</a>}
