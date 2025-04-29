@@ -161,7 +161,7 @@ var rune = (function (exports) {
   }
 
   function __wbg_adapter_60(arg0, arg1, arg2, arg3) {
-      wasm$1.closure263_externref_shim(arg0, arg1, arg2, arg3);
+      wasm$1.closure261_externref_shim(arg0, arg1, arg2, arg3);
   }
 
   const __wbindgen_enum_RequestMode = ["same-origin", "no-cors", "cors", "navigate"];
@@ -212,7 +212,7 @@ var rune = (function (exports) {
           const ret = arg0.call(arg1, arg2);
           return ret;
       }, arguments) };
-      imports.wbg.__wbg_crypto_ed58b8e10a292839 = function(arg0) {
+      imports.wbg.__wbg_crypto_574e78ad8b13b65f = function(arg0) {
           const ret = arg0.crypto;
           return ret;
       };
@@ -220,7 +220,7 @@ var rune = (function (exports) {
           const ret = arg0.fetch(arg1);
           return ret;
       };
-      imports.wbg.__wbg_getRandomValues_bcb4912f16000dc4 = function() { return handleError(function (arg0, arg1) {
+      imports.wbg.__wbg_getRandomValues_b8f5dbd5f3995a9e = function() { return handleError(function (arg0, arg1) {
           arg0.getRandomValues(arg1);
       }, arguments) };
       imports.wbg.__wbg_instanceof_Response_f2cc20d9f7dfd644 = function(arg0) {
@@ -243,7 +243,7 @@ var rune = (function (exports) {
           const ret = result;
           return ret;
       };
-      imports.wbg.__wbg_msCrypto_0a36e2ec3a343d26 = function(arg0) {
+      imports.wbg.__wbg_msCrypto_a61aeb35a24c1329 = function(arg0) {
           const ret = arg0.msCrypto;
           return ret;
       };
@@ -289,7 +289,7 @@ var rune = (function (exports) {
           const ret = new Request(getStringFromWasm0(arg0, arg1));
           return ret;
       }, arguments) };
-      imports.wbg.__wbg_node_02999533c4ea02e3 = function(arg0) {
+      imports.wbg.__wbg_node_905d3e251edff8a2 = function(arg0) {
           const ret = arg0.node;
           return ret;
       };
@@ -297,7 +297,7 @@ var rune = (function (exports) {
           const ret = JSON.parse(getStringFromWasm0(arg0, arg1));
           return ret;
       }, arguments) };
-      imports.wbg.__wbg_process_5c1d670bc53614b8 = function(arg0) {
+      imports.wbg.__wbg_process_dc0fbacc7c1c06f7 = function(arg0) {
           const ret = arg0.process;
           return ret;
       };
@@ -308,10 +308,10 @@ var rune = (function (exports) {
           const ret = arg0.queueMicrotask;
           return ret;
       };
-      imports.wbg.__wbg_randomFillSync_ab2cfe79ebbf2740 = function() { return handleError(function (arg0, arg1) {
+      imports.wbg.__wbg_randomFillSync_ac0988aba3254290 = function() { return handleError(function (arg0, arg1) {
           arg0.randomFillSync(arg1);
       }, arguments) };
-      imports.wbg.__wbg_require_79b1e9274cde3c87 = function() { return handleError(function () {
+      imports.wbg.__wbg_require_60cc747a6bc5215a = function() { return handleError(function () {
           const ret = module.require;
           return ret;
       }, arguments) };
@@ -364,7 +364,7 @@ var rune = (function (exports) {
           const ret = arg0.then(arg1, arg2);
           return ret;
       };
-      imports.wbg.__wbg_versions_c71aa1626a93e0a1 = function(arg0) {
+      imports.wbg.__wbg_versions_c01dfd4722a88165 = function(arg0) {
           const ret = arg0.versions;
           return ret;
       };
@@ -377,7 +377,7 @@ var rune = (function (exports) {
           const ret = false;
           return ret;
       };
-      imports.wbg.__wbindgen_closure_wrapper6214 = function(arg0, arg1, arg2) {
+      imports.wbg.__wbindgen_closure_wrapper6212 = function(arg0, arg1, arg2) {
           const ret = makeMutClosure(arg0, arg1, 1157, __wbg_adapter_26);
           return ret;
       };
@@ -499,7 +499,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-9958d530.wasm";
+                  let path = "/js/assets/rune_wasm-06956320.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
