@@ -156,12 +156,12 @@ var rune = (function (exports) {
       return ret;
   }
 
-  function __wbg_adapter_26(arg0, arg1, arg2) {
-      wasm$1.closure1146_externref_shim(arg0, arg1, arg2);
+  function __wbg_adapter_18(arg0, arg1, arg2) {
+      wasm$1.closure1142_externref_shim(arg0, arg1, arg2);
   }
 
-  function __wbg_adapter_60(arg0, arg1, arg2, arg3) {
-      wasm$1.closure252_externref_shim(arg0, arg1, arg2, arg3);
+  function __wbg_adapter_34(arg0, arg1, arg2, arg3) {
+      wasm$1.closure254_externref_shim(arg0, arg1, arg2, arg3);
   }
 
   const __wbindgen_enum_RequestMode = ["same-origin", "no-cors", "cors", "navigate"];
@@ -200,10 +200,6 @@ var rune = (function (exports) {
   function __wbg_get_imports() {
       const imports = {};
       imports.wbg = {};
-      imports.wbg.__wbg_buffer_609cc3eee51ed158 = function(arg0) {
-          const ret = arg0.buffer;
-          return ret;
-      };
       imports.wbg.__wbg_call_672a4d21634d4a24 = function() { return handleError(function (arg0, arg1) {
           const ret = arg0.call(arg1);
           return ret;
@@ -212,17 +208,10 @@ var rune = (function (exports) {
           const ret = arg0.call(arg1, arg2);
           return ret;
       }, arguments) };
-      imports.wbg.__wbg_crypto_574e78ad8b13b65f = function(arg0) {
-          const ret = arg0.crypto;
-          return ret;
-      };
       imports.wbg.__wbg_fetch_b7bf320f681242d2 = function(arg0, arg1) {
           const ret = arg0.fetch(arg1);
           return ret;
       };
-      imports.wbg.__wbg_getRandomValues_b8f5dbd5f3995a9e = function() { return handleError(function (arg0, arg1) {
-          arg0.getRandomValues(arg1);
-      }, arguments) };
       imports.wbg.__wbg_instanceof_Response_f2cc20d9f7dfd644 = function(arg0) {
           let result;
           try {
@@ -243,10 +232,6 @@ var rune = (function (exports) {
           const ret = result;
           return ret;
       };
-      imports.wbg.__wbg_msCrypto_a61aeb35a24c1329 = function(arg0) {
-          const ret = arg0.msCrypto;
-          return ret;
-      };
       imports.wbg.__wbg_new_23a2665fac83c611 = function(arg0, arg1) {
           try {
               var state0 = {a: arg0, b: arg1};
@@ -254,7 +239,7 @@ var rune = (function (exports) {
                   const a = state0.a;
                   state0.a = 0;
                   try {
-                      return __wbg_adapter_60(a, state0.b, arg0, arg1);
+                      return __wbg_adapter_34(a, state0.b, arg0, arg1);
                   } finally {
                       state0.a = a;
                   }
@@ -269,38 +254,18 @@ var rune = (function (exports) {
           const ret = new Object();
           return ret;
       };
-      imports.wbg.__wbg_new_a12002a7f91c75be = function(arg0) {
-          const ret = new Uint8Array(arg0);
-          return ret;
-      };
       imports.wbg.__wbg_newnoargs_105ed471475aaf50 = function(arg0, arg1) {
           const ret = new Function(getStringFromWasm0(arg0, arg1));
-          return ret;
-      };
-      imports.wbg.__wbg_newwithbyteoffsetandlength_d97e637ebe145a9a = function(arg0, arg1, arg2) {
-          const ret = new Uint8Array(arg0, arg1 >>> 0, arg2 >>> 0);
-          return ret;
-      };
-      imports.wbg.__wbg_newwithlength_a381634e90c276d4 = function(arg0) {
-          const ret = new Uint8Array(arg0 >>> 0);
           return ret;
       };
       imports.wbg.__wbg_newwithstr_78e86e03c4ae814e = function() { return handleError(function (arg0, arg1) {
           const ret = new Request(getStringFromWasm0(arg0, arg1));
           return ret;
       }, arguments) };
-      imports.wbg.__wbg_node_905d3e251edff8a2 = function(arg0) {
-          const ret = arg0.node;
-          return ret;
-      };
       imports.wbg.__wbg_parse_def2e24ef1252aff = function() { return handleError(function (arg0, arg1) {
           const ret = JSON.parse(getStringFromWasm0(arg0, arg1));
           return ret;
       }, arguments) };
-      imports.wbg.__wbg_process_dc0fbacc7c1c06f7 = function(arg0) {
-          const ret = arg0.process;
-          return ret;
-      };
       imports.wbg.__wbg_queueMicrotask_97d92b4fcc8a61c5 = function(arg0) {
           queueMicrotask(arg0);
       };
@@ -308,19 +273,9 @@ var rune = (function (exports) {
           const ret = arg0.queueMicrotask;
           return ret;
       };
-      imports.wbg.__wbg_randomFillSync_ac0988aba3254290 = function() { return handleError(function (arg0, arg1) {
-          arg0.randomFillSync(arg1);
-      }, arguments) };
-      imports.wbg.__wbg_require_60cc747a6bc5215a = function() { return handleError(function () {
-          const ret = module.require;
-          return ret;
-      }, arguments) };
       imports.wbg.__wbg_resolve_4851785c9c5f573d = function(arg0) {
           const ret = Promise.resolve(arg0);
           return ret;
-      };
-      imports.wbg.__wbg_set_65595bdd868b3009 = function(arg0, arg1, arg2) {
-          arg0.set(arg1, arg2 >>> 0);
       };
       imports.wbg.__wbg_setmethod_3c5280fe5d890842 = function(arg0, arg1, arg2) {
           arg0.method = getStringFromWasm0(arg1, arg2);
@@ -348,10 +303,6 @@ var rune = (function (exports) {
           const ret = JSON.stringify(arg0);
           return ret;
       }, arguments) };
-      imports.wbg.__wbg_subarray_aa9065fa9dc5df96 = function(arg0, arg1, arg2) {
-          const ret = arg0.subarray(arg1 >>> 0, arg2 >>> 0);
-          return ret;
-      };
       imports.wbg.__wbg_text_7805bea50de2af49 = function() { return handleError(function (arg0) {
           const ret = arg0.text();
           return ret;
@@ -364,10 +315,6 @@ var rune = (function (exports) {
           const ret = arg0.then(arg1, arg2);
           return ret;
       };
-      imports.wbg.__wbg_versions_c01dfd4722a88165 = function(arg0) {
-          const ret = arg0.versions;
-          return ret;
-      };
       imports.wbg.__wbindgen_cb_drop = function(arg0) {
           const obj = arg0.original;
           if (obj.cnt-- == 1) {
@@ -377,8 +324,8 @@ var rune = (function (exports) {
           const ret = false;
           return ret;
       };
-      imports.wbg.__wbindgen_closure_wrapper6192 = function(arg0, arg1, arg2) {
-          const ret = makeMutClosure(arg0, arg1, 1147, __wbg_adapter_26);
+      imports.wbg.__wbindgen_closure_wrapper6119 = function(arg0, arg1, arg2) {
+          const ret = makeMutClosure(arg0, arg1, 1143, __wbg_adapter_18);
           return ret;
       };
       imports.wbg.__wbindgen_init_externref_table = function() {
@@ -394,21 +341,8 @@ var rune = (function (exports) {
           const ret = typeof(arg0) === 'function';
           return ret;
       };
-      imports.wbg.__wbindgen_is_object = function(arg0) {
-          const val = arg0;
-          const ret = typeof(val) === 'object' && val !== null;
-          return ret;
-      };
-      imports.wbg.__wbindgen_is_string = function(arg0) {
-          const ret = typeof(arg0) === 'string';
-          return ret;
-      };
       imports.wbg.__wbindgen_is_undefined = function(arg0) {
           const ret = arg0 === undefined;
-          return ret;
-      };
-      imports.wbg.__wbindgen_memory = function() {
-          const ret = wasm$1.memory;
           return ret;
       };
       imports.wbg.__wbindgen_string_get = function(arg0, arg1) {
@@ -418,10 +352,6 @@ var rune = (function (exports) {
           var len1 = WASM_VECTOR_LEN;
           getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
           getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
-      };
-      imports.wbg.__wbindgen_string_new = function(arg0, arg1) {
-          const ret = getStringFromWasm0(arg0, arg1);
-          return ret;
       };
       imports.wbg.__wbindgen_throw = function(arg0, arg1) {
           throw new Error(getStringFromWasm0(arg0, arg1));
@@ -499,7 +429,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-e5302d90.wasm";
+                  let path = "/js/assets/rune_wasm-ee3846aa.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
