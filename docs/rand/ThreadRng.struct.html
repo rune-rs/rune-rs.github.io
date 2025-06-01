@@ -1,0 +1,135 @@
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preload" as="font" type="font/woff2" crossorigin="" href="../fonts/FiraSans-Medium-4ao_Crym_Z97hoxWqz7A4NshIi71DoT6u_IZY8EN1wQ.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin="" href="../fonts/FiraSans-Regular-D-SK3tCXwqEZQqcL_vSFEKv4dajoAPQ9QAfc6NKjrr4.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin="" href="../fonts/NanumBarunGothic-Regular-6_u5bM1Z_P691vS3fhfHDGxiAIyFL9cppAIAJVg151s.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin="" href="../fonts/SourceCodePro-It.ttf-9l14W6OSkW1dJiiKKavLd1_QdTHtv_Sl67HNQoWSu8g.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin="" href="../fonts/SourceCodePro-Regular-cU7uKbcNGR9b9LOga2jyxQUisTA9McfUTc79zF-d79A.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin="" href="../fonts/SourceCodePro-Semibold-SIsoBuinYZLCzu8ptJi6AeRraXV4sgDt4bXK2FXDebo.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin="" href="../fonts/SourceSerif4-Bold-_xCsH4HwyJAK__GCoff-x-hd_IB1y5MahmUNF4NgQsU.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin="" href="../fonts/SourceSerif4-Regular-KooC6dILCRRRWHXSr7KvGNFHM6ZZ054WggDt4WT32GU.woff2">
+<link rel="stylesheet" type="text/css" href="../syntax-hOylezLDPQHh3rL4EpbplIubIPDrhPsdZ6NqLZXhtw8.css"><link rel="stylesheet" type="text/css" href="../runedoc-RpGnmLv54qA3EswoqjjtiCiSLHPpqlrooIFm2cj7ozI.css">
+<script lang="text/javascript" src="../search-11hco3hjyxbot2LtE0-3TZtpn7blY_QZbxQ4j4EpDNE.js"></script>
+<script lang="text/javascript" src="../index-20hgb6Ma28-DembqjQ_ExDa_8vIi4iv7QajQzDtp37E.js"></script>
+</head>
+<body data-path="rand">
+    <div id="container">
+        <div id="search">
+            <div id="search-form">
+                <input id="search-input" placeholder="Click to search..." type="text" />
+            </div>
+
+            <h3 id="search-title" class="hidden title">Results</h3>
+
+            <div id="search-results" class="hidden"></div>
+        </div>
+
+        <div id="content">
+
+            <div class="title-wrapper">
+                <h3 class="title">Struct <a class="module" href="../rand.module.html">rand</a>::<span class="struct">ThreadRng</span></h3>
+                <a class="overview" href="../index.html">Overview</a>
+            </div>
+            
+<div class="docs"><p>A reference to the thread-local generator</p><p>This type is a reference to a lazily-initialized thread-local generator. An instance can be obtained via [<code>rand::rng()</code>][crate::rng()] or via [<code>ThreadRng::default()</code>]. The handle cannot be passed between threads (is not <code>Send</code> or <code>Sync</code>).</p><h1>Security</h1><p>Security must be considered relative to a threat model and validation requirements. The Rand project can provide no guarantee of fitness for purpose. The design criteria for <code>ThreadRng</code> are as follows:</p><ul><li>Automatic seeding via <a href="OsRng.struct.html" title="struct OsRng"><code>OsRng</code></a> and periodically thereafter (see (<a href="crate::rngs::ReseedingRng"><code>ReseedingRng</code></a> documentation). Limitation: there is no automatic reseeding on process fork (see <a href="#fork">below</a>).</li><li>A rigorusly analyzed, unpredictable (cryptographic) pseudo-random generator (see <a href="https://rust-random.github.io/book/guide-rngs.html#security">the book on security</a>). The currently selected algorithm is ChaCha (12-rounds). See also <a href="crate::rngs::StdRng"><code>StdRng</code></a> documentation.</li><li>Not to leak internal state through [<code>Debug</code>] or serialization implementations.</li><li>No further protections exist to in-memory state. In particular, the implementation is not required to zero memory on exit (of the process or thread). (This may change in the future.)</li><li>Be fast enough for general-purpose usage. Note in particular that <code>ThreadRng</code> is designed to be a &quot;fast, reasonably secure generator&quot; (where &quot;reasonably secure&quot; implies the above criteria).</li></ul><p>We leave it to the user to determine whether this generator meets their security requirements. For an alternative, see <a href="OsRng.struct.html" title="struct OsRng"><code>OsRng</code></a>.</p><h1>Fork</h1><p><code>ThreadRng</code> is not automatically reseeded on fork. It is recommended to explicitly call [<code>ThreadRng::reseed</code>] immediately after a fork, for example:</p><pre><code class="language-rune"><span class="source rust"><span class="meta function rust"><span class="meta function rust"><span class="storage type function rust">fn</span> </span><span class="entity name function rust">do_fork</span></span><span class="meta function rust"><span class="meta function parameters rust"><span class="punctuation section parameters begin rust">(</span></span><span class="meta function rust"><span class="meta function parameters rust"><span class="punctuation section parameters end rust">)</span></span></span></span><span class="meta function rust"> </span><span class="meta function rust"><span class="meta block rust"><span class="punctuation section block begin rust">{</span>
+   <span class="storage type rust">let</span> pid <span class="keyword operator rust">=</span> <span class="storage modifier rust">unsafe</span> <span class="meta block rust"><span class="punctuation section block begin rust">{</span> <span class="meta path rust">libc<span class="punctuation accessor rust">::</span></span>fork<span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span> </span><span class="meta block rust"><span class="punctuation section block end rust">}</span></span><span class="punctuation terminator rust">;</span>
+   <span class="keyword control rust">if</span> pid <span class="keyword operator rust">=</span><span class="keyword operator rust">=</span> <span class="constant numeric integer decimal rust">0</span> <span class="meta block rust"><span class="punctuation section block begin rust">{</span>
+       <span class="comment line double-slash rust"><span class="punctuation definition comment rust">//</span> Reseed ThreadRng in child processes:
+</span>       <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>rng<span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span>.<span class="support function rust">reseed</span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+   </span><span class="meta block rust"><span class="punctuation section block end rust">}</span></span>
+</span><span class="meta block rust"><span class="punctuation section block end rust">}</span></span></span>
+</span></code></pre><p>Methods on <code>ThreadRng</code> are not reentrant-safe and thus should not be called from an interrupt (e.g. a fork handler) unless it can be guaranteed that no other method on the same <code>ThreadRng</code> is currently executing.</p></div>
+            
+
+            <h4 class="section-title">Methods</h4>
+            
+                <div class="item item-fn">
+                    <div id="method.reseed" class="item-title">
+                    fn <a href="#method.reseed" class="fn">reseed</a>(<a class="struct" href="ThreadRng.struct.html">self</a>) -&gt; <a class="enum" href="../std/result/Result.enum.html">Result</a>
+                    
+                    </div>
+                    <div class="docs"><p>Immediately reseed the generator</p><p>This discards any remaining random data in the cache.</p></div>
+                </div>
+                <div class="item item-fn">
+                    <div id="method.random" class="item-title">
+                    fn <a href="#method.random" class="fn">random</a>&lt;<a class="type" href="../std/u64.type.html">u64</a>&gt;(<a class="struct" href="ThreadRng.struct.html">self</a>) -&gt; <a class="type" href="../std/u64.type.html">u64</a>
+                    
+                    </div>
+                    <div class="docs"><p>Return a random <code>u64</code> value via a standard uniform distribution.</p><h1>Example</h1><pre><code class="language-rune"><span class="source rust"><span class="keyword other rust">use</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>ThreadRng<span class="punctuation terminator rust">;</span>
+
+<span class="storage type rust">let</span> rng <span class="keyword operator rust">=</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>rng<span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="storage type rust">let</span> x <span class="keyword operator rust">=</span> rng.<span class="meta path rust">random<span class="punctuation accessor rust">::</span></span><span class="meta generic rust"><span class="punctuation definition generic begin rust">&lt;</span><span class="storage type rust">u64</span><span class="punctuation definition generic end rust">&gt;</span></span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="support macro rust">println!</span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span><span class="constant other placeholder rust">{x}</span><span class="punctuation definition string end rust">&quot;</span></span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+</span></code></pre></div>
+                </div>
+                <div class="item item-fn">
+                    <div id="method.random" class="item-title">
+                    fn <a href="#method.random" class="fn">random</a>&lt;<a class="type" href="../std/i64.type.html">i64</a>&gt;(<a class="struct" href="ThreadRng.struct.html">self</a>) -&gt; <a class="type" href="../std/i64.type.html">i64</a>
+                    
+                    </div>
+                    <div class="docs"><p>Return a random <code>i64</code> value via a standard uniform distribution.</p><h1>Example</h1><pre><code class="language-rune"><span class="source rust"><span class="keyword other rust">use</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>ThreadRng<span class="punctuation terminator rust">;</span>
+
+<span class="storage type rust">let</span> rng <span class="keyword operator rust">=</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>rng<span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="storage type rust">let</span> x <span class="keyword operator rust">=</span> rng.<span class="meta path rust">random<span class="punctuation accessor rust">::</span></span><span class="meta generic rust"><span class="punctuation definition generic begin rust">&lt;</span><span class="storage type rust">i64</span><span class="punctuation definition generic end rust">&gt;</span></span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="support macro rust">println!</span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span><span class="constant other placeholder rust">{x}</span><span class="punctuation definition string end rust">&quot;</span></span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+</span></code></pre></div>
+                </div>
+                <div class="item item-fn">
+                    <div id="method.random" class="item-title">
+                    fn <a href="#method.random" class="fn">random</a>&lt;<a class="type" href="../std/char.type.html">char</a>&gt;(<a class="struct" href="ThreadRng.struct.html">self</a>) -&gt; <a class="type" href="../std/char.type.html">char</a>
+                    
+                    </div>
+                    <div class="docs"><p>Return a random <code>char</code> value via a standard uniform distribution.</p><h1>Example</h1><pre><code class="language-rune"><span class="source rust"><span class="keyword other rust">use</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>ThreadRng<span class="punctuation terminator rust">;</span>
+
+<span class="storage type rust">let</span> rng <span class="keyword operator rust">=</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>rng<span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="storage type rust">let</span> x <span class="keyword operator rust">=</span> rng.<span class="meta path rust">random<span class="punctuation accessor rust">::</span></span><span class="meta generic rust"><span class="punctuation definition generic begin rust">&lt;</span><span class="storage type rust">char</span><span class="punctuation definition generic end rust">&gt;</span></span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="support macro rust">println!</span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span><span class="constant other placeholder rust">{x}</span><span class="punctuation definition string end rust">&quot;</span></span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+</span></code></pre></div>
+                </div>
+                <div class="item item-fn">
+                    <div id="method.random" class="item-title">
+                    fn <a href="#method.random" class="fn">random</a>&lt;<a class="type" href="../std/bool.type.html">bool</a>&gt;(<a class="struct" href="ThreadRng.struct.html">self</a>) -&gt; <a class="type" href="../std/bool.type.html">bool</a>
+                    
+                    </div>
+                    <div class="docs"><p>Return a random <code>bool</code> value via a standard uniform distribution.</p><h1>Example</h1><pre><code class="language-rune"><span class="source rust"><span class="keyword other rust">use</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>ThreadRng<span class="punctuation terminator rust">;</span>
+
+<span class="storage type rust">let</span> rng <span class="keyword operator rust">=</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>rng<span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="storage type rust">let</span> x <span class="keyword operator rust">=</span> rng.<span class="meta path rust">random<span class="punctuation accessor rust">::</span></span><span class="meta generic rust"><span class="punctuation definition generic begin rust">&lt;</span><span class="storage type rust">bool</span><span class="punctuation definition generic end rust">&gt;</span></span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="support macro rust">println!</span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span><span class="constant other placeholder rust">{x}</span><span class="punctuation definition string end rust">&quot;</span></span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+</span></code></pre></div>
+                </div>
+                <div class="item item-fn">
+                    <div id="method.random_range" class="item-title">
+                    fn <a href="#method.random_range" class="fn">random_range</a>&lt;<a class="type" href="../std/u64.type.html">u64</a>&gt;(<a class="struct" href="ThreadRng.struct.html">self</a>, range: <span class="any">any</span>) -&gt; <a class="type" href="../std/u64.type.html">u64</a>
+                    
+                    </div>
+                    <div class="docs"><p>Return a random <code>u64</code> value via a standard uniform constrained with a range.</p><h1>Example</h1><pre><code class="language-rune"><span class="source rust"><span class="keyword other rust">use</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>ThreadRng<span class="punctuation terminator rust">;</span>
+
+<span class="storage type rust">let</span> rng <span class="keyword operator rust">=</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>rng<span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="storage type rust">let</span> x <span class="keyword operator rust">=</span> rng.<span class="meta path rust">random_range<span class="punctuation accessor rust">::</span></span><span class="meta generic rust"><span class="punctuation definition generic begin rust">&lt;</span><span class="storage type rust">u64</span><span class="punctuation definition generic end rust">&gt;</span></span><span class="meta group rust"><span class="punctuation section group begin rust">(</span><span class="constant numeric integer decimal rust">0</span> <span class="keyword operator rust">..</span> <span class="constant numeric integer decimal rust">100</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="support macro rust">println!</span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span><span class="constant other placeholder rust">{x}</span><span class="punctuation definition string end rust">&quot;</span></span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+</span></code></pre></div>
+                </div>
+                <div class="item item-fn">
+                    <div id="method.random_range" class="item-title">
+                    fn <a href="#method.random_range" class="fn">random_range</a>&lt;<a class="type" href="../std/i64.type.html">i64</a>&gt;(<a class="struct" href="ThreadRng.struct.html">self</a>, range: <span class="any">any</span>) -&gt; <a class="type" href="../std/i64.type.html">i64</a>
+                    
+                    </div>
+                    <div class="docs"><p>Return a random <code>i64</code> value via a standard uniform constrained with a range.</p><h1>Example</h1><pre><code class="language-rune"><span class="source rust"><span class="keyword other rust">use</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>ThreadRng<span class="punctuation terminator rust">;</span>
+
+<span class="storage type rust">let</span> rng <span class="keyword operator rust">=</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>rng<span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="storage type rust">let</span> x <span class="keyword operator rust">=</span> rng.<span class="meta path rust">random_range<span class="punctuation accessor rust">::</span></span><span class="meta generic rust"><span class="punctuation definition generic begin rust">&lt;</span><span class="storage type rust">i64</span><span class="punctuation definition generic end rust">&gt;</span></span><span class="meta group rust"><span class="punctuation section group begin rust">(</span><span class="keyword operator rust">-</span> <span class="constant numeric integer decimal rust">100</span> <span class="keyword operator rust">..</span> <span class="constant numeric integer decimal rust">100</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="support macro rust">println!</span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span><span class="constant other placeholder rust">{x}</span><span class="punctuation definition string end rust">&quot;</span></span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+</span></code></pre></div>
+                </div>
+                <div class="item item-fn">
+                    <div id="method.random_range" class="item-title">
+                    fn <a href="#method.random_range" class="fn">random_range</a>&lt;<a class="type" href="../std/char.type.html">char</a>&gt;(<a class="struct" href="ThreadRng.struct.html">self</a>, range: <span class="any">any</span>) -&gt; <a class="type" href="../std/char.type.html">char</a>
+                    
+                    </div>
+                    <div class="docs"><p>Return a random <code>char</code> value via a standard uniform constrained with a range.</p><h1>Example</h1><pre><code class="language-rune"><span class="source rust"><span class="keyword other rust">use</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>ThreadRng<span class="punctuation terminator rust">;</span>
+
+<span class="storage type rust">let</span> rng <span class="keyword operator rust">=</span> <span class="meta path rust">rand<span class="punctuation accessor rust">::</span></span>rng<span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="storage type rust">let</span> x <span class="keyword operator rust">=</span> rng.<span class="meta path rust">random_range<span class="punctuation accessor rust">::</span></span><span class="meta generic rust"><span class="punctuation definition generic begin rust">&lt;</span><span class="storage type rust">char</span><span class="punctuation definition generic end rust">&gt;</span></span><span class="meta group rust"><span class="punctuation section group begin rust">(</span><span class="string quoted single rust"><span class="punctuation definition string begin rust">&#39;</span>a<span class="punctuation definition string end rust">&#39;</span></span> <span class="keyword operator rust">..</span> <span class="string quoted single rust"><span class="punctuation definition string begin rust">&#39;</span>z<span class="punctuation definition string end rust">&#39;</span></span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+<span class="support macro rust">println!</span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span><span class="constant other placeholder rust">{x}</span><span class="punctuation definition string end rust">&quot;</span></span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+</span></code></pre></div>
+                </div>
+
+
+
+        </div>
+    </div>
+</body>
