@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["acquire","with"],"struct":["Budget","BudgetGuard"]};
+window.SIDEBAR_ITEMS = {"fn":["acquire","replace","with"],"struct":["Budget","BudgetGuard"]};
