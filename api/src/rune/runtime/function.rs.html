@@ -70,7 +70,7 @@
 <a href=#70 id=70 data-nosnippet>70</a>    /// let unit = rune::prepare(&amp;mut sources).build()?;
 <a href=#71 id=71 data-nosnippet>71</a>    /// let mut vm = Vm::without_runtime(Arc::new(unit));
 <a href=#72 id=72 data-nosnippet>72</a>    ///
-<a href=#73 id=73 data-nosnippet>73</a>    /// let function = Function::new(|value: u32| value + 1);
+<a href=#73 id=73 data-nosnippet>73</a>    /// let function = Function::new(|value: u32| value + 1)?;
 <a href=#74 id=74 data-nosnippet>74</a>    ///
 <a href=#75 id=75 data-nosnippet>75</a>    /// assert_eq!(function.type_hash(), Hash::EMPTY);
 <a href=#76 id=76 data-nosnippet>76</a>    ///
@@ -99,7 +99,7 @@
 <a href=#99 id=99 data-nosnippet>99</a>    /// let unit = rune::prepare(&amp;mut sources).build()?;
 <a href=#100 id=100 data-nosnippet>100</a>    /// let mut vm = Vm::without_runtime(Arc::new(unit));
 <a href=#101 id=101 data-nosnippet>101</a>    ///
-<a href=#102 id=102 data-nosnippet>102</a>    /// let function = Function::new(|value: u32| async move { value + 1 });
+<a href=#102 id=102 data-nosnippet>102</a>    /// let function = Function::new(|value: u32| async move { value + 1 })?;
 <a href=#103 id=103 data-nosnippet>103</a>    ///
 <a href=#104 id=104 data-nosnippet>104</a>    /// assert_eq!(function.type_hash(), Hash::EMPTY);
 <a href=#105 id=105 data-nosnippet>105</a>    ///
@@ -110,19 +110,19 @@
 <a href=#110 id=110 data-nosnippet>110</a>    /// # })?;
 <a href=#111 id=111 data-nosnippet>111</a>    /// # Ok::&lt;_, rune::support::Error&gt;(())
 <a href=#112 id=112 data-nosnippet>112</a>    /// ```
-<a href=#113 id=113 data-nosnippet>113</a>    </span><span class="kw">pub fn </span>new&lt;F, A, K&gt;(f: F) -&gt; <span class="self">Self
-<a href=#114 id=114 data-nosnippet>114</a>    </span><span class="kw">where
+<a href=#113 id=113 data-nosnippet>113</a>    </span><span class="kw">pub fn </span>new&lt;F, A, K&gt;(f: F) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt;
+<a href=#114 id=114 data-nosnippet>114</a>    <span class="kw">where
 <a href=#115 id=115 data-nosnippet>115</a>        </span>F: function::Function&lt;A, K&gt;,
 <a href=#116 id=116 data-nosnippet>116</a>        K: function::FunctionKind,
 <a href=#117 id=117 data-nosnippet>117</a>    {
-<a href=#118 id=118 data-nosnippet>118</a>        <span class="self">Self</span>(FunctionImpl {
+<a href=#118 id=118 data-nosnippet>118</a>        <span class="prelude-val">Ok</span>(<span class="self">Self</span>(FunctionImpl {
 <a href=#119 id=119 data-nosnippet>119</a>            inner: Inner::FnHandler(FnHandler {
-<a href=#120 id=120 data-nosnippet>120</a>                handler: Arc::new(<span class="kw">move </span>|stack, addr, args, output| {
+<a href=#120 id=120 data-nosnippet>120</a>                handler: FunctionHandler::new(<span class="kw">move </span>|stack, addr, args, output| {
 <a href=#121 id=121 data-nosnippet>121</a>                    f.call(stack, addr, args, output)
-<a href=#122 id=122 data-nosnippet>122</a>                }),
+<a href=#122 id=122 data-nosnippet>122</a>                })<span class="question-mark">?</span>,
 <a href=#123 id=123 data-nosnippet>123</a>                hash: Hash::EMPTY,
 <a href=#124 id=124 data-nosnippet>124</a>            }),
-<a href=#125 id=125 data-nosnippet>125</a>        })
+<a href=#125 id=125 data-nosnippet>125</a>        }))
 <a href=#126 id=126 data-nosnippet>126</a>    }
 <a href=#127 id=127 data-nosnippet>127</a>
 <a href=#128 id=128 data-nosnippet>128</a>    <span class="doccomment">/// Perform an asynchronous call over the function which also implements
@@ -186,7 +186,7 @@
 <a href=#186 id=186 data-nosnippet>186</a>    }
 <a href=#187 id=187 data-nosnippet>187</a>
 <a href=#188 id=188 data-nosnippet>188</a>    <span class="doccomment">/// Create a function pointer from a handler.
-<a href=#189 id=189 data-nosnippet>189</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_handler(handler: Arc&lt;FunctionHandler&gt;, hash: Hash) -&gt; <span class="self">Self </span>{
+<a href=#189 id=189 data-nosnippet>189</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_handler(handler: FunctionHandler, hash: Hash) -&gt; <span class="self">Self </span>{
 <a href=#190 id=190 data-nosnippet>190</a>        <span class="self">Self</span>(FunctionImpl::from_handler(handler, hash))
 <a href=#191 id=191 data-nosnippet>191</a>    }
 <a href=#192 id=192 data-nosnippet>192</a>
@@ -527,7 +527,7 @@
 <a href=#527 id=527 data-nosnippet>527</a>                </span><span class="kw">let </span><span class="kw-2">mut </span>stack = Stack::with_capacity(size)<span class="question-mark">?</span>;
 <a href=#528 id=528 data-nosnippet>528</a>                <span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ args.guarded_into_stack(<span class="kw-2">&amp;mut </span>stack) }<span class="question-mark">?</span>;
 <a href=#529 id=529 data-nosnippet>529</a>                stack.resize(size)<span class="question-mark">?</span>;
-<a href=#530 id=530 data-nosnippet>530</a>                (handler.handler)(
+<a href=#530 id=530 data-nosnippet>530</a>                handler.handler.call(
 <a href=#531 id=531 data-nosnippet>531</a>                    <span class="kw-2">&amp;mut </span>stack,
 <a href=#532 id=532 data-nosnippet>532</a>                    InstAddress::ZERO,
 <a href=#533 id=533 data-nosnippet>533</a>                    count,
@@ -597,7 +597,7 @@
 <a href=#597 id=597 data-nosnippet>597</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;VmHalt&gt;, VmError&gt; {
 <a href=#598 id=598 data-nosnippet>598</a>        <span class="kw">let </span>reason = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.inner {
 <a href=#599 id=599 data-nosnippet>599</a>            Inner::FnHandler(handler) =&gt; {
-<a href=#600 id=600 data-nosnippet>600</a>                (handler.handler)(vm.stack_mut(), addr, args, out)<span class="question-mark">?</span>;
+<a href=#600 id=600 data-nosnippet>600</a>                handler.handler.call(vm.stack_mut(), addr, args, out)<span class="question-mark">?</span>;
 <a href=#601 id=601 data-nosnippet>601</a>                <span class="prelude-val">None
 <a href=#602 id=602 data-nosnippet>602</a>            </span>}
 <a href=#603 id=603 data-nosnippet>603</a>            Inner::FnOffset(fn_offset) =&gt; {
@@ -641,7 +641,7 @@
 <a href=#641 id=641 data-nosnippet>641</a>    }
 <a href=#642 id=642 data-nosnippet>642</a>
 <a href=#643 id=643 data-nosnippet>643</a>    <span class="doccomment">/// Create a function pointer from a handler.
-<a href=#644 id=644 data-nosnippet>644</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_handler(handler: Arc&lt;FunctionHandler&gt;, hash: Hash) -&gt; <span class="self">Self </span>{
+<a href=#644 id=644 data-nosnippet>644</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_handler(handler: FunctionHandler, hash: Hash) -&gt; <span class="self">Self </span>{
 <a href=#645 id=645 data-nosnippet>645</a>        <span class="self">Self </span>{
 <a href=#646 id=646 data-nosnippet>646</a>            inner: Inner::FnHandler(FnHandler { handler, hash }),
 <a href=#647 id=647 data-nosnippet>647</a>        }
@@ -750,7 +750,7 @@
 <a href=#750 id=750 data-nosnippet>750</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
 <a href=#751 id=751 data-nosnippet>751</a>        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.inner {
 <a href=#752 id=752 data-nosnippet>752</a>            Inner::FnHandler(handler) =&gt; {
-<a href=#753 id=753 data-nosnippet>753</a>                <span class="macro">write!</span>(f, <span class="string">"native function ({:p})"</span>, handler.handler.as_ref())<span class="question-mark">?</span>;
+<a href=#753 id=753 data-nosnippet>753</a>                <span class="macro">write!</span>(f, <span class="string">"native function ({:p})"</span>, handler.handler)<span class="question-mark">?</span>;
 <a href=#754 id=754 data-nosnippet>754</a>            }
 <a href=#755 id=755 data-nosnippet>755</a>            Inner::FnOffset(offset) =&gt; {
 <a href=#756 id=756 data-nosnippet>756</a>                <span class="macro">write!</span>(f, <span class="string">"{} function (at: 0x{:x})"</span>, offset.call, offset.offset)<span class="question-mark">?</span>;
@@ -813,7 +813,7 @@
 <a href=#813 id=813 data-nosnippet>813</a><span class="attr">#[derive(Clone, TryClone)]
 <a href=#814 id=814 data-nosnippet>814</a></span><span class="kw">struct </span>FnHandler {
 <a href=#815 id=815 data-nosnippet>815</a>    <span class="doccomment">/// The function handler.
-<a href=#816 id=816 data-nosnippet>816</a>    </span>handler: Arc&lt;FunctionHandler&gt;,
+<a href=#816 id=816 data-nosnippet>816</a>    </span>handler: FunctionHandler,
 <a href=#817 id=817 data-nosnippet>817</a>    <span class="doccomment">/// Hash for the function type
 <a href=#818 id=818 data-nosnippet>818</a>    </span>hash: Hash,
 <a href=#819 id=819 data-nosnippet>819</a>}
