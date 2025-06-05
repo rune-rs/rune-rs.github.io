@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["from_boxed_utf8_unchecked","into_string"]};
+window.SIDEBAR_ITEMS = {"fn":["from_boxed_utf8_unchecked","into_string","replace"]};
