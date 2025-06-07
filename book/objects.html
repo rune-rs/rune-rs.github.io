@@ -228,14 +228,13 @@ always strings, but its value must be specified as the sole type parameter.
 Note that the dynamic <a href="https://docs.rs/rune/0/rune/enum.Value.html"><code>Value</code></a> can be used if the type is unknown.</p>
 <pre><code class="language-rust noplaypen">use rune::alloc;
 use rune::runtime::Object;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
 
-use std::sync::Arc;
-
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -260,8 +259,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
     let mut object = Object::new();
     object.insert(alloc::String::try_from("key")?, rune::to_value(42i64)?)?;

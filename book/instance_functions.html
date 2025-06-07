@@ -218,10 +218,9 @@ be stabilized and documented in a future release.</p>
 <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.associated_function"><code>Module::associated_function</code></a> function. The type is identified as the first
 argument of the instance function, and must be a type registered in the module
 using <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.ty"><code>Module::ty</code></a>.</p>
-<pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
+<pre><code class="language-rust noplaypen">use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{ContextError, Diagnostics, Module, Vm};
-
-use std::sync::Arc;
 
 #[rune::function(instance)]
 fn divide_by_three(value: i64) -&gt; i64 {
@@ -234,7 +233,7 @@ async fn main() -&gt; rune::support::Result&lt;()&gt; {
 
     let mut context = rune_modules::default_context()?;
     context.install(m)?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources!(entry =&gt; {
         pub fn main(number) {
@@ -255,8 +254,9 @@ async fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
-    let mut vm = Vm::new(runtime, Arc::new(unit));
     let output = vm.execute(["main"], (33i64,))?.complete()?;
     let output: i64 = rune::from_value(output)?;
 

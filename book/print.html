@@ -509,13 +509,13 @@ or quite scary. It allows for a larger ability to express a program, but at the
 same time it can be harder to reason on what your program will do.</p>
 <h2 id="calling-functions-in-rust"><a class="header" href="#calling-functions-in-rust">Calling functions in Rust</a></h2>
 <p>Rune functions can be easily set up and called from Rust.</p>
-<pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
+<pre><code class="language-rust noplaypen">use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
-
-use std::sync::Arc;
 
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources!(
         entry =&gt; {
@@ -538,8 +538,9 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
-    let mut vm = Vm::new(Arc::new(context.runtime()?), Arc::new(unit));
     let output = vm.execute(["main"], (33i64,))?.complete()?;
     let output: i64 = rune::from_value(output)?;
 
@@ -1026,10 +1027,9 @@ be stabilized and documented in a future release.</p>
 <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.associated_function"><code>Module::associated_function</code></a> function. The type is identified as the first
 argument of the instance function, and must be a type registered in the module
 using <a href="https://docs.rs/rune/0/rune/struct.Module.html#method.ty"><code>Module::ty</code></a>.</p>
-<pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
+<pre><code class="language-rust noplaypen">use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{ContextError, Diagnostics, Module, Vm};
-
-use std::sync::Arc;
 
 #[rune::function(instance)]
 fn divide_by_three(value: i64) -&gt; i64 {
@@ -1042,7 +1042,7 @@ async fn main() -&gt; rune::support::Result&lt;()&gt; {
 
     let mut context = rune_modules::default_context()?;
     context.install(m)?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources!(entry =&gt; {
         pub fn main(number) {
@@ -1063,8 +1063,9 @@ async fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
-    let mut vm = Vm::new(runtime, Arc::new(unit));
     let output = vm.execute(["main"], (33i64,))?.complete()?;
     let output: i64 = rune::from_value(output)?;
 
@@ -1158,8 +1159,7 @@ is <em>not</em> tracked and should be avoided in favor of using <a href="https:/
 <h4 id="runeclone_with--path"><a class="header" href="#runeclone_with--path"><code>#[rune(clone_with = &lt;path&gt;)]</code></a></h4>
 <p>This specified a custom method that should be used to clone the value.</p>
 <pre><code class="language-rust noplaypen">use rune::Any;
-
-use std::sync::Arc;
+use rune::sync::Arc;
 
 #[derive(Any)]
 struct External {
@@ -1187,10 +1187,9 @@ argument to the corresponding attribute pointing to the function to use instead.
 <p>The following uses an implementation of <code>add_assign</code> which performs checked
 addition:</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::VmError;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Any, ContextError, Diagnostics, Module, Vm};
-
-use std::sync::Arc;
 
 #[derive(Any)]
 struct External {
@@ -1214,7 +1213,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
 
     let mut context = rune_modules::default_context()?;
     context.install(m)?;
-    let runtime = Arc::new(context.runtime()?);
+
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1237,8 +1237,9 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
+    let unit = Arc::try_new(unit)?;
 
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let mut vm = Vm::new(runtime, unit);
 
     let input = External { value: i64::MAX };
     let err = vm.call(["main"], (input,)).unwrap_err();
@@ -1524,14 +1525,13 @@ Hello
 </code></pre>
 <h2 id="using-vectors-from-rust"><a class="header" href="#using-vectors-from-rust">Using vectors from Rust</a></h2>
 <p>Vectors are represented externally as the standard <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>Vec</code></a>.</p>
-<pre><pre class="playground"><code class="language-rust">use rune::termcolor::{ColorChoice, StandardStream};
+<pre><pre class="playground"><code class="language-rust">use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
-
-use std::sync::Arc;
 
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1560,7 +1560,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
     let input = vec![1, 2, 3, 4];
     let output = vm.call(["calc"], (input,))?;
@@ -1575,14 +1576,13 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
 <p>If you have a vector which has values of non-uniform types, you can use
 <a href="https://docs.rs/rune/0/rune/struct.VecTuple.html"><code>VecTuple</code></a> to deal with them.</p>
 <pre><pre class="playground"><code class="language-rust">use rune::runtime::VecTuple;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
 
-use std::sync::Arc;
-
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1607,7 +1607,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
     let input: VecTuple&lt;(i64, String)&gt; = VecTuple::new((1, String::from("Hello")));
     let output = vm.call(["calc"], (input,))?;
@@ -1681,14 +1682,13 @@ always strings, but its value must be specified as the sole type parameter.
 Note that the dynamic <a href="https://docs.rs/rune/0/rune/enum.Value.html"><code>Value</code></a> can be used if the type is unknown.</p>
 <pre><code class="language-rust noplaypen">use rune::alloc;
 use rune::runtime::Object;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
 
-use std::sync::Arc;
-
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1713,8 +1713,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
     let mut object = Object::new();
     object.insert(alloc::String::try_from("key")?, rune::to_value(42i64)?)?;
@@ -1770,14 +1770,13 @@ dbg!(foo());
 </code></pre>
 <h2 id="using-tuples-from-rust"><a class="header" href="#using-tuples-from-rust">Using tuples from Rust</a></h2>
 <p>Tuples are represented externally as <a href="https://doc.rust-lang.org/std/primitive.tuple.html">primitive tuple types</a>.</p>
-<pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
+<pre><code class="language-rust noplaypen">use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
-
-use std::sync::Arc;
 
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1800,8 +1799,9 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
-    let mut vm = Vm::new(runtime, Arc::new(unit));
     let output = vm.call(["calc"], ((1u32, 2u32),))?;
     let output: (i32, i32) = rune::from_value(output)?;
 
@@ -1953,10 +1953,9 @@ about it except that it is a value bound to a variable.</p>
 <p>Below is the most simple example of an external type. It's implemented by
 deriving <a href="https://docs.rs/rune/latest/rune/derive.Any.html">Any</a> which can do a lot of heavy lifting for us.</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::Vm;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Any, ContextError, Diagnostics, Module};
-
-use std::sync::Arc;
 
 #[derive(Debug, Any)]
 struct External {
@@ -1974,7 +1973,7 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
 
     let mut context = rune_modules::default_context()?;
     context.install(m)?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -1997,8 +1996,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
     let output = vm.call(["main"], (External { value: 42 },))?;
     let output: External = rune::from_value(output)?;
@@ -2336,14 +2335,13 @@ pointers out of the virtual machine using the <code>Function</code> type.</p>
 <p>This allows you to write code that takes a function constructed in Rune, and use
 it for something else.</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::Function;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
 
-use std::sync::Arc;
-
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -2370,8 +2368,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
     let output = vm.call(["main"], ())?;
     let output: Function = rune::from_value(output)?;
 
@@ -2609,15 +2607,14 @@ such as Tokio. This is achieved by ensuring that all captured arguments are
 <a href="https://docs.rs/rune/latest/rune/runtime/enum.ConstValue.html"><code>ConstValue</code></a>'s, which in contrast to <a href="https://docs.rs/rune/latest/rune/runtime/enum.Value.html"><code>Value</code></a>'s are guaranteed to be
 thread-safe:</p>
 <pre><pre class="playground"><code class="language-rust">use rune::alloc::prelude::*;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
-
-use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -2640,8 +2637,8 @@ async fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-
-    let vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let vm = Vm::new(runtime, unit);
 
     let execution = vm.try_clone()?.send_execute(["main"], (5u32,))?;
     let t1 = tokio::spawn(async move {
@@ -2678,9 +2675,10 @@ mod path_reloader;
 
 use std::path::PathBuf;
 use std::pin::pin;
-use std::sync::Arc;
 
 use anyhow::{Context as _, Result};
+
+use rune::sync::Arc;
 use rune::{Context, Vm};
 
 #[tokio::main(flavor = "current_thread")]
@@ -2696,7 +2694,7 @@ async fn main() -&gt; Result&lt;()&gt; {
         &amp;context
     )?);
 
-    let context = Arc::new(context.runtime()?);
+    let context = Arc::try_new(context.runtime()?)?;
 
     let mut events = Vec::new();
 

@@ -223,14 +223,13 @@ pointers out of the virtual machine using the <code>Function</code> type.</p>
 <p>This allows you to write code that takes a function constructed in Rune, and use
 it for something else.</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::Function;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
 
-use std::sync::Arc;
-
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -257,8 +256,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
     let output = vm.call(["main"], ())?;
     let output: Function = rune::from_value(output)?;
 

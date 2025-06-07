@@ -211,13 +211,13 @@ or quite scary. It allows for a larger ability to express a program, but at the
 same time it can be harder to reason on what your program will do.</p>
 <h2 id="calling-functions-in-rust"><a class="header" href="#calling-functions-in-rust">Calling functions in Rust</a></h2>
 <p>Rune functions can be easily set up and called from Rust.</p>
-<pre><code class="language-rust noplaypen">use rune::termcolor::{ColorChoice, StandardStream};
+<pre><code class="language-rust noplaypen">use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
-
-use std::sync::Arc;
 
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources!(
         entry =&gt; {
@@ -240,8 +240,9 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
-    let mut vm = Vm::new(Arc::new(context.runtime()?), Arc::new(unit));
     let output = vm.execute(["main"], (33i64,))?.complete()?;
     let output: i64 = rune::from_value(output)?;
 

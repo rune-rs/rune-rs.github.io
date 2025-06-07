@@ -203,14 +203,13 @@ Hello
 </code></pre>
 <h2 id="using-vectors-from-rust"><a class="header" href="#using-vectors-from-rust">Using vectors from Rust</a></h2>
 <p>Vectors are represented externally as the standard <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html"><code>Vec</code></a>.</p>
-<pre><pre class="playground"><code class="language-rust">use rune::termcolor::{ColorChoice, StandardStream};
+<pre><pre class="playground"><code class="language-rust">use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
-
-use std::sync::Arc;
 
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -239,7 +238,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
     let input = vec![1, 2, 3, 4];
     let output = vm.call(["calc"], (input,))?;
@@ -254,14 +254,13 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
 <p>If you have a vector which has values of non-uniform types, you can use
 <a href="https://docs.rs/rune/0/rune/struct.VecTuple.html"><code>VecTuple</code></a> to deal with them.</p>
 <pre><pre class="playground"><code class="language-rust">use rune::runtime::VecTuple;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
 
-use std::sync::Arc;
-
 fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -286,7 +285,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
     let input: VecTuple&lt;(i64, String)&gt; = VecTuple::new((1, String::from("Hello")));
     let output = vm.call(["calc"], (input,))?;

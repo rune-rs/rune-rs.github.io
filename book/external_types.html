@@ -175,10 +175,9 @@ about it except that it is a value bound to a variable.</p>
 <p>Below is the most simple example of an external type. It's implemented by
 deriving <a href="https://docs.rs/rune/latest/rune/derive.Any.html">Any</a> which can do a lot of heavy lifting for us.</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::Vm;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Any, ContextError, Diagnostics, Module};
-
-use std::sync::Arc;
 
 #[derive(Debug, Any)]
 struct External {
@@ -196,7 +195,7 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
 
     let mut context = rune_modules::default_context()?;
     context.install(m)?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -219,8 +218,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let mut vm = Vm::new(runtime, unit);
 
     let output = vm.call(["main"], (External { value: 42 },))?;
     let output: External = rune::from_value(output)?;

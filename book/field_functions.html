@@ -242,8 +242,7 @@ is <em>not</em> tracked and should be avoided in favor of using <a href="https:/
 <h4 id="runeclone_with--path"><a class="header" href="#runeclone_with--path"><code>#[rune(clone_with = &lt;path&gt;)]</code></a></h4>
 <p>This specified a custom method that should be used to clone the value.</p>
 <pre><code class="language-rust noplaypen">use rune::Any;
-
-use std::sync::Arc;
+use rune::sync::Arc;
 
 #[derive(Any)]
 struct External {
@@ -271,10 +270,9 @@ argument to the corresponding attribute pointing to the function to use instead.
 <p>The following uses an implementation of <code>add_assign</code> which performs checked
 addition:</p>
 <pre><code class="language-rust noplaypen">use rune::runtime::VmError;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Any, ContextError, Diagnostics, Module, Vm};
-
-use std::sync::Arc;
 
 #[derive(Any)]
 struct External {
@@ -298,7 +296,8 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
 
     let mut context = rune_modules::default_context()?;
     context.install(m)?;
-    let runtime = Arc::new(context.runtime()?);
+
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -321,8 +320,9 @@ fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
+    let unit = Arc::try_new(unit)?;
 
-    let mut vm = Vm::new(runtime, Arc::new(unit));
+    let mut vm = Vm::new(runtime, unit);
 
     let input = External { value: i64::MAX };
     let err = vm.call(["main"], (input,)).unwrap_err();

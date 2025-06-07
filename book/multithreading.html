@@ -202,15 +202,14 @@ such as Tokio. This is achieved by ensuring that all captured arguments are
 <a href="https://docs.rs/rune/latest/rune/runtime/enum.ConstValue.html"><code>ConstValue</code></a>'s, which in contrast to <a href="https://docs.rs/rune/latest/rune/runtime/enum.Value.html"><code>Value</code></a>'s are guaranteed to be
 thread-safe:</p>
 <pre><pre class="playground"><code class="language-rust">use rune::alloc::prelude::*;
+use rune::sync::Arc;
 use rune::termcolor::{ColorChoice, StandardStream};
 use rune::{Diagnostics, Vm};
-
-use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -&gt; rune::support::Result&lt;()&gt; {
     let context = rune_modules::default_context()?;
-    let runtime = Arc::new(context.runtime()?);
+    let runtime = Arc::try_new(context.runtime()?)?;
 
     let mut sources = rune::sources! {
         entry =&gt; {
@@ -233,8 +232,8 @@ async fn main() -&gt; rune::support::Result&lt;()&gt; {
     }
 
     let unit = result?;
-
-    let vm = Vm::new(runtime, Arc::new(unit));
+    let unit = Arc::try_new(unit)?;
+    let vm = Vm::new(runtime, unit);
 
     let execution = vm.try_clone()?.send_execute(["main"], (5u32,))?;
     let t1 = tokio::spawn(async move {
