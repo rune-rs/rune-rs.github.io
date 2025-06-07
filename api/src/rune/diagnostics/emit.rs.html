@@ -174,7 +174,7 @@
 <a href=#174 id=174 data-nosnippet>174</a>        <span class="kw">let </span><span class="kw-2">mut </span>backtrace = <span class="macro">vec!</span>[];
 <a href=#175 id=175 data-nosnippet>175</a>        <span class="kw">let </span>config = term::Config::default();
 <a href=#176 id=176 data-nosnippet>176</a>
-<a href=#177 id=177 data-nosnippet>177</a>        <span class="kw">for </span>l <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.inner.stacktrace {
+<a href=#177 id=177 data-nosnippet>177</a>        <span class="kw">for </span>l <span class="kw">in </span><span class="self">self</span>.stacktrace() {
 <a href=#178 id=178 data-nosnippet>178</a>            <span class="kw">let </span>debug_info = <span class="kw">match </span>l.unit.debug_info() {
 <a href=#179 id=179 data-nosnippet>179</a>                <span class="prelude-val">Some</span>(debug_info) =&gt; debug_info,
 <a href=#180 id=180 data-nosnippet>180</a>                <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
@@ -200,19 +200,19 @@
 <a href=#200 id=200 data-nosnippet>200</a>        <span class="kw">let </span><span class="kw-2">mut </span>notes = rust_alloc::vec::Vec::new();
 <a href=#201 id=201 data-nosnippet>201</a>
 <a href=#202 id=202 data-nosnippet>202</a>        <span class="kw">let </span>get = |at: <span class="kw-2">&amp;</span>VmErrorAt| -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>DebugInst&gt; {
-<a href=#203 id=203 data-nosnippet>203</a>            <span class="kw">let </span>l = <span class="self">self</span>.inner.stacktrace.get(at.index())<span class="question-mark">?</span>;
+<a href=#203 id=203 data-nosnippet>203</a>            <span class="kw">let </span>l = <span class="self">self</span>.stacktrace().get(at.index())<span class="question-mark">?</span>;
 <a href=#204 id=204 data-nosnippet>204</a>            <span class="kw">let </span>debug_info = l.unit.debug_info()<span class="question-mark">?</span>;
 <a href=#205 id=205 data-nosnippet>205</a>            <span class="kw">let </span>debug_inst = debug_info.instruction_at(l.ip)<span class="question-mark">?</span>;
 <a href=#206 id=206 data-nosnippet>206</a>            <span class="prelude-val">Some</span>(debug_inst)
 <a href=#207 id=207 data-nosnippet>207</a>        };
 <a href=#208 id=208 data-nosnippet>208</a>
 <a href=#209 id=209 data-nosnippet>209</a>        <span class="kw">let </span>get_ident = |at: <span class="kw-2">&amp;</span>VmErrorAt, hash: Hash| {
-<a href=#210 id=210 data-nosnippet>210</a>            <span class="kw">let </span>l = <span class="self">self</span>.inner.stacktrace.get(at.index())<span class="question-mark">?</span>;
+<a href=#210 id=210 data-nosnippet>210</a>            <span class="kw">let </span>l = <span class="self">self</span>.stacktrace().get(at.index())<span class="question-mark">?</span>;
 <a href=#211 id=211 data-nosnippet>211</a>            <span class="kw">let </span>debug_info = l.unit.debug_info()<span class="question-mark">?</span>;
 <a href=#212 id=212 data-nosnippet>212</a>            debug_info.ident_for_hash(hash)
 <a href=#213 id=213 data-nosnippet>213</a>        };
 <a href=#214 id=214 data-nosnippet>214</a>
-<a href=#215 id=215 data-nosnippet>215</a>        <span class="kw">for </span>at <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.inner.chain {
+<a href=#215 id=215 data-nosnippet>215</a>        <span class="kw">for </span>at <span class="kw">in </span><span class="self">self</span>.chain() {
 <a href=#216 id=216 data-nosnippet>216</a>            <span class="comment">// Populate source-specific notes.
 <a href=#217 id=217 data-nosnippet>217</a>            </span><span class="kw">match </span>at.kind() {
 <a href=#218 id=218 data-nosnippet>218</a>                VmErrorKind::UnsupportedBinaryOperation { lhs, rhs, .. } =&gt; {
@@ -242,15 +242,15 @@
 <a href=#242 id=242 data-nosnippet>242</a>
 <a href=#243 id=243 data-nosnippet>243</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>DebugInst {
 <a href=#244 id=244 data-nosnippet>244</a>            source_id, span, ..
-<a href=#245 id=245 data-nosnippet>245</a>        }) = get(<span class="kw-2">&amp;</span><span class="self">self</span>.inner.error)
+<a href=#245 id=245 data-nosnippet>245</a>        }) = get(<span class="self">self</span>.error())
 <a href=#246 id=246 data-nosnippet>246</a>        {
 <a href=#247 id=247 data-nosnippet>247</a>            labels.push(
 <a href=#248 id=248 data-nosnippet>248</a>                d::Label::primary(source_id, span.range())
-<a href=#249 id=249 data-nosnippet>249</a>                    .with_message(<span class="self">self</span>.inner.error.try_to_string()<span class="question-mark">?</span>),
+<a href=#249 id=249 data-nosnippet>249</a>                    .with_message(<span class="self">self</span>.error().try_to_string()<span class="question-mark">?</span>),
 <a href=#250 id=250 data-nosnippet>250</a>            );
 <a href=#251 id=251 data-nosnippet>251</a>        };
 <a href=#252 id=252 data-nosnippet>252</a>
-<a href=#253 id=253 data-nosnippet>253</a>        <span class="kw">for </span>at <span class="kw">in </span>[<span class="kw-2">&amp;</span><span class="self">self</span>.inner.error].into_iter().chain(<span class="kw-2">&amp;</span><span class="self">self</span>.inner.chain) {
+<a href=#253 id=253 data-nosnippet>253</a>        <span class="kw">for </span>at <span class="kw">in </span>[<span class="self">self</span>.error()].into_iter().chain(<span class="self">self</span>.chain()) {
 <a href=#254 id=254 data-nosnippet>254</a>            <span class="comment">// Populate source-specific notes.
 <a href=#255 id=255 data-nosnippet>255</a>            </span><span class="kw">if let </span>VmErrorKind::MissingInstanceFunction { hash, instance } = at.kind() {
 <a href=#256 id=256 data-nosnippet>256</a>                <span class="comment">// Undo instance function hashing to extract the hash of the
@@ -284,7 +284,7 @@
 <a href=#284 id=284 data-nosnippet>284</a>        }
 <a href=#285 id=285 data-nosnippet>285</a>
 <a href=#286 id=286 data-nosnippet>286</a>        <span class="kw">let </span>diagnostic = d::Diagnostic::error()
-<a href=#287 id=287 data-nosnippet>287</a>            .with_message(<span class="self">self</span>.inner.error.try_to_string()<span class="question-mark">?</span>)
+<a href=#287 id=287 data-nosnippet>287</a>            .with_message(<span class="self">self</span>.error().try_to_string()<span class="question-mark">?</span>)
 <a href=#288 id=288 data-nosnippet>288</a>            .with_labels(labels)
 <a href=#289 id=289 data-nosnippet>289</a>            .with_notes(notes);
 <a href=#290 id=290 data-nosnippet>290</a>

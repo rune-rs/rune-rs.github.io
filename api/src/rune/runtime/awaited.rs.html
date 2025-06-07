@@ -22,19 +22,19 @@
 <a href=#22 id=22 data-nosnippet>22</a>    ) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;(), VmError&gt;&gt; {
 <a href=#23 id=23 data-nosnippet>23</a>        <span class="kw">let </span>this = <span class="kw">unsafe </span>{ Pin::get_unchecked_mut(<span class="self">self</span>) };
 <a href=#24 id=24 data-nosnippet>24</a>
-<a href=#25 id=25 data-nosnippet>25</a>        <span class="kw">match </span>this {
-<a href=#26 id=26 data-nosnippet>26</a>            <span class="self">Self</span>::Future(future, out) =&gt; {
+<a href=#25 id=25 data-nosnippet>25</a>        <span class="kw">match </span><span class="kw-2">*</span>this {
+<a href=#26 id=26 data-nosnippet>26</a>            <span class="self">Self</span>::Future(<span class="kw-2">ref mut </span>future, out) =&gt; {
 <a href=#27 id=27 data-nosnippet>27</a>                <span class="kw">let </span>future = <span class="kw">unsafe </span>{ Pin::new_unchecked(future) };
 <a href=#28 id=28 data-nosnippet>28</a>                <span class="kw">let </span>result = <span class="macro">ready!</span>(future.poll(cx));
 <a href=#29 id=29 data-nosnippet>29</a>                <span class="kw">let </span>value = <span class="macro">async_vm_try!</span>(VmError::with_vm(result, vm));
-<a href=#30 id=30 data-nosnippet>30</a>                <span class="macro">async_vm_try!</span>(out.store(vm.stack_mut(), value));
+<a href=#30 id=30 data-nosnippet>30</a>                <span class="macro">async_vm_try!</span>(vm.stack_mut().store(out, value));
 <a href=#31 id=31 data-nosnippet>31</a>            }
-<a href=#32 id=32 data-nosnippet>32</a>            <span class="self">Self</span>::Select(select, value_addr) =&gt; {
+<a href=#32 id=32 data-nosnippet>32</a>            <span class="self">Self</span>::Select(<span class="kw-2">ref mut </span>select, out) =&gt; {
 <a href=#33 id=33 data-nosnippet>33</a>                <span class="kw">let </span>select = <span class="kw">unsafe </span>{ Pin::new_unchecked(select) };
 <a href=#34 id=34 data-nosnippet>34</a>                <span class="kw">let </span>result = <span class="macro">ready!</span>(select.poll(cx));
 <a href=#35 id=35 data-nosnippet>35</a>                <span class="kw">let </span>(ip, value) = <span class="macro">async_vm_try!</span>(VmError::with_vm(result, vm));
 <a href=#36 id=36 data-nosnippet>36</a>                vm.set_ip(ip);
-<a href=#37 id=37 data-nosnippet>37</a>                <span class="macro">async_vm_try!</span>(value_addr.store(vm.stack_mut(), || value));
+<a href=#37 id=37 data-nosnippet>37</a>                <span class="macro">async_vm_try!</span>(vm.stack_mut().store(out, || value));
 <a href=#38 id=38 data-nosnippet>38</a>            }
 <a href=#39 id=39 data-nosnippet>39</a>        }
 <a href=#40 id=40 data-nosnippet>40</a>
