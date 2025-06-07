@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["FromPathError","Source"]};
+window.SIDEBAR_ITEMS = {"struct":["FromPathError","Source","SourceLine"]};
