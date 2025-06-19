@@ -161,7 +161,7 @@ var rune = (function (exports) {
   }
 
   function __wbg_adapter_34(arg0, arg1, arg2, arg3) {
-      wasm$1.closure251_externref_shim(arg0, arg1, arg2, arg3);
+      wasm$1.closure250_externref_shim(arg0, arg1, arg2, arg3);
   }
 
   const __wbindgen_enum_RequestMode = ["same-origin", "no-cors", "cors", "navigate"];
@@ -429,7 +429,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-613de51d.wasm";
+                  let path = "/js/assets/rune_wasm-5321eee5.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
