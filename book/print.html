@@ -37,6 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc.js"></script>
@@ -93,10 +94,13 @@
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
+                sidebar_toggle.checked = false;
             }
-            sidebar_toggle.checked = sidebar === 'visible';
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
@@ -147,7 +151,12 @@
 
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
                     </form>
                     <div id="searchresults-outer" class="searchresults-outer hidden">
                         <div id="searchresults-header" class="searchresults-header"></div>
@@ -1376,6 +1385,171 @@ implementation for <code>SIZE_HINT</code> will fall back to a default implementa
 it's not implemented. The appropriate protocol is also populated if it's
 missing. All the relevant associated functions are also provided, such as
 <code>value.next()</code> and <code>value.size_hint()</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="workspaces-and-packages"><a class="header" href="#workspaces-and-packages">Workspaces and Packages</a></h1>
+<p>Workspaces in Rune are an optional feature to help you organize larger
+collections of Rune packages. To create a workspaces, you need to create
+a <code>Rune.toml</code> manifest that tells Rune where to find the projects which
+comprise the workspace:</p>
+<pre><code class="language-toml">[workspace]
+members = [
+    "package-a",
+    "nested/package-b"
+]
+</code></pre>
+<p>The names of the members will be interpreted as directories relative to the
+workspace <code>Rune.toml</code> manifest. Each workspace member also needs to have its
+own <code>Rune.toml</code> manifest to give the package a name:</p>
+<pre><code class="language-toml">[package]
+name = "a"
+version = "0.0.0"
+</code></pre>
+<p>Within a package, Rune will automatically detect different types of compilation
+targets based on the directory structure of the package. This is similar to the
+<a href="https://doc.rust-lang.org/cargo/guide/project-layout.html">Rust package layout</a>:</p>
+<ul>
+<li>Source code goes in the <code>src</code> directory.</li>
+<li>The default executable is <code>src/main.rn</code>, and will be named the same as the
+package.</li>
+<li>The default library file is <code>src/lib.rn</code>. Libraries differ from executables
+in that they don't have a <code>main</code> function and cannot be invoked using
+<code>rune run</code>.</li>
+<li>Other executables can be placed in <code>src/bin/</code>.</li>
+<li>Benchmarks go in the <code>benches/</code> directory.</li>
+<li>Examples go in the <code>examples/</code> directory.</li>
+<li>Tests go in the <code>tests/</code> directory.</li>
+</ul>
+<p>If a binary, example, bench, or test consists of multiple source files, place
+a <code>main.rn</code> file along with the extra modules within a subdirectory of the
+respective directory. The name of the executable will be the directory name.</p>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>Here's a sample workspace layout that might go along with the manifest files
+above:</p>
+<pre><code class="language-text">workspace
+├── Rune.toml &lt;-- Workspace manifest
+├── package-a
+│   ├── Rune.toml &lt;-- Package 'a' manifest
+│   ├── src
+│   │   ├── bin
+│   │   │   ├── multi-file-executable
+│   │   │   │   ├── main.rn
+│   │   │   │   └── module
+│   │   │   │       └── mod.rn
+│   │   │   └── named-executable.rn
+│   │   ├── lib.rn
+│   │   └── main.rn
+│   ├── benches
+│   │   ├── collatz.rn
+│   │   └── multi-file-bench
+│   │       ├── collatz.rn
+│   │       └── main.rn
+│   ├── examples
+│   │   ├── multi-file-example
+│   │   │   ├── lib.rn
+│   │   │   └── main.rn
+│   │   └── simple.rn
+│   └── tests
+│       ├── fire
+│       │   ├── lib.rn
+│       │   └── main.rn
+│       └── smoke.rn
+└── nested
+    └── package-b
+        ├── Rune.toml &lt;-- Package 'b' manifest
+        ├── src
+        │   ├── bin
+        │   │   ├── multi-file-executable
+        │   │   │   ├── main.rn
+        │   │   │   └── module
+        │   │   │       └── mod.rn
+        │   │   └── named-executable.rn
+        │   ├── lib.rn
+        │   └── main.rn
+        ├── benches
+        │   ├── collatz.rn
+        │   └── multi-file-bench
+        │       ├── collatz.rn
+        │       └── main.rn
+        ├── examples
+        │   ├── multi-file-example
+        │   │   ├── lib.rn
+        │   │   └── main.rn
+        │   └── simple.rn
+        └── tests
+            ├── fire
+            │   ├── lib.rn
+            │   └── main.rn
+            └── smoke.rn
+</code></pre>
+<p>You don't need to pay too much attention to the <code>package-b</code> tree, since it's
+identical to <code>package-a</code>. The only reason it's there is to demonstrate how Rune
+handles duplicate names within a workspace.</p>
+<p>If we call <code>rune run</code> in the <code>workspace</code> directory, we'll see the following:</p>
+<pre><code class="language-text">     Running bin `package-a/src/main.rn` (from a)
+     Running bin `package-a/src/bin/named-executable.rn` (from a)
+     Running bin `package-a/src/bin/multi-file-executable/main.rn` (from a)
+     Running bin `nested/package-b/src/main.rn` (from b)
+     Running bin `nested/package-b/src/bin/named-executable.rn` (from b)
+     Running bin `nested/package-b/src/bin/multi-file-executable/main.rn` (from b)
+     Running example `package-a/examples/simple.rn` (from a)
+     Running example `package-a/examples/multi-file-example/main.rn` (from a)
+     Running example `nested/package-b/examples/simple.rn` (from b)
+     Running example `nested/package-b/examples/multi-file-example/main.rn` (from b)
+... output from the various executables
+</code></pre>
+<p>Note that <code>rune run</code> only executes the binaries (both default and named) and
+examples from both workspace packages. We can filter this down even further
+by calling, for example, <code>rune run --bin named-executable</code>, which shows this:</p>
+<pre><code class="language-text">     Running bin `package-a/src/bin/named-executable.rn` (from a)
+     Running bin `nested/package-b/src/bin/named-executable.rn` (from b)
+... output from the various executables
+</code></pre>
+<p>(Similar filters exist for <code>--lib</code>, <code>--example</code>, <code>--bench</code>, and <code>--test</code>.)</p>
+<p>If we're only interested in targets from one of the workspace packages, it's
+possible to restrict the list of targets using the <code>--package</code> or <code>-p</code> command
+line flag:</p>
+<pre><code class="language-text">$ rune run --bin named-executable -p a
+     Running bin `package-a/src/bin/named-executable.rn` (from a)
+... output
+</code></pre>
+<p>We can get a fuller view of all of the entry points that Rune sees by calling
+something like <code>rune check</code>, which shows the following:</p>
+<pre><code class="language-text">    Checking bin `package-a/src/main.rn` (from a)
+    Checking bin `package-a/src/bin/named-executable.rn` (from a)
+    Checking bin `package-a/src/bin/multi-file-executable/main.rn` (from a)
+    Checking bin `nested/package-b/src/main.rn` (from b)
+    Checking bin `nested/package-b/src/bin/named-executable.rn` (from b)
+    Checking bin `nested/package-b/src/bin/multi-file-executable/main.rn` (from b)
+    Checking lib `package-a/src/lib.rn` (from a)
+    Checking lib `nested/package-b/src/lib.rn` (from b)
+    Checking test `package-a/tests/smoke.rn` (from a)
+    Checking test `package-a/tests/fire/main.rn` (from a)
+    Checking test `nested/package-b/tests/smoke.rn` (from b)
+    Checking test `nested/package-b/tests/fire/main.rn` (from b)
+    Checking example `package-a/examples/simple.rn` (from a)
+    Checking example `package-a/examples/multi-file-example/main.rn` (from a)
+    Checking example `nested/package-b/examples/simple.rn` (from b)
+    Checking example `nested/package-b/examples/multi-file-example/main.rn` (from b)
+    Checking bench `package-a/benches/collatz.rn` (from a)
+    Checking bench `package-a/benches/multi-file-bench/main.rn` (from a)
+    Checking bench `nested/package-b/benches/collatz.rn` (from b)
+    Checking bench `nested/package-b/benches/multi-file-bench/main.rn` (from b)
+Checking: package-a/src/main.rn
+Checking: ...
+...
+</code></pre>
+<p>Note that while Rune will list entry points by their top-level file, for
+operations such as <code>check</code> and <code>fmt</code>, the entire tree of modules will be
+considered. If we introduce an error in a module file and try to run
+<code>rune check --bin multi-file-executable</code>, we'll get the following:</p>
+<pre><code class="language-text">    Checking bin `package-a/src/bin/multi-file-executable/main.rn` (from a)
+    Checking bin `nested/package-b/src/bin/multi-file-executable/main.rn` (from b)
+Checking: package-a/src/bin/multi-file-executable/main.rn
+error: Missing macro module::printline
+  ┌─ package-a/src/bin/multi-file-executable/module/mod.rn:2:5
+  │
+2 │     printline!("running a/multi-file-executable")
+  │     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Missing macro module::printline
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="rune-types"><a class="header" href="#rune-types">Rune types</a></h1>
 <p>Types in Rune are identified uniquely by their <em>item</em>. An item path is a
 scope-separated identifier, like <code>std::f64</code>. This particular item identifies
@@ -3244,6 +3418,7 @@ another, but we still want to provide links to.</p>
             window.setTimeout(window.print, 100);
         });
         </script>
+
 
     </div>
     </body>
