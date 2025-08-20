@@ -1,1 +1,0 @@
-searchState.loadedDescShard("rune_macros", 0, "Macros for the Rune Language, an embeddable dynamic …\nHelper derive to implement <code>Spanned</code>.")
