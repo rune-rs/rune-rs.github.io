@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run"],"mod":["envelope"]};
+window.SIDEBAR_ITEMS = {"fn":["run"],"mod":["envelope"],"struct":["Input","Output"]};
