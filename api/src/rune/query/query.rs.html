@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/query/query.rs`."><title>query.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0-nightly (b925a865e 2025-10-09)" data-channel="nightly" data-search-js="search-8d3311b9.js" data-stringdex-js="stringdex-828709d0.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/query/</div>query.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/query/query.rs`."><title>query.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-2eb46af5.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (fecb335cb 2026-01-07)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/query/</div>query.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#[cfg(feature = <span class="string">"emit"</span>)]
 <a href=#2 id=2 data-nosnippet>2</a></span><span class="kw">use </span>core::mem::take;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>core::ops::{Deref, DerefMut};
 <a href=#4 id=4 data-nosnippet>4</a>
@@ -28,9 +28,9 @@
 <a href=#28 id=28 data-nosnippet>28</a></span><span class="kw">use </span><span class="kw">crate</span>::runtime::Call;
 <a href=#29 id=29 data-nosnippet>29</a><span class="kw">use </span><span class="kw">crate</span>::runtime::ConstValue;
 <a href=#30 id=30 data-nosnippet>30</a><span class="kw">use </span><span class="kw">crate</span>::shared::{Consts, Gen};
-<a href=#31 id=31 data-nosnippet>31</a><span class="kw">use crate</span>::{Context, Diagnostics, Hash, Item, ItemBuf, Options, SourceId, Sources};
+<a href=#31 id=31 data-nosnippet>31</a><span class="kw">use </span>crate::{Context, Diagnostics, Hash, Item, ItemBuf, Options, SourceId, Sources};
 <a href=#32 id=32 data-nosnippet>32</a>
-<a href=#33 id=33 data-nosnippet>33</a><span class="kw">use super</span>::{
+<a href=#33 id=33 data-nosnippet>33</a><span class="kw">use </span>super::{
 <a href=#34 id=34 data-nosnippet>34</a>    Build, BuildEntry, BuiltInMacro, ConstFn, DeferEntry, ExpandedMacro, GenericsParameters, Named,
 <a href=#35 id=35 data-nosnippet>35</a>    Named2, Named2Kind, Used,
 <a href=#36 id=36 data-nosnippet>36</a>};
@@ -148,7 +148,7 @@
 <a href=#148 id=148 data-nosnippet>148</a>    <span class="doccomment">/// Build options.
 <a href=#149 id=149 data-nosnippet>149</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Options,
 <a href=#150 id=150 data-nosnippet>150</a>    <span class="doccomment">/// Shared id generator.
-<a href=#151 id=151 data-nosnippet>151</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) gen: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Gen,
+<a href=#151 id=151 data-nosnippet>151</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">gen</span>: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Gen,
 <a href=#152 id=152 data-nosnippet>152</a>    <span class="doccomment">/// Native context.
 <a href=#153 id=153 data-nosnippet>153</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) context: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Context,
 <a href=#154 id=154 data-nosnippet>154</a>    <span class="doccomment">/// Inner state of the query engine.
@@ -169,7 +169,7 @@
 <a href=#169 id=169 data-nosnippet>169</a>        diagnostics: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Diagnostics,
 <a href=#170 id=170 data-nosnippet>170</a>        source_loader: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span><span class="kw">dyn </span>SourceLoader,
 <a href=#171 id=171 data-nosnippet>171</a>        options: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Options,
-<a href=#172 id=172 data-nosnippet>172</a>        gen: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Gen,
+<a href=#172 id=172 data-nosnippet>172</a>        <span class="kw">gen</span>: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Gen,
 <a href=#173 id=173 data-nosnippet>173</a>        context: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Context,
 <a href=#174 id=174 data-nosnippet>174</a>        inner: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>QueryInner&lt;<span class="lifetime">'arena</span>&gt;,
 <a href=#175 id=175 data-nosnippet>175</a>    ) -&gt; <span class="self">Self </span>{
@@ -185,7 +185,7 @@
 <a href=#185 id=185 data-nosnippet>185</a>            diagnostics,
 <a href=#186 id=186 data-nosnippet>186</a>            source_loader,
 <a href=#187 id=187 data-nosnippet>187</a>            options,
-<a href=#188 id=188 data-nosnippet>188</a>            gen,
+<a href=#188 id=188 data-nosnippet>188</a>            <span class="kw">gen</span>,
 <a href=#189 id=189 data-nosnippet>189</a>            context,
 <a href=#190 id=190 data-nosnippet>190</a>            inner,
 <a href=#191 id=191 data-nosnippet>191</a>        }
@@ -205,7 +205,7 @@
 <a href=#205 id=205 data-nosnippet>205</a>            diagnostics: <span class="self">self</span>.diagnostics,
 <a href=#206 id=206 data-nosnippet>206</a>            source_loader: <span class="self">self</span>.source_loader,
 <a href=#207 id=207 data-nosnippet>207</a>            options: <span class="self">self</span>.options,
-<a href=#208 id=208 data-nosnippet>208</a>            gen: <span class="self">self</span>.gen,
+<a href=#208 id=208 data-nosnippet>208</a>            <span class="kw">gen</span>: <span class="self">self</span>.<span class="kw">gen</span>,
 <a href=#209 id=209 data-nosnippet>209</a>            context: <span class="self">self</span>.context,
 <a href=#210 id=210 data-nosnippet>210</a>            inner: <span class="self">self</span>.inner,
 <a href=#211 id=211 data-nosnippet>211</a>        }
@@ -235,7 +235,7 @@
 <a href=#235 id=235 data-nosnippet>235</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#236 id=236 data-nosnippet>236</a>        expand_macro: <span class="kw">impl </span>FnOnce(NonZeroId) -&gt; alloc::Result&lt;DeferEntry&gt;,
 <a href=#237 id=237 data-nosnippet>237</a>    ) -&gt; alloc::Result&lt;NonZeroId&gt; {
-<a href=#238 id=238 data-nosnippet>238</a>        <span class="kw">let </span>id = <span class="self">self</span>.gen.next();
+<a href=#238 id=238 data-nosnippet>238</a>        <span class="kw">let </span>id = <span class="self">self</span>.<span class="kw">gen</span>.next();
 <a href=#239 id=239 data-nosnippet>239</a>        <span class="self">self</span>.inner.defer_queue.try_push_back(expand_macro(id)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
 <a href=#240 id=240 data-nosnippet>240</a>        <span class="prelude-val">Ok</span>(id)
 <a href=#241 id=241 data-nosnippet>241</a>    }
@@ -293,7 +293,7 @@
 <a href=#293 id=293 data-nosnippet>293</a>                    <span class="kw">continue</span>;
 <a href=#294 id=294 data-nosnippet>294</a>                }
 <a href=#295 id=295 data-nosnippet>295</a>
-<a href=#296 id=296 data-nosnippet>296</a>                <span class="kw">if </span>kind != alt {
+<a href=#296 id=296 data-nosnippet>296</a>                <span class="kw">if </span><span class="macro">kind !</span>= alt {
 <a href=#297 id=297 data-nosnippet>297</a>                    <span class="kw">return </span><span class="prelude-val">None</span>;
 <a href=#298 id=298 data-nosnippet>298</a>                }
 <a href=#299 id=299 data-nosnippet>299</a>            }
@@ -601,7 +601,7 @@
 <a href=#601 id=601 data-nosnippet>601</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#602 id=602 data-nosnippet>602</a>        internal_macro: BuiltInMacro,
 <a href=#603 id=603 data-nosnippet>603</a>    ) -&gt; compile::Result&lt;NonZeroId&gt; {
-<a href=#604 id=604 data-nosnippet>604</a>        <span class="kw">let </span>id = <span class="self">self</span>.gen.next();
+<a href=#604 id=604 data-nosnippet>604</a>        <span class="kw">let </span>id = <span class="self">self</span>.<span class="kw">gen</span>.next();
 <a href=#605 id=605 data-nosnippet>605</a>        <span class="self">self</span>.inner
 <a href=#606 id=606 data-nosnippet>606</a>            .internal_macros
 <a href=#607 id=607 data-nosnippet>607</a>            .try_insert(id, Arc::new(internal_macro))<span class="question-mark">?</span>;
@@ -2089,4 +2089,5 @@
 <a href=#2089 id=2089 data-nosnippet>2089</a><span class="kw">struct </span>FoundImportStep {
 <a href=#2090 id=2090 data-nosnippet>2090</a>    item_meta: ItemMeta,
 <a href=#2091 id=2091 data-nosnippet>2091</a>    import: meta::Import,
-<a href=#2092 id=2092 data-nosnippet>2092</a>}</code></pre></div></section></main></body></html>
+<a href=#2092 id=2092 data-nosnippet>2092</a>}
+</code></pre></div></section></main></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pulldown-cmark-0.13.0/src/firstpass.rs`."><title>firstpass.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pulldown_cmark" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0-nightly (b925a865e 2025-10-09)" data-channel="nightly" data-search-js="search-8d3311b9.js" data-stringdex-js="stringdex-828709d0.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">pulldown_cmark/</div>firstpass.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! The first pass resolves all block structure, generating an AST. Within a block, items
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pulldown-cmark-0.13.0/src/firstpass.rs`."><title>firstpass.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-2eb46af5.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="pulldown_cmark" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (fecb335cb 2026-01-07)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">pulldown_cmark/</div>firstpass.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! The first pass resolves all block structure, generating an AST. Within a block, items
 <a href=#2 id=2 data-nosnippet>2</a>//! are in a linear chain with potential inline markup identified.
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a></span><span class="kw">use </span>std::cmp::max;
@@ -11,11 +11,11 @@
 <a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span><span class="kw">crate</span>::strings::CowStr;
 <a href=#12 id=12 data-nosnippet>12</a><span class="kw">use </span><span class="kw">crate</span>::tree::{Tree, TreeIndex};
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use </span><span class="kw">crate</span>::Options;
-<a href=#14 id=14 data-nosnippet>14</a><span class="kw">use crate</span>::{
+<a href=#14 id=14 data-nosnippet>14</a><span class="kw">use </span>crate::{
 <a href=#15 id=15 data-nosnippet>15</a>    linklabel::{scan_link_label_rest, LinkLabel},
 <a href=#16 id=16 data-nosnippet>16</a>    HeadingLevel,
 <a href=#17 id=17 data-nosnippet>17</a>};
-<a href=#18 id=18 data-nosnippet>18</a><span class="kw">use crate</span>::{scanners::<span class="kw-2">*</span>, MetadataBlockKind};
+<a href=#18 id=18 data-nosnippet>18</a><span class="kw">use </span>crate::{scanners::<span class="kw-2">*</span>, MetadataBlockKind};
 <a href=#19 id=19 data-nosnippet>19</a>
 <a href=#20 id=20 data-nosnippet>20</a><span class="kw">use </span>unicase::UniCase;
 <a href=#21 id=21 data-nosnippet>21</a>
@@ -932,7 +932,7 @@
 <a href=#932 id=932 data-nosnippet>932</a>                        ix - start,
 <a href=#933 id=933 data-nosnippet>933</a>                        mode,
 <a href=#934 id=934 data-nosnippet>934</a>                    );
-<a href=#935 id=935 data-nosnippet>935</a>                    <span class="kw">let </span>is_valid_seq = (c != <span class="string">b'~' </span>|| count &lt;= <span class="number">2</span>) || (c == <span class="string">b'~' </span>&amp;&amp; count == <span class="number">2</span>);
+<a href=#935 id=935 data-nosnippet>935</a>                    <span class="kw">let </span>is_valid_seq = (<span class="macro">c !</span>= <span class="string">b'~' </span>|| count &lt;= <span class="number">2</span>) || (c == <span class="string">b'~' </span>&amp;&amp; count == <span class="number">2</span>);
 <a href=#936 id=936 data-nosnippet>936</a>
 <a href=#937 id=937 data-nosnippet>937</a>                    <span class="kw">if </span>(can_open || can_close) &amp;&amp; is_valid_seq {
 <a href=#938 id=938 data-nosnippet>938</a>                        <span class="self">self</span>.tree.append_text(begin_text, ix, backslash_escaped);
@@ -1110,7 +1110,7 @@
 <a href=#1110 id=1110 data-nosnippet>1110</a>                    <span class="kw">_ </span>=&gt; LoopInstruction::ContinueAndSkip(<span class="number">0</span>),
 <a href=#1111 id=1111 data-nosnippet>1111</a>                },
 <a href=#1112 id=1112 data-nosnippet>1112</a>                <span class="string">b'|' </span>=&gt; {
-<a href=#1113 id=1113 data-nosnippet>1113</a>                    <span class="kw">if </span>ix != <span class="number">0 </span>&amp;&amp; bytes[ix - <span class="number">1</span>] == <span class="string">b'\\' </span>{
+<a href=#1113 id=1113 data-nosnippet>1113</a>                    <span class="kw">if </span><span class="macro">ix !</span>= <span class="number">0 </span>&amp;&amp; bytes[ix - <span class="number">1</span>] == <span class="string">b'\\' </span>{
 <a href=#1114 id=1114 data-nosnippet>1114</a>                        LoopInstruction::ContinueAndSkip(<span class="number">0</span>)
 <a href=#1115 id=1115 data-nosnippet>1115</a>                    } <span class="kw">else if let </span>TableParseMode::Active = mode {
 <a href=#1116 id=1116 data-nosnippet>1116</a>                        LoopInstruction::BreakAtWith(ix, <span class="prelude-val">None</span>)
@@ -1656,7 +1656,7 @@
 <a href=#1656 id=1656 data-nosnippet>1656</a>                .map_or(<span class="number">0</span>, |i| i + <span class="number">1</span>);
 <a href=#1657 id=1657 data-nosnippet>1657</a>            <span class="kw">let </span>closer = header_text[..limit]
 <a href=#1658 id=1658 data-nosnippet>1658</a>                .iter()
-<a href=#1659 id=1659 data-nosnippet>1659</a>                .rposition(|<span class="kw-2">&amp;</span>b| b != <span class="string">b'#'</span>)
+<a href=#1659 id=1659 data-nosnippet>1659</a>                .rposition(|<span class="kw-2">&amp;</span>b| <span class="macro">b !</span>= <span class="string">b'#'</span>)
 <a href=#1660 id=1660 data-nosnippet>1660</a>                .map_or(<span class="number">0</span>, |i| i + <span class="number">1</span>);
 <a href=#1661 id=1661 data-nosnippet>1661</a>            <span class="kw">if </span>closer == <span class="number">0 </span>{
 <a href=#1662 id=1662 data-nosnippet>1662</a>                limit = closer;
@@ -1874,7 +1874,7 @@
 <a href=#1874 id=1874 data-nosnippet>1874</a>                <span class="string">b'\\' </span>=&gt; {
 <a href=#1875 id=1875 data-nosnippet>1875</a>                    bytecount += <span class="number">1</span>;
 <a href=#1876 id=1876 data-nosnippet>1876</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = bytes.get(bytecount) {
-<a href=#1877 id=1877 data-nosnippet>1877</a>                        <span class="kw">if </span>c != <span class="kw-2">&amp;</span><span class="string">b'\r' </span>&amp;&amp; c != <span class="kw-2">&amp;</span><span class="string">b'\n' </span>{
+<a href=#1877 id=1877 data-nosnippet>1877</a>                        <span class="kw">if </span><span class="macro">c !</span>= <span class="kw-2">&amp;</span><span class="string">b'\r' </span>&amp;&amp; <span class="macro">c !</span>= <span class="kw-2">&amp;</span><span class="string">b'\n' </span>{
 <a href=#1878 id=1878 data-nosnippet>1878</a>                            bytecount += <span class="number">1</span>;
 <a href=#1879 id=1879 data-nosnippet>1879</a>                        }
 <a href=#1880 id=1880 data-nosnippet>1880</a>                    }
@@ -2291,7 +2291,7 @@
 <a href=#2291 id=2291 data-nosnippet>2291</a>    }
 <a href=#2292 id=2292 data-nosnippet>2292</a>
 <a href=#2293 id=2293 data-nosnippet>2293</a>    prev_char.is_whitespace()
-<a href=#2294 id=2294 data-nosnippet>2294</a>        || is_punctuation(prev_char) &amp;&amp; (delim != <span class="string">b'\'' </span>|| ![<span class="string">']'</span>, <span class="string">')'</span>].contains(<span class="kw-2">&amp;</span>prev_char))
+<a href=#2294 id=2294 data-nosnippet>2294</a>        || is_punctuation(prev_char) &amp;&amp; (<span class="macro">delim !</span>= <span class="string">b'\'' </span>|| ![<span class="string">']'</span>, <span class="string">')'</span>].contains(<span class="kw-2">&amp;</span>prev_char))
 <a href=#2295 id=2295 data-nosnippet>2295</a>}
 <a href=#2296 id=2296 data-nosnippet>2296</a>
 <a href=#2297 id=2297 data-nosnippet>2297</a><span class="doccomment">/// Determines whether the delimiter run starting at given index is
@@ -2585,7 +2585,7 @@
 <a href=#2585 id=2585 data-nosnippet>2585</a>    //!
 <a href=#2586 id=2586 data-nosnippet>2586</a>    //! [great overview]: http://0x80.pl/articles/simd-byte-lookup.html
 <a href=#2587 id=2587 data-nosnippet>2587</a>
-<a href=#2588 id=2588 data-nosnippet>2588</a>    </span><span class="kw">use super</span>::{LookupTable, LoopInstruction};
+<a href=#2588 id=2588 data-nosnippet>2588</a>    </span><span class="kw">use </span>super::{LookupTable, LoopInstruction};
 <a href=#2589 id=2589 data-nosnippet>2589</a>    <span class="kw">use </span><span class="kw">crate</span>::Options;
 <a href=#2590 id=2590 data-nosnippet>2590</a>    <span class="kw">use </span>core::arch::x86_64::<span class="kw-2">*</span>;
 <a href=#2591 id=2591 data-nosnippet>2591</a>
@@ -2709,7 +2709,7 @@
 <a href=#2709 id=2709 data-nosnippet>2709</a>    <span class="kw">where
 <a href=#2710 id=2710 data-nosnippet>2710</a>        </span>F: FnMut(usize, u8) -&gt; LoopInstruction&lt;<span class="prelude-ty">Option</span>&lt;T&gt;&gt;,
 <a href=#2711 id=2711 data-nosnippet>2711</a>    {
-<a href=#2712 id=2712 data-nosnippet>2712</a>        <span class="kw">while </span>mask != <span class="number">0 </span>{
+<a href=#2712 id=2712 data-nosnippet>2712</a>        <span class="kw">while </span><span class="macro">mask !</span>= <span class="number">0 </span>{
 <a href=#2713 id=2713 data-nosnippet>2713</a>            <span class="kw">let </span>mask_ix = mask.trailing_zeros() <span class="kw">as </span>usize;
 <a href=#2714 id=2714 data-nosnippet>2714</a>            offset += mask_ix;
 <a href=#2715 id=2715 data-nosnippet>2715</a>            <span class="kw">match </span>callback(offset, <span class="kw-2">*</span>bytes.get_unchecked(offset)) {
@@ -2765,7 +2765,7 @@
 <a href=#2765 id=2765 data-nosnippet>2765</a>    <span class="attr">#[cfg(test)]
 <a href=#2766 id=2766 data-nosnippet>2766</a>    </span><span class="kw">mod </span>simd_test {
 <a href=#2767 id=2767 data-nosnippet>2767</a>        <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::create_lut;
-<a href=#2768 id=2768 data-nosnippet>2768</a>        <span class="kw">use super</span>::{iterate_special_bytes, LoopInstruction};
+<a href=#2768 id=2768 data-nosnippet>2768</a>        <span class="kw">use </span>super::{iterate_special_bytes, LoopInstruction};
 <a href=#2769 id=2769 data-nosnippet>2769</a>        <span class="kw">use </span><span class="kw">crate</span>::Options;
 <a href=#2770 id=2770 data-nosnippet>2770</a>
 <a href=#2771 id=2771 data-nosnippet>2771</a>        <span class="kw">fn </span>check_expected_indices(bytes: <span class="kw-2">&amp;</span>[u8], expected: <span class="kw-2">&amp;</span>[usize], skip: usize) {
@@ -2834,4 +2834,5 @@
 <a href=#2834 id=2834 data-nosnippet>2834</a>            }
 <a href=#2835 id=2835 data-nosnippet>2835</a>        }
 <a href=#2836 id=2836 data-nosnippet>2836</a>    }
-<a href=#2837 id=2837 data-nosnippet>2837</a>}</code></pre></div></section></main></body></html>
+<a href=#2837 id=2837 data-nosnippet>2837</a>}
+</code></pre></div></section></main></body></html>

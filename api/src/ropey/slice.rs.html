@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ropey-1.6.1/src/slice.rs`."><title>slice.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="ropey" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0-nightly (b925a865e 2025-10-09)" data-channel="nightly" data-search-js="search-8d3311b9.js" data-stringdex-js="stringdex-828709d0.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">ropey/</div>slice.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>std::ops::RangeBounds;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ropey-1.6.1/src/slice.rs`."><title>slice.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-2eb46af5.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="ropey" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (fecb335cb 2026-01-07)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">ropey/</div>slice.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>std::ops::RangeBounds;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>std::sync::Arc;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::iter::{Bytes, Chars, Chunks, Lines};
@@ -9,7 +9,7 @@
 <a href=#9 id=9 data-nosnippet>9</a>    line_to_char_idx, utf16_code_unit_to_char_idx,
 <a href=#10 id=10 data-nosnippet>10</a>};
 <a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span><span class="kw">crate</span>::tree::{Count, Node, TextInfo};
-<a href=#12 id=12 data-nosnippet>12</a><span class="kw">use crate</span>::{end_bound_to_num, start_bound_to_num, Error, <span class="prelude-ty">Result</span>};
+<a href=#12 id=12 data-nosnippet>12</a><span class="kw">use </span>crate::{end_bound_to_num, start_bound_to_num, Error, <span class="prelude-ty">Result</span>};
 <a href=#13 id=13 data-nosnippet>13</a>
 <a href=#14 id=14 data-nosnippet>14</a><span class="doccomment">/// An immutable view into part of a `Rope`.
 <a href=#15 id=15 data-nosnippet>15</a>///
@@ -1851,7 +1851,7 @@
 <a href=#1851 id=1851 data-nosnippet>1851</a>                <span class="kw">let </span><span class="kw-2">mut </span>idx = <span class="number">0</span>;
 <a href=#1852 id=1852 data-nosnippet>1852</a>                <span class="kw">for </span>chunk <span class="kw">in </span><span class="self">self</span>.chunks() {
 <a href=#1853 id=1853 data-nosnippet>1853</a>                    <span class="kw">let </span>chunk = chunk.as_bytes();
-<a href=#1854 id=1854 data-nosnippet>1854</a>                    <span class="kw">if </span>chunk != <span class="kw-2">&amp;</span>other[idx..(idx + chunk.len())] {
+<a href=#1854 id=1854 data-nosnippet>1854</a>                    <span class="kw">if </span><span class="macro">chunk !</span>= <span class="kw-2">&amp;</span>other[idx..(idx + chunk.len())] {
 <a href=#1855 id=1855 data-nosnippet>1855</a>                        <span class="kw">return </span><span class="bool-val">false</span>;
 <a href=#1856 id=1856 data-nosnippet>1856</a>                    }
 <a href=#1857 id=1857 data-nosnippet>1857</a>                    idx += chunk.len();
@@ -1940,7 +1940,7 @@
 <a href=#1940 id=1940 data-nosnippet>1940</a>        <span class="kw">loop </span>{
 <a href=#1941 id=1941 data-nosnippet>1941</a>            <span class="kw">if </span>chunk1.len() &gt;= chunk2.len() {
 <a href=#1942 id=1942 data-nosnippet>1942</a>                <span class="kw">let </span>compared = chunk1[..chunk2.len()].cmp(chunk2);
-<a href=#1943 id=1943 data-nosnippet>1943</a>                <span class="kw">if </span>compared != std::cmp::Ordering::Equal {
+<a href=#1943 id=1943 data-nosnippet>1943</a>                <span class="kw">if </span><span class="macro">compared !</span>= std::cmp::Ordering::Equal {
 <a href=#1944 id=1944 data-nosnippet>1944</a>                    <span class="kw">return </span>compared;
 <a href=#1945 id=1945 data-nosnippet>1945</a>                }
 <a href=#1946 id=1946 data-nosnippet>1946</a>
@@ -1948,7 +1948,7 @@
 <a href=#1948 id=1948 data-nosnippet>1948</a>                chunk2 = <span class="kw-2">&amp;</span>[];
 <a href=#1949 id=1949 data-nosnippet>1949</a>            } <span class="kw">else </span>{
 <a href=#1950 id=1950 data-nosnippet>1950</a>                <span class="kw">let </span>compared = chunk1.cmp(<span class="kw-2">&amp;</span>chunk2[..chunk1.len()]);
-<a href=#1951 id=1951 data-nosnippet>1951</a>                <span class="kw">if </span>compared != std::cmp::Ordering::Equal {
+<a href=#1951 id=1951 data-nosnippet>1951</a>                <span class="kw">if </span><span class="macro">compared !</span>= std::cmp::Ordering::Equal {
 <a href=#1952 id=1952 data-nosnippet>1952</a>                    <span class="kw">return </span>compared;
 <a href=#1953 id=1953 data-nosnippet>1953</a>                }
 <a href=#1954 id=1954 data-nosnippet>1954</a>
@@ -2748,7 +2748,7 @@
 <a href=#2748 id=2748 data-nosnippet>2748</a>            <span class="kw">let </span>(chunk, b, c, l) = s.chunk_at_byte(i);
 <a href=#2749 id=2749 data-nosnippet>2749</a>            <span class="macro">assert_eq!</span>(c, byte_to_char_idx(text, b));
 <a href=#2750 id=2750 data-nosnippet>2750</a>            <span class="macro">assert_eq!</span>(l, byte_to_line_idx(text, b));
-<a href=#2751 id=2751 data-nosnippet>2751</a>            <span class="kw">if </span>chunk != prev_chunk {
+<a href=#2751 id=2751 data-nosnippet>2751</a>            <span class="kw">if </span><span class="macro">chunk !</span>= prev_chunk {
 <a href=#2752 id=2752 data-nosnippet>2752</a>                <span class="macro">assert_eq!</span>(chunk, <span class="kw-2">&amp;</span>t[..chunk.len()]);
 <a href=#2753 id=2753 data-nosnippet>2753</a>                t = <span class="kw-2">&amp;</span>t[chunk.len()..];
 <a href=#2754 id=2754 data-nosnippet>2754</a>                prev_chunk = chunk;
@@ -2783,7 +2783,7 @@
 <a href=#2783 id=2783 data-nosnippet>2783</a>            <span class="kw">let </span>(chunk, b, c, l) = s.chunk_at_char(i);
 <a href=#2784 id=2784 data-nosnippet>2784</a>            <span class="macro">assert_eq!</span>(b, char_to_byte_idx(text, c));
 <a href=#2785 id=2785 data-nosnippet>2785</a>            <span class="macro">assert_eq!</span>(l, char_to_line_idx(text, c));
-<a href=#2786 id=2786 data-nosnippet>2786</a>            <span class="kw">if </span>chunk != prev_chunk {
+<a href=#2786 id=2786 data-nosnippet>2786</a>            <span class="kw">if </span><span class="macro">chunk !</span>= prev_chunk {
 <a href=#2787 id=2787 data-nosnippet>2787</a>                <span class="macro">assert_eq!</span>(chunk, <span class="kw-2">&amp;</span>t[..chunk.len()]);
 <a href=#2788 id=2788 data-nosnippet>2788</a>                t = <span class="kw-2">&amp;</span>t[chunk.len()..];
 <a href=#2789 id=2789 data-nosnippet>2789</a>                prev_chunk = chunk;
@@ -3177,4 +3177,5 @@
 <a href=#3177 id=3177 data-nosnippet>3177</a>    }
 <a href=#3178 id=3178 data-nosnippet>3178</a>
 <a href=#3179 id=3179 data-nosnippet>3179</a>    <span class="comment">// Iterator tests are in the iter module
-<a href=#3180 id=3180 data-nosnippet>3180</a></span>}</code></pre></div></section></main></body></html>
+<a href=#3180 id=3180 data-nosnippet>3180</a></span>}
+</code></pre></div></section></main></body></html>

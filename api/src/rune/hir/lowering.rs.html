@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/lowering.rs`."><title>lowering.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0-nightly (b925a865e 2025-10-09)" data-channel="nightly" data-search-js="search-8d3311b9.js" data-stringdex-js="stringdex-828709d0.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/hir/</div>lowering.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::mem::{replace, take};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/hir/lowering.rs`."><title>lowering.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-2eb46af5.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (fecb335cb 2026-01-07)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/hir/</div>lowering.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::mem::{replace, take};
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::ops::Neg;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>num::ToPrimitive;
@@ -18,9 +18,9 @@
 <a href=#18 id=18 data-nosnippet>18</a><span class="kw">use </span><span class="kw">crate</span>::query::SecondaryBuildEntry;
 <a href=#19 id=19 data-nosnippet>19</a><span class="kw">use </span><span class="kw">crate</span>::query::{<span class="self">self</span>, GenericsParameters, Named, SecondaryBuild};
 <a href=#20 id=20 data-nosnippet>20</a><span class="kw">use </span><span class="kw">crate</span>::runtime::{<span class="self">self</span>, ConstInstance, ConstValue, ConstValueKind, Inline, Type, TypeHash};
-<a href=#21 id=21 data-nosnippet>21</a><span class="kw">use crate</span>::{Hash, Item};
+<a href=#21 id=21 data-nosnippet>21</a><span class="kw">use </span>crate::{Hash, Item};
 <a href=#22 id=22 data-nosnippet>22</a>
-<a href=#23 id=23 data-nosnippet>23</a><span class="kw">use super</span>::{Ctxt, Needs};
+<a href=#23 id=23 data-nosnippet>23</a><span class="kw">use </span>super::{Ctxt, Needs};
 <a href=#24 id=24 data-nosnippet>24</a>
 <a href=#25 id=25 data-nosnippet>25</a><span class="doccomment">/// Lower an empty function.
 <a href=#26 id=26 data-nosnippet>26</a></span><span class="attr">#[instrument_ast(span = span)]
@@ -1657,7 +1657,7 @@
 <a href=#1657 id=1657 data-nosnippet>1657</a>            ..
 <a href=#1658 id=1658 data-nosnippet>1658</a>        } =&gt; {
 <a href=#1659 id=1659 data-nosnippet>1659</a>            <span class="kw">let </span>kind = <span class="lifetime">'kind</span>: {
-<a href=#1660 id=1660 data-nosnippet>1660</a>                <span class="kw">if </span>enum_hash != Hash::EMPTY {
+<a href=#1660 id=1660 data-nosnippet>1660</a>                <span class="kw">if </span><span class="macro">enum_hash !</span>= Hash::EMPTY {
 <a href=#1661 id=1661 data-nosnippet>1661</a>                    <span class="kw">break </span><span class="lifetime">'kind </span>hir::PatSequenceKind::Type {
 <a href=#1662 id=1662 data-nosnippet>1662</a>                        hash: enum_hash,
 <a href=#1663 id=1663 data-nosnippet>1663</a>                        variant_hash: meta.hash,
@@ -1713,7 +1713,7 @@
 <a href=#1713 id=1713 data-nosnippet>1713</a>            };
 <a href=#1714 id=1714 data-nosnippet>1714</a>
 <a href=#1715 id=1715 data-nosnippet>1715</a>            <span class="kw">let </span>kind = <span class="lifetime">'kind</span>: {
-<a href=#1716 id=1716 data-nosnippet>1716</a>                <span class="kw">if </span>enum_hash != Hash::EMPTY {
+<a href=#1716 id=1716 data-nosnippet>1716</a>                <span class="kw">if </span><span class="macro">enum_hash !</span>= Hash::EMPTY {
 <a href=#1717 id=1717 data-nosnippet>1717</a>                    <span class="kw">break </span><span class="lifetime">'kind </span>hir::PatSequenceKind::Type {
 <a href=#1718 id=1718 data-nosnippet>1718</a>                        hash: enum_hash,
 <a href=#1719 id=1719 data-nosnippet>1719</a>                        variant_hash: meta.hash,
@@ -1826,7 +1826,7 @@
 <a href=#1826 id=1826 data-nosnippet>1826</a>                        fields: meta::Fields::Unnamed(args),
 <a href=#1827 id=1827 data-nosnippet>1827</a>                        ..
 <a href=#1828 id=1828 data-nosnippet>1828</a>                    } =&gt; {
-<a href=#1829 id=1829 data-nosnippet>1829</a>                        <span class="kw">if </span><span class="kw-2">*</span>args != ast.args.len() {
+<a href=#1829 id=1829 data-nosnippet>1829</a>                        <span class="kw">if </span><span class="kw-2">*</span><span class="macro">args !</span>= ast.args.len() {
 <a href=#1830 id=1830 data-nosnippet>1830</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
 <a href=#1831 id=1831 data-nosnippet>1831</a>                                <span class="kw-2">&amp;</span>ast.args,
 <a href=#1832 id=1832 data-nosnippet>1832</a>                                ErrorKind::BadArgumentCount {
@@ -1960,4 +1960,5 @@
 <a href=#1960 id=1960 data-nosnippet>1960</a>        expr: expr(cx, <span class="kw-2">&amp;</span>ast.expr)<span class="question-mark">?</span>,
 <a href=#1961 id=1961 data-nosnippet>1961</a>        expr_field,
 <a href=#1962 id=1962 data-nosnippet>1962</a>    })
-<a href=#1963 id=1963 data-nosnippet>1963</a>}</code></pre></div></section></main></body></html>
+<a href=#1963 id=1963 data-nosnippet>1963</a>}
+</code></pre></div></section></main></body></html>

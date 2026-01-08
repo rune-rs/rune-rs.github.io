@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/scopes.rs`."><title>scopes.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0-nightly (b925a865e 2025-10-09)" data-channel="nightly" data-search-js="search-8d3311b9.js" data-stringdex-js="stringdex-828709d0.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/v1/</div>scopes.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::cell::{Cell, RefCell};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/v1/scopes.rs`."><title>scopes.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-2eb46af5.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (fecb335cb 2026-01-07)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/compile/v1/</div>scopes.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::cell::{Cell, RefCell};
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::fmt;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -11,7 +11,7 @@
 <a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span><span class="kw">crate</span>::runtime::Output;
 <a href=#12 id=12 data-nosnippet>12</a><span class="kw">use </span><span class="kw">crate</span>::SourceId;
 <a href=#13 id=13 data-nosnippet>13</a>
-<a href=#14 id=14 data-nosnippet>14</a><span class="kw">use super</span>::{Address, Any, DisplayNamed, Linear, Slab, Slots};
+<a href=#14 id=14 data-nosnippet>14</a><span class="kw">use </span>super::{Address, Any, DisplayNamed, Linear, Slab, Slots};
 <a href=#15 id=15 data-nosnippet>15</a>
 <a href=#16 id=16 data-nosnippet>16</a><span class="doccomment">/// Root scope.
 <a href=#17 id=17 data-nosnippet>17</a></span><span class="kw">const </span>ROOT: ScopeId = ScopeId { index: <span class="number">0</span>, id: <span class="number">0 </span>};
@@ -41,7 +41,7 @@
 <a href=#41 id=41 data-nosnippet>41</a>
 <a href=#42 id=42 data-nosnippet>42</a>    <span class="doccomment">/// Get the parent scope.
 <a href=#43 id=43 data-nosnippet>43</a>    </span><span class="kw">fn </span>parent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;ScopeId&gt; {
-<a href=#44 id=44 data-nosnippet>44</a>        (<span class="self">self</span>.parent != <span class="self">self</span>.id).then_some(<span class="self">self</span>.parent)
+<a href=#44 id=44 data-nosnippet>44</a>        (<span class="self">self</span>.<span class="macro">parent !</span>= <span class="self">self</span>.id).then_some(<span class="self">self</span>.parent)
 <a href=#45 id=45 data-nosnippet>45</a>    }
 <a href=#46 id=46 data-nosnippet>46</a>}
 <a href=#47 id=47 data-nosnippet>47</a>
@@ -356,7 +356,7 @@
 <a href=#356 id=356 data-nosnippet>356</a>            ));
 <a href=#357 id=357 data-nosnippet>357</a>        };
 <a href=#358 id=358 data-nosnippet>358</a>
-<a href=#359 id=359 data-nosnippet>359</a>        <span class="kw">if </span>scope.id != id {
+<a href=#359 id=359 data-nosnippet>359</a>        <span class="kw">if </span>scope.<span class="macro">id !</span>= id {
 <a href=#360 id=360 data-nosnippet>360</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
 <a href=#361 id=361 data-nosnippet>361</a>                span,
 <a href=#362 id=362 data-nosnippet>362</a>                <span class="macro">try_format!</span>(
@@ -484,7 +484,7 @@
 <a href=#484 id=484 data-nosnippet>484</a>            ));
 <a href=#485 id=485 data-nosnippet>485</a>        };
 <a href=#486 id=486 data-nosnippet>486</a>
-<a href=#487 id=487 data-nosnippet>487</a>        <span class="kw">if </span>scope.id != id {
+<a href=#487 id=487 data-nosnippet>487</a>        <span class="kw">if </span>scope.<span class="macro">id !</span>= id {
 <a href=#488 id=488 data-nosnippet>488</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
 <a href=#489 id=489 data-nosnippet>489</a>                span,
 <a href=#490 id=490 data-nosnippet>490</a>                <span class="macro">try_format!</span>(
@@ -559,7 +559,7 @@
 <a href=#559 id=559 data-nosnippet>559</a>            ));
 <a href=#560 id=560 data-nosnippet>560</a>        };
 <a href=#561 id=561 data-nosnippet>561</a>
-<a href=#562 id=562 data-nosnippet>562</a>        <span class="kw">if </span>scope.id != id {
+<a href=#562 id=562 data-nosnippet>562</a>        <span class="kw">if </span>scope.<span class="macro">id !</span>= id {
 <a href=#563 id=563 data-nosnippet>563</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::msg(
 <a href=#564 id=564 data-nosnippet>564</a>                span,
 <a href=#565 id=565 data-nosnippet>565</a>                <span class="macro">try_format!</span>(
@@ -690,4 +690,5 @@
 <a href=#690 id=690 data-nosnippet>690</a>            .field(<span class="string">"moved_at"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.moved_at.get().map(|s| s.span()))
 <a href=#691 id=691 data-nosnippet>691</a>            .finish()
 <a href=#692 id=692 data-nosnippet>692</a>    }
-<a href=#693 id=693 data-nosnippet>693</a>}</code></pre></div></section></main></body></html>
+<a href=#693 id=693 data-nosnippet>693</a>}
+</code></pre></div></section></main></body></html>

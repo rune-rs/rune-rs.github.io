@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quick-xml-0.38.3/src/reader/buffered_reader.rs`."><title>buffered_reader.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quick_xml" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0-nightly (b925a865e 2025-10-09)" data-channel="nightly" data-search-js="search-8d3311b9.js" data-stringdex-js="stringdex-828709d0.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quick_xml/reader/</div>buffered_reader.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! This is an implementation of [`Reader`] for reading from a [`BufRead`] as
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quick-xml-0.38.4/src/reader/buffered_reader.rs`."><title>buffered_reader.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-2eb46af5.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quick_xml" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (fecb335cb 2026-01-07)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quick_xml/reader/</div>buffered_reader.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! This is an implementation of [`Reader`] for reading from a [`BufRead`] as
 <a href=#2 id=2 data-nosnippet>2</a>//! underlying byte stream.
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a></span><span class="kw">use </span>std::fs::File;
@@ -13,15 +13,15 @@
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use </span><span class="kw">crate</span>::utils::is_whitespace;
 <a href=#14 id=14 data-nosnippet>14</a>
 <a href=#15 id=15 data-nosnippet>15</a><span class="macro">macro_rules!</span> impl_buffered_source {
-<a href=#16 id=16 data-nosnippet>16</a>    ($(<span class="macro-nonterminal">$lf</span>:lifetime, <span class="macro-nonterminal">$reader</span>:tt, <span class="macro-nonterminal">$</span><span class="kw">async</span>:<span class="macro-nonterminal">ident</span>, <span class="macro-nonterminal">$</span><span class="kw">await</span>:<span class="macro-nonterminal">ident</span>)<span class="question-mark">?</span>) =&gt; {
+<a href=#16 id=16 data-nosnippet>16</a>    ($(<span class="macro-nonterminal">$lf</span>:lifetime, <span class="macro-nonterminal">$reader</span>:tt, <span class="macro-nonterminal">$async</span>:ident, <span class="macro-nonterminal">$await</span>:ident)<span class="question-mark">?</span>) =&gt; {
 <a href=#17 id=17 data-nosnippet>17</a>        <span class="attr">#[cfg(not(feature = <span class="string">"encoding"</span>))]
 <a href=#18 id=18 data-nosnippet>18</a>        #[inline]
-<a href=#19 id=19 data-nosnippet>19</a>        </span>$(<span class="macro-nonterminal">$</span><span class="kw">async</span>)<span class="question-mark">? </span><span class="kw">fn </span><span class="macro-nonterminal">remove_utf8_bom</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; io::Result&lt;()&gt; {
+<a href=#19 id=19 data-nosnippet>19</a>        </span>$(<span class="macro-nonterminal">$async</span>)<span class="question-mark">? </span><span class="kw">fn </span>remove_utf8_bom(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; io::Result&lt;()&gt; {
 <a href=#20 id=20 data-nosnippet>20</a>            <span class="kw">use </span><span class="kw">crate</span>::encoding::UTF8_BOM;
 <a href=#21 id=21 data-nosnippet>21</a>
 <a href=#22 id=22 data-nosnippet>22</a>            <span class="kw">loop </span>{
-<a href=#23 id=23 data-nosnippet>23</a>                <span class="kw">break match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$</span><span class="kw">await</span>)<span class="question-mark">? </span>{
-<a href=#24 id=24 data-nosnippet>24</a>                    <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">n</span>) =&gt; {
+<a href=#23 id=23 data-nosnippet>23</a>                <span class="kw">break match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$await</span>)<span class="question-mark">? </span>{
+<a href=#24 id=24 data-nosnippet>24</a>                    <span class="prelude-val">Ok</span>(n) =&gt; {
 <a href=#25 id=25 data-nosnippet>25</a>                        <span class="kw">if </span>n.starts_with(UTF8_BOM) {
 <a href=#26 id=26 data-nosnippet>26</a>                            <span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.consume(UTF8_BOM.len());
 <a href=#27 id=27 data-nosnippet>27</a>                        }
@@ -35,10 +35,10 @@
 <a href=#35 id=35 data-nosnippet>35</a>
 <a href=#36 id=36 data-nosnippet>36</a>        <span class="attr">#[cfg(feature = <span class="string">"encoding"</span>)]
 <a href=#37 id=37 data-nosnippet>37</a>        #[inline]
-<a href=#38 id=38 data-nosnippet>38</a>        </span>$(<span class="macro-nonterminal">$</span><span class="kw">async</span>)<span class="question-mark">? </span><span class="kw">fn </span><span class="macro-nonterminal">detect_encoding</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; io::Result&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>encoding_rs::Encoding&gt;&gt; {
+<a href=#38 id=38 data-nosnippet>38</a>        </span>$(<span class="macro-nonterminal">$async</span>)<span class="question-mark">? </span><span class="kw">fn </span>detect_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; io::Result&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>encoding_rs::Encoding&gt;&gt; {
 <a href=#39 id=39 data-nosnippet>39</a>            <span class="kw">loop </span>{
-<a href=#40 id=40 data-nosnippet>40</a>                <span class="kw">break match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$</span><span class="kw">await</span>)<span class="question-mark">? </span>{
-<a href=#41 id=41 data-nosnippet>41</a>                    <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">n</span>) =&gt; <span class="kw">if let </span><span class="prelude-val">Some</span>((enc, bom_len)) = <span class="kw">crate</span>::encoding::detect_encoding(n) {
+<a href=#40 id=40 data-nosnippet>40</a>                <span class="kw">break match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$await</span>)<span class="question-mark">? </span>{
+<a href=#41 id=41 data-nosnippet>41</a>                    <span class="prelude-val">Ok</span>(n) =&gt; <span class="kw">if let </span><span class="prelude-val">Some</span>((enc, bom_len)) = <span class="kw">crate</span>::encoding::detect_encoding(n) {
 <a href=#42 id=42 data-nosnippet>42</a>                        <span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.consume(bom_len);
 <a href=#43 id=43 data-nosnippet>43</a>                        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(enc))
 <a href=#44 id=44 data-nosnippet>44</a>                    } <span class="kw">else </span>{
@@ -51,7 +51,7 @@
 <a href=#51 id=51 data-nosnippet>51</a>        }
 <a href=#52 id=52 data-nosnippet>52</a>
 <a href=#53 id=53 data-nosnippet>53</a>        <span class="attr">#[inline]
-<a href=#54 id=54 data-nosnippet>54</a>        </span>$(<span class="macro-nonterminal">$</span><span class="kw">async</span>)<span class="question-mark">? </span><span class="kw">fn </span><span class="macro-nonterminal">read_text </span>$(&lt;<span class="macro-nonterminal">$lf</span>&gt;)<span class="question-mark">? </span>(
+<a href=#54 id=54 data-nosnippet>54</a>        </span>$(<span class="macro-nonterminal">$async</span>)<span class="question-mark">? </span><span class="kw">fn </span>read_text $(&lt;<span class="macro-nonterminal">$lf</span>&gt;)<span class="question-mark">? </span>(
 <a href=#55 id=55 data-nosnippet>55</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#56 id=56 data-nosnippet>56</a>            buf: <span class="kw-2">&amp;</span><span class="lifetime">'b </span><span class="kw-2">mut </span>Vec&lt;u8&gt;,
 <a href=#57 id=57 data-nosnippet>57</a>            position: <span class="kw-2">&amp;mut </span>u64,
@@ -59,8 +59,8 @@
 <a href=#59 id=59 data-nosnippet>59</a>            <span class="kw">let </span><span class="kw-2">mut </span>read = <span class="number">0</span>;
 <a href=#60 id=60 data-nosnippet>60</a>            <span class="kw">let </span>start = buf.len();
 <a href=#61 id=61 data-nosnippet>61</a>            <span class="kw">loop </span>{
-<a href=#62 id=62 data-nosnippet>62</a>                <span class="kw">let </span>available = <span class="kw">match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$</span><span class="kw">await</span>)<span class="question-mark">? </span>{
-<a href=#63 id=63 data-nosnippet>63</a>                    <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">n</span>) <span class="kw">if </span>n.is_empty() =&gt; <span class="kw">break</span>,
+<a href=#62 id=62 data-nosnippet>62</a>                <span class="kw">let </span>available = <span class="kw">match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$await</span>)<span class="question-mark">? </span>{
+<a href=#63 id=63 data-nosnippet>63</a>                    <span class="prelude-val">Ok</span>(n) <span class="kw">if </span>n.is_empty() =&gt; <span class="kw">break</span>,
 <a href=#64 id=64 data-nosnippet>64</a>                    <span class="prelude-val">Ok</span>(n) =&gt; n,
 <a href=#65 id=65 data-nosnippet>65</a>                    <span class="prelude-val">Err</span>(<span class="kw-2">ref </span>e) <span class="kw">if </span>e.kind() == io::ErrorKind::Interrupted =&gt; <span class="kw">continue</span>,
 <a href=#66 id=66 data-nosnippet>66</a>                    <span class="prelude-val">Err</span>(e) =&gt; {
@@ -116,7 +116,7 @@
 <a href=#116 id=116 data-nosnippet>116</a>        }
 <a href=#117 id=117 data-nosnippet>117</a>
 <a href=#118 id=118 data-nosnippet>118</a>        <span class="attr">#[inline]
-<a href=#119 id=119 data-nosnippet>119</a>        </span>$(<span class="macro-nonterminal">$</span><span class="kw">async</span>)<span class="question-mark">? </span><span class="kw">fn </span><span class="macro-nonterminal">read_ref </span>$(&lt;<span class="macro-nonterminal">$lf</span>&gt;)<span class="question-mark">? </span>(
+<a href=#119 id=119 data-nosnippet>119</a>        </span>$(<span class="macro-nonterminal">$async</span>)<span class="question-mark">? </span><span class="kw">fn </span>read_ref $(&lt;<span class="macro-nonterminal">$lf</span>&gt;)<span class="question-mark">? </span>(
 <a href=#120 id=120 data-nosnippet>120</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#121 id=121 data-nosnippet>121</a>            buf: <span class="kw-2">&amp;</span><span class="lifetime">'b </span><span class="kw-2">mut </span>Vec&lt;u8&gt;,
 <a href=#122 id=122 data-nosnippet>122</a>            position: <span class="kw-2">&amp;mut </span>u64,
@@ -124,8 +124,8 @@
 <a href=#124 id=124 data-nosnippet>124</a>            <span class="kw">let </span><span class="kw-2">mut </span>read = <span class="number">0</span>;
 <a href=#125 id=125 data-nosnippet>125</a>            <span class="kw">let </span>start = buf.len();
 <a href=#126 id=126 data-nosnippet>126</a>            <span class="kw">loop </span>{
-<a href=#127 id=127 data-nosnippet>127</a>                <span class="kw">let </span>available = <span class="kw">match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$</span><span class="kw">await</span>)<span class="question-mark">? </span>{
-<a href=#128 id=128 data-nosnippet>128</a>                    <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">n</span>) <span class="kw">if </span>n.is_empty() =&gt; <span class="kw">break</span>,
+<a href=#127 id=127 data-nosnippet>127</a>                <span class="kw">let </span>available = <span class="kw">match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$await</span>)<span class="question-mark">? </span>{
+<a href=#128 id=128 data-nosnippet>128</a>                    <span class="prelude-val">Ok</span>(n) <span class="kw">if </span>n.is_empty() =&gt; <span class="kw">break</span>,
 <a href=#129 id=129 data-nosnippet>129</a>                    <span class="prelude-val">Ok</span>(n) =&gt; n,
 <a href=#130 id=130 data-nosnippet>130</a>                    <span class="prelude-val">Err</span>(<span class="kw-2">ref </span>e) <span class="kw">if </span>e.kind() == io::ErrorKind::Interrupted =&gt; <span class="kw">continue</span>,
 <a href=#131 id=131 data-nosnippet>131</a>                    <span class="prelude-val">Err</span>(e) =&gt; {
@@ -195,7 +195,7 @@
 <a href=#195 id=195 data-nosnippet>195</a>        }
 <a href=#196 id=196 data-nosnippet>196</a>
 <a href=#197 id=197 data-nosnippet>197</a>        <span class="attr">#[inline]
-<a href=#198 id=198 data-nosnippet>198</a>        </span>$(<span class="macro-nonterminal">$</span><span class="kw">async</span>)<span class="question-mark">? </span><span class="kw">fn </span><span class="macro-nonterminal">read_with</span>&lt;$(<span class="macro-nonterminal">$lf</span>,)<span class="question-mark">? </span>P: Parser&gt;(
+<a href=#198 id=198 data-nosnippet>198</a>        </span>$(<span class="macro-nonterminal">$async</span>)<span class="question-mark">? </span><span class="kw">fn </span>read_with&lt;$(<span class="macro-nonterminal">$lf</span>,)<span class="question-mark">? </span>P: Parser&gt;(
 <a href=#199 id=199 data-nosnippet>199</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#200 id=200 data-nosnippet>200</a>            <span class="kw-2">mut </span>parser: P,
 <a href=#201 id=201 data-nosnippet>201</a>            buf: <span class="kw-2">&amp;</span><span class="lifetime">'b </span><span class="kw-2">mut </span>Vec&lt;u8&gt;,
@@ -204,8 +204,8 @@
 <a href=#204 id=204 data-nosnippet>204</a>            <span class="kw">let </span><span class="kw-2">mut </span>read = <span class="number">0</span>;
 <a href=#205 id=205 data-nosnippet>205</a>            <span class="kw">let </span>start = buf.len();
 <a href=#206 id=206 data-nosnippet>206</a>            <span class="kw">loop </span>{
-<a href=#207 id=207 data-nosnippet>207</a>                <span class="kw">let </span>available = <span class="kw">match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$</span><span class="kw">await</span>)<span class="question-mark">? </span>{
-<a href=#208 id=208 data-nosnippet>208</a>                    <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">n</span>) <span class="kw">if </span>n.is_empty() =&gt; <span class="kw">break</span>,
+<a href=#207 id=207 data-nosnippet>207</a>                <span class="kw">let </span>available = <span class="kw">match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$await</span>)<span class="question-mark">? </span>{
+<a href=#208 id=208 data-nosnippet>208</a>                    <span class="prelude-val">Ok</span>(n) <span class="kw">if </span>n.is_empty() =&gt; <span class="kw">break</span>,
 <a href=#209 id=209 data-nosnippet>209</a>                    <span class="prelude-val">Ok</span>(n) =&gt; n,
 <a href=#210 id=210 data-nosnippet>210</a>                    <span class="prelude-val">Err</span>(<span class="kw-2">ref </span>e) <span class="kw">if </span>e.kind() == io::ErrorKind::Interrupted =&gt; <span class="kw">continue</span>,
 <a href=#211 id=211 data-nosnippet>211</a>                    <span class="prelude-val">Err</span>(e) =&gt; {
@@ -238,7 +238,7 @@
 <a href=#238 id=238 data-nosnippet>238</a>        }
 <a href=#239 id=239 data-nosnippet>239</a>
 <a href=#240 id=240 data-nosnippet>240</a>        <span class="attr">#[inline]
-<a href=#241 id=241 data-nosnippet>241</a>        </span>$(<span class="macro-nonterminal">$</span><span class="kw">async</span>)<span class="question-mark">? </span><span class="kw">fn </span><span class="macro-nonterminal">read_bang_element </span>$(&lt;<span class="macro-nonterminal">$lf</span>&gt;)<span class="question-mark">? </span>(
+<a href=#241 id=241 data-nosnippet>241</a>        </span>$(<span class="macro-nonterminal">$async</span>)<span class="question-mark">? </span><span class="kw">fn </span>read_bang_element $(&lt;<span class="macro-nonterminal">$lf</span>&gt;)<span class="question-mark">? </span>(
 <a href=#242 id=242 data-nosnippet>242</a>            <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#243 id=243 data-nosnippet>243</a>            buf: <span class="kw-2">&amp;</span><span class="lifetime">'b </span><span class="kw-2">mut </span>Vec&lt;u8&gt;,
 <a href=#244 id=244 data-nosnippet>244</a>            position: <span class="kw-2">&amp;mut </span>u64,
@@ -250,13 +250,13 @@
 <a href=#250 id=250 data-nosnippet>250</a>            buf.push(<span class="string">b'!'</span>);
 <a href=#251 id=251 data-nosnippet>251</a>            <span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.consume(<span class="number">1</span>);
 <a href=#252 id=252 data-nosnippet>252</a>
-<a href=#253 id=253 data-nosnippet>253</a>            <span class="kw">let </span><span class="kw-2">mut </span>bang_type = BangType::new(<span class="self">self</span>.peek_one() $(.<span class="macro-nonterminal">$</span><span class="kw">await</span>)<span class="question-mark">? ?</span>)<span class="question-mark">?</span>;
+<a href=#253 id=253 data-nosnippet>253</a>            <span class="kw">let </span><span class="kw-2">mut </span>bang_type = BangType::new(<span class="self">self</span>.peek_one() $(.<span class="macro-nonterminal">$await</span>)<span class="question-mark">? ?</span>)<span class="question-mark">?</span>;
 <a href=#254 id=254 data-nosnippet>254</a>
 <a href=#255 id=255 data-nosnippet>255</a>            <span class="kw">loop </span>{
-<a href=#256 id=256 data-nosnippet>256</a>                <span class="kw">match </span><span class="macro-nonterminal">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$</span><span class="kw">await</span>)<span class="question-mark">? </span>{
+<a href=#256 id=256 data-nosnippet>256</a>                <span class="kw">match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$await</span>)<span class="question-mark">? </span>{
 <a href=#257 id=257 data-nosnippet>257</a>                    <span class="comment">// Note: Do not update position, so the error points to
 <a href=#258 id=258 data-nosnippet>258</a>                    // somewhere sane rather than at the EOF
-<a href=#259 id=259 data-nosnippet>259</a>                    </span><span class="prelude-val">Ok</span>(<span class="macro-nonterminal">n</span>) <span class="kw">if </span>n.is_empty() =&gt; <span class="kw">break</span>,
+<a href=#259 id=259 data-nosnippet>259</a>                    </span><span class="prelude-val">Ok</span>(n) <span class="kw">if </span>n.is_empty() =&gt; <span class="kw">break</span>,
 <a href=#260 id=260 data-nosnippet>260</a>                    <span class="prelude-val">Ok</span>(available) =&gt; {
 <a href=#261 id=261 data-nosnippet>261</a>                        <span class="comment">// We only parse from start because we don't want to consider
 <a href=#262 id=262 data-nosnippet>262</a>                        // whatever is in the buffer before the bang element
@@ -289,10 +289,10 @@
 <a href=#289 id=289 data-nosnippet>289</a>        }
 <a href=#290 id=290 data-nosnippet>290</a>
 <a href=#291 id=291 data-nosnippet>291</a>        <span class="attr">#[inline]
-<a href=#292 id=292 data-nosnippet>292</a>        </span>$(<span class="macro-nonterminal">$</span><span class="kw">async</span>)<span class="question-mark">? </span><span class="kw">fn </span><span class="macro-nonterminal">skip_whitespace</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: <span class="kw-2">&amp;mut </span>u64) -&gt; io::Result&lt;()&gt; {
+<a href=#292 id=292 data-nosnippet>292</a>        </span>$(<span class="macro-nonterminal">$async</span>)<span class="question-mark">? </span><span class="kw">fn </span>skip_whitespace(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: <span class="kw-2">&amp;mut </span>u64) -&gt; io::Result&lt;()&gt; {
 <a href=#293 id=293 data-nosnippet>293</a>            <span class="kw">loop </span>{
-<a href=#294 id=294 data-nosnippet>294</a>                <span class="kw">break match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$</span><span class="kw">await</span>)<span class="question-mark">? </span>{
-<a href=#295 id=295 data-nosnippet>295</a>                    <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">n</span>) =&gt; {
+<a href=#294 id=294 data-nosnippet>294</a>                <span class="kw">break match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$await</span>)<span class="question-mark">? </span>{
+<a href=#295 id=295 data-nosnippet>295</a>                    <span class="prelude-val">Ok</span>(n) =&gt; {
 <a href=#296 id=296 data-nosnippet>296</a>                        <span class="kw">let </span>count = n.iter().position(|b| !is_whitespace(<span class="kw-2">*</span>b)).unwrap_or(n.len());
 <a href=#297 id=297 data-nosnippet>297</a>                        <span class="kw">if </span>count &gt; <span class="number">0 </span>{
 <a href=#298 id=298 data-nosnippet>298</a>                            <span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.consume(count);
@@ -309,10 +309,10 @@
 <a href=#309 id=309 data-nosnippet>309</a>        }
 <a href=#310 id=310 data-nosnippet>310</a>
 <a href=#311 id=311 data-nosnippet>311</a>        <span class="attr">#[inline]
-<a href=#312 id=312 data-nosnippet>312</a>        </span>$(<span class="macro-nonterminal">$</span><span class="kw">async</span>)<span class="question-mark">? </span><span class="kw">fn </span><span class="macro-nonterminal">peek_one</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; io::Result&lt;<span class="prelude-ty">Option</span>&lt;u8&gt;&gt; {
+<a href=#312 id=312 data-nosnippet>312</a>        </span>$(<span class="macro-nonterminal">$async</span>)<span class="question-mark">? </span><span class="kw">fn </span>peek_one(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; io::Result&lt;<span class="prelude-ty">Option</span>&lt;u8&gt;&gt; {
 <a href=#313 id=313 data-nosnippet>313</a>            <span class="kw">loop </span>{
-<a href=#314 id=314 data-nosnippet>314</a>                <span class="kw">break match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$</span><span class="kw">await</span>)<span class="question-mark">? </span>{
-<a href=#315 id=315 data-nosnippet>315</a>                    <span class="prelude-val">Ok</span>(<span class="macro-nonterminal">n</span>) =&gt; <span class="prelude-val">Ok</span>(n.first().cloned()),
+<a href=#314 id=314 data-nosnippet>314</a>                <span class="kw">break match </span><span class="self">self </span>$(.<span class="macro-nonterminal">$reader</span>)<span class="question-mark">? </span>.fill_buf() $(.<span class="macro-nonterminal">$await</span>)<span class="question-mark">? </span>{
+<a href=#315 id=315 data-nosnippet>315</a>                    <span class="prelude-val">Ok</span>(n) =&gt; <span class="prelude-val">Ok</span>(n.first().cloned()),
 <a href=#316 id=316 data-nosnippet>316</a>                    <span class="prelude-val">Err</span>(<span class="kw-2">ref </span>e) <span class="kw">if </span>e.kind() == io::ErrorKind::Interrupted =&gt; <span class="kw">continue</span>,
 <a href=#317 id=317 data-nosnippet>317</a>                    <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(e),
 <a href=#318 id=318 data-nosnippet>318</a>                };
@@ -508,4 +508,5 @@
 <a href=#508 id=508 data-nosnippet>508</a>        identity,
 <a href=#509 id=509 data-nosnippet>509</a>        <span class="kw-2">&amp;mut </span>Vec::new()
 <a href=#510 id=510 data-nosnippet>510</a>    );
-<a href=#511 id=511 data-nosnippet>511</a>}</code></pre></div></section></main></body></html>
+<a href=#511 id=511 data-nosnippet>511</a>}
+</code></pre></div></section></main></body></html>

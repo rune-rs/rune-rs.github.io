@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/const_value.rs`."><title>const_value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0-nightly (b925a865e 2025-10-09)" data-channel="nightly" data-search-js="search-8d3311b9.js" data-stringdex-js="stringdex-828709d0.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>const_value.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#[macro_use]
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/const_value.rs`."><title>const_value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-2eb46af5.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (fecb335cb 2026-01-07)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>const_value.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#[macro_use]
 <a href=#2 id=2 data-nosnippet>2</a></span><span class="kw">mod </span>macros;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>core::any;
@@ -6,17 +6,17 @@
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>core::fmt;
 <a href=#7 id=7 data-nosnippet>7</a>
 <a href=#8 id=8 data-nosnippet>8</a><span class="attr">#[cfg(feature = <span class="string">"musli"</span>)]
-<a href=#9 id=9 data-nosnippet>9</a></span><span class="kw">use </span>musli::{Decode, Encode};
+<a href=#9 id=9 data-nosnippet>9</a></span><span class="kw">use </span>musli_core::{Decode, Encode};
 <a href=#10 id=10 data-nosnippet>10</a><span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 <a href=#11 id=11 data-nosnippet>11</a></span><span class="kw">use </span>serde::{Deserialize, Serialize};
 <a href=#12 id=12 data-nosnippet>12</a>
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use </span><span class="kw">crate</span>::alloc;
 <a href=#14 id=14 data-nosnippet>14</a><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <a href=#15 id=15 data-nosnippet>15</a><span class="kw">use </span><span class="kw">crate</span>::runtime;
-<a href=#16 id=16 data-nosnippet>16</a><span class="kw">use crate</span>::{<span class="self">self </span><span class="kw">as </span>rune};
-<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use crate</span>::{declare_dyn_trait, hash_in, Hash, TypeHash};
+<a href=#16 id=16 data-nosnippet>16</a><span class="kw">use </span>crate::{<span class="self">self </span><span class="kw">as </span>rune};
+<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use </span>crate::{declare_dyn_trait, hash_in, Hash, TypeHash};
 <a href=#18 id=18 data-nosnippet>18</a>
-<a href=#19 id=19 data-nosnippet>19</a><span class="kw">use super</span>::{
+<a href=#19 id=19 data-nosnippet>19</a><span class="kw">use </span>super::{
 <a href=#20 id=20 data-nosnippet>20</a>    AnyTypeInfo, Bytes, ExpectedType, FromValue, Inline, Object, OwnedTuple, Repr, RuntimeError,
 <a href=#21 id=21 data-nosnippet>21</a>    ToValue, Tuple, Type, TypeInfo, Value, VmErrorKind, VmIntegerRepr,
 <a href=#22 id=22 data-nosnippet>22</a>};
@@ -180,7 +180,7 @@
 <a href=#180 id=180 data-nosnippet>180</a><span class="doccomment">/// A dynamic constant value.
 <a href=#181 id=181 data-nosnippet>181</a></span><span class="attr">#[derive(Debug, TryClone)]
 <a href=#182 id=182 data-nosnippet>182</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#183 id=183 data-nosnippet>183</a>#[cfg_attr(feature = <span class="string">"musli"</span>, derive(Decode, Encode))]
+<a href=#183 id=183 data-nosnippet>183</a>#[cfg_attr(feature = <span class="string">"musli"</span>, derive(Decode, Encode), musli(<span class="kw">crate </span>= musli_core))]
 <a href=#184 id=184 data-nosnippet>184</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ConstInstance {
 <a href=#185 id=185 data-nosnippet>185</a>    <span class="doccomment">/// The type hash of the value.
 <a href=#186 id=186 data-nosnippet>186</a>    ///
@@ -207,7 +207,7 @@
 <a href=#207 id=207 data-nosnippet>207</a>        }
 <a href=#208 id=208 data-nosnippet>208</a>
 <a href=#209 id=209 data-nosnippet>209</a>        <span class="kw">match </span><span class="self">self</span>.hash {
-<a href=#210 id=210 data-nosnippet>210</a>            <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; TypeInfo::any::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;(),
+<a href=#210 id=210 data-nosnippet>210</a>            Option::&lt;Value&gt;::HASH =&gt; TypeInfo::any::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;(),
 <a href=#211 id=211 data-nosnippet>211</a>            runtime::Vec::HASH =&gt; TypeInfo::any::&lt;runtime::Vec&gt;(),
 <a href=#212 id=212 data-nosnippet>212</a>            OwnedTuple::HASH =&gt; TypeInfo::any::&lt;OwnedTuple&gt;(),
 <a href=#213 id=213 data-nosnippet>213</a>            Object::HASH =&gt; TypeInfo::any::&lt;Object&gt;(),
@@ -221,7 +221,7 @@
 <a href=#221 id=221 data-nosnippet>221</a>
 <a href=#222 id=222 data-nosnippet>222</a><span class="attr">#[derive(Debug, TryClone)]
 <a href=#223 id=223 data-nosnippet>223</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#224 id=224 data-nosnippet>224</a>#[cfg_attr(feature = <span class="string">"musli"</span>, derive(Decode, Encode))]
+<a href=#224 id=224 data-nosnippet>224</a>#[cfg_attr(feature = <span class="string">"musli"</span>, derive(Decode, Encode), musli(<span class="kw">crate </span>= musli_core))]
 <a href=#225 id=225 data-nosnippet>225</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ConstValueKind {
 <a href=#226 id=226 data-nosnippet>226</a>    <span class="doccomment">/// An inline constant value.
 <a href=#227 id=227 data-nosnippet>227</a>    </span>Inline(<span class="attr">#[try_clone(copy)] </span>Inline),
@@ -247,7 +247,7 @@
 <a href=#247 id=247 data-nosnippet>247</a>
 <a href=#248 id=248 data-nosnippet>248</a><span class="doccomment">/// A constant value.
 <a href=#249 id=249 data-nosnippet>249</a></span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Deserialize, Serialize), serde(transparent))]
-<a href=#250 id=250 data-nosnippet>250</a>#[cfg_attr(feature = <span class="string">"musli"</span>, derive(Encode, Decode), musli(transparent))]
+<a href=#250 id=250 data-nosnippet>250</a>#[cfg_attr(feature = <span class="string">"musli"</span>, derive(Decode, Encode), musli(<span class="kw">crate </span>= musli_core, transparent))]
 <a href=#251 id=251 data-nosnippet>251</a></span><span class="kw">pub struct </span>ConstValue {
 <a href=#252 id=252 data-nosnippet>252</a>    kind: ConstValueKind,
 <a href=#253 id=253 data-nosnippet>253</a>}
@@ -403,7 +403,7 @@
 <a href=#403 id=403 data-nosnippet>403</a>                    <span class="kw">let </span>instance = Box::try_new(instance)<span class="question-mark">?</span>;
 <a href=#404 id=404 data-nosnippet>404</a>                    ConstValueKind::Instance(instance)
 <a href=#405 id=405 data-nosnippet>405</a>                }
-<a href=#406 id=406 data-nosnippet>406</a>                <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; {
+<a href=#406 id=406 data-nosnippet>406</a>                Option::&lt;Value&gt;::HASH =&gt; {
 <a href=#407 id=407 data-nosnippet>407</a>                    <span class="kw">let </span>option = value.borrow_ref::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#408 id=408 data-nosnippet>408</a>
 <a href=#409 id=409 data-nosnippet>409</a>                    <span class="kw">let </span>(variant_hash, fields) = <span class="kw">match </span><span class="kw-2">&amp;*</span>option {
@@ -415,7 +415,7 @@
 <a href=#415 id=415 data-nosnippet>415</a>                    };
 <a href=#416 id=416 data-nosnippet>416</a>
 <a href=#417 id=417 data-nosnippet>417</a>                    <span class="kw">let </span>instance = ConstInstance {
-<a href=#418 id=418 data-nosnippet>418</a>                        hash: <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH,
+<a href=#418 id=418 data-nosnippet>418</a>                        hash: Option::&lt;Value&gt;::HASH,
 <a href=#419 id=419 data-nosnippet>419</a>                        variant_hash,
 <a href=#420 id=420 data-nosnippet>420</a>                        fields,
 <a href=#421 id=421 data-nosnippet>421</a>                    };
@@ -745,4 +745,5 @@
 <a href=#745 id=745 data-nosnippet>745</a>    </span><span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: Hash) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ConstConstructImpl&gt; {
 <a href=#746 id=746 data-nosnippet>746</a>        <span class="prelude-val">None
 <a href=#747 id=747 data-nosnippet>747</a>    </span>}
-<a href=#748 id=748 data-nosnippet>748</a>}</code></pre></div></section></main></body></html>
+<a href=#748 id=748 data-nosnippet>748</a>}
+</code></pre></div></section></main></body></html>

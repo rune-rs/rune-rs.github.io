@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0-nightly (b925a865e 2025-10-09)" data-channel="nightly" data-search-js="search-8d3311b9.js" data-stringdex-js="stringdex-828709d0.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::cmp::Ordering;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-2eb46af5.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (fecb335cb 2026-01-07)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7bab91a1.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::cmp::Ordering;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::fmt;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>core::mem::replace;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>core::ptr::NonNull;
@@ -13,7 +13,7 @@
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">mod </span>ops;
 <a href=#14 id=14 data-nosnippet>14</a><span class="kw">use </span><span class="self">self</span>::ops::<span class="kw-2">*</span>;
 <a href=#15 id=15 data-nosnippet>15</a>
-<a href=#16 id=16 data-nosnippet>16</a><span class="kw">use super</span>::{
+<a href=#16 id=16 data-nosnippet>16</a><span class="kw">use </span>super::{
 <a href=#17 id=17 data-nosnippet>17</a>    budget, inst, Address, AnySequence, Args, Awaited, BorrowMut, Bytes, Call, ControlFlow,
 <a href=#18 id=18 data-nosnippet>18</a>    DynArgs, DynGuardedArgs, Format, FormatSpec, Formatter, FromValue, Function, Future, Generator,
 <a href=#19 id=19 data-nosnippet>19</a>    GeneratorState, GuardedArgs, Inline, InstArithmeticOp, InstBitwiseOp, InstOp, InstRange,
@@ -777,14 +777,14 @@
 <a href=#777 id=777 data-nosnippet>777</a>            }
 <a href=#778 id=778 data-nosnippet>778</a>            Repr::Dynamic(data) =&gt; <span class="prelude-val">Err</span>(data.type_info()),
 <a href=#779 id=779 data-nosnippet>779</a>            Repr::Any(target) =&gt; <span class="kw">match </span>target.type_hash() {
-<a href=#780 id=780 data-nosnippet>780</a>                <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH =&gt; {
+<a href=#780 id=780 data-nosnippet>780</a>                Result::&lt;Value, Value&gt;::HASH =&gt; {
 <a href=#781 id=781 data-nosnippet>781</a>                    <span class="kw">match </span>(index, <span class="kw-2">&amp;*</span>target.borrow_ref::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;()<span class="question-mark">?</span>) {
 <a href=#782 id=782 data-nosnippet>782</a>                        (<span class="number">0</span>, <span class="prelude-val">Ok</span>(value)) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
 <a href=#783 id=783 data-nosnippet>783</a>                        (<span class="number">0</span>, <span class="prelude-val">Err</span>(value)) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
 <a href=#784 id=784 data-nosnippet>784</a>                        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(target.type_info()),
 <a href=#785 id=785 data-nosnippet>785</a>                    }
 <a href=#786 id=786 data-nosnippet>786</a>                }
-<a href=#787 id=787 data-nosnippet>787</a>                <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; <span class="kw">match </span>(index, <span class="kw-2">&amp;*</span>target.borrow_ref::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;()<span class="question-mark">?</span>) {
+<a href=#787 id=787 data-nosnippet>787</a>                Option::&lt;Value&gt;::HASH =&gt; <span class="kw">match </span>(index, <span class="kw-2">&amp;*</span>target.borrow_ref::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;()<span class="question-mark">?</span>) {
 <a href=#788 id=788 data-nosnippet>788</a>                    (<span class="number">0</span>, <span class="prelude-val">Some</span>(value)) =&gt; <span class="prelude-val">Ok</span>(value.clone()),
 <a href=#789 id=789 data-nosnippet>789</a>                    <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(target.type_info()),
 <a href=#790 id=790 data-nosnippet>790</a>                },
@@ -845,7 +845,7 @@
 <a href=#845 id=845 data-nosnippet>845</a>            }
 <a href=#846 id=846 data-nosnippet>846</a>            Repr::Dynamic(..) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
 <a href=#847 id=847 data-nosnippet>847</a>            Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
-<a href=#848 id=848 data-nosnippet>848</a>                <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH =&gt; {
+<a href=#848 id=848 data-nosnippet>848</a>                Result::&lt;Value, Value&gt;::HASH =&gt; {
 <a href=#849 id=849 data-nosnippet>849</a>                    <span class="kw">let </span><span class="kw-2">mut </span>result = value.borrow_mut::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#850 id=850 data-nosnippet>850</a>
 <a href=#851 id=851 data-nosnippet>851</a>                    <span class="kw">let </span>target = <span class="kw">match </span><span class="kw-2">&amp;mut *</span>result {
@@ -857,7 +857,7 @@
 <a href=#857 id=857 data-nosnippet>857</a>                    target.clone_from(from);
 <a href=#858 id=858 data-nosnippet>858</a>                    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
 <a href=#859 id=859 data-nosnippet>859</a>                }
-<a href=#860 id=860 data-nosnippet>860</a>                <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; {
+<a href=#860 id=860 data-nosnippet>860</a>                Option::&lt;Value&gt;::HASH =&gt; {
 <a href=#861 id=861 data-nosnippet>861</a>                    <span class="kw">let </span><span class="kw-2">mut </span>option = value.borrow_mut::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#862 id=862 data-nosnippet>862</a>
 <a href=#863 id=863 data-nosnippet>863</a>                    <span class="kw">let </span>target = <span class="kw">match </span><span class="kw-2">&amp;mut *</span>option {
@@ -2375,7 +2375,7 @@
 <a href=#2375 id=2375 data-nosnippet>2375</a>                value.display_fmt_with(f, <span class="kw-2">&amp;mut *</span><span class="self">self</span>)<span class="question-mark">?</span>;
 <a href=#2376 id=2376 data-nosnippet>2376</a>            }
 <a href=#2377 id=2377 data-nosnippet>2377</a>
-<a href=#2378 id=2378 data-nosnippet>2378</a>            <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, VmError&gt;(())
+<a href=#2378 id=2378 data-nosnippet>2378</a>            Ok::&lt;<span class="kw">_</span>, VmError&gt;(())
 <a href=#2379 id=2379 data-nosnippet>2379</a>        })<span class="question-mark">?</span>;
 <a href=#2380 id=2380 data-nosnippet>2380</a>
 <a href=#2381 id=2381 data-nosnippet>2381</a>        <span class="self">self</span>.stack.store(out, s)<span class="question-mark">?</span>;
@@ -2399,11 +2399,11 @@
 <a href=#2399 id=2399 data-nosnippet>2399</a>
 <a href=#2400 id=2400 data-nosnippet>2400</a>                <span class="kw">if let </span>Repr::Any(value) = value.as_ref() {
 <a href=#2401 id=2401 data-nosnippet>2401</a>                    <span class="kw">match </span>value.type_hash() {
-<a href=#2402 id=2402 data-nosnippet>2402</a>                        <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH =&gt; {
+<a href=#2402 id=2402 data-nosnippet>2402</a>                        Result::&lt;Value, Value&gt;::HASH =&gt; {
 <a href=#2403 id=2403 data-nosnippet>2403</a>                            <span class="kw">let </span>result = value.borrow_ref::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#2404 id=2404 data-nosnippet>2404</a>                            <span class="kw">break </span><span class="lifetime">'out </span>result::result_try(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>;
 <a href=#2405 id=2405 data-nosnippet>2405</a>                        }
-<a href=#2406 id=2406 data-nosnippet>2406</a>                        <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; {
+<a href=#2406 id=2406 data-nosnippet>2406</a>                        Option::&lt;Value&gt;::HASH =&gt; {
 <a href=#2407 id=2407 data-nosnippet>2407</a>                            <span class="kw">let </span>option = value.borrow_ref::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#2408 id=2408 data-nosnippet>2408</a>                            <span class="kw">break </span><span class="lifetime">'out </span>option::option_try(<span class="kw-2">&amp;</span>option)<span class="question-mark">?</span>;
 <a href=#2409 id=2409 data-nosnippet>2409</a>                        }
@@ -2540,7 +2540,7 @@
 <a href=#2540 id=2540 data-nosnippet>2540</a>        <span class="kw">let </span>type_hash = value.type_hash();
 <a href=#2541 id=2541 data-nosnippet>2541</a>
 <a href=#2542 id=2542 data-nosnippet>2542</a>        <span class="kw">let </span>is_match = <span class="lifetime">'out</span>: {
-<a href=#2543 id=2543 data-nosnippet>2543</a>            <span class="kw">if </span>type_hash != hash {
+<a href=#2543 id=2543 data-nosnippet>2543</a>            <span class="kw">if </span><span class="macro">type_hash !</span>= hash {
 <a href=#2544 id=2544 data-nosnippet>2544</a>                <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
 <a href=#2545 id=2545 data-nosnippet>2545</a>            }
 <a href=#2546 id=2546 data-nosnippet>2546</a>
@@ -2557,11 +2557,11 @@
 <a href=#2557 id=2557 data-nosnippet>2557</a>                    <span class="kw">break </span><span class="lifetime">'out </span>value.rtti().is(hash, variant_hash);
 <a href=#2558 id=2558 data-nosnippet>2558</a>                }
 <a href=#2559 id=2559 data-nosnippet>2559</a>                Repr::Any(any) =&gt; <span class="kw">match </span>hash {
-<a href=#2560 id=2560 data-nosnippet>2560</a>                    <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH =&gt; {
+<a href=#2560 id=2560 data-nosnippet>2560</a>                    Result::&lt;Value, Value&gt;::HASH =&gt; {
 <a href=#2561 id=2561 data-nosnippet>2561</a>                        <span class="kw">let </span>result = any.borrow_ref::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#2562 id=2562 data-nosnippet>2562</a>                        <span class="kw">break </span><span class="lifetime">'out </span>result::is_variant(<span class="kw-2">&amp;</span>result, variant_hash);
 <a href=#2563 id=2563 data-nosnippet>2563</a>                    }
-<a href=#2564 id=2564 data-nosnippet>2564</a>                    <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; {
+<a href=#2564 id=2564 data-nosnippet>2564</a>                    Option::&lt;Value&gt;::HASH =&gt; {
 <a href=#2565 id=2565 data-nosnippet>2565</a>                        <span class="kw">let </span>option = any.borrow_ref::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#2566 id=2566 data-nosnippet>2566</a>                        <span class="kw">break </span><span class="lifetime">'out </span>option::is_variant(<span class="kw-2">&amp;</span>option, variant_hash);
 <a href=#2567 id=2567 data-nosnippet>2567</a>                    }
@@ -2600,7 +2600,7 @@
 <a href=#2600 id=2600 data-nosnippet>2600</a>        <span class="kw">let </span>type_hash = value.type_hash();
 <a href=#2601 id=2601 data-nosnippet>2601</a>
 <a href=#2602 id=2602 data-nosnippet>2602</a>        <span class="kw">let </span>is_match = <span class="lifetime">'out</span>: {
-<a href=#2603 id=2603 data-nosnippet>2603</a>            <span class="kw">if </span>type_hash != hash {
+<a href=#2603 id=2603 data-nosnippet>2603</a>            <span class="kw">if </span><span class="macro">type_hash !</span>= hash {
 <a href=#2604 id=2604 data-nosnippet>2604</a>                <span class="kw">break </span><span class="lifetime">'out </span><span class="bool-val">false</span>;
 <a href=#2605 id=2605 data-nosnippet>2605</a>            }
 <a href=#2606 id=2606 data-nosnippet>2606</a>
@@ -2682,7 +2682,7 @@
 <a href=#2682 id=2682 data-nosnippet>2682</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(VmError::new(VmErrorKind::MissingFunction { hash }));
 <a href=#2683 id=2683 data-nosnippet>2683</a>        };
 <a href=#2684 id=2684 data-nosnippet>2684</a>
-<a href=#2685 id=2685 data-nosnippet>2685</a>        <span class="kw">if </span><span class="kw-2">*</span>captures != count {
+<a href=#2685 id=2685 data-nosnippet>2685</a>        <span class="kw">if </span><span class="kw-2">*</span><span class="macro">captures !</span>= count {
 <a href=#2686 id=2686 data-nosnippet>2686</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(VmError::new(VmErrorKind::BadEnvironmentCount {
 <a href=#2687 id=2687 data-nosnippet>2687</a>                expected: <span class="kw-2">*</span>captures,
 <a href=#2688 id=2688 data-nosnippet>2688</a>                actual: count,
@@ -2852,7 +2852,7 @@
 <a href=#2852 id=2852 data-nosnippet>2852</a>
 <a href=#2853 id=2853 data-nosnippet>2853</a>        <span class="kw">let </span>some = <span class="kw">match </span>value.as_ref() {
 <a href=#2854 id=2854 data-nosnippet>2854</a>            Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
-<a href=#2855 id=2855 data-nosnippet>2855</a>                <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; {
+<a href=#2855 id=2855 data-nosnippet>2855</a>                Option::&lt;Value&gt;::HASH =&gt; {
 <a href=#2856 id=2856 data-nosnippet>2856</a>                    <span class="kw">let </span>option = value.borrow_ref::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#2857 id=2857 data-nosnippet>2857</a>
 <a href=#2858 id=2858 data-nosnippet>2858</a>                    <span class="kw">let </span><span class="prelude-val">Some</span>(some) = <span class="kw-2">&amp;*</span>option <span class="kw">else </span>{
@@ -3285,7 +3285,7 @@
 <a href=#3285 id=3285 data-nosnippet>3285</a><span class="doccomment">/// Check that arguments matches expected or raise the appropriate error.
 <a href=#3286 id=3286 data-nosnippet>3286</a></span><span class="attr">#[inline(always)]
 <a href=#3287 id=3287 data-nosnippet>3287</a></span><span class="kw">fn </span>check_args(args: usize, expected: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmErrorKind&gt; {
-<a href=#3288 id=3288 data-nosnippet>3288</a>    <span class="kw">if </span>args != expected {
+<a href=#3288 id=3288 data-nosnippet>3288</a>    <span class="kw">if </span><span class="macro">args !</span>= expected {
 <a href=#3289 id=3289 data-nosnippet>3289</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(VmErrorKind::BadArgumentCount {
 <a href=#3290 id=3290 data-nosnippet>3290</a>            actual: args,
 <a href=#3291 id=3291 data-nosnippet>3291</a>            expected,
@@ -3380,7 +3380,7 @@
 <a href=#3380 id=3380 data-nosnippet>3380</a>            index: VmIntegerRepr::from(index),
 <a href=#3381 id=3381 data-nosnippet>3381</a>        }),
 <a href=#3382 id=3382 data-nosnippet>3382</a>        Repr::Any(value) =&gt; <span class="kw">match </span>value.type_hash() {
-<a href=#3383 id=3383 data-nosnippet>3383</a>            <span class="prelude-ty">Result</span>::&lt;Value, Value&gt;::HASH =&gt; {
+<a href=#3383 id=3383 data-nosnippet>3383</a>            Result::&lt;Value, Value&gt;::HASH =&gt; {
 <a href=#3384 id=3384 data-nosnippet>3384</a>                <span class="kw">let </span>result = BorrowMut::try_map(
 <a href=#3385 id=3385 data-nosnippet>3385</a>                    value.borrow_mut::&lt;<span class="prelude-ty">Result</span>&lt;Value, Value&gt;&gt;()<span class="question-mark">?</span>,
 <a href=#3386 id=3386 data-nosnippet>3386</a>                    |value| <span class="kw">match </span>(index, value) {
@@ -3399,7 +3399,7 @@
 <a href=#3399 id=3399 data-nosnippet>3399</a>                    index: VmIntegerRepr::from(index),
 <a href=#3400 id=3400 data-nosnippet>3400</a>                })
 <a href=#3401 id=3401 data-nosnippet>3401</a>            }
-<a href=#3402 id=3402 data-nosnippet>3402</a>            <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; {
+<a href=#3402 id=3402 data-nosnippet>3402</a>            Option::&lt;Value&gt;::HASH =&gt; {
 <a href=#3403 id=3403 data-nosnippet>3403</a>                <span class="kw">let </span>result =
 <a href=#3404 id=3404 data-nosnippet>3404</a>                    BorrowMut::try_map(value.borrow_mut::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;()<span class="question-mark">?</span>, |value| {
 <a href=#3405 id=3405 data-nosnippet>3405</a>                        <span class="kw">match </span>(index, value) {
@@ -3500,4 +3500,5 @@
 <a href=#3500 id=3500 data-nosnippet>3500</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
 <a href=#3501 id=3501 data-nosnippet>3501</a>        },
 <a href=#3502 id=3502 data-nosnippet>3502</a>    }
-<a href=#3503 id=3503 data-nosnippet>3503</a>}</code></pre></div></section></main></body></html>
+<a href=#3503 id=3503 data-nosnippet>3503</a>}
+</code></pre></div></section></main></body></html>

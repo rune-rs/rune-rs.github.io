@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["AllocError","Box","Disabled","FromUtf8Error","String","System","SystemAlloc","Vec"],"trait":["Alloc","Allocator","ToOwned"]};
+window.SIDEBAR_ITEMS = {"struct":["AllocError","Box","FromUtf8Error","String","Vec"],"trait":["Alloc","Allocator","GlobalAllocator","ToOwned"]};
