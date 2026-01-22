@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2c2db720.js";
+            window.path_to_searchindex_js = "searchindex-65ebb402.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-5070e9fe.js"></script>
+        <script src="toc-fb9cab74.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -337,6 +337,80 @@ languages, and how they work in Rune.</p>
 <p>Hopefully these should be familiar to anyone who’s used imperative programming
 languages before. We’ll try to take each concept and describe how they work with
 examples, one at a time.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="scripts"><a href="#scripts" class="header">Scripts</a></h1>
+<p>Rune can be run in a special mode called a “script” mode. This is the simplest
+way of using Rune.</p>
+<p>This is intended to support what looks like inline execution of code, and is
+implemented to allow for evaluating expressions like <code>value + 40</code>.</p>
+<p>In order to run a program in script mode <a href="https://docs.rs/rune/latest/rune/struct.Options.html#method.script"><code>Options::script</code></a> has to be set,
+any implicit arguments passed into the script must then be specified through
+<a href="https://docs.rs/rune/latest/rune/struct.Build.html#method.with_args"><code>Prepare::with_args</code></a>.</p>
+<pre><code class="language-rust noplaypen">use rune::support::Result;
+use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Context, ContextError, Diagnostics, Hash, Module, Options, Source, Sources, Unit, Vm};
+
+#[rune::function]
+fn calculate(value: i64) -&gt; i64 {
+    value + 10
+}
+
+pub fn module() -&gt; Result&lt;Module, ContextError&gt; {
+    let mut module = Module::new();
+    module.function_meta(calculate)?;
+    Ok(module)
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    let context = context()?;
+    let runtime = Arc::try_new(context.runtime()?)?;
+
+    let unit = compile(&amp;context, "calculate(value) / 2")?;
+    let mut vm = Vm::new(runtime, unit);
+
+    let output = vm.call(Hash::EMPTY, (5,))?;
+    let output: i64 = rune::from_value(output)?;
+    println!("{output:?}");
+    assert_eq!(output, 7);
+    Ok(())
+}
+
+fn context() -&gt; Result&lt;Arc&lt;Context&gt;, ContextError&gt; {
+    let m = module()?;
+    let mut context = rune_modules::default_context()?;
+    context.install(m)?;
+    Ok(Arc::try_new(context)?)
+}
+
+fn compile(context: &amp;Context, script: &amp;str) -&gt; Result&lt;Arc&lt;Unit&gt;&gt; {
+    let mut sources = Sources::new();
+    sources.insert(Source::memory(script)?)?;
+
+    let mut diagnostics = Diagnostics::new();
+    let mut options = Options::from_default_env()?;
+    options.script(true);
+
+    let result = rune::prepare(&amp;mut sources)
+        .with_args(["value"])?
+        .with_options(&amp;options)
+        .with_context(context)
+        .with_diagnostics(&amp;mut diagnostics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
+    }
+
+    let unit = result?;
+    let unit = Arc::try_new(unit)?;
+    Ok(unit)
+}</code></pre>
+<p>Behind the scenes script mode defines an unnamed function which can be addressed
+as <code>Hash::EMPTY</code>. The arguments that has to be passed into this function is
+defined through <a href="https://docs.rs/rune/latest/rune/struct.Build.html#method.with_args"><code>Prepare::with_args</code></a>. These variables are <em>not</em> global
+variables. They are not addressible from other functions.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="items-and-imports"><a class="header" href="#items-and-imports">Items and imports</a></h1>
 <p>Everything in Rune has a unique name. Every function, type, and import. This

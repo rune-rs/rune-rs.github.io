@@ -15,8 +15,8 @@
 <a href=#15 id=15 data-nosnippet>15</a><span class="kw">use </span><span class="kw">crate</span>::ast::{Span, Spanned};
 <a href=#16 id=16 data-nosnippet>16</a><span class="kw">use </span><span class="kw">crate</span>::compile::{ErrorKind, LinkerError, Location};
 <a href=#17 id=17 data-nosnippet>17</a><span class="kw">use </span><span class="kw">crate</span>::diagnostics::{
-<a href=#18 id=18 data-nosnippet>18</a>    Diagnostic, FatalDiagnostic, FatalDiagnosticKind, RuntimeWarningDiagnostic,
-<a href=#19 id=19 data-nosnippet>19</a>    RuntimeWarningDiagnosticKind, WarningDiagnostic, WarningDiagnosticKind,
+<a href=#18 id=18 data-nosnippet>18</a>    Diagnostic, FatalDiagnostic, FatalDiagnosticKind, RuntimeDiagnostic, RuntimeDiagnosticKind,
+<a href=#19 id=19 data-nosnippet>19</a>    WarningDiagnostic, WarningDiagnosticKind,
 <a href=#20 id=20 data-nosnippet>20</a>};
 <a href=#21 id=21 data-nosnippet>21</a><span class="kw">use </span><span class="kw">crate</span>::hash::Hash;
 <a href=#22 id=22 data-nosnippet>22</a><span class="kw">use </span><span class="kw">crate</span>::runtime::DebugInfo;
@@ -103,7 +103,7 @@
 <a href=#103 id=103 data-nosnippet>103</a>                Diagnostic::Warning(w) =&gt; {
 <a href=#104 id=104 data-nosnippet>104</a>                    warning_diagnostics_emit(w, out, sources, <span class="kw-2">&amp;</span>config)<span class="question-mark">?</span>;
 <a href=#105 id=105 data-nosnippet>105</a>                }
-<a href=#106 id=106 data-nosnippet>106</a>                Diagnostic::RuntimeWarning(w) =&gt; {
+<a href=#106 id=106 data-nosnippet>106</a>                Diagnostic::Runtime(w) =&gt; {
 <a href=#107 id=107 data-nosnippet>107</a>                    runtime_warning_diagnostics_emit(w, out, sources, <span class="kw-2">&amp;</span>config, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 <a href=#108 id=108 data-nosnippet>108</a>                }
 <a href=#109 id=109 data-nosnippet>109</a>            }
@@ -142,7 +142,7 @@
 <a href=#142 id=142 data-nosnippet>142</a>                Diagnostic::Warning(w) =&gt; {
 <a href=#143 id=143 data-nosnippet>143</a>                    warning_diagnostics_emit(w, out, sources, <span class="kw-2">&amp;</span>config)<span class="question-mark">?</span>;
 <a href=#144 id=144 data-nosnippet>144</a>                }
-<a href=#145 id=145 data-nosnippet>145</a>                Diagnostic::RuntimeWarning(w) =&gt; {
+<a href=#145 id=145 data-nosnippet>145</a>                Diagnostic::Runtime(w) =&gt; {
 <a href=#146 id=146 data-nosnippet>146</a>                    runtime_warning_diagnostics_emit(
 <a href=#147 id=147 data-nosnippet>147</a>                        w,
 <a href=#148 id=148 data-nosnippet>148</a>                        out,
@@ -343,7 +343,7 @@
 <a href=#343 id=343 data-nosnippet>343</a>    }
 <a href=#344 id=344 data-nosnippet>344</a>}
 <a href=#345 id=345 data-nosnippet>345</a>
-<a href=#346 id=346 data-nosnippet>346</a><span class="kw">impl </span>RuntimeWarningDiagnostic {
+<a href=#346 id=346 data-nosnippet>346</a><span class="kw">impl </span>RuntimeDiagnostic {
 <a href=#347 id=347 data-nosnippet>347</a>    <span class="doccomment">/// Generate formatted diagnostics capable of referencing source lines and
 <a href=#348 id=348 data-nosnippet>348</a>    /// hints.
 <a href=#349 id=349 data-nosnippet>349</a>    ///
@@ -478,7 +478,7 @@
 <a href=#478 id=478 data-nosnippet>478</a>
 <a href=#479 id=479 data-nosnippet>479</a><span class="doccomment">/// Helper to emit diagnostics for a runtime warning.
 <a href=#480 id=480 data-nosnippet>480</a></span><span class="kw">fn </span>runtime_warning_diagnostics_emit&lt;O&gt;(
-<a href=#481 id=481 data-nosnippet>481</a>    this: <span class="kw-2">&amp;</span>RuntimeWarningDiagnostic,
+<a href=#481 id=481 data-nosnippet>481</a>    this: <span class="kw-2">&amp;</span>RuntimeDiagnostic,
 <a href=#482 id=482 data-nosnippet>482</a>    out: <span class="kw-2">&amp;mut </span>O,
 <a href=#483 id=483 data-nosnippet>483</a>    sources: <span class="kw-2">&amp;</span>Sources,
 <a href=#484 id=484 data-nosnippet>484</a>    config: <span class="kw-2">&amp;</span>term::Config,
@@ -493,7 +493,7 @@
 <a href=#493 id=493 data-nosnippet>493</a>    <span class="kw">let </span><span class="kw-2">mut </span>message = String::new();
 <a href=#494 id=494 data-nosnippet>494</a>
 <a href=#495 id=495 data-nosnippet>495</a>    <span class="kw">match </span>this.kind {
-<a href=#496 id=496 data-nosnippet>496</a>        RuntimeWarningDiagnosticKind::UsedDeprecated { hash } =&gt; {
+<a href=#496 id=496 data-nosnippet>496</a>        RuntimeDiagnosticKind::UsedDeprecated { hash } =&gt; {
 <a href=#497 id=497 data-nosnippet>497</a>            <span class="comment">// try to get the function name - this needs to be improved
 <a href=#498 id=498 data-nosnippet>498</a>            </span><span class="kw">let </span>name = <span class="kw">match </span>context
 <a href=#499 id=499 data-nosnippet>499</a>                .map(|c| c.lookup_meta_by_hash(hash))
@@ -554,8 +554,8 @@
 <a href=#554 id=554 data-nosnippet>554</a>    }
 <a href=#555 id=555 data-nosnippet>555</a>
 <a href=#556 id=556 data-nosnippet>556</a>    <span class="kw">match </span>this.kind() {
-<a href=#557 id=557 data-nosnippet>557</a>        FatalDiagnosticKind::Internal(message) =&gt; {
-<a href=#558 id=558 data-nosnippet>558</a>            <span class="macro">writeln!</span>(out, <span class="string">"internal error: {message}"</span>)<span class="question-mark">?</span>;
+<a href=#557 id=557 data-nosnippet>557</a>        FatalDiagnosticKind::Custom(message) =&gt; {
+<a href=#558 id=558 data-nosnippet>558</a>            <span class="macro">writeln!</span>(out, <span class="string">"{message}"</span>)<span class="question-mark">?</span>;
 <a href=#559 id=559 data-nosnippet>559</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
 <a href=#560 id=560 data-nosnippet>560</a>        }
 <a href=#561 id=561 data-nosnippet>561</a>        FatalDiagnosticKind::LinkError(error) =&gt; {
