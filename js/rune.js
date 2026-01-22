@@ -91,7 +91,7 @@ var rune = (function (exports) {
                       const a = state0.a;
                       state0.a = 0;
                       try {
-                          return wasm_bindgen__convert__closures_____invoke__h887c2c03e3da7da0(a, state0.b, arg0, arg1);
+                          return wasm_bindgen__convert__closures_____invoke__h33210cf19b269d40(a, state0.b, arg0, arg1);
                       } finally {
                           state0.a = a;
                       }
@@ -165,7 +165,7 @@ var rune = (function (exports) {
           },
           __wbindgen_cast_0000000000000001: function(arg0, arg1) {
               // Cast intrinsic for `Closure(Closure { dtor_idx: 1055, function: Function { arguments: [Externref], shim_idx: 1056, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-              const ret = makeMutClosure(arg0, arg1, wasm$1.wasm_bindgen__closure__destroy__h6ea1c5f4f13c49cf, wasm_bindgen__convert__closures_____invoke__h7dbbc15f91e8e45e);
+              const ret = makeMutClosure(arg0, arg1, wasm$1.wasm_bindgen__closure__destroy__hef1d0c53bf84fa45, wasm_bindgen__convert__closures_____invoke__ha839aeab8ccecf69);
               return ret;
           },
           __wbindgen_init_externref_table: function() {
@@ -185,12 +185,12 @@ var rune = (function (exports) {
       };
   }
 
-  function wasm_bindgen__convert__closures_____invoke__h7dbbc15f91e8e45e(arg0, arg1, arg2) {
-      wasm$1.wasm_bindgen__convert__closures_____invoke__h7dbbc15f91e8e45e(arg0, arg1, arg2);
+  function wasm_bindgen__convert__closures_____invoke__ha839aeab8ccecf69(arg0, arg1, arg2) {
+      wasm$1.wasm_bindgen__convert__closures_____invoke__ha839aeab8ccecf69(arg0, arg1, arg2);
   }
 
-  function wasm_bindgen__convert__closures_____invoke__h887c2c03e3da7da0(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures_____invoke__h887c2c03e3da7da0(arg0, arg1, arg2, arg3);
+  function wasm_bindgen__convert__closures_____invoke__h33210cf19b269d40(arg0, arg1, arg2, arg3) {
+      wasm$1.wasm_bindgen__convert__closures_____invoke__h33210cf19b269d40(arg0, arg1, arg2, arg3);
   }
 
 
@@ -432,7 +432,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-1e12f9be.wasm";
+                  let path = "/js/assets/rune_wasm-83287351.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
