@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fancy-regex-0.16.2/src/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-bbd8d786.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="fancy_regex" data-themes="" data-resource-suffix="" data-rustdoc-version="1.95.0-nightly (eda76d9d1 2026-01-21)" data-channel="nightly" data-search-js="search-86d08462.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-f9617a14.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12f88f4f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">fancy_regex/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="comment">// Copyright 2016 The Fancy Regex Authors.
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/fancy-regex-0.16.2/src/vm.rs`."><title>vm.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="fancy_regex" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.0-nightly (b90dc1e59 2026-03-04)" data-channel="nightly" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">fancy_regex/</div>vm.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="comment">// Copyright 2016 The Fancy Regex Authors.
 <a href=#2 id=2 data-nosnippet>2</a>//
 <a href=#3 id=3 data-nosnippet>3</a>// Permission is hereby granted, free of charge, to any person obtaining a copy
 <a href=#4 id=4 data-nosnippet>4</a>// of this software and associated documentation files (the "Software"), to deal
@@ -338,7 +338,7 @@
 <a href=#338 id=338 data-nosnippet>338</a>        <span class="self">self</span>.saves[slot] = val;
 <a href=#339 id=339 data-nosnippet>339</a>
 <a href=#340 id=340 data-nosnippet>340</a>        <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-<a href=#341 id=341 data-nosnippet>341</a>        </span><span class="kw">if </span><span class="self">self</span>.options &amp; <span class="macro">OPTION_TRACE !</span>= <span class="number">0 </span>{
+<a href=#341 id=341 data-nosnippet>341</a>        </span><span class="kw">if </span><span class="self">self</span>.options &amp; OPTION_TRACE != <span class="number">0 </span>{
 <a href=#342 id=342 data-nosnippet>342</a>            <span class="macro">println!</span>(<span class="string">"saves: {:?}"</span>, <span class="self">self</span>.saves);
 <a href=#343 id=343 data-nosnippet>343</a>        }
 <a href=#344 id=344 data-nosnippet>344</a>    }
@@ -424,7 +424,7 @@
 <a href=#424 id=424 data-nosnippet>424</a>    #[allow(unused_variables)]
 <a href=#425 id=425 data-nosnippet>425</a>    </span><span class="kw">fn </span>trace_stack(<span class="kw-2">&amp;</span><span class="self">self</span>, operation: <span class="kw-2">&amp;</span>str) {
 <a href=#426 id=426 data-nosnippet>426</a>        <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-<a href=#427 id=427 data-nosnippet>427</a>        </span><span class="kw">if </span><span class="self">self</span>.options &amp; <span class="macro">OPTION_TRACE !</span>= <span class="number">0 </span>{
+<a href=#427 id=427 data-nosnippet>427</a>        </span><span class="kw">if </span><span class="self">self</span>.options &amp; OPTION_TRACE != <span class="number">0 </span>{
 <a href=#428 id=428 data-nosnippet>428</a>            <span class="macro">println!</span>(<span class="string">"stack after {}: {:?}"</span>, operation, <span class="self">self</span>.stack);
 <a href=#429 id=429 data-nosnippet>429</a>        }
 <a href=#430 id=430 data-nosnippet>430</a>    }
@@ -509,7 +509,7 @@
 <a href=#509 id=509 data-nosnippet>509</a>    <span class="kw">let </span><span class="kw-2">mut </span>inner_slots: Vec&lt;<span class="prelude-ty">Option</span>&lt;NonMaxUsize&gt;&gt; = Vec::new();
 <a href=#510 id=510 data-nosnippet>510</a>    <span class="kw">let </span>look_matcher = LookMatcher::new();
 <a href=#511 id=511 data-nosnippet>511</a>    <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-<a href=#512 id=512 data-nosnippet>512</a>    </span><span class="kw">if </span>option_flags &amp; <span class="macro">OPTION_TRACE !</span>= <span class="number">0 </span>{
+<a href=#512 id=512 data-nosnippet>512</a>    </span><span class="kw">if </span>option_flags &amp; OPTION_TRACE != <span class="number">0 </span>{
 <a href=#513 id=513 data-nosnippet>513</a>        <span class="macro">println!</span>(<span class="string">"pos\tinstruction"</span>);
 <a href=#514 id=514 data-nosnippet>514</a>    }
 <a href=#515 id=515 data-nosnippet>515</a>    <span class="kw">let </span><span class="kw-2">mut </span>backtrack_count = <span class="number">0</span>;
@@ -519,7 +519,7 @@
 <a href=#519 id=519 data-nosnippet>519</a>        <span class="comment">// break from this loop to fail, causes stack to pop
 <a href=#520 id=520 data-nosnippet>520</a>        </span><span class="lifetime">'fail</span>: <span class="kw">loop </span>{
 <a href=#521 id=521 data-nosnippet>521</a>            <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-<a href=#522 id=522 data-nosnippet>522</a>            </span><span class="kw">if </span>option_flags &amp; <span class="macro">OPTION_TRACE !</span>= <span class="number">0 </span>{
+<a href=#522 id=522 data-nosnippet>522</a>            </span><span class="kw">if </span>option_flags &amp; OPTION_TRACE != <span class="number">0 </span>{
 <a href=#523 id=523 data-nosnippet>523</a>                <span class="macro">println!</span>(<span class="string">"{}\t{} {:?}"</span>, ix, pc, prog.body[pc]);
 <a href=#524 id=524 data-nosnippet>524</a>            }
 <a href=#525 id=525 data-nosnippet>525</a>            <span class="kw">match </span>prog.body[pc] {
@@ -529,7 +529,7 @@
 <a href=#529 id=529 data-nosnippet>529</a>                    // optimize that.
 <a href=#530 id=530 data-nosnippet>530</a>                    //state.saves[1] = ix;
 <a href=#531 id=531 data-nosnippet>531</a>                    </span><span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-<a href=#532 id=532 data-nosnippet>532</a>                    </span><span class="kw">if </span>option_flags &amp; <span class="macro">OPTION_TRACE !</span>= <span class="number">0 </span>{
+<a href=#532 id=532 data-nosnippet>532</a>                    </span><span class="kw">if </span>option_flags &amp; OPTION_TRACE != <span class="number">0 </span>{
 <a href=#533 id=533 data-nosnippet>533</a>                        <span class="macro">println!</span>(<span class="string">"saves: {:?}"</span>, state.saves);
 <a href=#534 id=534 data-nosnippet>534</a>                    }
 <a href=#535 id=535 data-nosnippet>535</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>slot1) = state.saves.get(<span class="number">1</span>) {
@@ -775,7 +775,7 @@
 <a href=#775 id=775 data-nosnippet>775</a>                    }
 <a href=#776 id=776 data-nosnippet>776</a>                }
 <a href=#777 id=777 data-nosnippet>777</a>                Insn::ContinueFromPreviousMatchEnd =&gt; {
-<a href=#778 id=778 data-nosnippet>778</a>                    <span class="kw">if </span>ix &gt; pos || option_flags &amp; <span class="macro">OPTION_SKIPPED_EMPTY_MATCH !</span>= <span class="number">0 </span>{
+<a href=#778 id=778 data-nosnippet>778</a>                    <span class="kw">if </span>ix &gt; pos || option_flags &amp; OPTION_SKIPPED_EMPTY_MATCH != <span class="number">0 </span>{
 <a href=#779 id=779 data-nosnippet>779</a>                        <span class="kw">break </span><span class="lifetime">'fail</span>;
 <a href=#780 id=780 data-nosnippet>780</a>                    }
 <a href=#781 id=781 data-nosnippet>781</a>                }
@@ -783,7 +783,7 @@
 <a href=#783 id=783 data-nosnippet>783</a>            pc += <span class="number">1</span>;
 <a href=#784 id=784 data-nosnippet>784</a>        }
 <a href=#785 id=785 data-nosnippet>785</a>        <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-<a href=#786 id=786 data-nosnippet>786</a>        </span><span class="kw">if </span>option_flags &amp; <span class="macro">OPTION_TRACE !</span>= <span class="number">0 </span>{
+<a href=#786 id=786 data-nosnippet>786</a>        </span><span class="kw">if </span>option_flags &amp; OPTION_TRACE != <span class="number">0 </span>{
 <a href=#787 id=787 data-nosnippet>787</a>            <span class="macro">println!</span>(<span class="string">"fail"</span>);
 <a href=#788 id=788 data-nosnippet>788</a>        }
 <a href=#789 id=789 data-nosnippet>789</a>        <span class="comment">// "break 'fail" goes here
