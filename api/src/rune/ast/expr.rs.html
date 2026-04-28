@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/ast/expr.rs`."><title>expr.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.0-nightly (69370dc4a 2026-03-05)" data-channel="nightly" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">rune/ast/</div>expr.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::mem::take;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/ast/expr.rs`."><title>expr.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.97.0-nightly (52b6e2c20 2026-04-27)" data-channel="nightly" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-aa4d37ac.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">rune/ast/</div>expr.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::mem::take;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::ops;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::ast::prelude::<span class="kw-2">*</span>;
@@ -700,96 +700,94 @@
 <a href=#700 id=700 data-nosnippet>700</a>                    lookahead = ast::BinOp::from_peeker(p.peeker());
 <a href=#701 id=701 data-nosnippet>701</a>                    <span class="kw">continue</span>;
 <a href=#702 id=702 data-nosnippet>702</a>                }
-<a href=#703 id=703 data-nosnippet>703</a>                (lh, rh) <span class="kw">if </span>lh == rh =&gt; {
-<a href=#704 id=704 data-nosnippet>704</a>                    <span class="kw">if </span>!next.is_assoc() {
-<a href=#705 id=705 data-nosnippet>705</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
-<a href=#706 id=706 data-nosnippet>706</a>                            lhs.span().join(rhs.span()),
-<a href=#707 id=707 data-nosnippet>707</a>                            ErrorKind::PrecedenceGroupRequired,
-<a href=#708 id=708 data-nosnippet>708</a>                        ));
-<a href=#709 id=709 data-nosnippet>709</a>                    }
-<a href=#710 id=710 data-nosnippet>710</a>                }
-<a href=#711 id=711 data-nosnippet>711</a>                <span class="kw">_ </span>=&gt; {}
-<a href=#712 id=712 data-nosnippet>712</a>            };
-<a href=#713 id=713 data-nosnippet>713</a>
-<a href=#714 id=714 data-nosnippet>714</a>            <span class="kw">break</span>;
-<a href=#715 id=715 data-nosnippet>715</a>        }
-<a href=#716 id=716 data-nosnippet>716</a>
-<a href=#717 id=717 data-nosnippet>717</a>        lhs = Expr::Binary(ast::ExprBinary {
-<a href=#718 id=718 data-nosnippet>718</a>            attributes: lhs.take_attributes(),
-<a href=#719 id=719 data-nosnippet>719</a>            lhs: Box::try_new(lhs)<span class="question-mark">?</span>,
-<a href=#720 id=720 data-nosnippet>720</a>            op,
-<a href=#721 id=721 data-nosnippet>721</a>            rhs: Box::try_new(rhs)<span class="question-mark">?</span>,
-<a href=#722 id=722 data-nosnippet>722</a>        });
-<a href=#723 id=723 data-nosnippet>723</a>    }
-<a href=#724 id=724 data-nosnippet>724</a>
-<a href=#725 id=725 data-nosnippet>725</a>    <span class="prelude-val">Ok</span>(lhs)
-<a href=#726 id=726 data-nosnippet>726</a>}
-<a href=#727 id=727 data-nosnippet>727</a>
-<a href=#728 id=728 data-nosnippet>728</a><span class="doccomment">/// Parse the tail-end of a range.
-<a href=#729 id=729 data-nosnippet>729</a></span><span class="kw">fn </span>range(
-<a href=#730 id=730 data-nosnippet>730</a>    p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;,
-<a href=#731 id=731 data-nosnippet>731</a>    attributes: Vec&lt;ast::Attribute&gt;,
-<a href=#732 id=732 data-nosnippet>732</a>    from: <span class="prelude-ty">Option</span>&lt;Box&lt;Expr&gt;&gt;,
-<a href=#733 id=733 data-nosnippet>733</a>    limits: ast::ExprRangeLimits,
-<a href=#734 id=734 data-nosnippet>734</a>    eager_brace: EagerBrace,
-<a href=#735 id=735 data-nosnippet>735</a>) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
-<a href=#736 id=736 data-nosnippet>736</a>    <span class="kw">let </span>to = <span class="kw">if </span>Expr::peek_with_brace(p.peeker(), eager_brace) {
-<a href=#737 id=737 data-nosnippet>737</a>        <span class="prelude-val">Some</span>(Box::try_new(Expr::parse_with(
-<a href=#738 id=738 data-nosnippet>738</a>            p,
-<a href=#739 id=739 data-nosnippet>739</a>            eager_brace,
-<a href=#740 id=740 data-nosnippet>740</a>            EAGER_BINARY,
-<a href=#741 id=741 data-nosnippet>741</a>            CALLABLE,
-<a href=#742 id=742 data-nosnippet>742</a>        )<span class="question-mark">?</span>)<span class="question-mark">?</span>)
-<a href=#743 id=743 data-nosnippet>743</a>    } <span class="kw">else </span>{
-<a href=#744 id=744 data-nosnippet>744</a>        <span class="prelude-val">None
-<a href=#745 id=745 data-nosnippet>745</a>    </span>};
-<a href=#746 id=746 data-nosnippet>746</a>
-<a href=#747 id=747 data-nosnippet>747</a>    <span class="prelude-val">Ok</span>(Expr::Range(ast::ExprRange {
-<a href=#748 id=748 data-nosnippet>748</a>        attributes,
-<a href=#749 id=749 data-nosnippet>749</a>        start: from,
-<a href=#750 id=750 data-nosnippet>750</a>        limits,
-<a href=#751 id=751 data-nosnippet>751</a>        end: to,
-<a href=#752 id=752 data-nosnippet>752</a>    }))
-<a href=#753 id=753 data-nosnippet>753</a>}
-<a href=#754 id=754 data-nosnippet>754</a>
-<a href=#755 id=755 data-nosnippet>755</a><span class="doccomment">/// Parsing something that opens with an empty group marker.
-<a href=#756 id=756 data-nosnippet>756</a></span><span class="kw">fn </span>empty_group(p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;, attributes: Vec&lt;ast::Attribute&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
-<a href=#757 id=757 data-nosnippet>757</a>    <span class="kw">let </span>open = p.parse::&lt;ast::OpenEmpty&gt;()<span class="question-mark">?</span>;
-<a href=#758 id=758 data-nosnippet>758</a>    <span class="kw">let </span>expr = p.parse::&lt;Expr&gt;()<span class="question-mark">?</span>;
-<a href=#759 id=759 data-nosnippet>759</a>    <span class="kw">let </span>close = p.parse::&lt;ast::CloseEmpty&gt;()<span class="question-mark">?</span>;
-<a href=#760 id=760 data-nosnippet>760</a>
-<a href=#761 id=761 data-nosnippet>761</a>    <span class="prelude-val">Ok</span>(Expr::Empty(ast::ExprEmpty {
-<a href=#762 id=762 data-nosnippet>762</a>        attributes,
-<a href=#763 id=763 data-nosnippet>763</a>        open,
-<a href=#764 id=764 data-nosnippet>764</a>        expr: Box::try_new(expr)<span class="question-mark">?</span>,
-<a href=#765 id=765 data-nosnippet>765</a>        close,
-<a href=#766 id=766 data-nosnippet>766</a>    }))
-<a href=#767 id=767 data-nosnippet>767</a>}
-<a href=#768 id=768 data-nosnippet>768</a>
-<a href=#769 id=769 data-nosnippet>769</a><span class="doccomment">/// Parsing something that opens with a parenthesis.
-<a href=#770 id=770 data-nosnippet>770</a></span><span class="kw">fn </span>paren_group(p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;, attributes: Vec&lt;ast::Attribute&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
-<a href=#771 id=771 data-nosnippet>771</a>    <span class="comment">// Empty tuple.
-<a href=#772 id=772 data-nosnippet>772</a>    </span><span class="kw">if let </span>(<span class="macro">K!</span>[<span class="string">'('</span>], <span class="macro">K!</span>[<span class="string">')'</span>]) = (p.nth(<span class="number">0</span>)<span class="question-mark">?</span>, p.nth(<span class="number">1</span>)<span class="question-mark">?</span>) {
-<a href=#773 id=773 data-nosnippet>773</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(Expr::Tuple(ast::ExprTuple::parse_with_meta(p, attributes)<span class="question-mark">?</span>));
-<a href=#774 id=774 data-nosnippet>774</a>    }
-<a href=#775 id=775 data-nosnippet>775</a>
-<a href=#776 id=776 data-nosnippet>776</a>    <span class="kw">let </span>open = p.parse::&lt;<span class="macro">T!</span>[<span class="string">'('</span>]&gt;()<span class="question-mark">?</span>;
-<a href=#777 id=777 data-nosnippet>777</a>    <span class="kw">let </span>expr = p.parse::&lt;Expr&gt;()<span class="question-mark">?</span>;
-<a href=#778 id=778 data-nosnippet>778</a>
-<a href=#779 id=779 data-nosnippet>779</a>    <span class="comment">// Priority expression group.
-<a href=#780 id=780 data-nosnippet>780</a>    </span><span class="kw">if </span>p.peek::&lt;<span class="macro">T!</span>[<span class="string">')'</span>]&gt;()<span class="question-mark">? </span>{
-<a href=#781 id=781 data-nosnippet>781</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(Expr::Group(ast::ExprGroup {
-<a href=#782 id=782 data-nosnippet>782</a>            attributes,
-<a href=#783 id=783 data-nosnippet>783</a>            open,
-<a href=#784 id=784 data-nosnippet>784</a>            expr: Box::try_new(expr)<span class="question-mark">?</span>,
-<a href=#785 id=785 data-nosnippet>785</a>            close: p.parse()<span class="question-mark">?</span>,
-<a href=#786 id=786 data-nosnippet>786</a>        }));
-<a href=#787 id=787 data-nosnippet>787</a>    }
-<a href=#788 id=788 data-nosnippet>788</a>
-<a href=#789 id=789 data-nosnippet>789</a>    <span class="comment">// Tuple expression. These are distinguished from a group with a single item
-<a href=#790 id=790 data-nosnippet>790</a>    // by adding a `,` at the end like `(foo,)`.
-<a href=#791 id=791 data-nosnippet>791</a>    </span><span class="prelude-val">Ok</span>(Expr::Tuple(ast::ExprTuple::parse_from_first_expr(
-<a href=#792 id=792 data-nosnippet>792</a>        p, attributes, open, expr,
-<a href=#793 id=793 data-nosnippet>793</a>    )<span class="question-mark">?</span>))
-<a href=#794 id=794 data-nosnippet>794</a>}
+<a href=#703 id=703 data-nosnippet>703</a>                (lh, rh) <span class="kw">if </span>lh == rh &amp;&amp; !next.is_assoc() =&gt; {
+<a href=#704 id=704 data-nosnippet>704</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(compile::Error::new(
+<a href=#705 id=705 data-nosnippet>705</a>                        lhs.span().join(rhs.span()),
+<a href=#706 id=706 data-nosnippet>706</a>                        ErrorKind::PrecedenceGroupRequired,
+<a href=#707 id=707 data-nosnippet>707</a>                    ));
+<a href=#708 id=708 data-nosnippet>708</a>                }
+<a href=#709 id=709 data-nosnippet>709</a>                <span class="kw">_ </span>=&gt; {}
+<a href=#710 id=710 data-nosnippet>710</a>            };
+<a href=#711 id=711 data-nosnippet>711</a>
+<a href=#712 id=712 data-nosnippet>712</a>            <span class="kw">break</span>;
+<a href=#713 id=713 data-nosnippet>713</a>        }
+<a href=#714 id=714 data-nosnippet>714</a>
+<a href=#715 id=715 data-nosnippet>715</a>        lhs = Expr::Binary(ast::ExprBinary {
+<a href=#716 id=716 data-nosnippet>716</a>            attributes: lhs.take_attributes(),
+<a href=#717 id=717 data-nosnippet>717</a>            lhs: Box::try_new(lhs)<span class="question-mark">?</span>,
+<a href=#718 id=718 data-nosnippet>718</a>            op,
+<a href=#719 id=719 data-nosnippet>719</a>            rhs: Box::try_new(rhs)<span class="question-mark">?</span>,
+<a href=#720 id=720 data-nosnippet>720</a>        });
+<a href=#721 id=721 data-nosnippet>721</a>    }
+<a href=#722 id=722 data-nosnippet>722</a>
+<a href=#723 id=723 data-nosnippet>723</a>    <span class="prelude-val">Ok</span>(lhs)
+<a href=#724 id=724 data-nosnippet>724</a>}
+<a href=#725 id=725 data-nosnippet>725</a>
+<a href=#726 id=726 data-nosnippet>726</a><span class="doccomment">/// Parse the tail-end of a range.
+<a href=#727 id=727 data-nosnippet>727</a></span><span class="kw">fn </span>range(
+<a href=#728 id=728 data-nosnippet>728</a>    p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;,
+<a href=#729 id=729 data-nosnippet>729</a>    attributes: Vec&lt;ast::Attribute&gt;,
+<a href=#730 id=730 data-nosnippet>730</a>    from: <span class="prelude-ty">Option</span>&lt;Box&lt;Expr&gt;&gt;,
+<a href=#731 id=731 data-nosnippet>731</a>    limits: ast::ExprRangeLimits,
+<a href=#732 id=732 data-nosnippet>732</a>    eager_brace: EagerBrace,
+<a href=#733 id=733 data-nosnippet>733</a>) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
+<a href=#734 id=734 data-nosnippet>734</a>    <span class="kw">let </span>to = <span class="kw">if </span>Expr::peek_with_brace(p.peeker(), eager_brace) {
+<a href=#735 id=735 data-nosnippet>735</a>        <span class="prelude-val">Some</span>(Box::try_new(Expr::parse_with(
+<a href=#736 id=736 data-nosnippet>736</a>            p,
+<a href=#737 id=737 data-nosnippet>737</a>            eager_brace,
+<a href=#738 id=738 data-nosnippet>738</a>            EAGER_BINARY,
+<a href=#739 id=739 data-nosnippet>739</a>            CALLABLE,
+<a href=#740 id=740 data-nosnippet>740</a>        )<span class="question-mark">?</span>)<span class="question-mark">?</span>)
+<a href=#741 id=741 data-nosnippet>741</a>    } <span class="kw">else </span>{
+<a href=#742 id=742 data-nosnippet>742</a>        <span class="prelude-val">None
+<a href=#743 id=743 data-nosnippet>743</a>    </span>};
+<a href=#744 id=744 data-nosnippet>744</a>
+<a href=#745 id=745 data-nosnippet>745</a>    <span class="prelude-val">Ok</span>(Expr::Range(ast::ExprRange {
+<a href=#746 id=746 data-nosnippet>746</a>        attributes,
+<a href=#747 id=747 data-nosnippet>747</a>        start: from,
+<a href=#748 id=748 data-nosnippet>748</a>        limits,
+<a href=#749 id=749 data-nosnippet>749</a>        end: to,
+<a href=#750 id=750 data-nosnippet>750</a>    }))
+<a href=#751 id=751 data-nosnippet>751</a>}
+<a href=#752 id=752 data-nosnippet>752</a>
+<a href=#753 id=753 data-nosnippet>753</a><span class="doccomment">/// Parsing something that opens with an empty group marker.
+<a href=#754 id=754 data-nosnippet>754</a></span><span class="kw">fn </span>empty_group(p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;, attributes: Vec&lt;ast::Attribute&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
+<a href=#755 id=755 data-nosnippet>755</a>    <span class="kw">let </span>open = p.parse::&lt;ast::OpenEmpty&gt;()<span class="question-mark">?</span>;
+<a href=#756 id=756 data-nosnippet>756</a>    <span class="kw">let </span>expr = p.parse::&lt;Expr&gt;()<span class="question-mark">?</span>;
+<a href=#757 id=757 data-nosnippet>757</a>    <span class="kw">let </span>close = p.parse::&lt;ast::CloseEmpty&gt;()<span class="question-mark">?</span>;
+<a href=#758 id=758 data-nosnippet>758</a>
+<a href=#759 id=759 data-nosnippet>759</a>    <span class="prelude-val">Ok</span>(Expr::Empty(ast::ExprEmpty {
+<a href=#760 id=760 data-nosnippet>760</a>        attributes,
+<a href=#761 id=761 data-nosnippet>761</a>        open,
+<a href=#762 id=762 data-nosnippet>762</a>        expr: Box::try_new(expr)<span class="question-mark">?</span>,
+<a href=#763 id=763 data-nosnippet>763</a>        close,
+<a href=#764 id=764 data-nosnippet>764</a>    }))
+<a href=#765 id=765 data-nosnippet>765</a>}
+<a href=#766 id=766 data-nosnippet>766</a>
+<a href=#767 id=767 data-nosnippet>767</a><span class="doccomment">/// Parsing something that opens with a parenthesis.
+<a href=#768 id=768 data-nosnippet>768</a></span><span class="kw">fn </span>paren_group(p: <span class="kw-2">&amp;mut </span>Parser&lt;<span class="lifetime">'_</span>&gt;, attributes: Vec&lt;ast::Attribute&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
+<a href=#769 id=769 data-nosnippet>769</a>    <span class="comment">// Empty tuple.
+<a href=#770 id=770 data-nosnippet>770</a>    </span><span class="kw">if let </span>(<span class="macro">K!</span>[<span class="string">'('</span>], <span class="macro">K!</span>[<span class="string">')'</span>]) = (p.nth(<span class="number">0</span>)<span class="question-mark">?</span>, p.nth(<span class="number">1</span>)<span class="question-mark">?</span>) {
+<a href=#771 id=771 data-nosnippet>771</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(Expr::Tuple(ast::ExprTuple::parse_with_meta(p, attributes)<span class="question-mark">?</span>));
+<a href=#772 id=772 data-nosnippet>772</a>    }
+<a href=#773 id=773 data-nosnippet>773</a>
+<a href=#774 id=774 data-nosnippet>774</a>    <span class="kw">let </span>open = p.parse::&lt;<span class="macro">T!</span>[<span class="string">'('</span>]&gt;()<span class="question-mark">?</span>;
+<a href=#775 id=775 data-nosnippet>775</a>    <span class="kw">let </span>expr = p.parse::&lt;Expr&gt;()<span class="question-mark">?</span>;
+<a href=#776 id=776 data-nosnippet>776</a>
+<a href=#777 id=777 data-nosnippet>777</a>    <span class="comment">// Priority expression group.
+<a href=#778 id=778 data-nosnippet>778</a>    </span><span class="kw">if </span>p.peek::&lt;<span class="macro">T!</span>[<span class="string">')'</span>]&gt;()<span class="question-mark">? </span>{
+<a href=#779 id=779 data-nosnippet>779</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(Expr::Group(ast::ExprGroup {
+<a href=#780 id=780 data-nosnippet>780</a>            attributes,
+<a href=#781 id=781 data-nosnippet>781</a>            open,
+<a href=#782 id=782 data-nosnippet>782</a>            expr: Box::try_new(expr)<span class="question-mark">?</span>,
+<a href=#783 id=783 data-nosnippet>783</a>            close: p.parse()<span class="question-mark">?</span>,
+<a href=#784 id=784 data-nosnippet>784</a>        }));
+<a href=#785 id=785 data-nosnippet>785</a>    }
+<a href=#786 id=786 data-nosnippet>786</a>
+<a href=#787 id=787 data-nosnippet>787</a>    <span class="comment">// Tuple expression. These are distinguished from a group with a single item
+<a href=#788 id=788 data-nosnippet>788</a>    // by adding a `,` at the end like `(foo,)`.
+<a href=#789 id=789 data-nosnippet>789</a>    </span><span class="prelude-val">Ok</span>(Expr::Tuple(ast::ExprTuple::parse_from_first_expr(
+<a href=#790 id=790 data-nosnippet>790</a>        p, attributes, open, expr,
+<a href=#791 id=791 data-nosnippet>791</a>    )<span class="question-mark">?</span>))
+<a href=#792 id=792 data-nosnippet>792</a>}
 </code></pre></div></section></main></body></html>
