@@ -25,15 +25,15 @@ var rune = (function (exports) {
   function __wbg_get_imports() {
       const import0 = {
           __proto__: null,
-          __wbg___wbindgen_is_function_3baa9db1a987f47d: function(arg0) {
+          __wbg___wbindgen_is_function_2f0fd7ceb86e64c5: function(arg0) {
               const ret = typeof(arg0) === 'function';
               return ret;
           },
-          __wbg___wbindgen_is_undefined_29a43b4d42920abd: function(arg0) {
+          __wbg___wbindgen_is_undefined_244a92c34d3b6ec0: function(arg0) {
               const ret = arg0 === undefined;
               return ret;
           },
-          __wbg___wbindgen_string_get_7ed5322991caaec5: function(arg0, arg1) {
+          __wbg___wbindgen_string_get_965592073e5d848c: function(arg0, arg1) {
               const obj = arg1;
               const ret = typeof(obj) === 'string' ? obj : undefined;
               var ptr1 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm$1.__wbindgen_malloc, wasm$1.__wbindgen_realloc);
@@ -41,21 +41,21 @@ var rune = (function (exports) {
               getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
               getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
           },
-          __wbg___wbindgen_throw_6b64449b9b9ed33c: function(arg0, arg1) {
+          __wbg___wbindgen_throw_9c75d47bf9e7731e: function(arg0, arg1) {
               throw new Error(getStringFromWasm0(arg0, arg1));
           },
-          __wbg__wbg_cb_unref_b46c9b5a9f08ec37: function(arg0) {
+          __wbg__wbg_cb_unref_158e43e869788cdc: function(arg0) {
               arg0._wbg_cb_unref();
           },
-          __wbg_call_a24592a6f349a97e: function() { return handleError(function (arg0, arg1, arg2) {
+          __wbg_call_a41d6421b30a32c5: function() { return handleError(function (arg0, arg1, arg2) {
               const ret = arg0.call(arg1, arg2);
               return ret;
           }, arguments); },
-          __wbg_fetch_9ea633a8592ee39a: function(arg0, arg1) {
+          __wbg_fetch_f36631298df17a02: function(arg0, arg1) {
               const ret = arg0.fetch(arg1);
               return ret;
           },
-          __wbg_instanceof_Response_9b2d111407865ff2: function(arg0) {
+          __wbg_instanceof_Response_370b83aa6c17e88a: function(arg0) {
               let result;
               try {
                   result = arg0 instanceof Response;
@@ -65,7 +65,7 @@ var rune = (function (exports) {
               const ret = result;
               return ret;
           },
-          __wbg_instanceof_Window_cc64c86c8ef9e02b: function(arg0) {
+          __wbg_instanceof_Window_4153c1818a1c0c0b: function(arg0) {
               let result;
               try {
                   result = arg0 instanceof Window;
@@ -75,18 +75,18 @@ var rune = (function (exports) {
               const ret = result;
               return ret;
           },
-          __wbg_new_aa8d0fa9762c29bd: function() {
+          __wbg_new_2fad8ca02fd00684: function() {
               const ret = new Object();
               return ret;
           },
-          __wbg_new_typed_323f37fd55ab048d: function(arg0, arg1) {
+          __wbg_new_typed_1137602701dc87d4: function(arg0, arg1) {
               try {
                   var state0 = {a: arg0, b: arg1};
                   var cb0 = (arg0, arg1) => {
                       const a = state0.a;
                       state0.a = 0;
                       try {
-                          return wasm_bindgen__convert__closures_____invoke__h1d89fab8b4831cf8(a, state0.b, arg0, arg1);
+                          return wasm_bindgen__convert__closures_____invoke__h48642470a9efa954(a, state0.b, arg0, arg1);
                       } finally {
                           state0.a = a;
                       }
@@ -97,66 +97,66 @@ var rune = (function (exports) {
                   state0.a = 0;
               }
           },
-          __wbg_new_with_str_5f3ca98523ee76ef: function() { return handleError(function (arg0, arg1) {
+          __wbg_new_with_str_04ead40979f92eb7: function() { return handleError(function (arg0, arg1) {
               const ret = new Request(getStringFromWasm0(arg0, arg1));
               return ret;
           }, arguments); },
-          __wbg_parse_1bbc9c053611d0a7: function() { return handleError(function (arg0, arg1) {
+          __wbg_parse_342d5616e14beccc: function() { return handleError(function (arg0, arg1) {
               const ret = JSON.parse(getStringFromWasm0(arg0, arg1));
               return ret;
           }, arguments); },
-          __wbg_queueMicrotask_5d15a957e6aa920e: function(arg0) {
+          __wbg_queueMicrotask_40ac6ffc2848ba77: function(arg0) {
               queueMicrotask(arg0);
           },
-          __wbg_queueMicrotask_f8819e5ffc402f36: function(arg0) {
+          __wbg_queueMicrotask_74d092439f6494c1: function(arg0) {
               const ret = arg0.queueMicrotask;
               return ret;
           },
-          __wbg_resolve_e6c466bc1052f16c: function(arg0) {
+          __wbg_resolve_9feb5d906ca62419: function(arg0) {
               const ret = Promise.resolve(arg0);
               return ret;
           },
-          __wbg_set_method_c9f1f985f6b6c427: function(arg0, arg1, arg2) {
+          __wbg_set_method_0eea8a5597775fa1: function(arg0, arg1, arg2) {
               arg0.method = getStringFromWasm0(arg1, arg2);
           },
-          __wbg_set_mode_5e08d503428c06b9: function(arg0, arg1) {
+          __wbg_set_mode_9fe47bff60a1580d: function(arg0, arg1) {
               arg0.mode = __wbindgen_enum_RequestMode[arg1];
           },
-          __wbg_static_accessor_GLOBAL_8cfadc87a297ca02: function() {
-              const ret = typeof global === 'undefined' ? null : global;
-              return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-          },
-          __wbg_static_accessor_GLOBAL_THIS_602256ae5c8f42cf: function() {
+          __wbg_static_accessor_GLOBAL_THIS_1c7f1bd6c6941fdb: function() {
               const ret = typeof globalThis === 'undefined' ? null : globalThis;
               return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
           },
-          __wbg_static_accessor_SELF_e445c1c7484aecc3: function() {
+          __wbg_static_accessor_GLOBAL_e039bc914f83e74e: function() {
+              const ret = typeof global === 'undefined' ? null : global;
+              return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+          },
+          __wbg_static_accessor_SELF_8bf8c48c28420ad5: function() {
               const ret = typeof self === 'undefined' ? null : self;
               return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
           },
-          __wbg_static_accessor_WINDOW_f20e8576ef1e0f17: function() {
+          __wbg_static_accessor_WINDOW_6aeee9b51652ee0f: function() {
               const ret = typeof window === 'undefined' ? null : window;
               return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
           },
-          __wbg_stringify_91082ed7a5a5769e: function() { return handleError(function (arg0) {
+          __wbg_stringify_7fd5cae8859a6f10: function() { return handleError(function (arg0) {
               const ret = JSON.stringify(arg0);
               return ret;
           }, arguments); },
-          __wbg_text_595ef75535aa25c1: function() { return handleError(function (arg0) {
+          __wbg_text_de416916b5c06490: function() { return handleError(function (arg0) {
               const ret = arg0.text();
               return ret;
           }, arguments); },
-          __wbg_then_792e0c862b060889: function(arg0, arg1, arg2) {
-              const ret = arg0.then(arg1, arg2);
+          __wbg_then_20a157d939b514f5: function(arg0, arg1) {
+              const ret = arg0.then(arg1);
               return ret;
           },
-          __wbg_then_8e16ee11f05e4827: function(arg0, arg1) {
-              const ret = arg0.then(arg1);
+          __wbg_then_5ef9b762bc91555c: function(arg0, arg1, arg2) {
+              const ret = arg0.then(arg1, arg2);
               return ret;
           },
           __wbindgen_cast_0000000000000001: function(arg0, arg1) {
               // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 1, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-              const ret = makeMutClosure(arg0, arg1, wasm_bindgen__convert__closures_____invoke__h1027e4b3607359fe);
+              const ret = makeMutClosure(arg0, arg1, wasm_bindgen__convert__closures_____invoke__h7f998f3b71ca4221);
               return ret;
           },
           __wbindgen_init_externref_table: function() {
@@ -176,15 +176,15 @@ var rune = (function (exports) {
       };
   }
 
-  function wasm_bindgen__convert__closures_____invoke__h1027e4b3607359fe(arg0, arg1, arg2) {
-      const ret = wasm$1.wasm_bindgen__convert__closures_____invoke__h1027e4b3607359fe(arg0, arg1, arg2);
+  function wasm_bindgen__convert__closures_____invoke__h7f998f3b71ca4221(arg0, arg1, arg2) {
+      const ret = wasm$1.wasm_bindgen__convert__closures_____invoke__h7f998f3b71ca4221(arg0, arg1, arg2);
       if (ret[1]) {
           throw takeFromExternrefTable0(ret[0]);
       }
   }
 
-  function wasm_bindgen__convert__closures_____invoke__h1d89fab8b4831cf8(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen__convert__closures_____invoke__h1d89fab8b4831cf8(arg0, arg1, arg2, arg3);
+  function wasm_bindgen__convert__closures_____invoke__h48642470a9efa954(arg0, arg1, arg2, arg3) {
+      wasm$1.wasm_bindgen__convert__closures_____invoke__h48642470a9efa954(arg0, arg1, arg2, arg3);
   }
 
 
@@ -209,8 +209,7 @@ var rune = (function (exports) {
   }
 
   function getStringFromWasm0(ptr, len) {
-      ptr = ptr >>> 0;
-      return decodeText(ptr, len);
+      return decodeText(ptr >>> 0, len);
   }
 
   let cachedUint8ArrayMemory0 = null;
@@ -432,7 +431,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-aa3536dc.wasm";
+                  let path = "/js/assets/rune_wasm-36fae204.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
