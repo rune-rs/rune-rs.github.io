@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"attr":["instrument","instrument_ast"],"macro":["debug","enabled","error","event","info","span","trace","warn"],"mod":["event","field","instrument","span"],"struct":["Level"]};
+window.SIDEBAR_ITEMS = {"attr":["instrument","instrument_ast"],"macro":[["debug",1],["enabled",1],["error",1],["event",1],["info",1],["span",1],["trace",1],["warn",1]],"mod":["event","field","instrument","span"],"struct":["Level"]};

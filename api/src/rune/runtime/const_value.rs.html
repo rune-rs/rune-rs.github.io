@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/const_value.rs`."><title>const_value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.97.0-nightly (37d85e592 2026-04-28)" data-channel="nightly" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-aa4d37ac.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>const_value.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#[macro_use]
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/const_value.rs`."><title>const_value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.97.0-nightly (e96c36b6f 2026-05-21)" data-channel="nightly" data-search-js="search-fd9372ac.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-fcd733ba.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>const_value.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#[macro_use]
 <a href=#2 id=2 data-nosnippet>2</a></span><span class="kw">mod </span>macros;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>core::any;
@@ -13,10 +13,10 @@
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use </span><span class="kw">crate</span>::alloc;
 <a href=#14 id=14 data-nosnippet>14</a><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <a href=#15 id=15 data-nosnippet>15</a><span class="kw">use </span><span class="kw">crate</span>::runtime;
-<a href=#16 id=16 data-nosnippet>16</a><span class="kw">use </span>crate::{<span class="self">self </span><span class="kw">as </span>rune};
-<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use </span>crate::{declare_dyn_trait, hash_in, Hash, TypeHash};
+<a href=#16 id=16 data-nosnippet>16</a><span class="kw">use crate</span>::{<span class="self">self </span><span class="kw">as </span>rune};
+<a href=#17 id=17 data-nosnippet>17</a><span class="kw">use crate</span>::{declare_dyn_trait, hash_in, Hash, TypeHash};
 <a href=#18 id=18 data-nosnippet>18</a>
-<a href=#19 id=19 data-nosnippet>19</a><span class="kw">use </span>super::{
+<a href=#19 id=19 data-nosnippet>19</a><span class="kw">use super</span>::{
 <a href=#20 id=20 data-nosnippet>20</a>    AnyTypeInfo, Bytes, ExpectedType, FromValue, Inline, Object, OwnedTuple, Repr, RuntimeError,
 <a href=#21 id=21 data-nosnippet>21</a>    ToValue, Tuple, Type, TypeInfo, Value, VmErrorKind, VmIntegerRepr,
 <a href=#22 id=22 data-nosnippet>22</a>};
@@ -207,7 +207,7 @@
 <a href=#207 id=207 data-nosnippet>207</a>        }
 <a href=#208 id=208 data-nosnippet>208</a>
 <a href=#209 id=209 data-nosnippet>209</a>        <span class="kw">match </span><span class="self">self</span>.hash {
-<a href=#210 id=210 data-nosnippet>210</a>            Option::&lt;Value&gt;::HASH =&gt; TypeInfo::any::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;(),
+<a href=#210 id=210 data-nosnippet>210</a>            <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; TypeInfo::any::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;(),
 <a href=#211 id=211 data-nosnippet>211</a>            runtime::Vec::HASH =&gt; TypeInfo::any::&lt;runtime::Vec&gt;(),
 <a href=#212 id=212 data-nosnippet>212</a>            OwnedTuple::HASH =&gt; TypeInfo::any::&lt;OwnedTuple&gt;(),
 <a href=#213 id=213 data-nosnippet>213</a>            Object::HASH =&gt; TypeInfo::any::&lt;Object&gt;(),
@@ -403,7 +403,7 @@
 <a href=#403 id=403 data-nosnippet>403</a>                    <span class="kw">let </span>instance = Box::try_new(instance)<span class="question-mark">?</span>;
 <a href=#404 id=404 data-nosnippet>404</a>                    ConstValueKind::Instance(instance)
 <a href=#405 id=405 data-nosnippet>405</a>                }
-<a href=#406 id=406 data-nosnippet>406</a>                Option::&lt;Value&gt;::HASH =&gt; {
+<a href=#406 id=406 data-nosnippet>406</a>                <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH =&gt; {
 <a href=#407 id=407 data-nosnippet>407</a>                    <span class="kw">let </span>option = value.borrow_ref::&lt;<span class="prelude-ty">Option</span>&lt;Value&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#408 id=408 data-nosnippet>408</a>
 <a href=#409 id=409 data-nosnippet>409</a>                    <span class="kw">let </span>(variant_hash, fields) = <span class="kw">match </span><span class="kw-2">&amp;*</span>option {
@@ -415,7 +415,7 @@
 <a href=#415 id=415 data-nosnippet>415</a>                    };
 <a href=#416 id=416 data-nosnippet>416</a>
 <a href=#417 id=417 data-nosnippet>417</a>                    <span class="kw">let </span>instance = ConstInstance {
-<a href=#418 id=418 data-nosnippet>418</a>                        hash: Option::&lt;Value&gt;::HASH,
+<a href=#418 id=418 data-nosnippet>418</a>                        hash: <span class="prelude-ty">Option</span>::&lt;Value&gt;::HASH,
 <a href=#419 id=419 data-nosnippet>419</a>                        variant_hash,
 <a href=#420 id=420 data-nosnippet>420</a>                        fields,
 <a href=#421 id=421 data-nosnippet>421</a>                    };

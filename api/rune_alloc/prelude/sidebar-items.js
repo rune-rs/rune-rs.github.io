@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"derive":["TryClone"],"macro":["try_format","try_vec"],"trait":["OptionExt"]};
+window.SIDEBAR_ITEMS = {"derive":["TryClone"],"macro":[["try_format",1],["try_vec",1]],"trait":["OptionExt"]};
