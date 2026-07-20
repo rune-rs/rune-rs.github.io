@@ -42,17 +42,17 @@
 <a href=#42 id=42 data-nosnippet>42</a>    };
 <a href=#43 id=43 data-nosnippet>43</a>
 <a href=#44 id=44 data-nosnippet>44</a>    <span class="doccomment">/// Parse an option with the extra diagnostics metadata.
-<a href=#45 id=45 data-nosnippet>45</a>    </span><span class="kw">fn </span>parse_option_with(
-<a href=#46 id=46 data-nosnippet>46</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#47 id=47 data-nosnippet>47</a>        option: <span class="kw-2">&amp;</span>str,
-<a href=#48 id=48 data-nosnippet>48</a>        env: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;,
-<a href=#49 id=49 data-nosnippet>49</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ParseOptionError&gt; {
-<a href=#50 id=50 data-nosnippet>50</a>        <span class="kw">let </span>(head, tail) = <span class="kw">if let </span><span class="prelude-val">Some</span>((head, tail)) = option.trim().split_once(<span class="string">'='</span>) {
-<a href=#51 id=51 data-nosnippet>51</a>            (head.trim(), <span class="prelude-val">Some</span>(tail.trim()))
-<a href=#52 id=52 data-nosnippet>52</a>        } <span class="kw">else </span>{
-<a href=#53 id=53 data-nosnippet>53</a>            (option.trim(), <span class="prelude-val">None</span>)
-<a href=#54 id=54 data-nosnippet>54</a>        };
-<a href=#55 id=55 data-nosnippet>55</a>
+<a href=#45 id=45 data-nosnippet>45</a>    ///
+<a href=#46 id=46 data-nosnippet>46</a>    /// The `option` is the full option being parsed, and is used for error
+<a href=#47 id=47 data-nosnippet>47</a>    /// reporting, while `head` and `tail` are the already split option key and
+<a href=#48 id=48 data-nosnippet>48</a>    /// optional value.
+<a href=#49 id=49 data-nosnippet>49</a>    </span><span class="kw">fn </span>parse_option_with(
+<a href=#50 id=50 data-nosnippet>50</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#51 id=51 data-nosnippet>51</a>        option: <span class="kw-2">&amp;</span>str,
+<a href=#52 id=52 data-nosnippet>52</a>        head: <span class="kw-2">&amp;</span>str,
+<a href=#53 id=53 data-nosnippet>53</a>        tail: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+<a href=#54 id=54 data-nosnippet>54</a>        env: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;,
+<a href=#55 id=55 data-nosnippet>55</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ParseOptionError&gt; {
 <a href=#56 id=56 data-nosnippet>56</a>        <span class="kw">match </span>head {
 <a href=#57 id=57 data-nosnippet>57</a>            <span class="string">"error-recovery" </span>=&gt; {
 <a href=#58 id=58 data-nosnippet>58</a>                <span class="self">self</span>.error_recovery = tail.is_none_or(|s| s == <span class="string">"true"</span>);
@@ -385,7 +385,7 @@
 <a href=#385 id=385 data-nosnippet>385</a>                    <span class="self">self</span>.max_macro_depth = number;
 <a href=#386 id=386 data-nosnippet>386</a>                }
 <a href=#387 id=387 data-nosnippet>387</a>                other =&gt; {
-<a href=#388 id=388 data-nosnippet>388</a>                    <span class="kw">let </span><span class="prelude-val">Some</span>((head, tail)) = other.split_once(<span class="string">'.'</span>) <span class="kw">else </span>{
+<a href=#388 id=388 data-nosnippet>388</a>                    <span class="kw">let </span><span class="prelude-val">Some</span>((head, sub)) = other.split_once(<span class="string">'.'</span>) <span class="kw">else </span>{
 <a href=#389 id=389 data-nosnippet>389</a>                        <span class="kw">return </span><span class="prelude-val">Err</span>(ParseOptionError {
 <a href=#390 id=390 data-nosnippet>390</a>                            env,
 <a href=#391 id=391 data-nosnippet>391</a>                            option: option.into(),
@@ -393,11 +393,11 @@
 <a href=#393 id=393 data-nosnippet>393</a>                    };
 <a href=#394 id=394 data-nosnippet>394</a>
 <a href=#395 id=395 data-nosnippet>395</a>                    <span class="kw">let </span>head = head.trim();
-<a href=#396 id=396 data-nosnippet>396</a>                    <span class="kw">let </span>tail = tail.trim();
+<a href=#396 id=396 data-nosnippet>396</a>                    <span class="kw">let </span>sub = sub.trim();
 <a href=#397 id=397 data-nosnippet>397</a>
 <a href=#398 id=398 data-nosnippet>398</a>                    <span class="kw">match </span>head {
 <a href=#399 id=399 data-nosnippet>399</a>                        <span class="string">"fmt" </span>=&gt; {
-<a href=#400 id=400 data-nosnippet>400</a>                            <span class="self">self</span>.fmt.parse_option_with(tail, env)<span class="question-mark">?</span>;
+<a href=#400 id=400 data-nosnippet>400</a>                            <span class="self">self</span>.fmt.parse_option_with(option, sub, tail, env)<span class="question-mark">?</span>;
 <a href=#401 id=401 data-nosnippet>401</a>                        }
 <a href=#402 id=402 data-nosnippet>402</a>                        <span class="kw">_ </span>=&gt; {
 <a href=#403 id=403 data-nosnippet>403</a>                            <span class="kw">return </span><span class="prelude-val">Err</span>(ParseOptionError {
@@ -465,4 +465,19 @@
 <a href=#465 id=465 data-nosnippet>465</a>        Options::DEFAULT
 <a href=#466 id=466 data-nosnippet>466</a>    }
 <a href=#467 id=467 data-nosnippet>467</a>}
+<a href=#468 id=468 data-nosnippet>468</a>
+<a href=#469 id=469 data-nosnippet>469</a><span class="attr">#[cfg(test)]
+<a href=#470 id=470 data-nosnippet>470</a></span><span class="kw">mod </span>tests {
+<a href=#471 id=471 data-nosnippet>471</a>    <span class="kw">use </span><span class="kw">super</span>::Options;
+<a href=#472 id=472 data-nosnippet>472</a>
+<a href=#473 id=473 data-nosnippet>473</a>    <span class="attr">#[test]
+<a href=#474 id=474 data-nosnippet>474</a>    </span><span class="kw">fn </span>parse_nested_option_value() {
+<a href=#475 id=475 data-nosnippet>475</a>        <span class="kw">let </span><span class="kw-2">mut </span>options = Options::DEFAULT;
+<a href=#476 id=476 data-nosnippet>476</a>        <span class="macro">assert!</span>(options.fmt.force_newline);
+<a href=#477 id=477 data-nosnippet>477</a>        options.parse_option(<span class="string">"fmt.force-newline=false"</span>).unwrap();
+<a href=#478 id=478 data-nosnippet>478</a>        <span class="macro">assert!</span>(!options.fmt.force_newline);
+<a href=#479 id=479 data-nosnippet>479</a>        options.parse_option(<span class="string">"fmt.force-newline=true"</span>).unwrap();
+<a href=#480 id=480 data-nosnippet>480</a>        <span class="macro">assert!</span>(options.fmt.force_newline);
+<a href=#481 id=481 data-nosnippet>481</a>    }
+<a href=#482 id=482 data-nosnippet>482</a>}
 </code></pre></div></section></main></body></html>
