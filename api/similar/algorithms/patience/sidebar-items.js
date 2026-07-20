@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["diff","diff_deadline"]};
+window.SIDEBAR_ITEMS = {"fn":["diff","diff_deadline","diff_deadline_raw"]};
