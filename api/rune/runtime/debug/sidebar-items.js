@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["DebugArgs"],"struct":["DebugInfo","DebugInst","DebugSignature"]};
+window.SIDEBAR_ITEMS = {"enum":["DebugArgs"],"struct":["DebugGlobal","DebugInfo","DebugInst","DebugSignature"]};

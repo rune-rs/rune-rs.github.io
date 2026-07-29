@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c312ac75.js";
+            window.path_to_searchindex_js = "searchindex-a11c8651.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-aa9232e9.js"></script>
+        <script src="toc-495ec6f4.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -729,9 +729,9 @@ the number is smaller than 5
 variables in Rune are mutable and can be changed at any time.</p>
 <pre><code class="language-rune">pub fn main() {
     let x = 5;
-    println!("The value of x is: {}", x);
+    println!("The value of x is: {x}");
     x = 6;
-    println!("The value of x is: {}", x);
+    println!("The value of x is: {x}");
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/variables/variables.rn
@@ -814,6 +814,346 @@ field: 1
 object is no longer readable 😢
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="statics"><a class="header" href="#statics">Statics</a></h1>
+<p>A <code>static</code> item is a named piece of mutable state that lives for as long as the
+program using it, rather than for the duration of a single call.</p>
+<pre><code class="language-rune">static COUNTER = 0;
+
+fn bump() {
+    COUNTER += 1;
+    COUNTER
+}
+
+println!("{}", bump());
+println!("{}", bump());
+println!("{}", bump());
+</code></pre>
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/statics/counter.rn
+1
+2
+3
+</code></pre>
+<p>This is the main thing that distinguishes a <code>static</code> from a <a href="#items-and-imports"><code>const</code></a>. A
+constant is <em>inlined</em> at every place it is used, so each use produces a fresh
+copy and there is nothing to assign to. A static instead occupies a numbered
+slot, and every use reads or writes that one slot.</p>
+<p>Statics are declared at the item level, so they can appear inside modules and be
+addressed by path like any other item:</p>
+<pre><code class="language-rune">pub mod config {
+    pub static WIDTH = 800;
+}
+
+println!("{}", config::WIDTH);
+</code></pre>
+<h2 id="initializers"><a class="header" href="#initializers">Initializers</a></h2>
+<p>The expression a static is initialized with must be a constant expression, the
+same kind that a <code>const</code> accepts. It is evaluated lazily, the first time
+something reads the static:</p>
+<pre><code class="language-rune">static LIMIT = 4 * 8;
+</code></pre>
+<p>The initializer is optional. A static declared without one starts out
+uninitialized, and reading it before anything has assigned it is an error:</p>
+<pre><code class="language-rune">static CONFIG;
+
+println!("{CONFIG}");
+</code></pre>
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/statics/uninitialized.rn
+error: Reading uninitialized static `CONFIG` (slot 0)
+  ┌─ scripts/book/statics/uninitialized.rn:3:10
+  │
+3 │ println!("{CONFIG}");
+  │          ^^^^^^^^^^ Reading uninitialized static `CONFIG` (slot 0)
+</code></pre>
+<blockquote>
+<p>Note that the static is named in the diagnostic. This relies on debug
+information being available. Without it the message falls back to reporting
+the slot number alone.</p>
+</blockquote>
+<p>Since a static isn’t known until runtime, it cannot be used anywhere a value is
+required at compile time. Referring to one from a <code>const</code>, from another
+static’s initializer, or from a pattern is a compile error.</p>
+<h2 id="statics-hold-values-not-copies"><a class="header" href="#statics-hold-values-not-copies">Statics hold values, not copies</a></h2>
+<p><a href="#variables-and-memory">As with every other value in Rune</a>, what a static holds is a
+reference counted value. Reading a static therefore hands you a handle to <em>the
+same</em> instance, so mutating through that handle mutates what the static holds
+without any assignment taking place:</p>
+<pre><code class="language-rune">static SEEN = [];
+
+fn record(value) {
+    SEEN.push(value);
+}
+
+record(1);
+record(2);
+
+println!("{SEEN:?}");
+</code></pre>
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/statics/shared_value.rn
+[1, 2]
+</code></pre>
+<h2 id="storage-is-configured-on-the-virtual-machine"><a class="header" href="#storage-is-configured-on-the-virtual-machine">Storage is configured on the virtual machine</a></h2>
+<p>The values of statics are <em>not</em> stored in the <a href="https://docs.rs/rune/latest/rune/struct.Unit.html"><code>Unit</code></a>. A unit only records how
+many statics there are, which slot each one was assigned, and what each one’s
+initializer is. The values live in a separate <a href="https://docs.rs/rune/latest/rune/runtime/struct.Globals.html"><code>Globals</code></a> storage which is
+handed to the virtual machine when it is constructed:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let globals = Globals::new(unit.clone())?;
+let mut vm = Vm::new(runtime, unit).with_globals(globals);
+<span class="boring">}</span></code></pre>
+<p>This separation means one compiled unit can back any number of independent
+states - one per tenant, per session, per test - simply by constructing more
+than one <code>Globals</code> for it. Two machines built from the same unit with different
+storage do not observe each other’s statics.</p>
+<p><a href="https://docs.rs/rune/latest/rune/runtime/struct.Globals.html"><code>Globals</code></a> is a cheaply cloned handle, so the caller can hold on to a clone and
+read or write statics while the machine that uses them is running. Statics are
+addressed by item, the same way functions are:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let globals = Globals::new(unit.clone())?;
+
+// Assign before anything runs.
+globals.set(["COUNTER"], rune::to_value(41i64)?)?;
+
+let mut vm = Vm::new(runtime, unit).with_globals(globals.clone());
+vm.call(["main"], ())?;
+
+// Read back what the script left behind.
+let value = globals.get(["COUNTER"])?;
+<span class="boring">}</span></code></pre>
+<p>Writing a static from the outside takes precedence over its initializer, since
+the initializer only runs for a slot which is still uninitialized.</p>
+<p>If you construct a <code>Vm</code> without calling <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html#method.with_globals"><code>Vm::with_globals</code></a>, it has no storage
+and reading a static errors. <a href="https://docs.rs/rune/latest/rune/struct.Build.html#method.build_vm"><code>Build::build_vm</code></a> provisions storage for you, so
+the shorthand path needs no extra setup:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut vm = rune::prepare(&amp;mut sources)
+    .with_context(&amp;context)
+    .build_vm()?;
+<span class="boring">}</span></code></pre>
+<h2 id="providing-a-global-registry"><a class="header" href="#providing-a-global-registry">Providing a global registry</a></h2>
+<p>The most useful thing this enables is handing scripts access to something the
+host owns - a registry, a service handle, a configuration object - without
+threading it through the signature of every function that might need it.</p>
+<p>Declare a static with no initializer and let the host fill it in:</p>
+<pre><code class="language-rune">static REGISTRY;
+
+fn describe(key) {
+    match REGISTRY.get(key) {
+        Some(value) =&gt; format!("{key} is {value}"),
+        None =&gt; format!("{key} is unset"),
+    }
+}
+</code></pre>
+<p><code>describe</code> takes no registry argument, and neither does anything that calls it.
+The host writes the slot once, before the first call:</p>
+<pre class="playground"><code class="language-rust">//! Injecting a host-owned registry into scripts through a bare `static`.
+//!
+//! The registry is never passed as an argument. The script declares
+//! `static REGISTRY;` with no initializer, the host writes it into the
+//! [`Globals`] storage once, and every function in the script can reach it.
+
+use std::collections::HashMap;
+
+use rune::runtime::Globals;
+use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Any, ContextError, Diagnostics, Module, Vm};
+
+/// A registry owned by the host and shared with every script that runs.
+#[derive(Debug, Any)]
+struct Registry {
+    settings: HashMap&lt;String, i64&gt;,
+}
+
+impl Registry {
+    /// Look up a setting, returning `None` if it isn't present.
+    #[rune::function]
+    fn get(&amp;self, key: &amp;str) -&gt; Option&lt;i64&gt; {
+        self.settings.get(key).copied()
+    }
+}
+
+fn module() -&gt; Result&lt;Module, ContextError&gt; {
+    let mut m = Module::new();
+    m.ty::&lt;Registry&gt;()?;
+    m.function_meta(Registry::get)?;
+    Ok(m)
+}
+
+fn main() -&gt; rune::support::Result&lt;()&gt; {
+    let mut context = rune_modules::default_context()?;
+    context.install(module()?)?;
+    let runtime = Arc::try_new(context.runtime()?)?;
+
+    // Note that `REGISTRY` is not a parameter of either function.
+    let mut sources = rune::sources!(
+        entry =&gt; {
+            static REGISTRY;
+
+            fn describe(key) {
+                match REGISTRY.get(key) {
+                    Some(value) =&gt; format!("{key} is {value}"),
+                    None =&gt; format!("{key} is unset"),
+                }
+            }
+
+            pub fn main() {
+                [describe("width"), describe("height"), describe("depth")]
+            }
+        }
+    );
+
+    let mut diagnostics = Diagnostics::new();
+
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
+        .with_diagnostics(&amp;mut diagnostics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
+    }
+
+    let unit = Arc::try_new(result?)?;
+
+    let registry = Registry {
+        settings: HashMap::from([("width".to_owned(), 800), ("height".to_owned(), 600)]),
+    };
+
+    // Wire the registry into the slot the script declared, before it runs.
+    let globals = Globals::new(unit.clone())?;
+    globals.set(["REGISTRY"], rune::to_value(registry)?)?;
+
+    let mut vm = Vm::new(runtime, unit).with_globals(globals);
+
+    let output: Vec&lt;String&gt; = rune::from_value(vm.call(["main"], ())?)?;
+
+    for line in output {
+        println!("{line}");
+    }
+
+    Ok(())
+}</code></pre>
+<pre><code class="language-text">$&gt; cargo run --example global_registry
+width is 800
+height is 600
+depth is unset
+</code></pre>
+<p>Because the storage is per-machine rather than per-unit, this stays sound when
+the same script is used for many independent things at once - each caller
+constructs its own <code>Globals</code> and injects its own registry.</p>
+<h2 id="declaring-statics-with-the-build"><a class="header" href="#declaring-statics-with-the-build">Declaring statics with the build</a></h2>
+<p>A host which owns the state doesn’t necessarily want the script to be
+responsible for declaring it. Statics can therefore also be declared with the
+build through <a href="https://docs.rs/rune/latest/rune/struct.Statics.html"><code>Statics</code></a>, in which case the source doesn’t mention them at all:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut statics = Statics::new();
+statics.insert(["REGISTRY"])?;
+
+let unit = rune::prepare(&amp;mut sources)
+    .with_context(&amp;context)
+    .with_statics(&amp;statics)
+    .build()?;
+<span class="boring">}</span></code></pre>
+<p>The script above then works unchanged with its <code>static REGISTRY;</code> removed, in
+the same way that a native module makes a function available without the script
+declaring it. Every source in the unit sees the static, and the name is an item,
+so <code>["config", "REGISTRY"]</code> declares it inside of the <code>config</code> module.</p>
+<p>There is no source to evaluate, so a static declared this way has no
+initializer. It starts out uninitialized just like <code>static REGISTRY;</code> does, and
+the caller is expected to assign it before anything reads it:</p>
+<pre class="playground"><code class="language-rust">//! Demonstrates statics which are declared with the build rather than by the
+//! script.
+//!
+//! A host which owns a piece of state usually doesn't want the script to be
+//! responsible for declaring it. Declaring it with the build makes it available
+//! to every source in the unit without them saying anything about it, in the
+//! same way that a native module makes a function available.
+
+use rune::runtime::Globals;
+use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Diagnostics, Statics, Vm};
+
+fn main() -&gt; rune::support::Result&lt;()&gt; {
+    let context = rune_modules::default_context()?;
+    let runtime = Arc::try_new(context.runtime()?)?;
+
+    // Note that the script uses `GREETING` and `CALLS` without declaring them.
+    let mut sources = rune::sources!(
+        entry =&gt; {
+            pub fn main(name) {
+                CALLS += 1;
+                format!("{GREETING}, {name}! (call {CALLS})")
+            }
+        }
+    );
+
+    let mut statics = Statics::new();
+    statics.insert(["GREETING"])?;
+    statics.insert(["CALLS"])?;
+
+    let mut diagnostics = Diagnostics::new();
+
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
+        .with_diagnostics(&amp;mut diagnostics)
+        .with_statics(&amp;statics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
+    }
+
+    let unit = Arc::try_new(result?)?;
+
+    // A declared static has no initializer, so both of these have to be
+    // assigned before the script reads them.
+    let globals = Globals::new(unit.clone())?;
+    globals.set(["GREETING"], rune::to_value("Hello")?)?;
+    globals.set(["CALLS"], rune::to_value(0i64)?)?;
+
+    let mut vm = Vm::new(runtime, unit).with_globals(globals.clone());
+
+    for name in ["Jane", "John"] {
+        let output = vm.call(["main"], (name,))?;
+        let output: String = rune::from_value(output)?;
+        println!("{output}");
+    }
+
+    let calls = globals.get(["CALLS"])?.expect("CALLS to be initialized");
+    println!("calls: {}", rune::from_value::&lt;i64&gt;(calls)?);
+    Ok(())
+}</code></pre>
+<pre><code class="language-text">$&gt; cargo run --example declared_statics
+Hello, Jane! (call 1)
+Hello, John! (call 2)
+calls: 2
+</code></pre>
+<p>Since a declared static occupies the item it is named with, a source which
+declares an item of the same name is a compile error rather than a silent
+override of either one.</p>
+<h2 id="statics-and-threads"><a class="header" href="#statics-and-threads">Statics and threads</a></h2>
+<p>Static storage holds <a href="https://docs.rs/rune/latest/rune/runtime/struct.Value.html"><code>Value</code></a>’s, so like the <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html"><code>Vm</code></a> itself it cannot be shared
+across threads. Each thread builds its own <a href="https://docs.rs/rune/latest/rune/runtime/struct.Globals.html"><code>Globals</code></a> out of the shared
+<a href="https://docs.rs/rune/latest/rune/struct.Unit.html"><code>Unit</code></a>; see <a href="#multithreading">Multithreading</a> for the general picture.</p>
+<p>That does not stop statics from being shared state across threads, it just moves
+the responsibility. Assign a host value whose interior is synchronized, such as
+an <code>Arc&lt;Mutex&lt;..&gt;&gt;</code>, an atomic, or a channel sender, and every thread’s slot
+points at the same interior, with that value deciding how concurrent access is
+handled.
+This pairs naturally with a pool of machines: a pooled machine keeps the storage
+it was built with, so a worker that takes one out of the pool already has its
+statics wired up. See <a href="#statics-across-threads">Statics across threads</a> for a worked example.</p>
+<p>One consequence is worth calling out: <a href="https://docs.rs/rune/latest/rune/runtime/struct.Function.html#method.into_sync"><code>Function::into_sync</code></a> produces a
+<a href="https://docs.rs/rune/latest/rune/runtime/struct.SyncFunction.html"><code>SyncFunction</code></a>, which cannot carry the storage. Calling a static through a
+<code>SyncFunction</code> reports that no storage has been configured.</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="loops"><a class="header" href="#loops">Loops</a></h1>
 <p>Loops are a fundamental building block common to many programming languages.
 This is no exception in Rune.
@@ -834,7 +1174,8 @@ while value &lt; 100 {
     value = value + 1;
 }
 
-println!("The value is {}", value); // =&gt; The value is 50
+// =&gt; The value is 50
+println!("The value is {value}");
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/loops/while_loop.rn
 The value is 50
@@ -873,7 +1214,7 @@ let total = loop {
     }
 };
 
-println!("The final count is: {}", total);
+println!("The final count is: {total}");
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/loops/loop_break.rn
 The final count is: 11
@@ -888,8 +1229,8 @@ access to what you need.</p>
 <pre><code class="language-rune">fn match_input(n) {
     match n {
         1 =&gt; println!("The number one."),
-        n if n is i64 =&gt; println!("Another number: {}.", n),
-        [1, 2, n, ..] =&gt; println!("A vector starting with one and two, followed by {}.", n),
+        n if n is i64 =&gt; println!("Another number: {n}."),
+        [1, 2, n, ..] =&gt; println!("A vector starting with one and two, followed by {n}."),
         "one" =&gt; println!("One, but this time as a string."),
         _ =&gt; println!("Something else. Can I go eat now?"),
     }
@@ -979,7 +1320,7 @@ in scope of the match arm. This will also match the value unconditionally, but
 give us access to it in the match arm.</p>
 <pre><code class="language-rune">fn test_ignore(vector) {
     match vector {
-        [_, b] =&gt; println!("Second item in vector is {}.", b),
+        [_, b] =&gt; println!("Second item in vector is {b}."),
     }
 }
 
@@ -1768,7 +2109,7 @@ vector isn’t typed, and can store <em>any</em> Rune values.</p>
     println!("{}", values.1); // items in vectors can be accessed like tuple fields.
 
     for v in values {
-        println!("{}", v);
+        println!("{v}");
     }
 }
 </code></pre>
@@ -1785,7 +2126,7 @@ protocol. It is also possible to create and use an iterator manually using
     let values = ["Hello", 42];
 
     for v in values.iter().rev() {
-        println!("{}", v);
+        println!("{v}");
     }
 }
 </code></pre>
@@ -2188,7 +2529,7 @@ absent with <code>Option::None</code>.</p>
     let limit = limit.unwrap_or(10);
 
     for n in 0..limit {
-        println!("Count: {}", n);
+        println!("Count: {n}");
     }
 }
 
@@ -2395,11 +2736,11 @@ variant.</p>
 }
 
 if let Some((div, m)) = checked_div_mod(5, 2) {
-    println!("Result: {}, {}", div, m);
+    println!("Result: {div}, {m}");
 }
 
 if let Some((div, m)) = checked_div_mod(5, 0) {
-    println!("Result: {}, {}", div, m);
+    println!("Result: {div}, {m}");
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/try_operator/basic_try.rn
@@ -2461,7 +2802,7 @@ allowing the calling procedure to send values to the generator.</p>
 
     for _ in 0..2 {
         let out = yield;
-        println!("{:?}", out);
+        println!("{out:?}");
         collected.push(out);
     }
 
@@ -2515,7 +2856,7 @@ This enum has two variants: <code>Yielded</code> and <code>Complete</code>, and 
 possible states a generator can suspend itself into.</p>
 <pre><code class="language-rune">fn print_once() {
     let out = yield 1;
-    println!("{:?}", out);
+    println!("{out:?}");
     2
 }
 
@@ -2845,7 +3186,7 @@ the generator.</p>
 let requests = send_requests(["https://google.com", "https://amazon.com"]);
 
 while let Some(status) = requests.next().await.transpose()? {
-    println!("{}", status);
+    println!("{status}");
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/streams/basic_stream.rn
@@ -2886,7 +3227,7 @@ using <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html#method.un
 <p>Using <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html#method.send_execute"><code>Vm::send_execute</code></a> is a way to assert that a given execution is thread
 safe. And allows you to use Rune in asynchronous multithreaded environments,
 such as Tokio. This is achieved by ensuring that all captured arguments are
-<a href="https://docs.rs/rune/latest/rune/runtime/enum.ConstValue.html"><code>ConstValue</code></a>’s, which in contrast to <a href="https://docs.rs/rune/latest/rune/runtime/enum.Value.html"><code>Value</code></a>’s are guaranteed to be
+<a href="https://docs.rs/rune/latest/rune/runtime/struct.ConstValue.html"><code>ConstValue</code></a>’s, which in contrast to <a href="https://docs.rs/rune/latest/rune/runtime/struct.Value.html"><code>Value</code></a>’s are guaranteed to be
 thread-safe:</p>
 <pre class="playground"><code class="language-rust">use rune::alloc::prelude::*;
 use rune::sync::Arc;
@@ -2937,10 +3278,155 @@ async fn main() -&gt; rune::support::Result&lt;()&gt; {
     tokio::try_join!(t1, t2).unwrap();
     Ok(())
 }</code></pre>
+<h2 id="statics-across-threads"><a class="header" href="#statics-across-threads">Statics across threads</a></h2>
+<p><a href="#statics">Static storage</a> follows the same rule as the <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html"><code>Vm</code></a>: a
+<a href="https://docs.rs/rune/latest/rune/runtime/struct.Globals.html"><code>Globals</code></a> holds <a href="https://docs.rs/rune/latest/rune/runtime/struct.Value.html"><code>Value</code></a>’s, so it cannot be shared between threads. It is
+built per machine, alongside the machine, out of the shared <a href="https://docs.rs/rune/latest/rune/runtime/struct.Unit.html"><code>Unit</code></a>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let globals = Globals::new(unit.clone())?;
+let mut vm = Vm::new(runtime, unit).with_globals(globals);
+<span class="boring">}</span></code></pre>
+<p>This is not a limitation so much as a division of labour. What makes a static
+shared across threads is the <em>value</em> you put in it, not the storage holding it.
+Assign a host type whose interior is synchronized, such as an <code>Arc&lt;Mutex&lt;..&gt;&gt;</code>,
+an <code>Arc&lt;RwLock&lt;..&gt;&gt;</code>, an atomic, or a channel sender, and it is up to that value
+to decide how concurrent access is handled. Each thread gets its own slot, and
+every slot points at the same interior:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Debug, Clone, Any)]
+struct Counter {
+    inner: Arc&lt;Mutex&lt;i64&gt;&gt;,
+}
+<span class="boring">}</span></code></pre>
+<p>Cloning <code>Counter</code> produces another handle to the same <code>Mutex</code>, so each thread
+can be handed its own clone before it builds its machine. Note that the clone
+has to happen on the outside: a <a href="https://docs.rs/rune/latest/rune/runtime/struct.Value.html"><code>Value</code></a> cannot cross a thread boundary, so
+each thread converts its own clone into one.</p>
+<p>This composes with the pool described above. A pooled machine keeps the storage
+it was constructed with, so a worker which picks a machine out of the pool
+already has the statics associated with it, so there is nothing to re-inject per
+task. Warming the pool once means each machine resolves its statics once, and
+every one of them still reaches the same shared interior.</p>
+<pre class="playground"><code class="language-rust">//! Sharing state between virtual machines on different threads through a
+//! `static`.
+//!
+//! Static storage cannot cross a thread boundary, so every thread builds its
+//! own [`Globals`] out of the same [`Unit`]. What makes the state shared is the
+//! *value* placed in the slot: a host type whose interior is an
+//! `Arc&lt;Mutex&lt;..&gt;&gt;`, cloned once per thread.
+
+use std::sync::{Arc as StdArc, Mutex};
+use std::thread;
+
+use rune::runtime::Globals;
+use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Any, ContextError, Diagnostics, Module, Vm};
+
+/// A counter shared by every virtual machine, on every thread.
+///
+/// Cloning it produces another handle to the same interior, which is what makes
+/// it usable from more than one thread at a time.
+#[derive(Debug, Clone, Any)]
+struct Counter {
+    inner: StdArc&lt;Mutex&lt;i64&gt;&gt;,
+}
+
+impl Counter {
+    /// Bump the counter and return its new value.
+    #[rune::function]
+    fn increment(&amp;self) -&gt; i64 {
+        let mut count = self.inner.lock().unwrap();
+        *count += 1;
+        *count
+    }
+}
+
+fn module() -&gt; Result&lt;Module, ContextError&gt; {
+    let mut m = Module::new();
+    m.ty::&lt;Counter&gt;()?;
+    m.function_meta(Counter::increment)?;
+    Ok(m)
+}
+
+const THREADS: usize = 4;
+const CALLS: usize = 1000;
+
+fn main() -&gt; rune::support::Result&lt;()&gt; {
+    let mut context = rune_modules::default_context()?;
+    context.install(module()?)?;
+    let runtime = Arc::try_new(context.runtime()?)?;
+
+    let mut sources = rune::sources!(
+        entry =&gt; {
+            static COUNTER;
+
+            pub fn main() {
+                COUNTER.increment()
+            }
+        }
+    );
+
+    let mut diagnostics = Diagnostics::new();
+
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
+        .with_diagnostics(&amp;mut diagnostics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
+    }
+
+    // The unit and the runtime are `Send + Sync`, so they are compiled once and
+    // shared. The storage and the virtual machines are not, so they are built
+    // per thread.
+    let unit = Arc::try_new(result?)?;
+
+    let counter = Counter {
+        inner: StdArc::new(Mutex::new(0)),
+    };
+
+    let mut handles = Vec::new();
+
+    for _ in 0..THREADS {
+        let unit = unit.clone();
+        let runtime = runtime.clone();
+        // A new handle to the same interior.
+        let counter = counter.clone();
+
+        handles.push(thread::spawn(move || -&gt; rune::support::Result&lt;()&gt; {
+            let globals = Globals::new(unit.clone())?;
+            globals.set(["COUNTER"], rune::to_value(counter)?)?;
+
+            let mut vm = Vm::new(runtime, unit).with_globals(globals);
+
+            for _ in 0..CALLS {
+                vm.call(["main"], ())?;
+            }
+
+            Ok(())
+        }));
+    }
+
+    for handle in handles {
+        handle.join().unwrap()?;
+    }
+
+    let total = *counter.inner.lock().unwrap();
+    println!("total: {total}");
+    Ok(())
+}</code></pre>
+<pre><code class="language-text">$&gt; cargo run --example statics_threads
+total: 4000
+</code></pre>
 <p>Finally <a href="https://docs.rs/rune/latest/rune/runtime/struct.Function.html#method.into_sync"><code>Function::into_sync</code></a> exists to coerce a function into a
 <a href="https://docs.rs/rune/latest/rune/runtime/struct.SyncFunction.html"><code>SyncFunction</code></a>, which is a thread-safe variant of a regular <a href="https://docs.rs/rune/latest/rune/runtime/struct.Function.html"><code>Function</code></a>. This
 is a fallible operation since all values which are captured in the function-type
-in case its a closure has to be coerced to <a href="https://docs.rs/rune/latest/rune/runtime/enum.ConstValue.html"><code>ConstValue</code></a>. If this is not the
+in case its a closure has to be coerced to <a href="https://docs.rs/rune/latest/rune/runtime/struct.ConstValue.html"><code>ConstValue</code></a>. If this is not the
 case, the conversion will fail.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="hot-reloading"><a class="header" href="#hot-reloading">Hot reloading</a></h1>

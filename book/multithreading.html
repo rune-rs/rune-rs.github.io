@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c312ac75.js";
+            window.path_to_searchindex_js = "searchindex-a11c8651.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-aa9232e9.js"></script>
+        <script src="toc-495ec6f4.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -207,7 +207,7 @@ using <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html#method.un
 <p>Using <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html#method.send_execute"><code>Vm::send_execute</code></a> is a way to assert that a given execution is thread
 safe. And allows you to use Rune in asynchronous multithreaded environments,
 such as Tokio. This is achieved by ensuring that all captured arguments are
-<a href="https://docs.rs/rune/latest/rune/runtime/enum.ConstValue.html"><code>ConstValue</code></a>’s, which in contrast to <a href="https://docs.rs/rune/latest/rune/runtime/enum.Value.html"><code>Value</code></a>’s are guaranteed to be
+<a href="https://docs.rs/rune/latest/rune/runtime/struct.ConstValue.html"><code>ConstValue</code></a>’s, which in contrast to <a href="https://docs.rs/rune/latest/rune/runtime/struct.Value.html"><code>Value</code></a>’s are guaranteed to be
 thread-safe:</p>
 <pre class="playground"><code class="language-rust">use rune::alloc::prelude::*;
 use rune::sync::Arc;
@@ -258,10 +258,155 @@ async fn main() -&gt; rune::support::Result&lt;()&gt; {
     tokio::try_join!(t1, t2).unwrap();
     Ok(())
 }</code></pre>
+<h2 id="statics-across-threads"><a class="header" href="#statics-across-threads">Statics across threads</a></h2>
+<p><a href="./statics.html">Static storage</a> follows the same rule as the <a href="https://docs.rs/rune/latest/rune/runtime/struct.Vm.html"><code>Vm</code></a>: a
+<a href="https://docs.rs/rune/latest/rune/runtime/struct.Globals.html"><code>Globals</code></a> holds <a href="https://docs.rs/rune/latest/rune/runtime/struct.Value.html"><code>Value</code></a>’s, so it cannot be shared between threads. It is
+built per machine, alongside the machine, out of the shared <a href="https://docs.rs/rune/latest/rune/runtime/struct.Unit.html"><code>Unit</code></a>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let globals = Globals::new(unit.clone())?;
+let mut vm = Vm::new(runtime, unit).with_globals(globals);
+<span class="boring">}</span></code></pre>
+<p>This is not a limitation so much as a division of labour. What makes a static
+shared across threads is the <em>value</em> you put in it, not the storage holding it.
+Assign a host type whose interior is synchronized, such as an <code>Arc&lt;Mutex&lt;..&gt;&gt;</code>,
+an <code>Arc&lt;RwLock&lt;..&gt;&gt;</code>, an atomic, or a channel sender, and it is up to that value
+to decide how concurrent access is handled. Each thread gets its own slot, and
+every slot points at the same interior:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Debug, Clone, Any)]
+struct Counter {
+    inner: Arc&lt;Mutex&lt;i64&gt;&gt;,
+}
+<span class="boring">}</span></code></pre>
+<p>Cloning <code>Counter</code> produces another handle to the same <code>Mutex</code>, so each thread
+can be handed its own clone before it builds its machine. Note that the clone
+has to happen on the outside: a <a href="https://docs.rs/rune/latest/rune/runtime/struct.Value.html"><code>Value</code></a> cannot cross a thread boundary, so
+each thread converts its own clone into one.</p>
+<p>This composes with the pool described above. A pooled machine keeps the storage
+it was constructed with, so a worker which picks a machine out of the pool
+already has the statics associated with it, so there is nothing to re-inject per
+task. Warming the pool once means each machine resolves its statics once, and
+every one of them still reaches the same shared interior.</p>
+<pre class="playground"><code class="language-rust">//! Sharing state between virtual machines on different threads through a
+//! `static`.
+//!
+//! Static storage cannot cross a thread boundary, so every thread builds its
+//! own [`Globals`] out of the same [`Unit`]. What makes the state shared is the
+//! *value* placed in the slot: a host type whose interior is an
+//! `Arc&lt;Mutex&lt;..&gt;&gt;`, cloned once per thread.
+
+use std::sync::{Arc as StdArc, Mutex};
+use std::thread;
+
+use rune::runtime::Globals;
+use rune::sync::Arc;
+use rune::termcolor::{ColorChoice, StandardStream};
+use rune::{Any, ContextError, Diagnostics, Module, Vm};
+
+/// A counter shared by every virtual machine, on every thread.
+///
+/// Cloning it produces another handle to the same interior, which is what makes
+/// it usable from more than one thread at a time.
+#[derive(Debug, Clone, Any)]
+struct Counter {
+    inner: StdArc&lt;Mutex&lt;i64&gt;&gt;,
+}
+
+impl Counter {
+    /// Bump the counter and return its new value.
+    #[rune::function]
+    fn increment(&amp;self) -&gt; i64 {
+        let mut count = self.inner.lock().unwrap();
+        *count += 1;
+        *count
+    }
+}
+
+fn module() -&gt; Result&lt;Module, ContextError&gt; {
+    let mut m = Module::new();
+    m.ty::&lt;Counter&gt;()?;
+    m.function_meta(Counter::increment)?;
+    Ok(m)
+}
+
+const THREADS: usize = 4;
+const CALLS: usize = 1000;
+
+fn main() -&gt; rune::support::Result&lt;()&gt; {
+    let mut context = rune_modules::default_context()?;
+    context.install(module()?)?;
+    let runtime = Arc::try_new(context.runtime()?)?;
+
+    let mut sources = rune::sources!(
+        entry =&gt; {
+            static COUNTER;
+
+            pub fn main() {
+                COUNTER.increment()
+            }
+        }
+    );
+
+    let mut diagnostics = Diagnostics::new();
+
+    let result = rune::prepare(&amp;mut sources)
+        .with_context(&amp;context)
+        .with_diagnostics(&amp;mut diagnostics)
+        .build();
+
+    if !diagnostics.is_empty() {
+        let mut writer = StandardStream::stderr(ColorChoice::Always);
+        diagnostics.emit(&amp;mut writer, &amp;sources)?;
+    }
+
+    // The unit and the runtime are `Send + Sync`, so they are compiled once and
+    // shared. The storage and the virtual machines are not, so they are built
+    // per thread.
+    let unit = Arc::try_new(result?)?;
+
+    let counter = Counter {
+        inner: StdArc::new(Mutex::new(0)),
+    };
+
+    let mut handles = Vec::new();
+
+    for _ in 0..THREADS {
+        let unit = unit.clone();
+        let runtime = runtime.clone();
+        // A new handle to the same interior.
+        let counter = counter.clone();
+
+        handles.push(thread::spawn(move || -&gt; rune::support::Result&lt;()&gt; {
+            let globals = Globals::new(unit.clone())?;
+            globals.set(["COUNTER"], rune::to_value(counter)?)?;
+
+            let mut vm = Vm::new(runtime, unit).with_globals(globals);
+
+            for _ in 0..CALLS {
+                vm.call(["main"], ())?;
+            }
+
+            Ok(())
+        }));
+    }
+
+    for handle in handles {
+        handle.join().unwrap()?;
+    }
+
+    let total = *counter.inner.lock().unwrap();
+    println!("total: {total}");
+    Ok(())
+}</code></pre>
+<pre><code class="language-text">$&gt; cargo run --example statics_threads
+total: 4000
+</code></pre>
 <p>Finally <a href="https://docs.rs/rune/latest/rune/runtime/struct.Function.html#method.into_sync"><code>Function::into_sync</code></a> exists to coerce a function into a
 <a href="https://docs.rs/rune/latest/rune/runtime/struct.SyncFunction.html"><code>SyncFunction</code></a>, which is a thread-safe variant of a regular <a href="https://docs.rs/rune/latest/rune/runtime/struct.Function.html"><code>Function</code></a>. This
 is a fallible operation since all values which are captured in the function-type
-in case its a closure has to be coerced to <a href="https://docs.rs/rune/latest/rune/runtime/enum.ConstValue.html"><code>ConstValue</code></a>. If this is not the
+in case its a closure has to be coerced to <a href="https://docs.rs/rune/latest/rune/runtime/struct.ConstValue.html"><code>ConstValue</code></a>. If this is not the
 case, the conversion will fail.</p>
 
                     </main>
