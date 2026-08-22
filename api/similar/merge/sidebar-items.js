@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ConflictStyle","MergeResolution"],"struct":["MergeRegion","TextMerge","TextMergeConfig"]};

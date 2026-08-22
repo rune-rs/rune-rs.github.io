@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/context.rs`."><title>context.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-650bd49d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.0-nightly (12c36e253 2026-08-10)" data-channel="nightly" data-search-js="search-cf4fc35e.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-d4bd101e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">rune/compile/</div>context.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::fmt;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/compile/context.rs`."><title>context.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-203241e4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.100.0-nightly (c656540d6 2026-08-21)" data-channel="nightly" data-search-js="search-b167f383.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-1814ead3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-9f56287d.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">rune/compile/</div>context.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::fmt;
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use crate as </span>rune;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
@@ -18,8 +18,8 @@
 <a href=#18 id=18 data-nosnippet>18</a>    TypeSpecification,
 <a href=#19 id=19 data-nosnippet>19</a>};
 <a href=#20 id=20 data-nosnippet>20</a><span class="kw">use </span><span class="kw">crate</span>::runtime::{
-<a href=#21 id=21 data-nosnippet>21</a>    Address, AnyTypeInfo, ConstConstructImpl, ConstContext, ConstValue, FunctionHandler, Memory,
-<a href=#22 id=22 data-nosnippet>22</a>    Output, Protocol, Rtti, RttiKind, RuntimeContext, TypeInfo, VmError,
+<a href=#21 id=21 data-nosnippet>21</a>    Address, AnyTypeInfo, ConstConstructImpl, ConstContext, ConstValue, ConstValueBuf,
+<a href=#22 id=22 data-nosnippet>22</a>    FunctionHandler, Memory, Output, Protocol, Rtti, RttiKind, RuntimeContext, TypeInfo, VmError,
 <a href=#23 id=23 data-nosnippet>23</a>};
 <a href=#24 id=24 data-nosnippet>24</a><span class="kw">use </span><span class="kw">crate</span>::sync::Arc;
 <a href=#25 id=25 data-nosnippet>25</a><span class="kw">use crate</span>::{Hash, Item, ItemBuf};
@@ -316,7 +316,7 @@
 <a href=#316 id=316 data-nosnippet>316</a>    <span class="doccomment">/// Registered crates.
 <a href=#317 id=317 data-nosnippet>317</a>    </span>crates: HashSet&lt;Box&lt;str&gt;&gt;,
 <a href=#318 id=318 data-nosnippet>318</a>    <span class="doccomment">/// Constants visible in this context
-<a href=#319 id=319 data-nosnippet>319</a>    </span>constants: hash::Map&lt;ConstValue&gt;,
+<a href=#319 id=319 data-nosnippet>319</a>    </span>constants: hash::Map&lt;ConstValueBuf&gt;,
 <a href=#320 id=320 data-nosnippet>320</a>    <span class="doccomment">/// Constant constructor.
 <a href=#321 id=321 data-nosnippet>321</a>    </span>construct: hash::Map&lt;ConstConstructImpl&gt;,
 <a href=#322 id=322 data-nosnippet>322</a>}
@@ -1031,7 +1031,7 @@
 <a href=#1031 id=1031 data-nosnippet>1031</a>
 <a href=#1032 id=1032 data-nosnippet>1032</a>        <span class="self">self</span>.constants.try_insert(
 <a href=#1033 id=1033 data-nosnippet>1033</a>            Hash::associated_function(ty.hash, <span class="kw-2">&amp;</span>Protocol::INTO_TYPE_NAME),
-<a href=#1034 id=1034 data-nosnippet>1034</a>            ConstValue::try_from(ty.item.try_to_string()<span class="question-mark">?</span>)<span class="question-mark">?</span>,
+<a href=#1034 id=1034 data-nosnippet>1034</a>            ConstValueBuf::try_from(ty.item.try_to_string()<span class="question-mark">?</span>)<span class="question-mark">?</span>,
 <a href=#1035 id=1035 data-nosnippet>1035</a>        )<span class="question-mark">?</span>;
 <a href=#1036 id=1036 data-nosnippet>1036</a>
 <a href=#1037 id=1037 data-nosnippet>1037</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = <span class="self">self</span>.types.try_insert(ty.hash, ty)<span class="question-mark">? </span>{
@@ -1057,7 +1057,7 @@
 <a href=#1057 id=1057 data-nosnippet>1057</a>            rune::module::ModuleItemKind::Function(f) =&gt; {
 <a href=#1058 id=1058 data-nosnippet>1058</a>                <span class="self">self</span>.constants.try_insert(
 <a href=#1059 id=1059 data-nosnippet>1059</a>                    Hash::associated_function(m.hash, <span class="kw-2">&amp;</span>Protocol::INTO_TYPE_NAME),
-<a href=#1060 id=1060 data-nosnippet>1060</a>                    ConstValue::try_from(m.item.try_to_string()<span class="question-mark">?</span>)<span class="question-mark">?</span>,
+<a href=#1060 id=1060 data-nosnippet>1060</a>                    ConstValueBuf::try_from(m.item.try_to_string()<span class="question-mark">?</span>)<span class="question-mark">?</span>,
 <a href=#1061 id=1061 data-nosnippet>1061</a>                )<span class="question-mark">?</span>;
 <a href=#1062 id=1062 data-nosnippet>1062</a>
 <a href=#1063 id=1063 data-nosnippet>1063</a>                <span class="kw">let </span>signature = meta::Signature::from_context(<span class="kw-2">&amp;</span>f.doc, <span class="kw-2">&amp;</span>m.common)<span class="question-mark">?</span>;
@@ -1147,7 +1147,7 @@
 <a href=#1147 id=1147 data-nosnippet>1147</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>((hash, item)) = <span class="kw-2">&amp;</span>item {
 <a href=#1148 id=1148 data-nosnippet>1148</a>                    <span class="self">self</span>.constants.try_insert(
 <a href=#1149 id=1149 data-nosnippet>1149</a>                        Hash::associated_function(<span class="kw-2">*</span>hash, <span class="kw-2">&amp;</span>Protocol::INTO_TYPE_NAME),
-<a href=#1150 id=1150 data-nosnippet>1150</a>                        ConstValue::try_from(item.try_to_string()<span class="question-mark">?</span>)<span class="question-mark">?</span>,
+<a href=#1150 id=1150 data-nosnippet>1150</a>                        ConstValueBuf::try_from(item.try_to_string()<span class="question-mark">?</span>)<span class="question-mark">?</span>,
 <a href=#1151 id=1151 data-nosnippet>1151</a>                    )<span class="question-mark">?</span>;
 <a href=#1152 id=1152 data-nosnippet>1152</a>
 <a href=#1153 id=1153 data-nosnippet>1153</a>                    <span class="self">self</span>.insert_native_fn(
@@ -1220,7 +1220,7 @@
 <a href=#1220 id=1220 data-nosnippet>1220</a>
 <a href=#1221 id=1221 data-nosnippet>1221</a>    <span class="doccomment">/// Get a constant value.
 <a href=#1222 id=1222 data-nosnippet>1222</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_const_value(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: Hash) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ConstValue&gt; {
-<a href=#1223 id=1223 data-nosnippet>1223</a>        <span class="self">self</span>.constants.get(<span class="kw-2">&amp;</span>hash)
+<a href=#1223 id=1223 data-nosnippet>1223</a>        <span class="prelude-val">Some</span>(<span class="self">self</span>.constants.get(<span class="kw-2">&amp;</span>hash)<span class="question-mark">?</span>)
 <a href=#1224 id=1224 data-nosnippet>1224</a>    }
 <a href=#1225 id=1225 data-nosnippet>1225</a>}
 <a href=#1226 id=1226 data-nosnippet>1226</a>

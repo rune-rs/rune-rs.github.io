@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a11c8651.js";
+            window.path_to_searchindex_js = "searchindex-29405d42.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-495ec6f4.js"></script>
@@ -419,13 +419,13 @@ compile time checks to make sure that every item we try to use actually exists.<
 <p>The following are examples of items in Rune:</p>
 <ul>
 <li><code>std::result::Result</code> (a type)</li>
-<li><code>std::iter::range</code> (a function)</li>
+<li><code>std::iter::once</code> (a function)</li>
 </ul>
-<p>The first refers to the <code>Result</code> enum, and the second is the <code>range</code> function.
+<p>The first refers to the <code>Result</code> enum, and the second is the <code>once</code> function.
 They both live within their corresponding <code>std</code> module. <code>Result</code> is a bit
 special even, since it’s part of the <em>prelude</em>, allowing us to use it without
-importing it. But what about <code>range</code>?</p>
-<p>If we wanted to use <code>range</code> we would have to import it first with a <code>use</code>
+importing it. But what about <code>once</code>?</p>
+<p>If we wanted to use <code>once</code> we would have to import it first with a <code>use</code>
 statement:</p>
 <pre><code class="language-rune">use std::iter::once;
 
@@ -435,7 +435,8 @@ dbg!(it.next());
 dbg!(it.next());
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/items_imports/example_import.rn
-std::iter::Range
+Some(0)
+None
 </code></pre>
 <p>Trying to use an item which doesn’t exist results in a compile error:</p>
 <pre><code class="language-rune">pub fn main() {
@@ -443,11 +444,13 @@ std::iter::Range
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/items_imports/missing_item.rn.fail
-error: compile error
+error: Missing item Foo::new
   ┌─ scripts/book/items_imports/missing_item.rn.fail:2:15
   │
 2 │     let foo = Foo::new();
-  │               ^^^^^^^^ missing item `Foo::new`
+  │               ^^^^^^^^ Missing item Foo::new
+
+Error: Failed to build rune sources (see diagnostics for details)
 </code></pre>
 <p>Every item used in a Rune program must be known at compile time. This is one of
 the static guarantees every Rune script are has to fulfill. And is one important
@@ -673,7 +676,7 @@ if number &lt; 5 {
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/control_flow/conditional.rn
-The number *is* smaller than 5
+The number is smaller than 5
 </code></pre>
 <p>Optionally, we can add another branch under <code>else</code>, which will execute in case
 the condition is false.</p>
@@ -785,12 +788,15 @@ take its argument and free it.</p>
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/variables/take_argument.rn
 field: 1
-== ! (cannot read, value is moved (at 14)) (469µs)
-error: virtual machine error
+error: Cannot read, the value has been moved
   ┌─ scripts/book/variables/take_argument.rn:6:27
   │
 6 │     println!("field: {}", object.field);
-  │                           ^^^^^^^^^^^^ cannot read, value is moved
+  │                           ^^^^^^^^^^^^ Cannot read, the value has been moved
+
+Backtrace:
+scripts/book/variables/take_argument.rn:6:27:
+    println!("field: {}", object.field);
 </code></pre>
 <p>If you need to, you can test if a variable is still accessible for reading with
 <code>is_readable</code>, and for writing with <code>is_writable</code>. These are both imported in
@@ -863,6 +869,10 @@ error: Reading uninitialized static `CONFIG` (slot 0)
   │
 3 │ println!("{CONFIG}");
   │          ^^^^^^^^^^ Reading uninitialized static `CONFIG` (slot 0)
+
+Backtrace:
+scripts/book/statics/uninitialized.rn:3:10:
+println!("{CONFIG}");
 </code></pre>
 <blockquote>
 <p>Note that the static is named in the diagnostic. This relies on debug
@@ -1401,12 +1411,14 @@ types which do not implement this protocol will fail to run.</p>
 dbg!(`${vec}`);
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/template_literals/not_a_template.rn
-== ! (`Vec` does not implement the `display_fmt` protocol (at 5)) (77.7µs)
-error: virtual machine error
-  ┌─ scripts/book/template_literals/not_a_template.rn:3:9
-  │
-3 │     dbg!(`${vec}`);
-  │          ^^^^^^^^ `Vec` does not implement the `display_fmt` protocol
+error: Missing protocol function `DISPLAY_FMT` for `::std::vec::Vec`
+  ┌─ scripts/book/template_literals/not_a_template.rn:1:1
+  │  
+1 │ ╭ let vec = [1, 2, 3];
+2 │ │ dbg!(`${vec}`);
+  │ ╰───────────^ Missing protocol function `DISPLAY_FMT` for `::std::vec::Vec`
+
+Backtrace:
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="instance-functions"><a class="header" href="#instance-functions">Instance functions</a></h1>
@@ -1428,11 +1440,18 @@ let foo = Foo::new();
 foo.bar();
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/instance_functions/missing_instance_fn.rn
-error: virtual machine error
-   ┌─ scripts/book/instance_functions/missing_instance_fn.rn:11:5
+error: Missing instance function `0x8cec23d38bca81a9` for `Foo`
+   ┌─ scripts/book/instance_functions/missing_instance_fn.rn:10:1
    │
-11 │     foo.bar();
-   │     ^^^^^^^^^ missing instance function `0xfb67fa086988a22d` for `type(0xc153807c3ddc98d7)``
+10 │ foo.bar();
+   │ ^^^^^^^^^
+   │ │
+   │ Missing instance function `0x8cec23d38bca81a9` for `Foo`
+   │ This corresponds to the `Foo::bar` instance function
+
+Backtrace:
+scripts/book/instance_functions/missing_instance_fn.rn:10:1:
+foo.bar();
 </code></pre>
 <blockquote>
 <p>Note: The error is currently a bit nondescript. But in the future we will be
@@ -2009,12 +2028,15 @@ of that type.</p>
 <pre><code class="language-rune">assert!(["hello", "world"] is String, "vectors should be strings");
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/types/bad_type_check.rn
-== ! (panicked `assertion failed: vectors should be strings` (at 12)) (133.3µs)
-error: virtual machine error
-  ┌─ scripts/book/types/bad_type_check.rn:2:5
+error: Panicked: assertion failed: vectors should be strings
+  ┌─ scripts/book/types/bad_type_check.rn:1:1
   │
-2 │     assert!(["hello", "world"] is String, "vectors should be strings");
-  │     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ panicked `assertion failed: vectors should be strings`
+1 │ assert!(["hello", "world"] is String, "vectors should be strings");
+  │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Panicked: assertion failed: vectors should be strings
+
+Backtrace:
+scripts/book/types/bad_type_check.rn:1:1:
+assert!(["hello", "world"] is String, "vectors should be strings");
 </code></pre>
 <p>This gives us insight at runtime which type is which, and allows Rune scripts to
 make decisions depending on what type a value has.</p>
@@ -2256,8 +2278,8 @@ for entry in values {
 "bar"
 42
 key did not exist
-("second", 42)
 ("first", "bar")
+("second", 42)
 </code></pre>
 <p>These are useful because they allow their data to be specified dynamically,
 which is exactly the same use case as storing unknown JSON.</p>
@@ -2355,7 +2377,7 @@ dbg!(values);
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/tuples/tuple_masquerade.rn
 ("Now", "You", "See", "Me")
-("Now", "You", "Don\'t", "!")
+("Now", "You", "Don't", "!")
 </code></pre>
 <p>The following is a simple example of a function returning a tuple:</p>
 <pre><code class="language-rune">fn foo() {
@@ -2480,8 +2502,8 @@ user.set_active(true);
 user.describe();
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/structs/user_database.rn
-setbac is inactive
-setbac is active
+setbac is inactive.
+setbac is active.
 </code></pre>
 <p>Structs can also be pattern matched, like most types.</p>
 <p>But since the fields of a struct are known at compile time, the compiler can
@@ -2891,11 +2913,15 @@ Generator { completed: false }
 Yielded(1)
 Complete("John")
 Generator { completed: true }
-error: virtual machine error
-   ┌─ scripts/book/generators/error.rn:11:9
+error: Cannot resume a generator that has completed
+   ┌─ scripts/book/generators/error.rn:10:6
    │
-11 │     dbg!(printer.resume(()));
-   │          ^^^^^^^^^^^^^^^^^^ cannot resume a generator that has completed
+10 │ dbg!(printer.resume(()));
+   │      ^^^^^^^^^^^^^^^^^^ Cannot resume a generator that has completed
+
+Backtrace:
+scripts/book/generators/error.rn:10:6:
+dbg!(printer.resume(()));
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="closures"><a class="header" href="#closures">Closures</a></h1>
@@ -3018,13 +3044,15 @@ pub fn main() {
 }
 </code></pre>
 <pre><code class="language-text">$&gt; cargo run -- run scripts/book/closures/closure_move.rn.fail
-error: compile error
-  ┌─ scripts/book/closures/closure_move.rn.fail:7:33
+error: Variable moved
+  ┌─ scripts/book/closures/closure_move.rn.fail:8:26
   │
 7 │     println!("Result: {}", work(move |a, b| n + a + b));
-  │                                 --------------------- moved here
+  │                                 --------------------- Moved here
 8 │     assert!(!is_readable(n));
-  │                          ^ variable moved
+  │                          ^ Variable moved
+
+Error: Failed to build rune sources (see diagnostics for details)
 </code></pre>
 <blockquote>
 <p>Moving indiscriminately applies to types which in principle could be copied

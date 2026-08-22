@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/function.rs`."><title>function.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-650bd49d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.0-nightly (12c36e253 2026-08-10)" data-channel="nightly" data-search-js="search-cf4fc35e.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-d4bd101e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>function.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::fmt;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/runtime/function.rs`."><title>function.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-203241e4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.100.0-nightly (c656540d6 2026-08-21)" data-channel="nightly" data-search-js="search-b167f383.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-1814ead3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-9f56287d.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">rune/runtime/</div>function.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::fmt;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::future::Future;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use crate as </span>rune;
@@ -13,9 +13,9 @@
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use crate</span>::{Any, Hash};
 <a href=#14 id=14 data-nosnippet>14</a>
 <a href=#15 id=15 data-nosnippet>15</a><span class="kw">use super</span>::{
-<a href=#16 id=16 data-nosnippet>16</a>    Address, AnySequence, Args, Call, ConstValue, Formatter, FromValue, FunctionHandler, Globals,
-<a href=#17 id=17 data-nosnippet>17</a>    GuardedArgs, Output, OwnedTuple, Rtti, RuntimeContext, RuntimeError, Stack, Unit, Value, Vm,
-<a href=#18 id=18 data-nosnippet>18</a>    VmCall, VmError, VmErrorKind, VmHalt,
+<a href=#16 id=16 data-nosnippet>16</a>    Address, AnySequence, Args, Call, ConstValueBuf, Dismantle, Formatter, FromValue,
+<a href=#17 id=17 data-nosnippet>17</a>    FunctionHandler, Globals, GuardedArgs, Handover, Output, OwnedTuple, Rtti, RuntimeContext,
+<a href=#18 id=18 data-nosnippet>18</a>    RuntimeError, Stack, Unit, Value, Vm, VmCall, VmError, VmErrorKind, VmHalt,
 <a href=#19 id=19 data-nosnippet>19</a>};
 <a href=#20 id=20 data-nosnippet>20</a>
 <a href=#21 id=21 data-nosnippet>21</a><span class="doccomment">/// The type of a function in Rune.
@@ -45,7 +45,7 @@
 <a href=#45 id=45 data-nosnippet>45</a>/// ```
 <a href=#46 id=46 data-nosnippet>46</a></span><span class="attr">#[derive(Any, TryClone)]
 <a href=#47 id=47 data-nosnippet>47</a>#[repr(transparent)]
-<a href=#48 id=48 data-nosnippet>48</a>#[rune(item = ::std::ops)]
+<a href=#48 id=48 data-nosnippet>48</a>#[rune(item = ::std::ops, dismantle)]
 <a href=#49 id=49 data-nosnippet>49</a></span><span class="kw">pub struct </span>Function(FunctionImpl&lt;Value&gt;);
 <a href=#50 id=50 data-nosnippet>50</a>
 <a href=#51 id=51 data-nosnippet>51</a><span class="kw">impl </span>Function {
@@ -377,7 +377,7 @@
 <a href=#377 id=377 data-nosnippet>377</a>    /// }
 <a href=#378 id=378 data-nosnippet>378</a>    ///
 <a href=#379 id=379 data-nosnippet>379</a>    /// println!("{function:?}");
-<a href=#380 id=380 data-nosnippet>380</a>    /// ``
+<a href=#380 id=380 data-nosnippet>380</a>    /// ```
 <a href=#381 id=381 data-nosnippet>381</a>    </span><span class="attr">#[rune::function(keep, protocol = DEBUG_FMT)]
 <a href=#382 id=382 data-nosnippet>382</a>    </span><span class="kw">fn </span>debug_fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; alloc::Result&lt;()&gt; {
 <a href=#383 id=383 data-nosnippet>383</a>        <span class="macro">write!</span>(f, <span class="string">"{self:?}"</span>)
@@ -387,7 +387,7 @@
 <a href=#387 id=387 data-nosnippet>387</a><span class="doccomment">/// A callable sync function. This currently only supports a subset of values
 <a href=#388 id=388 data-nosnippet>388</a>/// that are supported by the Vm.
 <a href=#389 id=389 data-nosnippet>389</a></span><span class="attr">#[repr(transparent)]
-<a href=#390 id=390 data-nosnippet>390</a></span><span class="kw">pub struct </span>SyncFunction(FunctionImpl&lt;ConstValue&gt;);
+<a href=#390 id=390 data-nosnippet>390</a></span><span class="kw">pub struct </span>SyncFunction(FunctionImpl&lt;ConstValueBuf&gt;);
 <a href=#391 id=391 data-nosnippet>391</a>
 <a href=#392 id=392 data-nosnippet>392</a><span class="macro">assert_impl!</span>(SyncFunction: Send + Sync);
 <a href=#393 id=393 data-nosnippet>393</a>
@@ -641,457 +641,468 @@
 <a href=#641 id=641 data-nosnippet>641</a>            </span>}
 <a href=#642 id=642 data-nosnippet>642</a>            Inner::FnUnitStruct(empty) =&gt; {
 <a href=#643 id=643 data-nosnippet>643</a>                check_args(args, <span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#644 id=644 data-nosnippet>644</a>                vm.stack_mut()
-<a href=#645 id=645 data-nosnippet>645</a>                    .store(out, || Value::empty_struct(empty.rtti.clone()))<span class="question-mark">?</span>;
-<a href=#646 id=646 data-nosnippet>646</a>                <span class="prelude-val">None
-<a href=#647 id=647 data-nosnippet>647</a>            </span>}
-<a href=#648 id=648 data-nosnippet>648</a>            Inner::FnTupleStruct(tuple) =&gt; {
-<a href=#649 id=649 data-nosnippet>649</a>                check_args(args, tuple.args)<span class="question-mark">?</span>;
-<a href=#650 id=650 data-nosnippet>650</a>
-<a href=#651 id=651 data-nosnippet>651</a>                <span class="kw">let </span>seq = vm.stack().slice_at(addr, args)<span class="question-mark">?</span>;
-<a href=#652 id=652 data-nosnippet>652</a>                <span class="kw">let </span>data = seq.iter().cloned();
-<a href=#653 id=653 data-nosnippet>653</a>                <span class="kw">let </span>value = AnySequence::new(tuple.rtti.clone(), data)<span class="question-mark">?</span>;
-<a href=#654 id=654 data-nosnippet>654</a>                vm.stack_mut().store(out, value)<span class="question-mark">?</span>;
-<a href=#655 id=655 data-nosnippet>655</a>                <span class="prelude-val">None
-<a href=#656 id=656 data-nosnippet>656</a>            </span>}
-<a href=#657 id=657 data-nosnippet>657</a>        };
-<a href=#658 id=658 data-nosnippet>658</a>
-<a href=#659 id=659 data-nosnippet>659</a>        <span class="prelude-val">Ok</span>(reason)
-<a href=#660 id=660 data-nosnippet>660</a>    }
-<a href=#661 id=661 data-nosnippet>661</a>
-<a href=#662 id=662 data-nosnippet>662</a>    <span class="doccomment">/// Create a function pointer from a handler.
-<a href=#663 id=663 data-nosnippet>663</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_handler(handler: FunctionHandler, hash: Hash) -&gt; <span class="self">Self </span>{
-<a href=#664 id=664 data-nosnippet>664</a>        <span class="self">Self </span>{
-<a href=#665 id=665 data-nosnippet>665</a>            inner: Inner::FnHandler(FnHandler { handler, hash }),
-<a href=#666 id=666 data-nosnippet>666</a>        }
-<a href=#667 id=667 data-nosnippet>667</a>    }
-<a href=#668 id=668 data-nosnippet>668</a>
-<a href=#669 id=669 data-nosnippet>669</a>    <span class="doccomment">/// Create a function pointer from an offset.
-<a href=#670 id=670 data-nosnippet>670</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_offset(
-<a href=#671 id=671 data-nosnippet>671</a>        context: Arc&lt;RuntimeContext&gt;,
-<a href=#672 id=672 data-nosnippet>672</a>        unit: Arc&lt;Unit&gt;,
-<a href=#673 id=673 data-nosnippet>673</a>        globals: V::Globals,
-<a href=#674 id=674 data-nosnippet>674</a>        offset: usize,
-<a href=#675 id=675 data-nosnippet>675</a>        call: Call,
-<a href=#676 id=676 data-nosnippet>676</a>        args: usize,
-<a href=#677 id=677 data-nosnippet>677</a>        hash: Hash,
-<a href=#678 id=678 data-nosnippet>678</a>    ) -&gt; <span class="self">Self </span>{
-<a href=#679 id=679 data-nosnippet>679</a>        <span class="self">Self </span>{
-<a href=#680 id=680 data-nosnippet>680</a>            inner: Inner::FnOffset(FnOffset {
-<a href=#681 id=681 data-nosnippet>681</a>                context,
-<a href=#682 id=682 data-nosnippet>682</a>                unit,
-<a href=#683 id=683 data-nosnippet>683</a>                globals,
-<a href=#684 id=684 data-nosnippet>684</a>                offset,
-<a href=#685 id=685 data-nosnippet>685</a>                call,
-<a href=#686 id=686 data-nosnippet>686</a>                args,
-<a href=#687 id=687 data-nosnippet>687</a>                hash,
-<a href=#688 id=688 data-nosnippet>688</a>            }),
-<a href=#689 id=689 data-nosnippet>689</a>        }
-<a href=#690 id=690 data-nosnippet>690</a>    }
-<a href=#691 id=691 data-nosnippet>691</a>
-<a href=#692 id=692 data-nosnippet>692</a>    <span class="doccomment">/// Create a function pointer from an offset.
-<a href=#693 id=693 data-nosnippet>693</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_closure(
-<a href=#694 id=694 data-nosnippet>694</a>        context: Arc&lt;RuntimeContext&gt;,
-<a href=#695 id=695 data-nosnippet>695</a>        unit: Arc&lt;Unit&gt;,
-<a href=#696 id=696 data-nosnippet>696</a>        globals: V::Globals,
-<a href=#697 id=697 data-nosnippet>697</a>        offset: usize,
-<a href=#698 id=698 data-nosnippet>698</a>        call: Call,
-<a href=#699 id=699 data-nosnippet>699</a>        args: usize,
-<a href=#700 id=700 data-nosnippet>700</a>        environment: Box&lt;[V]&gt;,
-<a href=#701 id=701 data-nosnippet>701</a>        hash: Hash,
-<a href=#702 id=702 data-nosnippet>702</a>    ) -&gt; <span class="self">Self </span>{
-<a href=#703 id=703 data-nosnippet>703</a>        <span class="self">Self </span>{
-<a href=#704 id=704 data-nosnippet>704</a>            inner: Inner::FnClosureOffset(FnClosureOffset {
-<a href=#705 id=705 data-nosnippet>705</a>                fn_offset: FnOffset {
-<a href=#706 id=706 data-nosnippet>706</a>                    context,
-<a href=#707 id=707 data-nosnippet>707</a>                    unit,
-<a href=#708 id=708 data-nosnippet>708</a>                    globals,
-<a href=#709 id=709 data-nosnippet>709</a>                    offset,
-<a href=#710 id=710 data-nosnippet>710</a>                    call,
-<a href=#711 id=711 data-nosnippet>711</a>                    args,
-<a href=#712 id=712 data-nosnippet>712</a>                    hash,
-<a href=#713 id=713 data-nosnippet>713</a>                },
-<a href=#714 id=714 data-nosnippet>714</a>                environment,
-<a href=#715 id=715 data-nosnippet>715</a>            }),
-<a href=#716 id=716 data-nosnippet>716</a>        }
-<a href=#717 id=717 data-nosnippet>717</a>    }
-<a href=#718 id=718 data-nosnippet>718</a>
-<a href=#719 id=719 data-nosnippet>719</a>    <span class="doccomment">/// Create a function pointer from an offset.
-<a href=#720 id=720 data-nosnippet>720</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_unit_struct(rtti: Arc&lt;Rtti&gt;) -&gt; <span class="self">Self </span>{
-<a href=#721 id=721 data-nosnippet>721</a>        <span class="self">Self </span>{
-<a href=#722 id=722 data-nosnippet>722</a>            inner: Inner::FnUnitStruct(FnUnitStruct { rtti }),
-<a href=#723 id=723 data-nosnippet>723</a>        }
-<a href=#724 id=724 data-nosnippet>724</a>    }
-<a href=#725 id=725 data-nosnippet>725</a>
-<a href=#726 id=726 data-nosnippet>726</a>    <span class="doccomment">/// Create a function pointer from an offset.
-<a href=#727 id=727 data-nosnippet>727</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_tuple_struct(rtti: Arc&lt;Rtti&gt;, args: usize) -&gt; <span class="self">Self </span>{
-<a href=#728 id=728 data-nosnippet>728</a>        <span class="self">Self </span>{
-<a href=#729 id=729 data-nosnippet>729</a>            inner: Inner::FnTupleStruct(FnTupleStruct { rtti, args }),
-<a href=#730 id=730 data-nosnippet>730</a>        }
-<a href=#731 id=731 data-nosnippet>731</a>    }
-<a href=#732 id=732 data-nosnippet>732</a>
-<a href=#733 id=733 data-nosnippet>733</a>    <span class="attr">#[inline]
-<a href=#734 id=734 data-nosnippet>734</a>    </span><span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
-<a href=#735 id=735 data-nosnippet>735</a>        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.inner {
-<a href=#736 id=736 data-nosnippet>736</a>            Inner::FnHandler(FnHandler { hash, .. }) | Inner::FnOffset(FnOffset { hash, .. }) =&gt; {
-<a href=#737 id=737 data-nosnippet>737</a>                <span class="kw-2">*</span>hash
-<a href=#738 id=738 data-nosnippet>738</a>            }
-<a href=#739 id=739 data-nosnippet>739</a>            Inner::FnClosureOffset(fco) =&gt; fco.fn_offset.hash,
-<a href=#740 id=740 data-nosnippet>740</a>            Inner::FnUnitStruct(func) =&gt; func.rtti.type_hash(),
-<a href=#741 id=741 data-nosnippet>741</a>            Inner::FnTupleStruct(func) =&gt; func.rtti.type_hash(),
-<a href=#742 id=742 data-nosnippet>742</a>        }
-<a href=#743 id=743 data-nosnippet>743</a>    }
-<a href=#744 id=744 data-nosnippet>744</a>}
-<a href=#745 id=745 data-nosnippet>745</a>
-<a href=#746 id=746 data-nosnippet>746</a><span class="kw">impl </span>FunctionImpl&lt;Value&gt; {
-<a href=#747 id=747 data-nosnippet>747</a>    <span class="doccomment">/// Try to convert into a [SyncFunction].
-<a href=#748 id=748 data-nosnippet>748</a>    </span><span class="kw">fn </span>into_sync(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;FunctionImpl&lt;ConstValue&gt;, RuntimeError&gt; {
-<a href=#749 id=749 data-nosnippet>749</a>        <span class="kw">let </span>inner = <span class="kw">match </span><span class="self">self</span>.inner {
-<a href=#750 id=750 data-nosnippet>750</a>            Inner::FnClosureOffset(closure) =&gt; {
-<a href=#751 id=751 data-nosnippet>751</a>                <span class="kw">let </span><span class="kw-2">mut </span>env = Vec::try_with_capacity(closure.environment.len())<span class="question-mark">?</span>;
-<a href=#752 id=752 data-nosnippet>752</a>
-<a href=#753 id=753 data-nosnippet>753</a>                <span class="kw">for </span>value <span class="kw">in </span>Vec::from(closure.environment) {
-<a href=#754 id=754 data-nosnippet>754</a>                    env.try_push(FromValue::from_value(value)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-<a href=#755 id=755 data-nosnippet>755</a>                }
-<a href=#756 id=756 data-nosnippet>756</a>
-<a href=#757 id=757 data-nosnippet>757</a>                Inner::FnClosureOffset(FnClosureOffset {
-<a href=#758 id=758 data-nosnippet>758</a>                    fn_offset: closure.fn_offset.into_sync(),
-<a href=#759 id=759 data-nosnippet>759</a>                    environment: env.try_into_boxed_slice()<span class="question-mark">?</span>,
-<a href=#760 id=760 data-nosnippet>760</a>                })
-<a href=#761 id=761 data-nosnippet>761</a>            }
-<a href=#762 id=762 data-nosnippet>762</a>            Inner::FnHandler(inner) =&gt; Inner::FnHandler(inner),
-<a href=#763 id=763 data-nosnippet>763</a>            Inner::FnOffset(inner) =&gt; Inner::FnOffset(inner.into_sync()),
-<a href=#764 id=764 data-nosnippet>764</a>            Inner::FnUnitStruct(inner) =&gt; Inner::FnUnitStruct(inner),
-<a href=#765 id=765 data-nosnippet>765</a>            Inner::FnTupleStruct(inner) =&gt; Inner::FnTupleStruct(inner),
-<a href=#766 id=766 data-nosnippet>766</a>        };
-<a href=#767 id=767 data-nosnippet>767</a>
-<a href=#768 id=768 data-nosnippet>768</a>        <span class="prelude-val">Ok</span>(FunctionImpl { inner })
-<a href=#769 id=769 data-nosnippet>769</a>    }
-<a href=#770 id=770 data-nosnippet>770</a>}
-<a href=#771 id=771 data-nosnippet>771</a>
-<a href=#772 id=772 data-nosnippet>772</a><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Function {
-<a href=#773 id=773 data-nosnippet>773</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-<a href=#774 id=774 data-nosnippet>774</a>        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.inner {
-<a href=#775 id=775 data-nosnippet>775</a>            Inner::FnHandler(handler) =&gt; {
-<a href=#776 id=776 data-nosnippet>776</a>                <span class="macro">write!</span>(f, <span class="string">"native function ({:p})"</span>, handler.handler)<span class="question-mark">?</span>;
-<a href=#777 id=777 data-nosnippet>777</a>            }
-<a href=#778 id=778 data-nosnippet>778</a>            Inner::FnOffset(offset) =&gt; {
-<a href=#779 id=779 data-nosnippet>779</a>                <span class="macro">write!</span>(f, <span class="string">"{} function (at: 0x{:x})"</span>, offset.call, offset.offset)<span class="question-mark">?</span>;
-<a href=#780 id=780 data-nosnippet>780</a>            }
-<a href=#781 id=781 data-nosnippet>781</a>            Inner::FnClosureOffset(closure) =&gt; {
-<a href=#782 id=782 data-nosnippet>782</a>                <span class="macro">write!</span>(
-<a href=#783 id=783 data-nosnippet>783</a>                    f,
-<a href=#784 id=784 data-nosnippet>784</a>                    <span class="string">"closure (at: 0x{:x}, env:{:?})"</span>,
-<a href=#785 id=785 data-nosnippet>785</a>                    closure.fn_offset.offset, closure.environment
-<a href=#786 id=786 data-nosnippet>786</a>                )<span class="question-mark">?</span>;
-<a href=#787 id=787 data-nosnippet>787</a>            }
-<a href=#788 id=788 data-nosnippet>788</a>            Inner::FnUnitStruct(empty) =&gt; {
-<a href=#789 id=789 data-nosnippet>789</a>                <span class="macro">write!</span>(f, <span class="string">"empty {}"</span>, empty.rtti.item)<span class="question-mark">?</span>;
-<a href=#790 id=790 data-nosnippet>790</a>            }
-<a href=#791 id=791 data-nosnippet>791</a>            Inner::FnTupleStruct(tuple) =&gt; {
-<a href=#792 id=792 data-nosnippet>792</a>                <span class="macro">write!</span>(f, <span class="string">"tuple {}"</span>, tuple.rtti.item)<span class="question-mark">?</span>;
-<a href=#793 id=793 data-nosnippet>793</a>            }
-<a href=#794 id=794 data-nosnippet>794</a>        }
-<a href=#795 id=795 data-nosnippet>795</a>
-<a href=#796 id=796 data-nosnippet>796</a>        <span class="prelude-val">Ok</span>(())
-<a href=#797 id=797 data-nosnippet>797</a>    }
-<a href=#798 id=798 data-nosnippet>798</a>}
-<a href=#799 id=799 data-nosnippet>799</a>
-<a href=#800 id=800 data-nosnippet>800</a><span class="attr">#[derive(Debug)]
-<a href=#801 id=801 data-nosnippet>801</a></span><span class="kw">enum </span>Inner&lt;V&gt;
-<a href=#802 id=802 data-nosnippet>802</a><span class="kw">where
-<a href=#803 id=803 data-nosnippet>803</a>    </span>V: FnValue,
-<a href=#804 id=804 data-nosnippet>804</a>{
-<a href=#805 id=805 data-nosnippet>805</a>    <span class="doccomment">/// A native function handler.
-<a href=#806 id=806 data-nosnippet>806</a>    /// This is wrapped as an `Arc&lt;dyn FunctionHandler&gt;`.
-<a href=#807 id=807 data-nosnippet>807</a>    </span>FnHandler(FnHandler),
-<a href=#808 id=808 data-nosnippet>808</a>    <span class="doccomment">/// The offset to a free function.
-<a href=#809 id=809 data-nosnippet>809</a>    ///
-<a href=#810 id=810 data-nosnippet>810</a>    /// This also captures the context and unit it belongs to allow for external
-<a href=#811 id=811 data-nosnippet>811</a>    /// calls.
-<a href=#812 id=812 data-nosnippet>812</a>    </span>FnOffset(FnOffset&lt;V&gt;),
-<a href=#813 id=813 data-nosnippet>813</a>    <span class="doccomment">/// A closure with a captured environment.
-<a href=#814 id=814 data-nosnippet>814</a>    ///
-<a href=#815 id=815 data-nosnippet>815</a>    /// This also captures the context and unit it belongs to allow for external
-<a href=#816 id=816 data-nosnippet>816</a>    /// calls.
-<a href=#817 id=817 data-nosnippet>817</a>    </span>FnClosureOffset(FnClosureOffset&lt;V&gt;),
-<a href=#818 id=818 data-nosnippet>818</a>    <span class="doccomment">/// Constructor for a unit struct.
-<a href=#819 id=819 data-nosnippet>819</a>    </span>FnUnitStruct(FnUnitStruct),
-<a href=#820 id=820 data-nosnippet>820</a>    <span class="doccomment">/// Constructor for a tuple.
-<a href=#821 id=821 data-nosnippet>821</a>    </span>FnTupleStruct(FnTupleStruct),
-<a href=#822 id=822 data-nosnippet>822</a>}
-<a href=#823 id=823 data-nosnippet>823</a>
-<a href=#824 id=824 data-nosnippet>824</a><span class="kw">impl</span>&lt;V&gt; TryClone <span class="kw">for </span>Inner&lt;V&gt;
-<a href=#825 id=825 data-nosnippet>825</a><span class="kw">where
-<a href=#826 id=826 data-nosnippet>826</a>    </span>V: FnValue,
-<a href=#827 id=827 data-nosnippet>827</a>{
-<a href=#828 id=828 data-nosnippet>828</a>    <span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
-<a href=#829 id=829 data-nosnippet>829</a>        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
-<a href=#830 id=830 data-nosnippet>830</a>            Inner::FnHandler(inner) =&gt; Inner::FnHandler(inner.clone()),
-<a href=#831 id=831 data-nosnippet>831</a>            Inner::FnOffset(inner) =&gt; Inner::FnOffset(inner.clone()),
-<a href=#832 id=832 data-nosnippet>832</a>            Inner::FnClosureOffset(inner) =&gt; Inner::FnClosureOffset(inner.try_clone()<span class="question-mark">?</span>),
-<a href=#833 id=833 data-nosnippet>833</a>            Inner::FnUnitStruct(inner) =&gt; Inner::FnUnitStruct(inner.clone()),
-<a href=#834 id=834 data-nosnippet>834</a>            Inner::FnTupleStruct(inner) =&gt; Inner::FnTupleStruct(inner.clone()),
-<a href=#835 id=835 data-nosnippet>835</a>        })
-<a href=#836 id=836 data-nosnippet>836</a>    }
-<a href=#837 id=837 data-nosnippet>837</a>}
-<a href=#838 id=838 data-nosnippet>838</a>
-<a href=#839 id=839 data-nosnippet>839</a><span class="attr">#[derive(Clone, TryClone)]
-<a href=#840 id=840 data-nosnippet>840</a></span><span class="kw">struct </span>FnHandler {
-<a href=#841 id=841 data-nosnippet>841</a>    <span class="doccomment">/// The function handler.
-<a href=#842 id=842 data-nosnippet>842</a>    </span>handler: FunctionHandler,
-<a href=#843 id=843 data-nosnippet>843</a>    <span class="doccomment">/// Hash for the function type
-<a href=#844 id=844 data-nosnippet>844</a>    </span>hash: Hash,
-<a href=#845 id=845 data-nosnippet>845</a>}
-<a href=#846 id=846 data-nosnippet>846</a>
-<a href=#847 id=847 data-nosnippet>847</a><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>FnHandler {
-<a href=#848 id=848 data-nosnippet>848</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-<a href=#849 id=849 data-nosnippet>849</a>        <span class="macro">write!</span>(f, <span class="string">"FnHandler"</span>)
-<a href=#850 id=850 data-nosnippet>850</a>    }
-<a href=#851 id=851 data-nosnippet>851</a>}
-<a href=#852 id=852 data-nosnippet>852</a>
-<a href=#853 id=853 data-nosnippet>853</a><span class="doccomment">/// The kind of value a function closes over, and with it the kind of static
-<a href=#854 id=854 data-nosnippet>854</a>/// item storage the function is able to carry.
-<a href=#855 id=855 data-nosnippet>855</a>///
-<a href=#856 id=856 data-nosnippet>856</a>/// A [`Function`] carries the [`Globals`] of the virtual machine which produced
-<a href=#857 id=857 data-nosnippet>857</a>/// it, so that calling it from the outside still observes the same statics. A
-<a href=#858 id=858 data-nosnippet>858</a>/// [`SyncFunction`] can be sent between threads and the storage isn't thread
-<a href=#859 id=859 data-nosnippet>859</a>/// safe, so it carries nothing.
-<a href=#860 id=860 data-nosnippet>860</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>FnValue: TryClone {
-<a href=#861 id=861 data-nosnippet>861</a>    <span class="doccomment">/// How static item storage is represented for this kind of function.
-<a href=#862 id=862 data-nosnippet>862</a>    </span><span class="kw">type </span>Globals: TryClone + Clone;
+<a href=#644 id=644 data-nosnippet>644</a>                vm.store(out, || Value::empty_struct(empty.rtti.clone()))<span class="question-mark">?</span>;
+<a href=#645 id=645 data-nosnippet>645</a>                <span class="prelude-val">None
+<a href=#646 id=646 data-nosnippet>646</a>            </span>}
+<a href=#647 id=647 data-nosnippet>647</a>            Inner::FnTupleStruct(tuple) =&gt; {
+<a href=#648 id=648 data-nosnippet>648</a>                check_args(args, tuple.args)<span class="question-mark">?</span>;
+<a href=#649 id=649 data-nosnippet>649</a>
+<a href=#650 id=650 data-nosnippet>650</a>                <span class="kw">let </span>seq = vm.stack().slice_at(addr, args)<span class="question-mark">?</span>;
+<a href=#651 id=651 data-nosnippet>651</a>                <span class="kw">let </span>data = seq.iter().cloned();
+<a href=#652 id=652 data-nosnippet>652</a>                <span class="kw">let </span>value = AnySequence::new(tuple.rtti.clone(), data)<span class="question-mark">?</span>;
+<a href=#653 id=653 data-nosnippet>653</a>                vm.store(out, value)<span class="question-mark">?</span>;
+<a href=#654 id=654 data-nosnippet>654</a>                <span class="prelude-val">None
+<a href=#655 id=655 data-nosnippet>655</a>            </span>}
+<a href=#656 id=656 data-nosnippet>656</a>        };
+<a href=#657 id=657 data-nosnippet>657</a>
+<a href=#658 id=658 data-nosnippet>658</a>        <span class="prelude-val">Ok</span>(reason)
+<a href=#659 id=659 data-nosnippet>659</a>    }
+<a href=#660 id=660 data-nosnippet>660</a>
+<a href=#661 id=661 data-nosnippet>661</a>    <span class="doccomment">/// Create a function pointer from a handler.
+<a href=#662 id=662 data-nosnippet>662</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_handler(handler: FunctionHandler, hash: Hash) -&gt; <span class="self">Self </span>{
+<a href=#663 id=663 data-nosnippet>663</a>        <span class="self">Self </span>{
+<a href=#664 id=664 data-nosnippet>664</a>            inner: Inner::FnHandler(FnHandler { handler, hash }),
+<a href=#665 id=665 data-nosnippet>665</a>        }
+<a href=#666 id=666 data-nosnippet>666</a>    }
+<a href=#667 id=667 data-nosnippet>667</a>
+<a href=#668 id=668 data-nosnippet>668</a>    <span class="doccomment">/// Create a function pointer from an offset.
+<a href=#669 id=669 data-nosnippet>669</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_offset(
+<a href=#670 id=670 data-nosnippet>670</a>        context: Arc&lt;RuntimeContext&gt;,
+<a href=#671 id=671 data-nosnippet>671</a>        unit: Arc&lt;Unit&gt;,
+<a href=#672 id=672 data-nosnippet>672</a>        globals: V::Globals,
+<a href=#673 id=673 data-nosnippet>673</a>        offset: usize,
+<a href=#674 id=674 data-nosnippet>674</a>        call: Call,
+<a href=#675 id=675 data-nosnippet>675</a>        args: usize,
+<a href=#676 id=676 data-nosnippet>676</a>        hash: Hash,
+<a href=#677 id=677 data-nosnippet>677</a>    ) -&gt; <span class="self">Self </span>{
+<a href=#678 id=678 data-nosnippet>678</a>        <span class="self">Self </span>{
+<a href=#679 id=679 data-nosnippet>679</a>            inner: Inner::FnOffset(FnOffset {
+<a href=#680 id=680 data-nosnippet>680</a>                context,
+<a href=#681 id=681 data-nosnippet>681</a>                unit,
+<a href=#682 id=682 data-nosnippet>682</a>                globals,
+<a href=#683 id=683 data-nosnippet>683</a>                offset,
+<a href=#684 id=684 data-nosnippet>684</a>                call,
+<a href=#685 id=685 data-nosnippet>685</a>                args,
+<a href=#686 id=686 data-nosnippet>686</a>                hash,
+<a href=#687 id=687 data-nosnippet>687</a>            }),
+<a href=#688 id=688 data-nosnippet>688</a>        }
+<a href=#689 id=689 data-nosnippet>689</a>    }
+<a href=#690 id=690 data-nosnippet>690</a>
+<a href=#691 id=691 data-nosnippet>691</a>    <span class="doccomment">/// Create a function pointer from an offset.
+<a href=#692 id=692 data-nosnippet>692</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_closure(
+<a href=#693 id=693 data-nosnippet>693</a>        context: Arc&lt;RuntimeContext&gt;,
+<a href=#694 id=694 data-nosnippet>694</a>        unit: Arc&lt;Unit&gt;,
+<a href=#695 id=695 data-nosnippet>695</a>        globals: V::Globals,
+<a href=#696 id=696 data-nosnippet>696</a>        offset: usize,
+<a href=#697 id=697 data-nosnippet>697</a>        call: Call,
+<a href=#698 id=698 data-nosnippet>698</a>        args: usize,
+<a href=#699 id=699 data-nosnippet>699</a>        environment: Box&lt;[V]&gt;,
+<a href=#700 id=700 data-nosnippet>700</a>        hash: Hash,
+<a href=#701 id=701 data-nosnippet>701</a>    ) -&gt; <span class="self">Self </span>{
+<a href=#702 id=702 data-nosnippet>702</a>        <span class="self">Self </span>{
+<a href=#703 id=703 data-nosnippet>703</a>            inner: Inner::FnClosureOffset(FnClosureOffset {
+<a href=#704 id=704 data-nosnippet>704</a>                fn_offset: FnOffset {
+<a href=#705 id=705 data-nosnippet>705</a>                    context,
+<a href=#706 id=706 data-nosnippet>706</a>                    unit,
+<a href=#707 id=707 data-nosnippet>707</a>                    globals,
+<a href=#708 id=708 data-nosnippet>708</a>                    offset,
+<a href=#709 id=709 data-nosnippet>709</a>                    call,
+<a href=#710 id=710 data-nosnippet>710</a>                    args,
+<a href=#711 id=711 data-nosnippet>711</a>                    hash,
+<a href=#712 id=712 data-nosnippet>712</a>                },
+<a href=#713 id=713 data-nosnippet>713</a>                environment,
+<a href=#714 id=714 data-nosnippet>714</a>            }),
+<a href=#715 id=715 data-nosnippet>715</a>        }
+<a href=#716 id=716 data-nosnippet>716</a>    }
+<a href=#717 id=717 data-nosnippet>717</a>
+<a href=#718 id=718 data-nosnippet>718</a>    <span class="doccomment">/// Create a function pointer from an offset.
+<a href=#719 id=719 data-nosnippet>719</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_unit_struct(rtti: Arc&lt;Rtti&gt;) -&gt; <span class="self">Self </span>{
+<a href=#720 id=720 data-nosnippet>720</a>        <span class="self">Self </span>{
+<a href=#721 id=721 data-nosnippet>721</a>            inner: Inner::FnUnitStruct(FnUnitStruct { rtti }),
+<a href=#722 id=722 data-nosnippet>722</a>        }
+<a href=#723 id=723 data-nosnippet>723</a>    }
+<a href=#724 id=724 data-nosnippet>724</a>
+<a href=#725 id=725 data-nosnippet>725</a>    <span class="doccomment">/// Create a function pointer from an offset.
+<a href=#726 id=726 data-nosnippet>726</a>    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_tuple_struct(rtti: Arc&lt;Rtti&gt;, args: usize) -&gt; <span class="self">Self </span>{
+<a href=#727 id=727 data-nosnippet>727</a>        <span class="self">Self </span>{
+<a href=#728 id=728 data-nosnippet>728</a>            inner: Inner::FnTupleStruct(FnTupleStruct { rtti, args }),
+<a href=#729 id=729 data-nosnippet>729</a>        }
+<a href=#730 id=730 data-nosnippet>730</a>    }
+<a href=#731 id=731 data-nosnippet>731</a>
+<a href=#732 id=732 data-nosnippet>732</a>    <span class="attr">#[inline]
+<a href=#733 id=733 data-nosnippet>733</a>    </span><span class="kw">fn </span>type_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Hash {
+<a href=#734 id=734 data-nosnippet>734</a>        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.inner {
+<a href=#735 id=735 data-nosnippet>735</a>            Inner::FnHandler(FnHandler { hash, .. }) | Inner::FnOffset(FnOffset { hash, .. }) =&gt; {
+<a href=#736 id=736 data-nosnippet>736</a>                <span class="kw-2">*</span>hash
+<a href=#737 id=737 data-nosnippet>737</a>            }
+<a href=#738 id=738 data-nosnippet>738</a>            Inner::FnClosureOffset(fco) =&gt; fco.fn_offset.hash,
+<a href=#739 id=739 data-nosnippet>739</a>            Inner::FnUnitStruct(func) =&gt; func.rtti.type_hash(),
+<a href=#740 id=740 data-nosnippet>740</a>            Inner::FnTupleStruct(func) =&gt; func.rtti.type_hash(),
+<a href=#741 id=741 data-nosnippet>741</a>        }
+<a href=#742 id=742 data-nosnippet>742</a>    }
+<a href=#743 id=743 data-nosnippet>743</a>}
+<a href=#744 id=744 data-nosnippet>744</a>
+<a href=#745 id=745 data-nosnippet>745</a><span class="kw">impl </span>FunctionImpl&lt;Value&gt; {
+<a href=#746 id=746 data-nosnippet>746</a>    <span class="doccomment">/// Try to convert into a [SyncFunction].
+<a href=#747 id=747 data-nosnippet>747</a>    </span><span class="kw">fn </span>into_sync(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;FunctionImpl&lt;ConstValueBuf&gt;, RuntimeError&gt; {
+<a href=#748 id=748 data-nosnippet>748</a>        <span class="kw">let </span>inner = <span class="kw">match </span><span class="self">self</span>.inner {
+<a href=#749 id=749 data-nosnippet>749</a>            Inner::FnClosureOffset(closure) =&gt; {
+<a href=#750 id=750 data-nosnippet>750</a>                <span class="kw">let </span><span class="kw-2">mut </span>env = Vec::try_with_capacity(closure.environment.len())<span class="question-mark">?</span>;
+<a href=#751 id=751 data-nosnippet>751</a>
+<a href=#752 id=752 data-nosnippet>752</a>                <span class="kw">for </span>value <span class="kw">in </span>Vec::from(closure.environment) {
+<a href=#753 id=753 data-nosnippet>753</a>                    env.try_push(FromValue::from_value(value)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+<a href=#754 id=754 data-nosnippet>754</a>                }
+<a href=#755 id=755 data-nosnippet>755</a>
+<a href=#756 id=756 data-nosnippet>756</a>                Inner::FnClosureOffset(FnClosureOffset {
+<a href=#757 id=757 data-nosnippet>757</a>                    fn_offset: closure.fn_offset.into_sync(),
+<a href=#758 id=758 data-nosnippet>758</a>                    environment: env.try_into_boxed_slice()<span class="question-mark">?</span>,
+<a href=#759 id=759 data-nosnippet>759</a>                })
+<a href=#760 id=760 data-nosnippet>760</a>            }
+<a href=#761 id=761 data-nosnippet>761</a>            Inner::FnHandler(inner) =&gt; Inner::FnHandler(inner),
+<a href=#762 id=762 data-nosnippet>762</a>            Inner::FnOffset(inner) =&gt; Inner::FnOffset(inner.into_sync()),
+<a href=#763 id=763 data-nosnippet>763</a>            Inner::FnUnitStruct(inner) =&gt; Inner::FnUnitStruct(inner),
+<a href=#764 id=764 data-nosnippet>764</a>            Inner::FnTupleStruct(inner) =&gt; Inner::FnTupleStruct(inner),
+<a href=#765 id=765 data-nosnippet>765</a>        };
+<a href=#766 id=766 data-nosnippet>766</a>
+<a href=#767 id=767 data-nosnippet>767</a>        <span class="prelude-val">Ok</span>(FunctionImpl { inner })
+<a href=#768 id=768 data-nosnippet>768</a>    }
+<a href=#769 id=769 data-nosnippet>769</a>}
+<a href=#770 id=770 data-nosnippet>770</a>
+<a href=#771 id=771 data-nosnippet>771</a><span class="doccomment">/// A closure holds the environment it captured, so a closure which captured
+<a href=#772 id=772 data-nosnippet>772</a>/// another one nests just like a container does.
+<a href=#773 id=773 data-nosnippet>773</a></span><span class="kw">impl </span>Dismantle <span class="kw">for </span>Function {
+<a href=#774 id=774 data-nosnippet>774</a>    <span class="kw">fn </span>dismantle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, out: <span class="kw-2">&amp;mut </span>Handover&lt;<span class="lifetime">'_</span>&gt;) {
+<a href=#775 id=775 data-nosnippet>775</a>        <span class="kw">let </span>Inner::FnClosureOffset(closure) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>.inner <span class="kw">else </span>{
+<a href=#776 id=776 data-nosnippet>776</a>            <span class="kw">return</span>;
+<a href=#777 id=777 data-nosnippet>777</a>        };
+<a href=#778 id=778 data-nosnippet>778</a>
+<a href=#779 id=779 data-nosnippet>779</a>        out.consume_all(closure.environment.iter_mut());
+<a href=#780 id=780 data-nosnippet>780</a>    }
+<a href=#781 id=781 data-nosnippet>781</a>}
+<a href=#782 id=782 data-nosnippet>782</a>
+<a href=#783 id=783 data-nosnippet>783</a><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Function {
+<a href=#784 id=784 data-nosnippet>784</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+<a href=#785 id=785 data-nosnippet>785</a>        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.inner {
+<a href=#786 id=786 data-nosnippet>786</a>            Inner::FnHandler(handler) =&gt; {
+<a href=#787 id=787 data-nosnippet>787</a>                <span class="macro">write!</span>(f, <span class="string">"native function ({:p})"</span>, handler.handler)<span class="question-mark">?</span>;
+<a href=#788 id=788 data-nosnippet>788</a>            }
+<a href=#789 id=789 data-nosnippet>789</a>            Inner::FnOffset(offset) =&gt; {
+<a href=#790 id=790 data-nosnippet>790</a>                <span class="macro">write!</span>(f, <span class="string">"{} function (at: 0x{:x})"</span>, offset.call, offset.offset)<span class="question-mark">?</span>;
+<a href=#791 id=791 data-nosnippet>791</a>            }
+<a href=#792 id=792 data-nosnippet>792</a>            Inner::FnClosureOffset(closure) =&gt; {
+<a href=#793 id=793 data-nosnippet>793</a>                <span class="macro">write!</span>(
+<a href=#794 id=794 data-nosnippet>794</a>                    f,
+<a href=#795 id=795 data-nosnippet>795</a>                    <span class="string">"closure (at: 0x{:x}, env:{:?})"</span>,
+<a href=#796 id=796 data-nosnippet>796</a>                    closure.fn_offset.offset, closure.environment
+<a href=#797 id=797 data-nosnippet>797</a>                )<span class="question-mark">?</span>;
+<a href=#798 id=798 data-nosnippet>798</a>            }
+<a href=#799 id=799 data-nosnippet>799</a>            Inner::FnUnitStruct(empty) =&gt; {
+<a href=#800 id=800 data-nosnippet>800</a>                <span class="macro">write!</span>(f, <span class="string">"empty {}"</span>, empty.rtti.item)<span class="question-mark">?</span>;
+<a href=#801 id=801 data-nosnippet>801</a>            }
+<a href=#802 id=802 data-nosnippet>802</a>            Inner::FnTupleStruct(tuple) =&gt; {
+<a href=#803 id=803 data-nosnippet>803</a>                <span class="macro">write!</span>(f, <span class="string">"tuple {}"</span>, tuple.rtti.item)<span class="question-mark">?</span>;
+<a href=#804 id=804 data-nosnippet>804</a>            }
+<a href=#805 id=805 data-nosnippet>805</a>        }
+<a href=#806 id=806 data-nosnippet>806</a>
+<a href=#807 id=807 data-nosnippet>807</a>        <span class="prelude-val">Ok</span>(())
+<a href=#808 id=808 data-nosnippet>808</a>    }
+<a href=#809 id=809 data-nosnippet>809</a>}
+<a href=#810 id=810 data-nosnippet>810</a>
+<a href=#811 id=811 data-nosnippet>811</a><span class="attr">#[derive(Debug)]
+<a href=#812 id=812 data-nosnippet>812</a></span><span class="kw">enum </span>Inner&lt;V&gt;
+<a href=#813 id=813 data-nosnippet>813</a><span class="kw">where
+<a href=#814 id=814 data-nosnippet>814</a>    </span>V: FnValue,
+<a href=#815 id=815 data-nosnippet>815</a>{
+<a href=#816 id=816 data-nosnippet>816</a>    <span class="doccomment">/// A native function handler.
+<a href=#817 id=817 data-nosnippet>817</a>    /// This is wrapped as an `Arc&lt;dyn FunctionHandler&gt;`.
+<a href=#818 id=818 data-nosnippet>818</a>    </span>FnHandler(FnHandler),
+<a href=#819 id=819 data-nosnippet>819</a>    <span class="doccomment">/// The offset to a free function.
+<a href=#820 id=820 data-nosnippet>820</a>    ///
+<a href=#821 id=821 data-nosnippet>821</a>    /// This also captures the context and unit it belongs to allow for external
+<a href=#822 id=822 data-nosnippet>822</a>    /// calls.
+<a href=#823 id=823 data-nosnippet>823</a>    </span>FnOffset(FnOffset&lt;V&gt;),
+<a href=#824 id=824 data-nosnippet>824</a>    <span class="doccomment">/// A closure with a captured environment.
+<a href=#825 id=825 data-nosnippet>825</a>    ///
+<a href=#826 id=826 data-nosnippet>826</a>    /// This also captures the context and unit it belongs to allow for external
+<a href=#827 id=827 data-nosnippet>827</a>    /// calls.
+<a href=#828 id=828 data-nosnippet>828</a>    </span>FnClosureOffset(FnClosureOffset&lt;V&gt;),
+<a href=#829 id=829 data-nosnippet>829</a>    <span class="doccomment">/// Constructor for a unit struct.
+<a href=#830 id=830 data-nosnippet>830</a>    </span>FnUnitStruct(FnUnitStruct),
+<a href=#831 id=831 data-nosnippet>831</a>    <span class="doccomment">/// Constructor for a tuple.
+<a href=#832 id=832 data-nosnippet>832</a>    </span>FnTupleStruct(FnTupleStruct),
+<a href=#833 id=833 data-nosnippet>833</a>}
+<a href=#834 id=834 data-nosnippet>834</a>
+<a href=#835 id=835 data-nosnippet>835</a><span class="kw">impl</span>&lt;V&gt; TryClone <span class="kw">for </span>Inner&lt;V&gt;
+<a href=#836 id=836 data-nosnippet>836</a><span class="kw">where
+<a href=#837 id=837 data-nosnippet>837</a>    </span>V: FnValue,
+<a href=#838 id=838 data-nosnippet>838</a>{
+<a href=#839 id=839 data-nosnippet>839</a>    <span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
+<a href=#840 id=840 data-nosnippet>840</a>        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
+<a href=#841 id=841 data-nosnippet>841</a>            Inner::FnHandler(inner) =&gt; Inner::FnHandler(inner.clone()),
+<a href=#842 id=842 data-nosnippet>842</a>            Inner::FnOffset(inner) =&gt; Inner::FnOffset(inner.clone()),
+<a href=#843 id=843 data-nosnippet>843</a>            Inner::FnClosureOffset(inner) =&gt; Inner::FnClosureOffset(inner.try_clone()<span class="question-mark">?</span>),
+<a href=#844 id=844 data-nosnippet>844</a>            Inner::FnUnitStruct(inner) =&gt; Inner::FnUnitStruct(inner.clone()),
+<a href=#845 id=845 data-nosnippet>845</a>            Inner::FnTupleStruct(inner) =&gt; Inner::FnTupleStruct(inner.clone()),
+<a href=#846 id=846 data-nosnippet>846</a>        })
+<a href=#847 id=847 data-nosnippet>847</a>    }
+<a href=#848 id=848 data-nosnippet>848</a>}
+<a href=#849 id=849 data-nosnippet>849</a>
+<a href=#850 id=850 data-nosnippet>850</a><span class="attr">#[derive(Clone, TryClone)]
+<a href=#851 id=851 data-nosnippet>851</a></span><span class="kw">struct </span>FnHandler {
+<a href=#852 id=852 data-nosnippet>852</a>    <span class="doccomment">/// The function handler.
+<a href=#853 id=853 data-nosnippet>853</a>    </span>handler: FunctionHandler,
+<a href=#854 id=854 data-nosnippet>854</a>    <span class="doccomment">/// Hash for the function type
+<a href=#855 id=855 data-nosnippet>855</a>    </span>hash: Hash,
+<a href=#856 id=856 data-nosnippet>856</a>}
+<a href=#857 id=857 data-nosnippet>857</a>
+<a href=#858 id=858 data-nosnippet>858</a><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>FnHandler {
+<a href=#859 id=859 data-nosnippet>859</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+<a href=#860 id=860 data-nosnippet>860</a>        <span class="macro">write!</span>(f, <span class="string">"FnHandler"</span>)
+<a href=#861 id=861 data-nosnippet>861</a>    }
+<a href=#862 id=862 data-nosnippet>862</a>}
 <a href=#863 id=863 data-nosnippet>863</a>
-<a href=#864 id=864 data-nosnippet>864</a>    <span class="doccomment">/// Materialize the storage a virtual machine should be given.
-<a href=#865 id=865 data-nosnippet>865</a>    </span><span class="kw">fn </span>globals(globals: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals) -&gt; Globals;
-<a href=#866 id=866 data-nosnippet>866</a>
-<a href=#867 id=867 data-nosnippet>867</a>    <span class="doccomment">/// Test if the given vm already uses this storage.
-<a href=#868 id=868 data-nosnippet>868</a>    </span><span class="kw">fn </span>same_globals(globals: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals, vm: <span class="kw-2">&amp;</span>Vm) -&gt; bool;
-<a href=#869 id=869 data-nosnippet>869</a>}
-<a href=#870 id=870 data-nosnippet>870</a>
-<a href=#871 id=871 data-nosnippet>871</a><span class="kw">impl </span>FnValue <span class="kw">for </span>Value {
-<a href=#872 id=872 data-nosnippet>872</a>    <span class="kw">type </span>Globals = Globals;
-<a href=#873 id=873 data-nosnippet>873</a>
-<a href=#874 id=874 data-nosnippet>874</a>    <span class="attr">#[inline]
-<a href=#875 id=875 data-nosnippet>875</a>    </span><span class="kw">fn </span>globals(globals: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals) -&gt; Globals {
-<a href=#876 id=876 data-nosnippet>876</a>        globals.clone()
-<a href=#877 id=877 data-nosnippet>877</a>    }
-<a href=#878 id=878 data-nosnippet>878</a>
-<a href=#879 id=879 data-nosnippet>879</a>    <span class="attr">#[inline]
-<a href=#880 id=880 data-nosnippet>880</a>    </span><span class="kw">fn </span>same_globals(globals: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals, vm: <span class="kw-2">&amp;</span>Vm) -&gt; bool {
-<a href=#881 id=881 data-nosnippet>881</a>        vm.is_same_globals(globals)
-<a href=#882 id=882 data-nosnippet>882</a>    }
-<a href=#883 id=883 data-nosnippet>883</a>}
+<a href=#864 id=864 data-nosnippet>864</a><span class="doccomment">/// The kind of value a function closes over, and with it the kind of static
+<a href=#865 id=865 data-nosnippet>865</a>/// item storage the function is able to carry.
+<a href=#866 id=866 data-nosnippet>866</a>///
+<a href=#867 id=867 data-nosnippet>867</a>/// A [`Function`] carries the [`Globals`] of the virtual machine which produced
+<a href=#868 id=868 data-nosnippet>868</a>/// it, so that calling it from the outside still observes the same statics. A
+<a href=#869 id=869 data-nosnippet>869</a>/// [`SyncFunction`] can be sent between threads and the storage isn't thread
+<a href=#870 id=870 data-nosnippet>870</a>/// safe, so it carries nothing.
+<a href=#871 id=871 data-nosnippet>871</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>FnValue: TryClone {
+<a href=#872 id=872 data-nosnippet>872</a>    <span class="doccomment">/// How static item storage is represented for this kind of function.
+<a href=#873 id=873 data-nosnippet>873</a>    </span><span class="kw">type </span>Globals: TryClone + Clone;
+<a href=#874 id=874 data-nosnippet>874</a>
+<a href=#875 id=875 data-nosnippet>875</a>    <span class="doccomment">/// Materialize the storage a virtual machine should be given.
+<a href=#876 id=876 data-nosnippet>876</a>    </span><span class="kw">fn </span>globals(globals: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals) -&gt; Globals;
+<a href=#877 id=877 data-nosnippet>877</a>
+<a href=#878 id=878 data-nosnippet>878</a>    <span class="doccomment">/// Test if the given vm already uses this storage.
+<a href=#879 id=879 data-nosnippet>879</a>    </span><span class="kw">fn </span>same_globals(globals: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals, vm: <span class="kw-2">&amp;</span>Vm) -&gt; bool;
+<a href=#880 id=880 data-nosnippet>880</a>}
+<a href=#881 id=881 data-nosnippet>881</a>
+<a href=#882 id=882 data-nosnippet>882</a><span class="kw">impl </span>FnValue <span class="kw">for </span>Value {
+<a href=#883 id=883 data-nosnippet>883</a>    <span class="kw">type </span>Globals = Globals;
 <a href=#884 id=884 data-nosnippet>884</a>
-<a href=#885 id=885 data-nosnippet>885</a><span class="kw">impl </span>FnValue <span class="kw">for </span>ConstValue {
-<a href=#886 id=886 data-nosnippet>886</a>    <span class="kw">type </span>Globals = ();
-<a href=#887 id=887 data-nosnippet>887</a>
-<a href=#888 id=888 data-nosnippet>888</a>    <span class="attr">#[inline]
-<a href=#889 id=889 data-nosnippet>889</a>    </span><span class="kw">fn </span>globals(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals) -&gt; Globals {
-<a href=#890 id=890 data-nosnippet>890</a>        Globals::empty()
-<a href=#891 id=891 data-nosnippet>891</a>    }
-<a href=#892 id=892 data-nosnippet>892</a>
-<a href=#893 id=893 data-nosnippet>893</a>    <span class="attr">#[inline]
-<a href=#894 id=894 data-nosnippet>894</a>    </span><span class="kw">fn </span>same_globals(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals, vm: <span class="kw-2">&amp;</span>Vm) -&gt; bool {
-<a href=#895 id=895 data-nosnippet>895</a>        !vm.globals().is_configured()
-<a href=#896 id=896 data-nosnippet>896</a>    }
-<a href=#897 id=897 data-nosnippet>897</a>}
+<a href=#885 id=885 data-nosnippet>885</a>    <span class="attr">#[inline]
+<a href=#886 id=886 data-nosnippet>886</a>    </span><span class="kw">fn </span>globals(globals: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals) -&gt; Globals {
+<a href=#887 id=887 data-nosnippet>887</a>        globals.clone()
+<a href=#888 id=888 data-nosnippet>888</a>    }
+<a href=#889 id=889 data-nosnippet>889</a>
+<a href=#890 id=890 data-nosnippet>890</a>    <span class="attr">#[inline]
+<a href=#891 id=891 data-nosnippet>891</a>    </span><span class="kw">fn </span>same_globals(globals: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals, vm: <span class="kw-2">&amp;</span>Vm) -&gt; bool {
+<a href=#892 id=892 data-nosnippet>892</a>        vm.is_same_globals(globals)
+<a href=#893 id=893 data-nosnippet>893</a>    }
+<a href=#894 id=894 data-nosnippet>894</a>}
+<a href=#895 id=895 data-nosnippet>895</a>
+<a href=#896 id=896 data-nosnippet>896</a><span class="kw">impl </span>FnValue <span class="kw">for </span>ConstValueBuf {
+<a href=#897 id=897 data-nosnippet>897</a>    <span class="kw">type </span>Globals = ();
 <a href=#898 id=898 data-nosnippet>898</a>
-<a href=#899 id=899 data-nosnippet>899</a><span class="kw">struct </span>FnOffset&lt;V&gt;
-<a href=#900 id=900 data-nosnippet>900</a><span class="kw">where
-<a href=#901 id=901 data-nosnippet>901</a>    </span>V: FnValue,
-<a href=#902 id=902 data-nosnippet>902</a>{
-<a href=#903 id=903 data-nosnippet>903</a>    context: Arc&lt;RuntimeContext&gt;,
-<a href=#904 id=904 data-nosnippet>904</a>    <span class="doccomment">/// The unit where the function resides.
-<a href=#905 id=905 data-nosnippet>905</a>    </span>unit: Arc&lt;Unit&gt;,
-<a href=#906 id=906 data-nosnippet>906</a>    <span class="doccomment">/// The storage for static items declared by the unit.
-<a href=#907 id=907 data-nosnippet>907</a>    </span>globals: V::Globals,
-<a href=#908 id=908 data-nosnippet>908</a>    <span class="doccomment">/// The offset of the function.
-<a href=#909 id=909 data-nosnippet>909</a>    </span>offset: usize,
-<a href=#910 id=910 data-nosnippet>910</a>    <span class="doccomment">/// The calling convention.
-<a href=#911 id=911 data-nosnippet>911</a>    </span>call: Call,
-<a href=#912 id=912 data-nosnippet>912</a>    <span class="doccomment">/// The number of arguments the function takes.
-<a href=#913 id=913 data-nosnippet>913</a>    </span>args: usize,
-<a href=#914 id=914 data-nosnippet>914</a>    <span class="doccomment">/// Hash for the function type
-<a href=#915 id=915 data-nosnippet>915</a>    </span>hash: Hash,
-<a href=#916 id=916 data-nosnippet>916</a>}
-<a href=#917 id=917 data-nosnippet>917</a>
-<a href=#918 id=918 data-nosnippet>918</a><span class="kw">impl</span>&lt;V&gt; Clone <span class="kw">for </span>FnOffset&lt;V&gt;
-<a href=#919 id=919 data-nosnippet>919</a><span class="kw">where
-<a href=#920 id=920 data-nosnippet>920</a>    </span>V: FnValue,
-<a href=#921 id=921 data-nosnippet>921</a>{
-<a href=#922 id=922 data-nosnippet>922</a>    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-<a href=#923 id=923 data-nosnippet>923</a>        <span class="self">Self </span>{
-<a href=#924 id=924 data-nosnippet>924</a>            context: <span class="self">self</span>.context.clone(),
-<a href=#925 id=925 data-nosnippet>925</a>            unit: <span class="self">self</span>.unit.clone(),
-<a href=#926 id=926 data-nosnippet>926</a>            globals: <span class="self">self</span>.globals.clone(),
-<a href=#927 id=927 data-nosnippet>927</a>            offset: <span class="self">self</span>.offset,
-<a href=#928 id=928 data-nosnippet>928</a>            call: <span class="self">self</span>.call,
-<a href=#929 id=929 data-nosnippet>929</a>            args: <span class="self">self</span>.args,
-<a href=#930 id=930 data-nosnippet>930</a>            hash: <span class="self">self</span>.hash,
-<a href=#931 id=931 data-nosnippet>931</a>        }
-<a href=#932 id=932 data-nosnippet>932</a>    }
-<a href=#933 id=933 data-nosnippet>933</a>}
-<a href=#934 id=934 data-nosnippet>934</a>
-<a href=#935 id=935 data-nosnippet>935</a><span class="kw">impl</span>&lt;V&gt; TryClone <span class="kw">for </span>FnOffset&lt;V&gt;
-<a href=#936 id=936 data-nosnippet>936</a><span class="kw">where
-<a href=#937 id=937 data-nosnippet>937</a>    </span>V: FnValue,
-<a href=#938 id=938 data-nosnippet>938</a>{
-<a href=#939 id=939 data-nosnippet>939</a>    <span class="attr">#[inline]
-<a href=#940 id=940 data-nosnippet>940</a>    </span><span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
-<a href=#941 id=941 data-nosnippet>941</a>        <span class="prelude-val">Ok</span>(<span class="self">self</span>.clone())
-<a href=#942 id=942 data-nosnippet>942</a>    }
-<a href=#943 id=943 data-nosnippet>943</a>}
-<a href=#944 id=944 data-nosnippet>944</a>
-<a href=#945 id=945 data-nosnippet>945</a><span class="kw">impl</span>&lt;V&gt; FnOffset&lt;V&gt;
-<a href=#946 id=946 data-nosnippet>946</a><span class="kw">where
-<a href=#947 id=947 data-nosnippet>947</a>    </span>V: FnValue,
-<a href=#948 id=948 data-nosnippet>948</a>{
-<a href=#949 id=949 data-nosnippet>949</a>    <span class="doccomment">/// Perform a call into the specified offset and return the produced value.
-<a href=#950 id=950 data-nosnippet>950</a>    </span><span class="attr">#[tracing::instrument(skip_all, fields(args = args.count(), extra = extra.count(), <span class="question-mark">?</span><span class="self">self</span>.offset, <span class="question-mark">?</span><span class="self">self</span>.call, <span class="question-mark">?</span><span class="self">self</span>.args, <span class="question-mark">?</span><span class="self">self</span>.hash))]
-<a href=#951 id=951 data-nosnippet>951</a>    </span><span class="kw">fn </span>call(<span class="kw-2">&amp;</span><span class="self">self</span>, args: <span class="kw">impl </span>GuardedArgs, extra: <span class="kw">impl </span>Args) -&gt; <span class="prelude-ty">Result</span>&lt;Value, VmError&gt; {
-<a href=#952 id=952 data-nosnippet>952</a>        check_args(args.count().wrapping_add(extra.count()), <span class="self">self</span>.args)<span class="question-mark">?</span>;
-<a href=#953 id=953 data-nosnippet>953</a>
-<a href=#954 id=954 data-nosnippet>954</a>        <span class="kw">let </span><span class="kw-2">mut </span>vm = Vm::new(<span class="self">self</span>.context.clone(), <span class="self">self</span>.unit.clone())
-<a href=#955 id=955 data-nosnippet>955</a>            .with_globals(V::globals(<span class="kw-2">&amp;</span><span class="self">self</span>.globals));
-<a href=#956 id=956 data-nosnippet>956</a>
-<a href=#957 id=957 data-nosnippet>957</a>        vm.set_ip(<span class="self">self</span>.offset);
-<a href=#958 id=958 data-nosnippet>958</a>        <span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ args.guarded_into_stack(vm.stack_mut())<span class="question-mark">? </span>};
-<a href=#959 id=959 data-nosnippet>959</a>        extra.into_stack(vm.stack_mut())<span class="question-mark">?</span>;
-<a href=#960 id=960 data-nosnippet>960</a>
-<a href=#961 id=961 data-nosnippet>961</a>        <span class="self">self</span>.call.call_with_vm(vm)
-<a href=#962 id=962 data-nosnippet>962</a>    }
-<a href=#963 id=963 data-nosnippet>963</a>
-<a href=#964 id=964 data-nosnippet>964</a>    <span class="doccomment">/// Perform a potentially optimized call into the specified vm.
-<a href=#965 id=965 data-nosnippet>965</a>    ///
-<a href=#966 id=966 data-nosnippet>966</a>    /// This will cause a halt in case the vm being called into isn't the same
-<a href=#967 id=967 data-nosnippet>967</a>    /// as the context and unit of the function.
-<a href=#968 id=968 data-nosnippet>968</a>    </span><span class="attr">#[tracing::instrument(skip_all, fields(args, extra = extra.count(), keep, <span class="question-mark">?</span><span class="self">self</span>.offset, <span class="question-mark">?</span><span class="self">self</span>.call, <span class="question-mark">?</span><span class="self">self</span>.args, <span class="question-mark">?</span><span class="self">self</span>.hash))]
-<a href=#969 id=969 data-nosnippet>969</a>    </span><span class="kw">fn </span>call_with_vm(
-<a href=#970 id=970 data-nosnippet>970</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#971 id=971 data-nosnippet>971</a>        vm: <span class="kw-2">&amp;mut </span>Vm,
-<a href=#972 id=972 data-nosnippet>972</a>        addr: Address,
-<a href=#973 id=973 data-nosnippet>973</a>        args: usize,
-<a href=#974 id=974 data-nosnippet>974</a>        extra: <span class="kw">impl </span>Args,
-<a href=#975 id=975 data-nosnippet>975</a>        out: Output,
-<a href=#976 id=976 data-nosnippet>976</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;VmCall&gt;, VmError&gt; {
-<a href=#977 id=977 data-nosnippet>977</a>        check_args(args.wrapping_add(extra.count()), <span class="self">self</span>.args)<span class="question-mark">?</span>;
-<a href=#978 id=978 data-nosnippet>978</a>
-<a href=#979 id=979 data-nosnippet>979</a>        <span class="kw">let </span>same_unit = <span class="macro">matches!</span>(<span class="self">self</span>.call, Call::Immediate <span class="kw">if </span>vm.is_same_unit(<span class="kw-2">&amp;</span><span class="self">self</span>.unit));
-<a href=#980 id=980 data-nosnippet>980</a>        <span class="kw">let </span>same_context =
-<a href=#981 id=981 data-nosnippet>981</a>            <span class="macro">matches!</span>(<span class="self">self</span>.call, Call::Immediate <span class="kw">if </span>vm.is_same_context(<span class="kw-2">&amp;</span><span class="self">self</span>.context));
-<a href=#982 id=982 data-nosnippet>982</a>        <span class="kw">let </span>same_globals =
-<a href=#983 id=983 data-nosnippet>983</a>            <span class="macro">matches!</span>(<span class="self">self</span>.call, Call::Immediate <span class="kw">if </span>V::same_globals(<span class="kw-2">&amp;</span><span class="self">self</span>.globals, vm));
-<a href=#984 id=984 data-nosnippet>984</a>
-<a href=#985 id=985 data-nosnippet>985</a>        vm.push_call_frame(<span class="self">self</span>.offset, addr, args, Isolated::new(!same_context), out)<span class="question-mark">?</span>;
-<a href=#986 id=986 data-nosnippet>986</a>        extra.into_stack(vm.stack_mut())<span class="question-mark">?</span>;
-<a href=#987 id=987 data-nosnippet>987</a>
-<a href=#988 id=988 data-nosnippet>988</a>        <span class="comment">// Fast path, just allocate a call frame and keep running.
-<a href=#989 id=989 data-nosnippet>989</a>        </span><span class="kw">if </span>same_context &amp;&amp; same_unit &amp;&amp; same_globals {
-<a href=#990 id=990 data-nosnippet>990</a>            <span class="macro">tracing::trace!</span>(<span class="string">"same context, unit and globals"</span>);
-<a href=#991 id=991 data-nosnippet>991</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-<a href=#992 id=992 data-nosnippet>992</a>        }
-<a href=#993 id=993 data-nosnippet>993</a>
-<a href=#994 id=994 data-nosnippet>994</a>        <span class="kw">let </span>call = VmCall::new(
-<a href=#995 id=995 data-nosnippet>995</a>            <span class="self">self</span>.call,
-<a href=#996 id=996 data-nosnippet>996</a>            (!same_context).then(|| <span class="self">self</span>.context.clone()),
-<a href=#997 id=997 data-nosnippet>997</a>            (!same_unit).then(|| <span class="self">self</span>.unit.clone()),
-<a href=#998 id=998 data-nosnippet>998</a>            (!same_globals).then(|| V::globals(<span class="kw-2">&amp;</span><span class="self">self</span>.globals)),
-<a href=#999 id=999 data-nosnippet>999</a>            out,
-<a href=#1000 id=1000 data-nosnippet>1000</a>        );
-<a href=#1001 id=1001 data-nosnippet>1001</a>
-<a href=#1002 id=1002 data-nosnippet>1002</a>        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(call))
-<a href=#1003 id=1003 data-nosnippet>1003</a>    }
-<a href=#1004 id=1004 data-nosnippet>1004</a>}
-<a href=#1005 id=1005 data-nosnippet>1005</a>
-<a href=#1006 id=1006 data-nosnippet>1006</a><span class="kw">impl </span>FnOffset&lt;Value&gt; {
-<a href=#1007 id=1007 data-nosnippet>1007</a>    <span class="doccomment">/// Shed the static item storage so that the function can be sent between
-<a href=#1008 id=1008 data-nosnippet>1008</a>    /// threads.
-<a href=#1009 id=1009 data-nosnippet>1009</a>    ///
-<a href=#1010 id=1010 data-nosnippet>1010</a>    /// The storage isn't thread safe, so a [`SyncFunction`] cannot carry it.
-<a href=#1011 id=1011 data-nosnippet>1011</a>    /// Reading a static through the resulting function reports that no storage
-<a href=#1012 id=1012 data-nosnippet>1012</a>    /// has been configured.
-<a href=#1013 id=1013 data-nosnippet>1013</a>    </span><span class="kw">fn </span>into_sync(<span class="self">self</span>) -&gt; FnOffset&lt;ConstValue&gt; {
-<a href=#1014 id=1014 data-nosnippet>1014</a>        FnOffset {
-<a href=#1015 id=1015 data-nosnippet>1015</a>            context: <span class="self">self</span>.context,
-<a href=#1016 id=1016 data-nosnippet>1016</a>            unit: <span class="self">self</span>.unit,
-<a href=#1017 id=1017 data-nosnippet>1017</a>            globals: (),
-<a href=#1018 id=1018 data-nosnippet>1018</a>            offset: <span class="self">self</span>.offset,
-<a href=#1019 id=1019 data-nosnippet>1019</a>            call: <span class="self">self</span>.call,
-<a href=#1020 id=1020 data-nosnippet>1020</a>            args: <span class="self">self</span>.args,
-<a href=#1021 id=1021 data-nosnippet>1021</a>            hash: <span class="self">self</span>.hash,
-<a href=#1022 id=1022 data-nosnippet>1022</a>        }
-<a href=#1023 id=1023 data-nosnippet>1023</a>    }
-<a href=#1024 id=1024 data-nosnippet>1024</a>}
-<a href=#1025 id=1025 data-nosnippet>1025</a>
-<a href=#1026 id=1026 data-nosnippet>1026</a><span class="kw">impl</span>&lt;V&gt; fmt::Debug <span class="kw">for </span>FnOffset&lt;V&gt;
-<a href=#1027 id=1027 data-nosnippet>1027</a><span class="kw">where
-<a href=#1028 id=1028 data-nosnippet>1028</a>    </span>V: FnValue,
-<a href=#1029 id=1029 data-nosnippet>1029</a>{
-<a href=#1030 id=1030 data-nosnippet>1030</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
-<a href=#1031 id=1031 data-nosnippet>1031</a>        f.debug_struct(<span class="string">"FnOffset"</span>)
-<a href=#1032 id=1032 data-nosnippet>1032</a>            .field(<span class="string">"context"</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.context <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>))
-<a href=#1033 id=1033 data-nosnippet>1033</a>            .field(<span class="string">"unit"</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.unit <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>))
-<a href=#1034 id=1034 data-nosnippet>1034</a>            .field(<span class="string">"offset"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.offset)
-<a href=#1035 id=1035 data-nosnippet>1035</a>            .field(<span class="string">"call"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.call)
-<a href=#1036 id=1036 data-nosnippet>1036</a>            .field(<span class="string">"args"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.args)
-<a href=#1037 id=1037 data-nosnippet>1037</a>            .finish()
-<a href=#1038 id=1038 data-nosnippet>1038</a>    }
-<a href=#1039 id=1039 data-nosnippet>1039</a>}
-<a href=#1040 id=1040 data-nosnippet>1040</a>
-<a href=#1041 id=1041 data-nosnippet>1041</a><span class="attr">#[derive(Debug)]
-<a href=#1042 id=1042 data-nosnippet>1042</a></span><span class="kw">struct </span>FnClosureOffset&lt;V&gt;
-<a href=#1043 id=1043 data-nosnippet>1043</a><span class="kw">where
-<a href=#1044 id=1044 data-nosnippet>1044</a>    </span>V: FnValue,
-<a href=#1045 id=1045 data-nosnippet>1045</a>{
-<a href=#1046 id=1046 data-nosnippet>1046</a>    <span class="doccomment">/// The offset in the associated unit that the function lives.
-<a href=#1047 id=1047 data-nosnippet>1047</a>    </span>fn_offset: FnOffset&lt;V&gt;,
-<a href=#1048 id=1048 data-nosnippet>1048</a>    <span class="doccomment">/// Captured environment.
-<a href=#1049 id=1049 data-nosnippet>1049</a>    </span>environment: Box&lt;[V]&gt;,
+<a href=#899 id=899 data-nosnippet>899</a>    <span class="attr">#[inline]
+<a href=#900 id=900 data-nosnippet>900</a>    </span><span class="kw">fn </span>globals(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals) -&gt; Globals {
+<a href=#901 id=901 data-nosnippet>901</a>        Globals::empty()
+<a href=#902 id=902 data-nosnippet>902</a>    }
+<a href=#903 id=903 data-nosnippet>903</a>
+<a href=#904 id=904 data-nosnippet>904</a>    <span class="attr">#[inline]
+<a href=#905 id=905 data-nosnippet>905</a>    </span><span class="kw">fn </span>same_globals(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::Globals, vm: <span class="kw-2">&amp;</span>Vm) -&gt; bool {
+<a href=#906 id=906 data-nosnippet>906</a>        !vm.globals().is_configured()
+<a href=#907 id=907 data-nosnippet>907</a>    }
+<a href=#908 id=908 data-nosnippet>908</a>}
+<a href=#909 id=909 data-nosnippet>909</a>
+<a href=#910 id=910 data-nosnippet>910</a><span class="kw">struct </span>FnOffset&lt;V&gt;
+<a href=#911 id=911 data-nosnippet>911</a><span class="kw">where
+<a href=#912 id=912 data-nosnippet>912</a>    </span>V: FnValue,
+<a href=#913 id=913 data-nosnippet>913</a>{
+<a href=#914 id=914 data-nosnippet>914</a>    context: Arc&lt;RuntimeContext&gt;,
+<a href=#915 id=915 data-nosnippet>915</a>    <span class="doccomment">/// The unit where the function resides.
+<a href=#916 id=916 data-nosnippet>916</a>    </span>unit: Arc&lt;Unit&gt;,
+<a href=#917 id=917 data-nosnippet>917</a>    <span class="doccomment">/// The storage for static items declared by the unit.
+<a href=#918 id=918 data-nosnippet>918</a>    </span>globals: V::Globals,
+<a href=#919 id=919 data-nosnippet>919</a>    <span class="doccomment">/// The offset of the function.
+<a href=#920 id=920 data-nosnippet>920</a>    </span>offset: usize,
+<a href=#921 id=921 data-nosnippet>921</a>    <span class="doccomment">/// The calling convention.
+<a href=#922 id=922 data-nosnippet>922</a>    </span>call: Call,
+<a href=#923 id=923 data-nosnippet>923</a>    <span class="doccomment">/// The number of arguments the function takes.
+<a href=#924 id=924 data-nosnippet>924</a>    </span>args: usize,
+<a href=#925 id=925 data-nosnippet>925</a>    <span class="doccomment">/// Hash for the function type
+<a href=#926 id=926 data-nosnippet>926</a>    </span>hash: Hash,
+<a href=#927 id=927 data-nosnippet>927</a>}
+<a href=#928 id=928 data-nosnippet>928</a>
+<a href=#929 id=929 data-nosnippet>929</a><span class="kw">impl</span>&lt;V&gt; Clone <span class="kw">for </span>FnOffset&lt;V&gt;
+<a href=#930 id=930 data-nosnippet>930</a><span class="kw">where
+<a href=#931 id=931 data-nosnippet>931</a>    </span>V: FnValue,
+<a href=#932 id=932 data-nosnippet>932</a>{
+<a href=#933 id=933 data-nosnippet>933</a>    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+<a href=#934 id=934 data-nosnippet>934</a>        <span class="self">Self </span>{
+<a href=#935 id=935 data-nosnippet>935</a>            context: <span class="self">self</span>.context.clone(),
+<a href=#936 id=936 data-nosnippet>936</a>            unit: <span class="self">self</span>.unit.clone(),
+<a href=#937 id=937 data-nosnippet>937</a>            globals: <span class="self">self</span>.globals.clone(),
+<a href=#938 id=938 data-nosnippet>938</a>            offset: <span class="self">self</span>.offset,
+<a href=#939 id=939 data-nosnippet>939</a>            call: <span class="self">self</span>.call,
+<a href=#940 id=940 data-nosnippet>940</a>            args: <span class="self">self</span>.args,
+<a href=#941 id=941 data-nosnippet>941</a>            hash: <span class="self">self</span>.hash,
+<a href=#942 id=942 data-nosnippet>942</a>        }
+<a href=#943 id=943 data-nosnippet>943</a>    }
+<a href=#944 id=944 data-nosnippet>944</a>}
+<a href=#945 id=945 data-nosnippet>945</a>
+<a href=#946 id=946 data-nosnippet>946</a><span class="kw">impl</span>&lt;V&gt; TryClone <span class="kw">for </span>FnOffset&lt;V&gt;
+<a href=#947 id=947 data-nosnippet>947</a><span class="kw">where
+<a href=#948 id=948 data-nosnippet>948</a>    </span>V: FnValue,
+<a href=#949 id=949 data-nosnippet>949</a>{
+<a href=#950 id=950 data-nosnippet>950</a>    <span class="attr">#[inline]
+<a href=#951 id=951 data-nosnippet>951</a>    </span><span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
+<a href=#952 id=952 data-nosnippet>952</a>        <span class="prelude-val">Ok</span>(<span class="self">self</span>.clone())
+<a href=#953 id=953 data-nosnippet>953</a>    }
+<a href=#954 id=954 data-nosnippet>954</a>}
+<a href=#955 id=955 data-nosnippet>955</a>
+<a href=#956 id=956 data-nosnippet>956</a><span class="kw">impl</span>&lt;V&gt; FnOffset&lt;V&gt;
+<a href=#957 id=957 data-nosnippet>957</a><span class="kw">where
+<a href=#958 id=958 data-nosnippet>958</a>    </span>V: FnValue,
+<a href=#959 id=959 data-nosnippet>959</a>{
+<a href=#960 id=960 data-nosnippet>960</a>    <span class="doccomment">/// Perform a call into the specified offset and return the produced value.
+<a href=#961 id=961 data-nosnippet>961</a>    </span><span class="attr">#[tracing::instrument(skip_all, fields(args = args.count(), extra = extra.count(), <span class="question-mark">?</span><span class="self">self</span>.offset, <span class="question-mark">?</span><span class="self">self</span>.call, <span class="question-mark">?</span><span class="self">self</span>.args, <span class="question-mark">?</span><span class="self">self</span>.hash))]
+<a href=#962 id=962 data-nosnippet>962</a>    </span><span class="kw">fn </span>call(<span class="kw-2">&amp;</span><span class="self">self</span>, args: <span class="kw">impl </span>GuardedArgs, extra: <span class="kw">impl </span>Args) -&gt; <span class="prelude-ty">Result</span>&lt;Value, VmError&gt; {
+<a href=#963 id=963 data-nosnippet>963</a>        check_args(args.count().wrapping_add(extra.count()), <span class="self">self</span>.args)<span class="question-mark">?</span>;
+<a href=#964 id=964 data-nosnippet>964</a>
+<a href=#965 id=965 data-nosnippet>965</a>        <span class="kw">let </span><span class="kw-2">mut </span>vm = Vm::new(<span class="self">self</span>.context.clone(), <span class="self">self</span>.unit.clone())
+<a href=#966 id=966 data-nosnippet>966</a>            .with_globals(V::globals(<span class="kw-2">&amp;</span><span class="self">self</span>.globals));
+<a href=#967 id=967 data-nosnippet>967</a>
+<a href=#968 id=968 data-nosnippet>968</a>        vm.set_ip(<span class="self">self</span>.offset);
+<a href=#969 id=969 data-nosnippet>969</a>        <span class="kw">let </span>_guard = <span class="kw">unsafe </span>{ args.guarded_into_stack(vm.stack_mut())<span class="question-mark">? </span>};
+<a href=#970 id=970 data-nosnippet>970</a>        extra.into_stack(vm.stack_mut())<span class="question-mark">?</span>;
+<a href=#971 id=971 data-nosnippet>971</a>
+<a href=#972 id=972 data-nosnippet>972</a>        <span class="self">self</span>.call.call_with_vm(vm)
+<a href=#973 id=973 data-nosnippet>973</a>    }
+<a href=#974 id=974 data-nosnippet>974</a>
+<a href=#975 id=975 data-nosnippet>975</a>    <span class="doccomment">/// Perform a potentially optimized call into the specified vm.
+<a href=#976 id=976 data-nosnippet>976</a>    ///
+<a href=#977 id=977 data-nosnippet>977</a>    /// This will cause a halt in case the vm being called into isn't the same
+<a href=#978 id=978 data-nosnippet>978</a>    /// as the context and unit of the function.
+<a href=#979 id=979 data-nosnippet>979</a>    </span><span class="attr">#[tracing::instrument(skip_all, fields(args, extra = extra.count(), keep, <span class="question-mark">?</span><span class="self">self</span>.offset, <span class="question-mark">?</span><span class="self">self</span>.call, <span class="question-mark">?</span><span class="self">self</span>.args, <span class="question-mark">?</span><span class="self">self</span>.hash))]
+<a href=#980 id=980 data-nosnippet>980</a>    </span><span class="kw">fn </span>call_with_vm(
+<a href=#981 id=981 data-nosnippet>981</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#982 id=982 data-nosnippet>982</a>        vm: <span class="kw-2">&amp;mut </span>Vm,
+<a href=#983 id=983 data-nosnippet>983</a>        addr: Address,
+<a href=#984 id=984 data-nosnippet>984</a>        args: usize,
+<a href=#985 id=985 data-nosnippet>985</a>        extra: <span class="kw">impl </span>Args,
+<a href=#986 id=986 data-nosnippet>986</a>        out: Output,
+<a href=#987 id=987 data-nosnippet>987</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;VmCall&gt;, VmError&gt; {
+<a href=#988 id=988 data-nosnippet>988</a>        check_args(args.wrapping_add(extra.count()), <span class="self">self</span>.args)<span class="question-mark">?</span>;
+<a href=#989 id=989 data-nosnippet>989</a>
+<a href=#990 id=990 data-nosnippet>990</a>        <span class="kw">let </span>same_unit = <span class="macro">matches!</span>(<span class="self">self</span>.call, Call::Immediate <span class="kw">if </span>vm.is_same_unit(<span class="kw-2">&amp;</span><span class="self">self</span>.unit));
+<a href=#991 id=991 data-nosnippet>991</a>        <span class="kw">let </span>same_context =
+<a href=#992 id=992 data-nosnippet>992</a>            <span class="macro">matches!</span>(<span class="self">self</span>.call, Call::Immediate <span class="kw">if </span>vm.is_same_context(<span class="kw-2">&amp;</span><span class="self">self</span>.context));
+<a href=#993 id=993 data-nosnippet>993</a>        <span class="kw">let </span>same_globals =
+<a href=#994 id=994 data-nosnippet>994</a>            <span class="macro">matches!</span>(<span class="self">self</span>.call, Call::Immediate <span class="kw">if </span>V::same_globals(<span class="kw-2">&amp;</span><span class="self">self</span>.globals, vm));
+<a href=#995 id=995 data-nosnippet>995</a>
+<a href=#996 id=996 data-nosnippet>996</a>        vm.push_call_frame(<span class="self">self</span>.offset, addr, args, Isolated::new(!same_context), out)<span class="question-mark">?</span>;
+<a href=#997 id=997 data-nosnippet>997</a>        extra.into_stack(vm.stack_mut())<span class="question-mark">?</span>;
+<a href=#998 id=998 data-nosnippet>998</a>
+<a href=#999 id=999 data-nosnippet>999</a>        <span class="comment">// Fast path, just allocate a call frame and keep running.
+<a href=#1000 id=1000 data-nosnippet>1000</a>        </span><span class="kw">if </span>same_context &amp;&amp; same_unit &amp;&amp; same_globals {
+<a href=#1001 id=1001 data-nosnippet>1001</a>            <span class="macro">tracing::trace!</span>(<span class="string">"same context, unit and globals"</span>);
+<a href=#1002 id=1002 data-nosnippet>1002</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+<a href=#1003 id=1003 data-nosnippet>1003</a>        }
+<a href=#1004 id=1004 data-nosnippet>1004</a>
+<a href=#1005 id=1005 data-nosnippet>1005</a>        <span class="kw">let </span>call = VmCall::new(
+<a href=#1006 id=1006 data-nosnippet>1006</a>            <span class="self">self</span>.call,
+<a href=#1007 id=1007 data-nosnippet>1007</a>            (!same_context).then(|| <span class="self">self</span>.context.clone()),
+<a href=#1008 id=1008 data-nosnippet>1008</a>            (!same_unit).then(|| <span class="self">self</span>.unit.clone()),
+<a href=#1009 id=1009 data-nosnippet>1009</a>            (!same_globals).then(|| V::globals(<span class="kw-2">&amp;</span><span class="self">self</span>.globals)),
+<a href=#1010 id=1010 data-nosnippet>1010</a>            out,
+<a href=#1011 id=1011 data-nosnippet>1011</a>        );
+<a href=#1012 id=1012 data-nosnippet>1012</a>
+<a href=#1013 id=1013 data-nosnippet>1013</a>        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(call))
+<a href=#1014 id=1014 data-nosnippet>1014</a>    }
+<a href=#1015 id=1015 data-nosnippet>1015</a>}
+<a href=#1016 id=1016 data-nosnippet>1016</a>
+<a href=#1017 id=1017 data-nosnippet>1017</a><span class="kw">impl </span>FnOffset&lt;Value&gt; {
+<a href=#1018 id=1018 data-nosnippet>1018</a>    <span class="doccomment">/// Shed the static item storage so that the function can be sent between
+<a href=#1019 id=1019 data-nosnippet>1019</a>    /// threads.
+<a href=#1020 id=1020 data-nosnippet>1020</a>    ///
+<a href=#1021 id=1021 data-nosnippet>1021</a>    /// The storage isn't thread safe, so a [`SyncFunction`] cannot carry it.
+<a href=#1022 id=1022 data-nosnippet>1022</a>    /// Reading a static through the resulting function reports that no storage
+<a href=#1023 id=1023 data-nosnippet>1023</a>    /// has been configured.
+<a href=#1024 id=1024 data-nosnippet>1024</a>    </span><span class="kw">fn </span>into_sync(<span class="self">self</span>) -&gt; FnOffset&lt;ConstValueBuf&gt; {
+<a href=#1025 id=1025 data-nosnippet>1025</a>        FnOffset {
+<a href=#1026 id=1026 data-nosnippet>1026</a>            context: <span class="self">self</span>.context,
+<a href=#1027 id=1027 data-nosnippet>1027</a>            unit: <span class="self">self</span>.unit,
+<a href=#1028 id=1028 data-nosnippet>1028</a>            globals: (),
+<a href=#1029 id=1029 data-nosnippet>1029</a>            offset: <span class="self">self</span>.offset,
+<a href=#1030 id=1030 data-nosnippet>1030</a>            call: <span class="self">self</span>.call,
+<a href=#1031 id=1031 data-nosnippet>1031</a>            args: <span class="self">self</span>.args,
+<a href=#1032 id=1032 data-nosnippet>1032</a>            hash: <span class="self">self</span>.hash,
+<a href=#1033 id=1033 data-nosnippet>1033</a>        }
+<a href=#1034 id=1034 data-nosnippet>1034</a>    }
+<a href=#1035 id=1035 data-nosnippet>1035</a>}
+<a href=#1036 id=1036 data-nosnippet>1036</a>
+<a href=#1037 id=1037 data-nosnippet>1037</a><span class="kw">impl</span>&lt;V&gt; fmt::Debug <span class="kw">for </span>FnOffset&lt;V&gt;
+<a href=#1038 id=1038 data-nosnippet>1038</a><span class="kw">where
+<a href=#1039 id=1039 data-nosnippet>1039</a>    </span>V: FnValue,
+<a href=#1040 id=1040 data-nosnippet>1040</a>{
+<a href=#1041 id=1041 data-nosnippet>1041</a>    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+<a href=#1042 id=1042 data-nosnippet>1042</a>        f.debug_struct(<span class="string">"FnOffset"</span>)
+<a href=#1043 id=1043 data-nosnippet>1043</a>            .field(<span class="string">"context"</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.context <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>))
+<a href=#1044 id=1044 data-nosnippet>1044</a>            .field(<span class="string">"unit"</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.unit <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>))
+<a href=#1045 id=1045 data-nosnippet>1045</a>            .field(<span class="string">"offset"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.offset)
+<a href=#1046 id=1046 data-nosnippet>1046</a>            .field(<span class="string">"call"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.call)
+<a href=#1047 id=1047 data-nosnippet>1047</a>            .field(<span class="string">"args"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.args)
+<a href=#1048 id=1048 data-nosnippet>1048</a>            .finish()
+<a href=#1049 id=1049 data-nosnippet>1049</a>    }
 <a href=#1050 id=1050 data-nosnippet>1050</a>}
 <a href=#1051 id=1051 data-nosnippet>1051</a>
-<a href=#1052 id=1052 data-nosnippet>1052</a><span class="kw">impl</span>&lt;V&gt; TryClone <span class="kw">for </span>FnClosureOffset&lt;V&gt;
-<a href=#1053 id=1053 data-nosnippet>1053</a><span class="kw">where
-<a href=#1054 id=1054 data-nosnippet>1054</a>    </span>V: FnValue,
-<a href=#1055 id=1055 data-nosnippet>1055</a>{
-<a href=#1056 id=1056 data-nosnippet>1056</a>    <span class="attr">#[inline]
-<a href=#1057 id=1057 data-nosnippet>1057</a>    </span><span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
-<a href=#1058 id=1058 data-nosnippet>1058</a>        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-<a href=#1059 id=1059 data-nosnippet>1059</a>            fn_offset: <span class="self">self</span>.fn_offset.clone(),
-<a href=#1060 id=1060 data-nosnippet>1060</a>            environment: <span class="self">self</span>.environment.try_clone()<span class="question-mark">?</span>,
-<a href=#1061 id=1061 data-nosnippet>1061</a>        })
-<a href=#1062 id=1062 data-nosnippet>1062</a>    }
-<a href=#1063 id=1063 data-nosnippet>1063</a>}
-<a href=#1064 id=1064 data-nosnippet>1064</a>
-<a href=#1065 id=1065 data-nosnippet>1065</a><span class="attr">#[derive(Debug, Clone, TryClone)]
-<a href=#1066 id=1066 data-nosnippet>1066</a></span><span class="kw">struct </span>FnUnitStruct {
-<a href=#1067 id=1067 data-nosnippet>1067</a>    <span class="doccomment">/// The type of the empty.
-<a href=#1068 id=1068 data-nosnippet>1068</a>    </span>rtti: Arc&lt;Rtti&gt;,
-<a href=#1069 id=1069 data-nosnippet>1069</a>}
-<a href=#1070 id=1070 data-nosnippet>1070</a>
-<a href=#1071 id=1071 data-nosnippet>1071</a><span class="attr">#[derive(Debug, Clone, TryClone)]
-<a href=#1072 id=1072 data-nosnippet>1072</a></span><span class="kw">struct </span>FnTupleStruct {
-<a href=#1073 id=1073 data-nosnippet>1073</a>    <span class="doccomment">/// The type of the tuple.
-<a href=#1074 id=1074 data-nosnippet>1074</a>    </span>rtti: Arc&lt;Rtti&gt;,
-<a href=#1075 id=1075 data-nosnippet>1075</a>    <span class="doccomment">/// The number of arguments the tuple takes.
-<a href=#1076 id=1076 data-nosnippet>1076</a>    </span>args: usize,
-<a href=#1077 id=1077 data-nosnippet>1077</a>}
-<a href=#1078 id=1078 data-nosnippet>1078</a>
-<a href=#1079 id=1079 data-nosnippet>1079</a><span class="kw">impl </span>FromValue <span class="kw">for </span>SyncFunction {
-<a href=#1080 id=1080 data-nosnippet>1080</a>    <span class="attr">#[inline]
-<a href=#1081 id=1081 data-nosnippet>1081</a>    </span><span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
-<a href=#1082 id=1082 data-nosnippet>1082</a>        value.downcast::&lt;Function&gt;()<span class="question-mark">?</span>.into_sync()
-<a href=#1083 id=1083 data-nosnippet>1083</a>    }
-<a href=#1084 id=1084 data-nosnippet>1084</a>}
-<a href=#1085 id=1085 data-nosnippet>1085</a>
-<a href=#1086 id=1086 data-nosnippet>1086</a><span class="attr">#[inline]
-<a href=#1087 id=1087 data-nosnippet>1087</a></span><span class="kw">fn </span>check_args(actual: usize, expected: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmError&gt; {
-<a href=#1088 id=1088 data-nosnippet>1088</a>    <span class="kw">if </span>actual != expected {
-<a href=#1089 id=1089 data-nosnippet>1089</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(VmError::new(VmErrorKind::BadArgumentCount {
-<a href=#1090 id=1090 data-nosnippet>1090</a>            expected,
-<a href=#1091 id=1091 data-nosnippet>1091</a>            actual,
-<a href=#1092 id=1092 data-nosnippet>1092</a>        }));
-<a href=#1093 id=1093 data-nosnippet>1093</a>    }
-<a href=#1094 id=1094 data-nosnippet>1094</a>
-<a href=#1095 id=1095 data-nosnippet>1095</a>    <span class="prelude-val">Ok</span>(())
-<a href=#1096 id=1096 data-nosnippet>1096</a>}
+<a href=#1052 id=1052 data-nosnippet>1052</a><span class="attr">#[derive(Debug)]
+<a href=#1053 id=1053 data-nosnippet>1053</a></span><span class="kw">struct </span>FnClosureOffset&lt;V&gt;
+<a href=#1054 id=1054 data-nosnippet>1054</a><span class="kw">where
+<a href=#1055 id=1055 data-nosnippet>1055</a>    </span>V: FnValue,
+<a href=#1056 id=1056 data-nosnippet>1056</a>{
+<a href=#1057 id=1057 data-nosnippet>1057</a>    <span class="doccomment">/// The offset in the associated unit that the function lives.
+<a href=#1058 id=1058 data-nosnippet>1058</a>    </span>fn_offset: FnOffset&lt;V&gt;,
+<a href=#1059 id=1059 data-nosnippet>1059</a>    <span class="doccomment">/// Captured environment.
+<a href=#1060 id=1060 data-nosnippet>1060</a>    </span>environment: Box&lt;[V]&gt;,
+<a href=#1061 id=1061 data-nosnippet>1061</a>}
+<a href=#1062 id=1062 data-nosnippet>1062</a>
+<a href=#1063 id=1063 data-nosnippet>1063</a><span class="kw">impl</span>&lt;V&gt; TryClone <span class="kw">for </span>FnClosureOffset&lt;V&gt;
+<a href=#1064 id=1064 data-nosnippet>1064</a><span class="kw">where
+<a href=#1065 id=1065 data-nosnippet>1065</a>    </span>V: FnValue,
+<a href=#1066 id=1066 data-nosnippet>1066</a>{
+<a href=#1067 id=1067 data-nosnippet>1067</a>    <span class="attr">#[inline]
+<a href=#1068 id=1068 data-nosnippet>1068</a>    </span><span class="kw">fn </span>try_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; alloc::Result&lt;<span class="self">Self</span>&gt; {
+<a href=#1069 id=1069 data-nosnippet>1069</a>        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+<a href=#1070 id=1070 data-nosnippet>1070</a>            fn_offset: <span class="self">self</span>.fn_offset.clone(),
+<a href=#1071 id=1071 data-nosnippet>1071</a>            environment: <span class="self">self</span>.environment.try_clone()<span class="question-mark">?</span>,
+<a href=#1072 id=1072 data-nosnippet>1072</a>        })
+<a href=#1073 id=1073 data-nosnippet>1073</a>    }
+<a href=#1074 id=1074 data-nosnippet>1074</a>}
+<a href=#1075 id=1075 data-nosnippet>1075</a>
+<a href=#1076 id=1076 data-nosnippet>1076</a><span class="attr">#[derive(Debug, Clone, TryClone)]
+<a href=#1077 id=1077 data-nosnippet>1077</a></span><span class="kw">struct </span>FnUnitStruct {
+<a href=#1078 id=1078 data-nosnippet>1078</a>    <span class="doccomment">/// The type of the empty.
+<a href=#1079 id=1079 data-nosnippet>1079</a>    </span>rtti: Arc&lt;Rtti&gt;,
+<a href=#1080 id=1080 data-nosnippet>1080</a>}
+<a href=#1081 id=1081 data-nosnippet>1081</a>
+<a href=#1082 id=1082 data-nosnippet>1082</a><span class="attr">#[derive(Debug, Clone, TryClone)]
+<a href=#1083 id=1083 data-nosnippet>1083</a></span><span class="kw">struct </span>FnTupleStruct {
+<a href=#1084 id=1084 data-nosnippet>1084</a>    <span class="doccomment">/// The type of the tuple.
+<a href=#1085 id=1085 data-nosnippet>1085</a>    </span>rtti: Arc&lt;Rtti&gt;,
+<a href=#1086 id=1086 data-nosnippet>1086</a>    <span class="doccomment">/// The number of arguments the tuple takes.
+<a href=#1087 id=1087 data-nosnippet>1087</a>    </span>args: usize,
+<a href=#1088 id=1088 data-nosnippet>1088</a>}
+<a href=#1089 id=1089 data-nosnippet>1089</a>
+<a href=#1090 id=1090 data-nosnippet>1090</a><span class="kw">impl </span>FromValue <span class="kw">for </span>SyncFunction {
+<a href=#1091 id=1091 data-nosnippet>1091</a>    <span class="attr">#[inline]
+<a href=#1092 id=1092 data-nosnippet>1092</a>    </span><span class="kw">fn </span>from_value(value: Value) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RuntimeError&gt; {
+<a href=#1093 id=1093 data-nosnippet>1093</a>        value.downcast::&lt;Function&gt;()<span class="question-mark">?</span>.into_sync()
+<a href=#1094 id=1094 data-nosnippet>1094</a>    }
+<a href=#1095 id=1095 data-nosnippet>1095</a>}
+<a href=#1096 id=1096 data-nosnippet>1096</a>
+<a href=#1097 id=1097 data-nosnippet>1097</a><span class="attr">#[inline]
+<a href=#1098 id=1098 data-nosnippet>1098</a></span><span class="kw">fn </span>check_args(actual: usize, expected: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), VmError&gt; {
+<a href=#1099 id=1099 data-nosnippet>1099</a>    <span class="kw">if </span>actual != expected {
+<a href=#1100 id=1100 data-nosnippet>1100</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(VmError::new(VmErrorKind::BadArgumentCount {
+<a href=#1101 id=1101 data-nosnippet>1101</a>            expected,
+<a href=#1102 id=1102 data-nosnippet>1102</a>            actual,
+<a href=#1103 id=1103 data-nosnippet>1103</a>        }));
+<a href=#1104 id=1104 data-nosnippet>1104</a>    }
+<a href=#1105 id=1105 data-nosnippet>1105</a>
+<a href=#1106 id=1106 data-nosnippet>1106</a>    <span class="prelude-val">Ok</span>(())
+<a href=#1107 id=1107 data-nosnippet>1107</a>}
 </code></pre></div></section></main></body></html>

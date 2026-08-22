@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Assoc"],"struct":["Op","PrattParser","PrattParserMap"]};
+window.SIDEBAR_ITEMS = {"enum":["Assoc"],"macro":[["pratt_precedence",1]],"struct":["ConstPrattParser","Op","PrattParser","PrattParserMap"],"type":["Prec"]};

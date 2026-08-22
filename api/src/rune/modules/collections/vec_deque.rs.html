@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/modules/collections/vec_deque.rs`."><title>vec_deque.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-650bd49d.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.0-nightly (12c36e253 2026-08-10)" data-channel="nightly" data-search-js="search-cf4fc35e.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-d4bd101e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">rune/modules/collections/</div>vec_deque.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::cmp::Ordering;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rune/src/modules/collections/vec_deque.rs`."><title>vec_deque.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-203241e4.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="rune" data-themes="" data-resource-suffix="" data-rustdoc-version="1.100.0-nightly (c656540d6 2026-08-21)" data-channel="nightly" data-search-js="search-b167f383.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-1814ead3.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-9f56287d.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">rune/modules/collections/</div>vec_deque.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>core::cmp::Ordering;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>core::iter;
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use crate as </span>rune;
@@ -6,8 +6,8 @@
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span><span class="kw">crate</span>::alloc::fmt::TryWrite;
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::alloc::prelude::<span class="kw-2">*</span>;
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span><span class="kw">crate</span>::runtime::{
-<a href=#9 id=9 data-nosnippet>9</a>    EnvProtocolCaller, Formatter, Iterator, Protocol, ProtocolCaller, RawAnyGuard, Ref, Value, Vec,
-<a href=#10 id=10 data-nosnippet>10</a>    VmError, VmErrorKind,
+<a href=#9 id=9 data-nosnippet>9</a>    Dismantle, EnvProtocolCaller, Formatter, Handover, Iterator, Protocol, ProtocolCaller,
+<a href=#10 id=10 data-nosnippet>10</a>    RawAnyGuard, Ref, Value, Vec, VmError, VmErrorKind,
 <a href=#11 id=11 data-nosnippet>11</a>};
 <a href=#12 id=12 data-nosnippet>12</a><span class="kw">use crate</span>::{Any, ContextError, Module};
 <a href=#13 id=13 data-nosnippet>13</a>
@@ -91,7 +91,7 @@
 <a href=#91 id=91 data-nosnippet>91</a>/// [`extend`]: VecDeque::extend
 <a href=#92 id=92 data-nosnippet>92</a>/// [`append`]: VecDeque::append
 <a href=#93 id=93 data-nosnippet>93</a></span><span class="attr">#[derive(Any, Default)]
-<a href=#94 id=94 data-nosnippet>94</a>#[rune(module = <span class="kw">crate</span>, item = ::std::collections::vec_deque)]
+<a href=#94 id=94 data-nosnippet>94</a>#[rune(module = <span class="kw">crate</span>, item = ::std::collections::vec_deque, dismantle)]
 <a href=#95 id=95 data-nosnippet>95</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>VecDeque {
 <a href=#96 id=96 data-nosnippet>96</a>    inner: alloc::VecDeque&lt;Value&gt;,
 <a href=#97 id=97 data-nosnippet>97</a>}
@@ -802,51 +802,70 @@
 <a href=#802 id=802 data-nosnippet>802</a>}
 <a href=#803 id=803 data-nosnippet>803</a>
 <a href=#804 id=804 data-nosnippet>804</a><span class="attr">#[derive(Any)]
-<a href=#805 id=805 data-nosnippet>805</a>#[rune(item = ::std::collections::vec_deque)]
+<a href=#805 id=805 data-nosnippet>805</a>#[rune(item = ::std::collections::vec_deque, dismantle)]
 <a href=#806 id=806 data-nosnippet>806</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Iter {
 <a href=#807 id=807 data-nosnippet>807</a>    iter: alloc::vec_deque::RawIter&lt;Value&gt;,
 <a href=#808 id=808 data-nosnippet>808</a>    <span class="comment">// Drop must happen after the raw iterator.
-<a href=#809 id=809 data-nosnippet>809</a>    </span><span class="attr">#[allow(unused)]
-<a href=#810 id=810 data-nosnippet>810</a>    </span>guard: RawAnyGuard,
-<a href=#811 id=811 data-nosnippet>811</a>}
-<a href=#812 id=812 data-nosnippet>812</a>
-<a href=#813 id=813 data-nosnippet>813</a><span class="kw">impl </span>Iter {
-<a href=#814 id=814 data-nosnippet>814</a>    <span class="attr">#[rune::function(keep, protocol = NEXT)]
-<a href=#815 id=815 data-nosnippet>815</a>    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Value&gt; {
-<a href=#816 id=816 data-nosnippet>816</a>        <span class="comment">// SAFETY: We're holding onto the reference guard.
-<a href=#817 id=817 data-nosnippet>817</a>        </span><span class="kw">unsafe </span>{ <span class="prelude-val">Some</span>((<span class="kw-2">*</span><span class="self">self</span>.iter.next()<span class="question-mark">?</span>).clone()) }
-<a href=#818 id=818 data-nosnippet>818</a>    }
+<a href=#809 id=809 data-nosnippet>809</a>    </span>guard: RawAnyGuard,
+<a href=#810 id=810 data-nosnippet>810</a>}
+<a href=#811 id=811 data-nosnippet>811</a>
+<a href=#812 id=812 data-nosnippet>812</a><span class="doccomment">/// The deque is kept alive through a guard rather than through a slot, so
+<a href=#813 id=813 data-nosnippet>813</a>/// taking the iterator apart releases the guard and hands the deque over.
+<a href=#814 id=814 data-nosnippet>814</a></span><span class="kw">impl </span>Dismantle <span class="kw">for </span>Iter {
+<a href=#815 id=815 data-nosnippet>815</a>    <span class="kw">fn </span>dismantle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, out: <span class="kw-2">&amp;mut </span>Handover&lt;<span class="lifetime">'_</span>&gt;) {
+<a href=#816 id=816 data-nosnippet>816</a>        out.consume_ref(<span class="kw-2">&amp;mut </span><span class="self">self</span>.guard);
+<a href=#817 id=817 data-nosnippet>817</a>    }
+<a href=#818 id=818 data-nosnippet>818</a>}
 <a href=#819 id=819 data-nosnippet>819</a>
-<a href=#820 id=820 data-nosnippet>820</a>    <span class="attr">#[rune::function(keep, protocol = SIZE_HINT)]
-<a href=#821 id=821 data-nosnippet>821</a>    </span><span class="kw">fn </span>size_hint(<span class="self">self</span>) -&gt; (usize, <span class="prelude-ty">Option</span>&lt;usize&gt;) {
-<a href=#822 id=822 data-nosnippet>822</a>        <span class="self">self</span>.iter.size_hint()
-<a href=#823 id=823 data-nosnippet>823</a>    }
-<a href=#824 id=824 data-nosnippet>824</a>
-<a href=#825 id=825 data-nosnippet>825</a>    <span class="attr">#[rune::function(keep, protocol = LEN)]
-<a href=#826 id=826 data-nosnippet>826</a>    </span><span class="kw">fn </span>len(<span class="self">self</span>) -&gt; usize {
-<a href=#827 id=827 data-nosnippet>827</a>        <span class="self">self</span>.iter.len()
-<a href=#828 id=828 data-nosnippet>828</a>    }
-<a href=#829 id=829 data-nosnippet>829</a>
-<a href=#830 id=830 data-nosnippet>830</a>    <span class="attr">#[rune::function(keep, protocol = NEXT_BACK)]
-<a href=#831 id=831 data-nosnippet>831</a>    </span><span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Value&gt; {
-<a href=#832 id=832 data-nosnippet>832</a>        <span class="comment">// SAFETY: We're holding onto the reference guard.
-<a href=#833 id=833 data-nosnippet>833</a>        </span><span class="kw">unsafe </span>{ <span class="prelude-val">Some</span>((<span class="kw-2">*</span><span class="self">self</span>.iter.next_back()<span class="question-mark">?</span>).clone()) }
-<a href=#834 id=834 data-nosnippet>834</a>    }
-<a href=#835 id=835 data-nosnippet>835</a>}
+<a href=#820 id=820 data-nosnippet>820</a><span class="kw">impl </span>Iter {
+<a href=#821 id=821 data-nosnippet>821</a>    <span class="attr">#[rune::function(keep, protocol = NEXT)]
+<a href=#822 id=822 data-nosnippet>822</a>    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Value&gt; {
+<a href=#823 id=823 data-nosnippet>823</a>        <span class="comment">// SAFETY: We're holding onto the reference guard.
+<a href=#824 id=824 data-nosnippet>824</a>        </span><span class="kw">unsafe </span>{ <span class="prelude-val">Some</span>((<span class="kw-2">*</span><span class="self">self</span>.iter.next()<span class="question-mark">?</span>).clone()) }
+<a href=#825 id=825 data-nosnippet>825</a>    }
+<a href=#826 id=826 data-nosnippet>826</a>
+<a href=#827 id=827 data-nosnippet>827</a>    <span class="attr">#[rune::function(keep, protocol = SIZE_HINT)]
+<a href=#828 id=828 data-nosnippet>828</a>    </span><span class="kw">fn </span>size_hint(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, <span class="prelude-ty">Option</span>&lt;usize&gt;) {
+<a href=#829 id=829 data-nosnippet>829</a>        <span class="self">self</span>.iter.size_hint()
+<a href=#830 id=830 data-nosnippet>830</a>    }
+<a href=#831 id=831 data-nosnippet>831</a>
+<a href=#832 id=832 data-nosnippet>832</a>    <span class="attr">#[rune::function(keep, protocol = LEN)]
+<a href=#833 id=833 data-nosnippet>833</a>    </span><span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+<a href=#834 id=834 data-nosnippet>834</a>        <span class="self">self</span>.iter.len()
+<a href=#835 id=835 data-nosnippet>835</a>    }
 <a href=#836 id=836 data-nosnippet>836</a>
-<a href=#837 id=837 data-nosnippet>837</a><span class="kw">impl </span>iter::Iterator <span class="kw">for </span>Iter {
-<a href=#838 id=838 data-nosnippet>838</a>    <span class="kw">type </span>Item = Value;
-<a href=#839 id=839 data-nosnippet>839</a>
-<a href=#840 id=840 data-nosnippet>840</a>    <span class="attr">#[inline]
-<a href=#841 id=841 data-nosnippet>841</a>    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
-<a href=#842 id=842 data-nosnippet>842</a>        Iter::next(<span class="self">self</span>)
-<a href=#843 id=843 data-nosnippet>843</a>    }
-<a href=#844 id=844 data-nosnippet>844</a>}
-<a href=#845 id=845 data-nosnippet>845</a>
-<a href=#846 id=846 data-nosnippet>846</a><span class="kw">impl </span>iter::DoubleEndedIterator <span class="kw">for </span>Iter {
+<a href=#837 id=837 data-nosnippet>837</a>    <span class="attr">#[rune::function(keep, protocol = NEXT_BACK)]
+<a href=#838 id=838 data-nosnippet>838</a>    </span><span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Value&gt; {
+<a href=#839 id=839 data-nosnippet>839</a>        <span class="comment">// SAFETY: We're holding onto the reference guard.
+<a href=#840 id=840 data-nosnippet>840</a>        </span><span class="kw">unsafe </span>{ <span class="prelude-val">Some</span>((<span class="kw-2">*</span><span class="self">self</span>.iter.next_back()<span class="question-mark">?</span>).clone()) }
+<a href=#841 id=841 data-nosnippet>841</a>    }
+<a href=#842 id=842 data-nosnippet>842</a>}
+<a href=#843 id=843 data-nosnippet>843</a>
+<a href=#844 id=844 data-nosnippet>844</a><span class="kw">impl </span>iter::Iterator <span class="kw">for </span>Iter {
+<a href=#845 id=845 data-nosnippet>845</a>    <span class="kw">type </span>Item = Value;
+<a href=#846 id=846 data-nosnippet>846</a>
 <a href=#847 id=847 data-nosnippet>847</a>    <span class="attr">#[inline]
-<a href=#848 id=848 data-nosnippet>848</a>    </span><span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
-<a href=#849 id=849 data-nosnippet>849</a>        Iter::next_back(<span class="self">self</span>)
+<a href=#848 id=848 data-nosnippet>848</a>    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+<a href=#849 id=849 data-nosnippet>849</a>        Iter::next(<span class="self">self</span>)
 <a href=#850 id=850 data-nosnippet>850</a>    }
 <a href=#851 id=851 data-nosnippet>851</a>}
+<a href=#852 id=852 data-nosnippet>852</a>
+<a href=#853 id=853 data-nosnippet>853</a><span class="kw">impl </span>iter::DoubleEndedIterator <span class="kw">for </span>Iter {
+<a href=#854 id=854 data-nosnippet>854</a>    <span class="attr">#[inline]
+<a href=#855 id=855 data-nosnippet>855</a>    </span><span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+<a href=#856 id=856 data-nosnippet>856</a>        Iter::next_back(<span class="self">self</span>)
+<a href=#857 id=857 data-nosnippet>857</a>    }
+<a href=#858 id=858 data-nosnippet>858</a>}
+<a href=#859 id=859 data-nosnippet>859</a>
+<a href=#860 id=860 data-nosnippet>860</a><span class="doccomment">/// A deque removes the slots it is done with, which is what keeps the search
+<a href=#861 id=861 data-nosnippet>861</a>/// for the way back out of it from walking over them again.
+<a href=#862 id=862 data-nosnippet>862</a></span><span class="kw">impl </span>Dismantle <span class="kw">for </span>VecDeque {
+<a href=#863 id=863 data-nosnippet>863</a>    <span class="kw">fn </span>dismantle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, out: <span class="kw-2">&amp;mut </span>Handover&lt;<span class="lifetime">'_</span>&gt;) {
+<a href=#864 id=864 data-nosnippet>864</a>        <span class="comment">// Every value is handed over in one pass over the deque, and what is
+<a href=#865 id=865 data-nosnippet>865</a>        // left of it is dropped as soon as this returns.
+<a href=#866 id=866 data-nosnippet>866</a>        </span><span class="kw">while let </span><span class="prelude-val">Some</span>(value) = <span class="self">self</span>.inner.pop_back() {
+<a href=#867 id=867 data-nosnippet>867</a>            out.push(value);
+<a href=#868 id=868 data-nosnippet>868</a>        }
+<a href=#869 id=869 data-nosnippet>869</a>    }
+<a href=#870 id=870 data-nosnippet>870</a>}
 </code></pre></div></section></main></body></html>
