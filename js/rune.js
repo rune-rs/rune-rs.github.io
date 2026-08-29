@@ -86,7 +86,7 @@ var rune = (function (exports) {
                       const a = state0.a;
                       state0.a = 0;
                       try {
-                          return wasm_bindgen_92953143b1658eca___convert__closures_____invoke___js_sys_56963c07a6c75379___Function_fn_wasm_bindgen_92953143b1658eca___JsValue_____wasm_bindgen_92953143b1658eca___sys__Undefined___js_sys_56963c07a6c75379___Function_fn_wasm_bindgen_92953143b1658eca___JsValue_____wasm_bindgen_92953143b1658eca___sys__Undefined_______true_(a, state0.b, arg0, arg1);
+                          return wasm_bindgen_9dea0c148055f366___convert__closures_____invoke___js_sys_a9f52c7cc39b55f5___Function_fn_wasm_bindgen_9dea0c148055f366___JsValue_____wasm_bindgen_9dea0c148055f366___sys__Undefined___js_sys_a9f52c7cc39b55f5___Function_fn_wasm_bindgen_9dea0c148055f366___JsValue_____wasm_bindgen_9dea0c148055f366___sys__Undefined_______true_(a, state0.b, arg0, arg1);
                       } finally {
                           state0.a = a;
                       }
@@ -156,7 +156,7 @@ var rune = (function (exports) {
           },
           __wbindgen_cast_0000000000000001: function(arg0, arg1) {
               // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 243, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-              const ret = makeMutClosure(arg0, arg1, wasm_bindgen_92953143b1658eca___convert__closures_____invoke___wasm_bindgen_92953143b1658eca___JsValue__core_f0fd674eaa06beef___result__Result_____wasm_bindgen_92953143b1658eca___JsError___true_);
+              const ret = makeMutClosure(arg0, arg1, wasm_bindgen_9dea0c148055f366___convert__closures_____invoke___wasm_bindgen_9dea0c148055f366___JsValue__core_f0fd674eaa06beef___result__Result_____wasm_bindgen_9dea0c148055f366___JsError___true_);
               return ret;
           },
           __wbindgen_init_externref_table: function() {
@@ -176,15 +176,15 @@ var rune = (function (exports) {
       };
   }
 
-  function wasm_bindgen_92953143b1658eca___convert__closures_____invoke___wasm_bindgen_92953143b1658eca___JsValue__core_f0fd674eaa06beef___result__Result_____wasm_bindgen_92953143b1658eca___JsError___true_(arg0, arg1, arg2) {
-      const ret = wasm$1.wasm_bindgen_92953143b1658eca___convert__closures_____invoke___wasm_bindgen_92953143b1658eca___JsValue__core_f0fd674eaa06beef___result__Result_____wasm_bindgen_92953143b1658eca___JsError___true_(arg0, arg1, arg2);
+  function wasm_bindgen_9dea0c148055f366___convert__closures_____invoke___wasm_bindgen_9dea0c148055f366___JsValue__core_f0fd674eaa06beef___result__Result_____wasm_bindgen_9dea0c148055f366___JsError___true_(arg0, arg1, arg2) {
+      const ret = wasm$1.wasm_bindgen_9dea0c148055f366___convert__closures_____invoke___wasm_bindgen_9dea0c148055f366___JsValue__core_f0fd674eaa06beef___result__Result_____wasm_bindgen_9dea0c148055f366___JsError___true_(arg0, arg1, arg2);
       if (ret[1]) {
           throw takeFromExternrefTable0(ret[0]);
       }
   }
 
-  function wasm_bindgen_92953143b1658eca___convert__closures_____invoke___js_sys_56963c07a6c75379___Function_fn_wasm_bindgen_92953143b1658eca___JsValue_____wasm_bindgen_92953143b1658eca___sys__Undefined___js_sys_56963c07a6c75379___Function_fn_wasm_bindgen_92953143b1658eca___JsValue_____wasm_bindgen_92953143b1658eca___sys__Undefined_______true_(arg0, arg1, arg2, arg3) {
-      wasm$1.wasm_bindgen_92953143b1658eca___convert__closures_____invoke___js_sys_56963c07a6c75379___Function_fn_wasm_bindgen_92953143b1658eca___JsValue_____wasm_bindgen_92953143b1658eca___sys__Undefined___js_sys_56963c07a6c75379___Function_fn_wasm_bindgen_92953143b1658eca___JsValue_____wasm_bindgen_92953143b1658eca___sys__Undefined_______true_(arg0, arg1, arg2, arg3);
+  function wasm_bindgen_9dea0c148055f366___convert__closures_____invoke___js_sys_a9f52c7cc39b55f5___Function_fn_wasm_bindgen_9dea0c148055f366___JsValue_____wasm_bindgen_9dea0c148055f366___sys__Undefined___js_sys_a9f52c7cc39b55f5___Function_fn_wasm_bindgen_9dea0c148055f366___JsValue_____wasm_bindgen_9dea0c148055f366___sys__Undefined_______true_(arg0, arg1, arg2, arg3) {
+      wasm$1.wasm_bindgen_9dea0c148055f366___convert__closures_____invoke___js_sys_a9f52c7cc39b55f5___Function_fn_wasm_bindgen_9dea0c148055f366___JsValue_____wasm_bindgen_9dea0c148055f366___sys__Undefined___js_sys_a9f52c7cc39b55f5___Function_fn_wasm_bindgen_9dea0c148055f366___JsValue_____wasm_bindgen_9dea0c148055f366___sys__Undefined_______true_(arg0, arg1, arg2, arg3);
   }
 
 
@@ -435,7 +435,7 @@ var rune = (function (exports) {
   var wasm = async (opt = {}) => {
                   let {importHook, serverPath} = opt;
 
-                  let path = "/js/assets/rune_wasm-ccaf402f.wasm";
+                  let path = "/js/assets/rune_wasm-ede10fff.wasm";
 
                   if (serverPath != null) {
                       path = serverPath + /[^\/\\]*$/.exec(path)[0];
