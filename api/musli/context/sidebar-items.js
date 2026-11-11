@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["new","new_in"],"struct":["Capture","DefaultContext","Emit","Error","ErrorMarker","Errors","Ignore","NoTrace","Report","Trace"],"trait":["ContextError","ErrorMode","TraceImpl","TraceMode"]};
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_NESTING_LIMIT"],"fn":["new","new_in"],"struct":["Capture","DefaultContext","Emit","Error","ErrorMarker","Errors","Ignore","NoTrace","Report","Trace"],"trait":["ContextError","ErrorMode","TraceImpl","TraceMode"]};
