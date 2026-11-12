@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["HostData","ParseErrorKind"],"mod":["enc"],"struct":["Authority","Host","ParseError","Path","Scheme","Uri","View"]};
