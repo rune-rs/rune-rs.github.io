@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f4304f1e.js";
+            window.path_to_searchindex_js = "searchindex-b2a10630.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-495ec6f4.js"></script>
@@ -2527,6 +2527,42 @@ user.describe();
 setbac is inactive.
 setbac is active.
 </code></pre>
+<p>An <code>impl</code> block can also declare constants, which belong to the type the same
+way its functions do. They are reached through the type’s name, or through
+<code>Self</code> inside the <code>impl</code>, and can be used anywhere a constant can, including in
+the definition of another one. Like any <code>const</code> they are evaluated when the
+script is compiled, and they may be made <code>pub</code>.</p>
+<pre><code class="language-rune">struct Rgb {
+    r,
+    g,
+    b,
+}
+
+impl Rgb {
+    /// The largest value a channel can have.
+    pub const MAX = 255;
+    const HALF = Self::MAX / 2;
+    /// Black, built at compile time like any other constant.
+    pub const BLACK = Self { r: 0, g: 0, b: 0 };
+
+    fn grey(level) {
+        Rgb { r: level, g: level, b: level }
+    }
+
+    fn mid_grey() {
+        Self::grey(Self::HALF)
+    }
+}
+
+let grey = Rgb::mid_grey();
+println!("max: {}, grey: {}, black: {}", Rgb::MAX, grey.r, Rgb::BLACK.g);
+</code></pre>
+<pre><code class="language-text">$&gt; cargo run -- run scripts/book/structs/associated_constants.rn
+max: 255, grey: 127, black: 0
+</code></pre>
+<p>A constant can hold an instance of a struct or enum defined in the script, like
+<code>BLACK</code> above. Each use of it is a fresh value, so changing a field of one does
+not change the constant.</p>
 <p>Structs can also be pattern matched, like most types.</p>
 <p>But since the fields of a struct are known at compile time, the compiler can
 ensure that you’re only using fields which are defined.</p>
