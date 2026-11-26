@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b2a10630.js";
+            window.path_to_searchindex_js = "searchindex-aaf36cf6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-495ec6f4.js"></script>
+        <script src="toc-a69820bc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -193,8 +193,28 @@ name = "a"
 version = "0.0.0"
 </code></pre>
 <p>Within a package, Rune will automatically detect different types of compilation
-targets based on the directory structure of the package. This is similar to the
-<a href="https://doc.rust-lang.org/cargo/guide/project-layout.html">Rust package layout</a>:</p>
+targets based on the directory structure of the package. This is similar to the</p>
+<h2 id="declarations-bundled-by-cargo-crates"><a class="header" href="#declarations-bundled-by-cargo-crates">Declarations bundled by cargo crates</a></h2>
+<p>A Rust crate which embeds Rune, or provides modules for it, can ship
+declaration sources describing what it installs and name them in its
+<code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[package.metadata.rune]
+declarations = ["rune/*.d.rn"]
+</code></pre>
+<p>Each entry is a path relative to the crate’s manifest directory, in which <code>*</code>
+matches any part of a file or directory name. The language server finds the
+cargo project it was opened in by the nearest <code>Cargo.toml</code> at or above the
+directory the editor opened, runs <code>cargo metadata --offline</code> for it, and
+compiles what every package in it names beside each script it builds - those of
+a workspace and loose scripts alike. Only crates that cargo knows about are
+looked at, so a dependency fetched from a registry has to include the files in
+what it publishes.</p>
+<p>Cargo is asked once when the server starts and again whenever a <code>Cargo.toml</code> is
+saved or reported changed by the editor. If its dependencies cannot be resolved
+offline it is asked about the workspace alone. A missing or failing <code>cargo</code>, one
+which takes longer than ten seconds, or a malformed <code>[package.metadata.rune]</code>
+is logged as a warning and does not stop the server.</p>
+<p><a href="https://doc.rust-lang.org/cargo/guide/project-layout.html">Rust package layout</a>:</p>
 <ul>
 <li>Source code goes in the <code>src</code> directory.</li>
 <li>The default executable is <code>src/main.rn</code>, and will be named the same as the
@@ -339,6 +359,35 @@ error: Missing macro module::printline
 2 │     printline!("running a/multi-file-executable")
   │     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Missing macro module::printline
 </code></pre>
+<h2 id="declarations"><a class="header" href="#declarations">Declarations</a></h2>
+<p>A package’s own <a href="./declarations.html">declaration sources</a>, every <code>*.d.rn</code> file
+under its directory, are compiled beside each of its entry points, which is how
+a project describes the host its scripts are run in. A <code>.d.rn</code> file is never an
+entry point itself, even under <code>src/bin</code>.</p>
+<h2 id="dependencies"><a class="header" href="#dependencies">Dependencies</a></h2>
+<p>A package can name other packages it depends on in a <code>[dependencies]</code> section
+of its manifest. The only kind of dependency there is a path dependency: a
+directory, relative to the manifest, which holds a <code>Rune.toml</code> of its own with a
+<code>[package]</code> in it.</p>
+<pre><code class="language-toml">[package]
+name = "app"
+version = "0.0.0"
+
+[dependencies]
+host = { path = "../host" }
+</code></pre>
+<p>What a dependency brings is its <a href="./declarations.html">declaration sources</a>: every
+<code>*.d.rn</code> file under its directory, along with those of whatever it depends on in
+turn. Directories whose names start with <code>.</code>, <code>target</code>, and directories holding
+a package of their own are not looked in. These are compiled beside each entry
+point of the depending package by <code>rune check</code>, <code>rune run</code>, <code>rune test</code> and
+<code>rune bench</code>, and by the language server, so a script can call what a host
+library declares without the host being there.</p>
+<p>A dependency is not a member of the workspace: none of its entry points are
+checked or run, and a <code>[workspace]</code> in its manifest is left alone. Anything
+other than a path dependency - a version, a <code>git</code> source, a key beside <code>path</code> -
+is reported in the manifest where it is written, as is a path without a
+<code>Rune.toml</code> and a package which ends up depending on itself.</p>
 
                     </main>
 

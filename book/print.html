@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b2a10630.js";
+            window.path_to_searchindex_js = "searchindex-aaf36cf6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-495ec6f4.js"></script>
+        <script src="toc-a69820bc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -1879,8 +1879,28 @@ name = "a"
 version = "0.0.0"
 </code></pre>
 <p>Within a package, Rune will automatically detect different types of compilation
-targets based on the directory structure of the package. This is similar to the
-<a href="https://doc.rust-lang.org/cargo/guide/project-layout.html">Rust package layout</a>:</p>
+targets based on the directory structure of the package. This is similar to the</p>
+<h2 id="declarations-bundled-by-cargo-crates"><a class="header" href="#declarations-bundled-by-cargo-crates">Declarations bundled by cargo crates</a></h2>
+<p>A Rust crate which embeds Rune, or provides modules for it, can ship
+declaration sources describing what it installs and name them in its
+<code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[package.metadata.rune]
+declarations = ["rune/*.d.rn"]
+</code></pre>
+<p>Each entry is a path relative to the crate’s manifest directory, in which <code>*</code>
+matches any part of a file or directory name. The language server finds the
+cargo project it was opened in by the nearest <code>Cargo.toml</code> at or above the
+directory the editor opened, runs <code>cargo metadata --offline</code> for it, and
+compiles what every package in it names beside each script it builds - those of
+a workspace and loose scripts alike. Only crates that cargo knows about are
+looked at, so a dependency fetched from a registry has to include the files in
+what it publishes.</p>
+<p>Cargo is asked once when the server starts and again whenever a <code>Cargo.toml</code> is
+saved or reported changed by the editor. If its dependencies cannot be resolved
+offline it is asked about the workspace alone. A missing or failing <code>cargo</code>, one
+which takes longer than ten seconds, or a malformed <code>[package.metadata.rune]</code>
+is logged as a warning and does not stop the server.</p>
+<p><a href="https://doc.rust-lang.org/cargo/guide/project-layout.html">Rust package layout</a>:</p>
 <ul>
 <li>Source code goes in the <code>src</code> directory.</li>
 <li>The default executable is <code>src/main.rn</code>, and will be named the same as the
@@ -2025,6 +2045,35 @@ error: Missing macro module::printline
 2 │     printline!("running a/multi-file-executable")
   │     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Missing macro module::printline
 </code></pre>
+<h2 id="declarations"><a class="header" href="#declarations">Declarations</a></h2>
+<p>A package’s own <a href="#declaration-sources">declaration sources</a>, every <code>*.d.rn</code> file
+under its directory, are compiled beside each of its entry points, which is how
+a project describes the host its scripts are run in. A <code>.d.rn</code> file is never an
+entry point itself, even under <code>src/bin</code>.</p>
+<h2 id="dependencies"><a class="header" href="#dependencies">Dependencies</a></h2>
+<p>A package can name other packages it depends on in a <code>[dependencies]</code> section
+of its manifest. The only kind of dependency there is a path dependency: a
+directory, relative to the manifest, which holds a <code>Rune.toml</code> of its own with a
+<code>[package]</code> in it.</p>
+<pre><code class="language-toml">[package]
+name = "app"
+version = "0.0.0"
+
+[dependencies]
+host = { path = "../host" }
+</code></pre>
+<p>What a dependency brings is its <a href="#declaration-sources">declaration sources</a>: every
+<code>*.d.rn</code> file under its directory, along with those of whatever it depends on in
+turn. Directories whose names start with <code>.</code>, <code>target</code>, and directories holding
+a package of their own are not looked in. These are compiled beside each entry
+point of the depending package by <code>rune check</code>, <code>rune run</code>, <code>rune test</code> and
+<code>rune bench</code>, and by the language server, so a script can call what a host
+library declares without the host being there.</p>
+<p>A dependency is not a member of the workspace: none of its entry points are
+checked or run, and a <code>[workspace]</code> in its manifest is left alone. Anything
+other than a path dependency - a version, a <code>git</code> source, a key beside <code>path</code> -
+is reported in the manifest where it is written, as is a path without a
+<code>Rune.toml</code> and a package which ends up depending on itself.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="rune-types"><a class="header" href="#rune-types">Rune types</a></h1>
 <p>Types in Rune are identified uniquely by their <em>item</em>. An item path is a
@@ -2804,6 +2853,63 @@ otherwise. How would we construct an instance of <code>External::First</code> wi
 able to <em>specify</em> what the values of all fields are? The answer is that all
 fields must be visible. Alternatively we can declare another constructor as an
 associated function. The same way we’d do it in Rust.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="declaration-sources"><a class="header" href="#declaration-sources">Declaration sources</a></h1>
+<p>A host which installs native functions and types can describe them in a
+<em>declaration source</em>: a file whose name ends in <code>.d.rn</code>. It is written in the
+same syntax as any other Rune source, but holds only signatures, type
+definitions and their documentation:</p>
+<pre><code class="language-rune">/// Say hello.
+pub fn hello(value: u64) -&gt; u64;
+
+pub mod net {
+    /// Fetch the body behind `url`.
+    pub async fn fetch(url: String) -&gt; String;
+}
+
+pub struct Point { x: f64, y: f64 }
+
+impl Point {
+    fn new(x: f64, y: f64) -&gt; Point;
+    fn len(self) -&gt; f64;
+}
+</code></pre>
+<p>Functions have no bodies, and unlike in an ordinary source arguments, return
+values and fields may carry types. Anything which is not a declaration - a
+function body, a constant, a statement, a macro call - is reported where it was
+written.</p>
+<h2 id="what-the-compiler-does-with-it"><a class="header" href="#what-the-compiler-does-with-it">What the compiler does with it</a></h2>
+<p>Nothing in a declaration source is compiled into the unit. What it declares is
+instead resolved the way an item the host installed natively is, so a script
+compiled beside it may call <code>hello(1)</code>, <code>net::fetch(url)</code> and <code>Point::new(1.0, 2.0)</code> and name <code>Point</code> without the host being there. This is what lets a
+language server or <code>rune check</code> work on scripts written for a host they do not
+have.</p>
+<ul>
+<li>An item the native context already has wins over a declaration of the same
+name, and no conflict is reported, so a declaration source keeps working when
+the script is compiled against the real host.</li>
+<li>A function nobody declared is still a compile error.</li>
+<li>Calling a declared function which the host does not provide when the script
+runs fails at that call with an error naming the function, not at compile
+time.</li>
+<li>Declarations are public, since what they stand for are native items. The
+types written in them are documentation; the compiler does not check them.</li>
+<li>The variants of a declared enum can be constructed and matched on like those
+of a native enum. Constructing one without the host fails at run time,
+the way calling a declared function the host does not provide does.</li>
+<li><code>use</code> is not allowed in a declaration source. Since types in it are only
+documentation there is nothing for an import to resolve. A type is looked up
+among the types the same source declares, then the prelude, then the native
+context.</li>
+</ul>
+<h2 id="documentation"><a class="header" href="#documentation">Documentation</a></h2>
+<p><code>rune doc</code> documents what a declaration source declares: its modules,
+functions, types, methods and variants, with their documentation and the types
+written on their arguments and return values. A type declared in the same
+source links to its own page.</p>
+<p>The language server shows the same: hovering a call to a declared function
+shows its signature and documentation, going to its definition opens the
+declaration source, and completion offers declared functions and types.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="try-operator"><a class="header" href="#try-operator">Try operator</a></h1>
 <p>The try operator (<code>?</code>) is a control flow operator which causes a function to
